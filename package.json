@@ -1,0 +1,41 @@
+{
+  "name": "tcg",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "seed:cards": "node --import tsx/esm scripts/seedCards.ts",
+    "seed:card-images": "node --import tsx/esm scripts/seedCardImages.ts",
+    "seed:sets": "node --import tsx/esm scripts/seedSets.ts",
+    "seed:sets-assets": "node --import tsx/esm scripts/seedSetAssets.ts",
+    "merge:set-details": "node --import tsx/esm scripts/mergeSetDetails.ts",
+    "payload": "payload",
+    "migrate": "payload migrate",
+    "migrate:create": "payload migrate:create"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "^3.79.1",
+    "@payloadcms/next": "^3.79.1",
+    "@payloadcms/richtext-lexical": "^3.79.1",
+    "@tcgdex/sdk": "^2.7.1",
+    "graphql": "^16.13.1",
+    "next": "^16.2.0",
+    "payload": "^3.79.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
