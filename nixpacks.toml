@@ -1,0 +1,4 @@
+# Pin Node.js to 20 so Next.js 16 build succeeds (Nixpacks defaults to Node 18).
+# See: https://nixpacks.com/docs/providers/node
+[variables]
+NIXPACKS_NODE_VERSION = "20"
