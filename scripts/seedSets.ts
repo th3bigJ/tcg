@@ -44,7 +44,7 @@ export default async function seedSets() {
         select: { id: true },
       });
 
-  const brandId = dryRun ? undefined : brands.docs[0]?.id;
+  const brandId = dryRun ? undefined : brands?.docs[0]?.id;
   if (!dryRun && !brandId) {
     console.warn(
       "No Brands found in Payload. Create at least one Brand first, then re-run seedSets.",
