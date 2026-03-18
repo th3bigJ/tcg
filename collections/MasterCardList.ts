@@ -24,6 +24,8 @@ export const MasterCardList: CollectionConfig = {
       label: "Brand",
       admin: {
         description: "The Pokémon brand this card belongs to.",
+        appearance: "select",
+        sortOptions: "name",
       },
     },
     {
@@ -34,6 +36,8 @@ export const MasterCardList: CollectionConfig = {
       label: "Set",
       admin: {
         description: "The card set this card belongs to.",
+        appearance: "select",
+        sortOptions: "name",
       },
     },
     {

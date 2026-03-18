@@ -67,6 +67,30 @@ export const Brands: CollectionConfig = {
         description: "Internal notes for your team.",
       },
     },
+    // Virtual join: show Sets that reference this Brand (via Sets.brand)
+    {
+      name: "linkedSets",
+      type: "join",
+      label: "Sets using this brand",
+      collection: "sets",
+      on: "brand",
+      admin: {
+        description: "Sets that use this brand (linked via each Set’s Brand field).",
+        defaultColumns: ["name", "code", "releaseDate"],
+      },
+    },
+    // Virtual join: show Master Card List entries that reference this Brand (via MasterCardList.brand)
+    {
+      name: "linkedMasterCards",
+      type: "join",
+      label: "Master cards using this brand",
+      collection: "master-card-list",
+      on: "brand",
+      admin: {
+        description: "Master card list entries that use this brand (linked via each card’s Brand field).",
+        defaultColumns: ["fullDisplayName", "set", "rarity", "cardNumber"],
+      },
+    },
   ],
 };
 

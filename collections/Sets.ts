@@ -50,6 +50,8 @@ export const Sets: CollectionConfig = {
       label: "Brand",
       admin: {
         description: "The Pokémon brand that this set belongs to.",
+        appearance: "select",
+        sortOptions: "name",
       },
     },
     {
@@ -176,6 +178,18 @@ export const Sets: CollectionConfig = {
       label: "Admin notes",
       admin: {
         description: "Internal notes for this set.",
+      },
+    },
+    // Virtual join: show Master Card List entries that reference this Set (via MasterCardList.set)
+    {
+      name: "linkedMasterCards",
+      type: "join",
+      label: "Master cards in this set",
+      collection: "master-card-list",
+      on: "set",
+      admin: {
+        description: "Master card list entries in this set (linked via each card’s Set field).",
+        defaultColumns: ["fullDisplayName", "cardNumber", "rarity"],
       },
     },
   ],
