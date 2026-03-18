@@ -178,7 +178,7 @@ export default async function seedSetAssets() {
             overrideAccess: true,
           });
 
-          logoMediaId = logoDoc.id;
+          logoMediaId = logoDoc.id == null ? null : String(logoDoc.id);
           logoCreated++;
         }
       }
@@ -203,7 +203,7 @@ export default async function seedSetAssets() {
             overrideAccess: true,
           });
 
-          symbolMediaId = symbolDoc.id;
+          symbolMediaId = symbolDoc.id == null ? null : String(symbolDoc.id);
           symbolCreated++;
         }
       }
