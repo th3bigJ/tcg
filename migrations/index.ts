@@ -1,7 +1,7 @@
 import * as migration_1731880000000_merge_master_card_list_into_one from './1731880000000_merge_master_card_list_into_one';
 import * as migration_1731900000000_drop_media_table from './1731900000000_drop_media_table';
 import * as migration_1731920000000_add_master_card_list_image_urls from './1731920000000_add_master_card_list_image_urls';
-import * as migration_20260318_235757 from './20260318_235757';
+import * as migration_1731930000000_add_relationship_columns_for_brands_sets from './1731930000000_add_relationship_columns_for_brands_sets';
 
 export const migrations = [
   {
@@ -20,8 +20,8 @@ export const migrations = [
     name: '1731920000000_add_master_card_list_image_urls',
   },
   {
-    up: migration_20260318_235757.up,
-    down: migration_20260318_235757.down,
-    name: '20260318_235757'
+    up: migration_1731930000000_add_relationship_columns_for_brands_sets.up,
+    down: migration_1731930000000_add_relationship_columns_for_brands_sets.down,
+    name: '1731930000000_add_relationship_columns_for_brands_sets',
   },
 ];
