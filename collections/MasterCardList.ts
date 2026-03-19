@@ -20,6 +20,7 @@ export const MasterCardList: CollectionConfig = {
       name: "brand",
       type: "relationship",
       relationTo: "brands",
+      hasMany: false,
       required: true,
       label: "Brand",
       admin: {
@@ -32,6 +33,7 @@ export const MasterCardList: CollectionConfig = {
       name: "set",
       type: "relationship",
       relationTo: "sets",
+      hasMany: false,
       required: true,
       label: "Set",
       admin: {

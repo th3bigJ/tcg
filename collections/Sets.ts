@@ -46,6 +46,7 @@ export const Sets: CollectionConfig = {
       name: "brand",
       type: "relationship",
       relationTo: "brands",
+      hasMany: false,
       required: true,
       label: "Brand",
       admin: {
