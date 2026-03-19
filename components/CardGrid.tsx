@@ -10,6 +10,7 @@ export type CardEntry = {
   src: string;
 };
 
+
 function getHighResSrc(card: CardEntry): string {
   return card.src.replace("/low/", "/high/");
 }
