@@ -17,6 +17,15 @@ import { SetSymbolMedia } from "./collections/SetSymbolMedia";
 
 import { SiteSettings } from "./globals/SiteSettings";
 
+const resolvedServerURL =
+  process.env.SERVER_URL ||
+  process.env.NEXT_PUBLIC_SERVER_URL ||
+  (process.env.NODE_ENV === "production" ? "" : "http://localhost:3000");
+
+if (process.env.NODE_ENV === "production" && !resolvedServerURL) {
+  throw new Error("SERVER_URL (or NEXT_PUBLIC_SERVER_URL) must be set in production.");
+}
+
 export default buildConfig({
   // When running seed scripts with `tsx`, Payload's type auto-generation
   // triggers its CLI bin which loads env files via `@next/env` in a way that
@@ -49,6 +58,6 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URI || "",
     },
   }),
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000",
+  serverURL: resolvedServerURL,
 });
 
