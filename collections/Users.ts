@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { isAdmin } from "../lib/access";
 
 export const Users: CollectionConfig = {
   slug: "users",
@@ -15,11 +16,11 @@ export const Users: CollectionConfig = {
     // `email` is added by default when `auth: true` is enabled.
   ],
   access: {
-    admin: ({ req }) => Boolean(req.user),
-    create: ({ req }) => Boolean(req.user),
-    delete: ({ req }) => Boolean(req.user),
-    read: ({ req }) => Boolean(req.user),
-    update: ({ req }) => Boolean(req.user),
+    admin: isAdmin,
+    create: isAdmin,
+    delete: isAdmin,
+    read: isAdmin,
+    update: isAdmin,
   },
 };
 

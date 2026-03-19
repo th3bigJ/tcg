@@ -1,4 +1,6 @@
 import type { CollectionConfig } from "payload";
+import { allowRead, isAdmin } from "../lib/access";
+import { getRelationshipID, syncBrandFromSetHook } from "../lib/masterCardList";
 
 export const MasterCardList: CollectionConfig = {
   slug: "master-card-list",
@@ -8,11 +10,14 @@ export const MasterCardList: CollectionConfig = {
     defaultColumns: ["fullDisplayName", "set", "rarity", "cardNumber"],
   },
   access: {
-    admin: ({ req }) => Boolean(req.user),
-    read: () => true,
-    create: ({ req }) => Boolean(req.user),
-    update: ({ req }) => Boolean(req.user),
-    delete: ({ req }) => Boolean(req.user),
+    admin: isAdmin,
+    read: allowRead,
+    create: isAdmin,
+    update: isAdmin,
+    delete: isAdmin,
+  },
+  hooks: {
+    beforeValidate: [syncBrandFromSetHook],
   },
   timestamps: true,
   fields: [
@@ -36,6 +41,22 @@ export const MasterCardList: CollectionConfig = {
       hasMany: false,
       required: true,
       label: "Set",
+      filterOptions: ({ siblingData }) => {
+        if (siblingData && typeof siblingData === "object") {
+          const brandID = getRelationshipID(
+            (siblingData as Record<string, unknown>).brand,
+          );
+          if (brandID) {
+            return {
+              brand: {
+                equals: brandID,
+              },
+            };
+          }
+        }
+
+        return true;
+      },
       admin: {
         description: "The card set this card belongs to.",
         appearance: "select",

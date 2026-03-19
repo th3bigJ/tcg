@@ -1,4 +1,5 @@
 import type { CollectionConfig } from "payload";
+import { allowRead, isAdmin } from "../lib/access";
 
 export const ProductCategories: CollectionConfig = {
   slug: "product-categories",
@@ -6,11 +7,11 @@ export const ProductCategories: CollectionConfig = {
     useAsTitle: "name",
   },
   access: {
-    admin: ({ req }) => Boolean(req.user),
-    read: ({ req }) => Boolean(req.user),
-    create: ({ req }) => Boolean(req.user),
-    update: ({ req }) => Boolean(req.user),
-    delete: ({ req }) => Boolean(req.user),
+    admin: isAdmin,
+    read: allowRead,
+    create: isAdmin,
+    update: isAdmin,
+    delete: isAdmin,
   },
   timestamps: true,
   fields: [

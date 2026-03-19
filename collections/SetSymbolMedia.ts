@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
 import path from "path";
+import { allowRead, isAdmin } from "../lib/access";
 
 export const SetSymbolMedia: CollectionConfig = {
   slug: "set-symbol-media",
@@ -8,11 +9,11 @@ export const SetSymbolMedia: CollectionConfig = {
   },
   access: {
     // Symbols are intended to be publicly readable so the frontend can render them.
-    read: () => true,
-    admin: ({ req }) => Boolean(req.user),
-    create: ({ req }) => Boolean(req.user),
-    update: ({ req }) => Boolean(req.user),
-    delete: ({ req }) => Boolean(req.user),
+    read: allowRead,
+    admin: isAdmin,
+    create: isAdmin,
+    update: isAdmin,
+    delete: isAdmin,
   },
   timestamps: true,
   fields: [
