@@ -6,6 +6,7 @@ export const SetLogoMedia: CollectionConfig = {
   slug: "set-logo-media",
   admin: {
     useAsTitle: "alt",
+    group: "Images",
   },
   access: {
     // Logos are intended to be publicly readable so the frontend can render them.
@@ -18,13 +19,23 @@ export const SetLogoMedia: CollectionConfig = {
   timestamps: true,
   fields: [
     {
-      name: "alt",
-      type: "text",
-      required: true,
-      label: "Alt text",
-      admin: {
-        description: "Used as accessible text for set logo images.",
-      },
+      type: "tabs",
+      tabs: [
+        {
+          label: "Media details",
+          fields: [
+            {
+              name: "alt",
+              type: "text",
+              required: true,
+              label: "Alt text",
+              admin: {
+                description: "Used as accessible text for set logo images.",
+              },
+            },
+          ],
+        },
+      ],
     },
   ],
   upload: {

@@ -1,4 +1,5 @@
 import { postgresAdapter } from "@payloadcms/db-postgres";
+import { s3Storage } from "@payloadcms/storage-s3";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { buildConfig } from "payload";
 import path from "path";
@@ -10,8 +11,10 @@ import { Brands } from "./collections/Brands";
 import { ItemConditions } from "./collections/ItemConditions";
 import { ProductCategories } from "./collections/ProductCategories";
 import { ProductTypes } from "./collections/ProductTypes";
+import { Series } from "./collections/Series";
 import { Sets } from "./collections/Sets";
 import { MasterCardList } from "./collections/MasterCardList";
+import { CardMedia } from "./collections/CardMedia";
 import { SetLogoMedia } from "./collections/SetLogoMedia";
 import { SetSymbolMedia } from "./collections/SetSymbolMedia";
 
@@ -25,6 +28,12 @@ const resolvedServerURL =
 if (process.env.NODE_ENV === "production" && !resolvedServerURL) {
   throw new Error("SERVER_URL (or NEXT_PUBLIC_SERVER_URL) must be set in production.");
 }
+
+const hasR2Config =
+  Boolean(process.env.R2_BUCKET) &&
+  Boolean(process.env.R2_ACCESS_KEY_ID) &&
+  Boolean(process.env.R2_SECRET_ACCESS_KEY) &&
+  Boolean(process.env.R2_ENDPOINT);
 
 export default buildConfig({
   // When running seed scripts with `tsx`, Payload's type auto-generation
@@ -41,9 +50,11 @@ export default buildConfig({
   },
   collections: [
     Users,
+    CardMedia,
     SetLogoMedia,
     SetSymbolMedia,
     Brands,
+    Series,
     Sets,
     ProductTypes,
     ProductCategories,
@@ -52,6 +63,33 @@ export default buildConfig({
   ],
   globals: [SiteSettings],
   editor: lexicalEditor(),
+  plugins: hasR2Config
+    ? [
+        s3Storage({
+          bucket: process.env.R2_BUCKET || "",
+          collections: {
+            "card-media": {
+              prefix: "cards",
+            },
+            "set-logo-media": {
+              prefix: "sets/logo",
+            },
+            "set-symbol-media": {
+              prefix: "sets/symbol",
+            },
+          },
+          config: {
+            credentials: {
+              accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+              secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+            },
+            endpoint: process.env.R2_ENDPOINT,
+            forcePathStyle: true,
+            region: process.env.R2_REGION || "auto",
+          },
+        }),
+      ]
+    : [],
   secret: process.env.PAYLOAD_SECRET || "",
   db: postgresAdapter({
     pool: {

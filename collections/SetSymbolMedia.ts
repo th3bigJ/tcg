@@ -6,6 +6,7 @@ export const SetSymbolMedia: CollectionConfig = {
   slug: "set-symbol-media",
   admin: {
     useAsTitle: "alt",
+    group: "Images",
   },
   access: {
     // Symbols are intended to be publicly readable so the frontend can render them.
@@ -18,13 +19,23 @@ export const SetSymbolMedia: CollectionConfig = {
   timestamps: true,
   fields: [
     {
-      name: "alt",
-      type: "text",
-      required: true,
-      label: "Alt text",
-      admin: {
-        description: "Used as accessible text for set symbol images.",
-      },
+      type: "tabs",
+      tabs: [
+        {
+          label: "Media details",
+          fields: [
+            {
+              name: "alt",
+              type: "text",
+              required: true,
+              label: "Alt text",
+              admin: {
+                description: "Used as accessible text for set symbol images.",
+              },
+            },
+          ],
+        },
+      ],
     },
   ],
   upload: {

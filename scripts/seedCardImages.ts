@@ -1,8 +1,7 @@
 /**
- * Download high and low card images from TCGdex and store local URLs in master_card_list.
+ * Download high and low card images from TCGdex and create Card Media uploads.
  * Files: public/media/cards/high/{setCode}/{localId}.webp and .../low/{setCode}/{localId}.webp
- * URLs stored: /media/cards/high/{setCode}/{localId}.webp and /media/cards/low/{setCode}/{localId}.webp
- * Replaces any existing imageHighUrl / imageLowUrl.
+ * Links Master Card List records via imageHigh / imageLow relationships.
  * @see https://tcgdex.dev/assets
  */
 import fs from "fs/promises";
@@ -10,8 +9,6 @@ import path from "path";
 
 import TCGdex from "@tcgdex/sdk";
 import nextEnvImport from "@next/env";
-
-type Payload = Awaited<ReturnType<typeof import("payload").getPayload>>;
 
 type FullCard = {
   id: string;
@@ -58,6 +55,15 @@ const downloadToFile = async (url: string, outputPath: string, maxRetries = 3): 
     }
   }
   throw lastErr ?? new Error("Download failed after retries");
+};
+
+const toContentType = (filename: string): string => {
+  const ext = path.extname(filename).toLowerCase();
+  if (ext === ".webp") return "image/webp";
+  if (ext === ".png") return "image/png";
+  if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+  if (ext === ".gif") return "image/gif";
+  return "application/octet-stream";
 };
 
 export default async function seedCardImages() {
@@ -111,7 +117,7 @@ export default async function seedCardImages() {
     await ensureDir(lowDir);
   }
 
-  console.log(`Downloading images for ${total} cards (set=${setCode}), storing in media/cards/{high|low}/${setCode}/, replacing existing URLs.\n`);
+  console.log(`Downloading images for ${total} cards (set=${setCode}), storing in media/cards/{high|low}/${setCode}/, creating card media links.\n`);
 
   let updated = 0;
   let skipped = 0;
@@ -148,13 +154,9 @@ export default async function seedCardImages() {
       continue;
     }
 
-    // URL stored in DB: path from site root (no leading public/)
-    const imageHighUrl = `/media/cards/high/${setCode}/${localIdPadded}.webp`;
-    const imageLowUrl = `/media/cards/low/${setCode}/${localIdPadded}.webp`;
-
     if (dryRun) {
-      console.log(`  High -> ${imageHighUrl}`);
-      console.log(`  Low  -> ${imageLowUrl}`);
+      console.log(`  High -> /media/cards/high/${setCode}/${localIdPadded}.webp`);
+      console.log(`  Low  -> /media/cards/low/${setCode}/${localIdPadded}.webp`);
       updated++;
       continue;
     }
@@ -171,16 +173,56 @@ export default async function seedCardImages() {
     }
 
     try {
+      const lowFilename = `${localIdPadded}.webp`;
+      const highFilename = `${localIdPadded}.webp`;
+      const lowBuffer = await fs.readFile(path.join(lowDir, lowFilename));
+      const highBuffer = await fs.readFile(path.join(highDir, highFilename));
+
+      const lowMedia = await payload.create({
+        collection: "card-media",
+        data: {
+          alt: `${displayName} low`,
+          quality: "low",
+          setCode,
+          cardLocalId: localIdPadded,
+        },
+        file: {
+          data: lowBuffer,
+          mimetype: toContentType(lowFilename),
+          name: lowFilename,
+          size: lowBuffer.byteLength,
+        },
+        overrideAccess: true,
+      });
+
+      const highMedia = await payload.create({
+        collection: "card-media",
+        data: {
+          alt: `${displayName} high`,
+          quality: "high",
+          setCode,
+          cardLocalId: localIdPadded,
+        },
+        file: {
+          data: highBuffer,
+          mimetype: toContentType(highFilename),
+          name: highFilename,
+          size: highBuffer.byteLength,
+        },
+        overrideAccess: true,
+      });
+
       await payload.update({
         collection: "master-card-list",
         id: card.id,
-        data: { imageHighUrl, imageLowUrl },
+        data: {
+          imageLow: lowMedia.id,
+          imageHigh: highMedia.id,
+        },
         overrideAccess: true,
       });
     } catch (e) {
-      console.warn(`  Update failed for ${card.externalId}:`, e);
-      errors++;
-      continue;
+      console.warn(`  Card media upload failed for ${card.externalId}:`, e);
     }
 
     updated++;

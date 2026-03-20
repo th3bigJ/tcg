@@ -89,6 +89,7 @@ export default async function seedSets() {
           name,
           slug,
           code: setId,
+          tcgdexId: setId,
           brand: brandId,
           cardCountTotal:
             typeof tcgSet.cardCount?.total === "number"

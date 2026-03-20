@@ -17,7 +17,6 @@ type FullCard = {
   category?: string;
   illustrator?: string;
   rarity?: string;
-  image?: string;
   set?: { id?: string; name?: string; cardCount?: { total?: number; official?: number } };
   variants?: { normal?: boolean; reverse?: boolean; holo?: boolean; firstEdition?: boolean; wPromo?: boolean };
   hp?: number;
@@ -25,8 +24,6 @@ type FullCard = {
   evolveFrom?: string;
   description?: string;
   stage?: string;
-  level?: string | number;
-  suffix?: string;
   item?: { name?: string; effect?: string };
   dexId?: number[];
   attacks?: Array<{ cost?: string[]; name: string; effect?: string; damage?: string | number }>;
@@ -38,27 +35,12 @@ type FullCard = {
   energyType?: string;
   regulationMark?: string;
   legal?: { standard?: boolean; expanded?: boolean };
-  boosters?: unknown;
-  getImageURL?: (quality: string, ext: string) => string;
 };
 
 const getArg = (key: string): string | undefined => {
   const match = process.argv.find((arg) => arg.startsWith(`--${key}=`));
   if (!match) return undefined;
   return match.split("=").slice(1).join("=") || undefined;
-};
-
-const getCardImageUrls = (
-  card: FullCard,
-): { high: string | null; low: string | null } => {
-  const get = (quality: "high" | "low") => {
-    if (typeof (card as FullCard & { getImageURL?: (q: string, e: string) => string }).getImageURL === "function") {
-      return (card as FullCard & { getImageURL: (q: string, e: string) => string }).getImageURL(quality, "webp");
-    }
-    if (card.image) return `${card.image}/${quality}.webp`;
-    return null;
-  };
-  return { high: get("high"), low: get("low") };
 };
 
 export default async function seedCards() {
@@ -69,7 +51,6 @@ export default async function seedCards() {
   const limitArg = getArg("limit");
   const limit = limitArg ? Number(limitArg) : undefined;
   const dryRun = process.argv.includes("--dry-run");
-  const skipImages = process.argv.includes("--no-images");
 
   const tcgdex = new TCGdex("en");
 
@@ -172,8 +153,6 @@ export default async function seedCards() {
       }
     }
 
-    const imageUrls = skipImages ? { high: null as string | null, low: null as string | null } : getCardImageUrls(fullCard);
-
     const variants = fullCard.variants
       ? {
           firstEdition: fullCard.variants.firstEdition ?? false,
@@ -184,39 +163,9 @@ export default async function seedCards() {
         }
       : undefined;
 
-    const attacks =
-      fullCard.attacks?.map((a) => ({
-        cost: a.cost ?? [],
-        name: a.name,
-        effect: a.effect ?? undefined,
-        damage: a.damage != null ? String(a.damage) : undefined,
-      })) ?? [];
-
-    const weaknesses =
-      fullCard.weaknesses?.map((w) => ({
-        type: w.type,
-        value: w.value ?? undefined,
-      })) ?? [];
-
     const dexId =
       fullCard.dexId?.length
         ? fullCard.dexId.map((v) => ({ value: v }))
-        : undefined;
-
-    const item =
-      fullCard.item?.name != null || fullCard.item?.effect != null
-        ? {
-            name: fullCard.item.name ?? undefined,
-            effect: fullCard.item.effect ?? undefined,
-          }
-        : undefined;
-
-    const legal =
-      fullCard.legal != null
-        ? {
-            standard: fullCard.legal.standard ?? false,
-            expanded: fullCard.legal.expanded ?? false,
-          }
         : undefined;
 
     const data = {
@@ -228,32 +177,19 @@ export default async function seedCards() {
       category: fullCard.category ?? undefined,
       localId,
       rarity: fullCard.rarity ?? undefined,
-      supertype: fullCard.category ?? undefined,
       subtypes: fullCard.stage ? [fullCard.stage] : [],
       stage: fullCard.stage ?? undefined,
       hp: fullCard.hp ?? undefined,
       elementTypes: fullCard.types ?? [],
       evolveFrom: fullCard.evolveFrom ?? undefined,
-      description: fullCard.description ?? undefined,
-      effect: fullCard.effect ?? undefined,
       trainerType: fullCard.trainerType ?? undefined,
       energyType: fullCard.energyType ?? undefined,
       artist: fullCard.illustrator ?? undefined,
       externalId,
       variants,
-      attacks,
-      weaknesses,
-      retreat: fullCard.retreat ?? undefined,
       regulationMark: fullCard.regulationMark ?? undefined,
-      legal,
       dexId,
-      level: fullCard.level != null ? String(fullCard.level) : undefined,
-      suffix: fullCard.suffix ?? undefined,
-      item,
-      boosters: fullCard.boosters ?? undefined,
       isActive: true,
-      imageHighUrl: imageUrls.high ?? undefined,
-      imageLowUrl: imageUrls.low ?? undefined,
     };
 
     if (dryRun) {

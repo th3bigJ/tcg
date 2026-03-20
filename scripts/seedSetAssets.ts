@@ -8,6 +8,8 @@ type TCGdexSetBrief = {
   symbol?: string | null;
 };
 
+type RelId = number | string;
+
 const getArg = (key: string): string | undefined => {
   const match = process.argv.find((arg) => arg.startsWith(`--${key}=`));
   if (!match) return undefined;
@@ -160,7 +162,7 @@ export default async function seedSetAssets() {
     const setName = tcgSet.name ?? setId;
 
     // Logo
-    let logoMediaId: string | null = null;
+    let logoMediaId: RelId | null = null;
     if (tcgSet.logo) {
       if (dryRun || !currentSetImageId) {
         const { buffer: logoBuffer, mime, ext } = await fetchImageBuffer(
@@ -178,14 +180,14 @@ export default async function seedSetAssets() {
             overrideAccess: true,
           });
 
-          logoMediaId = logoDoc.id == null ? null : String(logoDoc.id);
+          logoMediaId = logoDoc.id == null ? null : logoDoc.id;
           logoCreated++;
         }
       }
     }
 
     // Symbol
-    let symbolMediaId: string | null = null;
+    let symbolMediaId: RelId | null = null;
     if (tcgSet.symbol) {
       if (dryRun || !currentSymbolImageId) {
         const { buffer: symbolBuffer, mime, ext } = await fetchImageBuffer(
@@ -203,7 +205,7 @@ export default async function seedSetAssets() {
             overrideAccess: true,
           });
 
-          symbolMediaId = symbolDoc.id == null ? null : String(symbolDoc.id);
+          symbolMediaId = symbolDoc.id == null ? null : symbolDoc.id;
           symbolCreated++;
         }
       }

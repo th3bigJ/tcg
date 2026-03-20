@@ -5,7 +5,6 @@ type FullSet = {
   id: string;
   name?: string;
   releaseDate?: string;
-  legal?: { standard?: boolean; expanded?: boolean };
   serie?: { id?: string; name?: string };
   cardCount?: {
     total?: number;
@@ -22,6 +21,13 @@ const getArg = (key: string): string | undefined => {
   if (!match) return undefined;
   return match.split("=").slice(1).join("=") || undefined;
 };
+
+const slugify = (input: string): string =>
+  input
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 export default async function mergeSetDetails() {
   const { loadEnvConfig } = nextEnvImport as {
@@ -72,6 +78,7 @@ export default async function mergeSetDetails() {
   let updated = 0;
   let skipped = 0;
   let errors = 0;
+  const seriesIdByName = new Map<string, string | number>();
 
   for (let i = 0; i < toProcess; i++) {
     const row = setsToProcess[i];
@@ -93,21 +100,51 @@ export default async function mergeSetDetails() {
     }
 
     const cc = fullSet.cardCount ?? {};
-    const legal = fullSet.legal ?? {};
     const serie = fullSet.serie ?? {};
 
     const data: Record<string, unknown> = {};
     if (fullSet.releaseDate != null) data.releaseDate = fullSet.releaseDate;
     if (typeof cc.total === "number") data.cardCountTotal = cc.total;
     if (typeof cc.official === "number") data.cardCountOfficial = cc.official;
-    if (typeof cc.firstEd === "number") data.cardCountFirstEd = cc.firstEd;
-    if (typeof cc.holo === "number") data.cardCountHolo = cc.holo;
-    if (typeof cc.normal === "number") data.cardCountNormal = cc.normal;
-    if (typeof cc.reverse === "number") data.cardCountReverse = cc.reverse;
-    if (typeof legal.standard === "boolean") data.legalStandard = legal.standard;
-    if (typeof legal.expanded === "boolean") data.legalExpanded = legal.expanded;
-    if (serie.id != null) data.serieId = serie.id;
-    if (serie.name != null) data.serieName = serie.name;
+    if (serie.name != null && serie.name.trim() !== "") {
+      const serieName = serie.name.trim();
+      const cacheKey = serieName.toLowerCase();
+      let seriesRecordId = seriesIdByName.get(cacheKey);
+
+      if (!seriesRecordId) {
+        const existingSeries = await payload!.find({
+          collection: "series",
+          where: {
+            name: {
+              equals: serieName,
+            },
+          },
+          limit: 1,
+          select: { id: true },
+          overrideAccess: true,
+        });
+
+        if (existingSeries.totalDocs > 0) {
+          seriesRecordId = existingSeries.docs[0].id;
+        } else {
+          const createdSeries = await payload!.create({
+            collection: "series",
+            data: {
+              name: serieName,
+              slug: `${slugify(serieName)}-${String(serie.id ?? serieName).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+              tcgdexSeriesId: typeof serie.id === "string" ? serie.id : undefined,
+              isActive: true,
+            },
+            overrideAccess: true,
+          });
+          seriesRecordId = createdSeries.id;
+        }
+
+        seriesIdByName.set(cacheKey, seriesRecordId);
+      }
+
+      data.serieName = seriesRecordId;
+    }
 
     if (dryRun) {
       console.log(`[dry-run] code=${code}`, data);

@@ -9,11 +9,21 @@ export const Users: CollectionConfig = {
   auth: true,
   fields: [
     {
-      name: "name",
-      type: "text",
-      required: true,
+      type: "tabs",
+      tabs: [
+        {
+          label: "Profile",
+          fields: [
+            {
+              name: "name",
+              type: "text",
+              required: true,
+            },
+            // `email` is added by default when `auth: true` is enabled.
+          ],
+        },
+      ],
     },
-    // `email` is added by default when `auth: true` is enabled.
   ],
   access: {
     admin: isAdmin,
