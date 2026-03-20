@@ -123,7 +123,7 @@ Tracks which card sets have been imported into `master-card-list` and which are 
 | smp | SM Black Star Promos | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | sp | Sample | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | sv1 | Scarlet & Violet | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sv10 | Destined Rivals | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| sv10 | Destined Rivals | completed | local-json + tcgdex-enrichment | 244 | 0 | 0 | 244 | 2026-03-20T12:58:53.898Z |
 | sv2 | Paldea Evolved | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | sv3 | Obsidian Flames | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | sv3pt5 | 151 | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |

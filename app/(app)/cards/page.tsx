@@ -8,6 +8,9 @@ type CardEntry = {
   src: string;
   lowSrc: string;
   highSrc: string;
+  rarity: string;
+  illustrator: string;
+  cardName: string;
 };
 
 type ImageRelation = {
@@ -46,6 +49,9 @@ async function getLowResCards(): Promise<CardEntry[]> {
         set: true,
         imageLow: true,
         imageHigh: true,
+        rarity: true,
+        artist: true,
+        cardName: true,
       },
       where: {
         imageLow: {
@@ -81,6 +87,9 @@ async function getLowResCards(): Promise<CardEntry[]> {
         src: resolveMediaURL(lowUrl),
         lowSrc: resolveMediaURL(lowUrl),
         highSrc: resolveMediaURL(highUrl),
+        rarity: typeof doc.rarity === "string" ? doc.rarity.trim() : "",
+        illustrator: typeof doc.artist === "string" ? doc.artist.trim() : "",
+        cardName: typeof doc.cardName === "string" ? doc.cardName.trim() : "",
       });
     }
 
@@ -148,6 +157,9 @@ type CardsPageProps = {
   searchParams?: Promise<{
     page?: string;
     set?: string;
+    rarity?: string;
+    illustrator?: string;
+    search?: string;
   }>;
 };
 
@@ -155,14 +167,35 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const cards = await getLowResCards();
   const selectedSet = (resolvedSearchParams.set ?? "").trim();
+  const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();
+  const selectedIllustrator = (resolvedSearchParams.illustrator ?? "").trim();
+  const selectedSearch = (resolvedSearchParams.search ?? "").trim();
   const availableSetCodes = [...new Set(cards.map((card) => card.set))].filter(
     (setCode) => setCode && setCode !== "unknown",
   );
+  const rarityOptions = [...new Set(cards.map((card) => card.rarity))].filter(Boolean).sort();
+  const illustratorOptions = [...new Set(cards.map((card) => card.illustrator))]
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b));
   const setFilterOptions = await getSetFilterOptions(availableSetCodes);
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
+  const hasSelectedRarity = rarityOptions.includes(selectedRarity);
+  const hasSelectedIllustrator = illustratorOptions.includes(selectedIllustrator);
   const activeSet = hasSelectedSet ? selectedSet : "";
+  const activeRarity = hasSelectedRarity ? selectedRarity : "";
+  const activeIllustrator = hasSelectedIllustrator ? selectedIllustrator : "";
+  const activeSearch = selectedSearch;
+  const activeSearchLower = activeSearch.toLocaleLowerCase();
 
-  const filteredCards = activeSet ? cards.filter((card) => card.set === activeSet) : cards;
+  const filteredCards = cards.filter((card) => {
+    if (activeSet && card.set !== activeSet) return false;
+    if (activeRarity && card.rarity !== activeRarity) return false;
+    if (activeIllustrator && card.illustrator !== activeIllustrator) return false;
+    if (activeSearchLower && !card.cardName.toLocaleLowerCase().includes(activeSearchLower)) {
+      return false;
+    }
+    return true;
+  });
   const rawPage = Number.parseInt(resolvedSearchParams.page ?? "1", 10);
   const totalPages = Math.max(1, Math.ceil(filteredCards.length / CARDS_PER_PAGE));
   const currentPage = Number.isFinite(rawPage)
@@ -175,6 +208,9 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const createCardsHref = (page: number) => {
     const params = new URLSearchParams();
     if (activeSet) params.set("set", activeSet);
+    if (activeRarity) params.set("rarity", activeRarity);
+    if (activeIllustrator) params.set("illustrator", activeIllustrator);
+    if (activeSearch) params.set("search", activeSearch);
     if (page > 1) params.set("page", String(page));
     const query = params.toString();
     return query ? `/cards?${query}` : "/cards";
@@ -183,8 +219,8 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const nextHref = createCardsHref(currentPage + 1);
 
   return (
-    <div className="min-h-full bg-[var(--background)] text-[var(--foreground)]">
-      <header className="border-b border-[var(--foreground)]/10 bg-[var(--background)] px-4 py-4">
+    <div className="flex min-h-screen flex-col bg-[var(--background)] text-[var(--foreground)]">
+      <header className="shrink-0 border-b border-[var(--foreground)]/10 bg-[var(--background)] px-4 py-4">
         <div className="flex w-full items-center justify-between">
           <h1 className="text-xl font-semibold">Low-res card gallery</h1>
           <Link
@@ -195,13 +231,92 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
           </Link>
         </div>
       </header>
-      <main className="w-full px-4 py-6">
-        <div className="grid items-start gap-4 lg:grid-cols-[20%_minmax(0,1fr)]">
-          <aside className="rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2">
-            <h2 className="mb-3 text-sm font-semibold">Filter by set</h2>
-            <div className="space-y-2">
+      <main className="min-h-0 flex-1 w-full px-4 py-6">
+        <div className="grid h-full items-start gap-4 lg:grid-cols-[20%_minmax(0,1fr)]">
+          <aside className="rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2 lg:min-h-0 lg:overflow-y-auto">
+            <h2 className="mb-3 text-sm font-semibold">Filters</h2>
+            <form method="get" action="/cards" className="mb-3 space-y-2 rounded-md border border-[var(--foreground)]/10 p-2">
+              <div>
+                <label htmlFor="search" className="mb-1 block text-xs font-medium text-[var(--foreground)]/80">
+                  Search card name
+                </label>
+                <input
+                  id="search"
+                  name="search"
+                  type="search"
+                  defaultValue={activeSearch}
+                  placeholder="e.g. Charizard"
+                  className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 text-xs"
+                />
+              </div>
+              <div>
+                <label htmlFor="rarity" className="mb-1 block text-xs font-medium text-[var(--foreground)]/80">
+                  Rarity
+                </label>
+                <select
+                  id="rarity"
+                  name="rarity"
+                  defaultValue={activeRarity}
+                  className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 text-xs"
+                >
+                  <option value="">All rarities</option>
+                  {rarityOptions.map((rarity) => (
+                    <option key={rarity} value={rarity}>
+                      {rarity}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="illustrator"
+                  className="mb-1 block text-xs font-medium text-[var(--foreground)]/80"
+                >
+                  Illustrator
+                </label>
+                <select
+                  id="illustrator"
+                  name="illustrator"
+                  defaultValue={activeIllustrator}
+                  className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 text-xs"
+                >
+                  <option value="">All illustrators</option>
+                  {illustratorOptions.map((illustrator) => (
+                    <option key={illustrator} value={illustrator}>
+                      {illustrator}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
+              <button
+                type="submit"
+                className="w-full rounded-md border border-[var(--foreground)]/20 px-2 py-1.5 text-xs font-medium hover:bg-[var(--foreground)]/5"
+              >
+                Apply filters
+              </button>
               <Link
                 href="/cards"
+                className="block text-center text-xs text-[var(--foreground)]/70 underline underline-offset-2 hover:no-underline"
+              >
+                Clear all filters
+              </Link>
+            </form>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]/70">
+              Set
+            </h3>
+            <div className="space-y-2">
+              <Link
+                href={
+                  (() => {
+                    const params = new URLSearchParams();
+                    if (activeRarity) params.set("rarity", activeRarity);
+                    if (activeIllustrator) params.set("illustrator", activeIllustrator);
+                    if (activeSearch) params.set("search", activeSearch);
+                    const query = params.toString();
+                    return query ? `/cards?${query}` : "/cards";
+                  })()
+                }
                 className={`flex items-center justify-center rounded-md border px-2 py-1.5 text-xs transition hover:bg-[var(--foreground)]/5 ${
                   activeSet
                     ? "border-[var(--foreground)]/15"
@@ -215,6 +330,9 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                   const isActive = activeSet === setOption.code;
                   const params = new URLSearchParams();
                   params.set("set", setOption.code);
+                  if (activeRarity) params.set("rarity", activeRarity);
+                  if (activeIllustrator) params.set("illustrator", activeIllustrator);
+                  if (activeSearch) params.set("search", activeSearch);
                   const href = `/cards?${params.toString()}`;
                   return (
                     <li key={setOption.code}>
@@ -241,12 +359,12 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               </ul>
             </div>
           </aside>
-          <section>
+          <section className="lg:min-h-0 lg:overflow-y-auto lg:pr-1">
             <p className="mb-6 text-sm text-[var(--foreground)]/70">
               Showing {showingFrom}-{showingTo} of {filteredCards.length} card
               {filteredCards.length === 1 ? "" : "s"} in {setFilterOptions.length} set
               {setFilterOptions.length === 1 ? "" : "s"}
-              {activeSet ? " (filtered)" : ""}
+              {activeSet || activeRarity || activeIllustrator || activeSearch ? " (filtered)" : ""}
             </p>
             <CardGrid cards={paginatedCards} />
             <div className="mt-6 flex items-center justify-between gap-3 text-sm">
