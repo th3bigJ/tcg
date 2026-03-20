@@ -222,7 +222,8 @@ export default async function importSetCardsFromJson() {
     });
     if (setDoc.totalDocs === 0) throw new Error(`Set not found in Payload for code=${setCode}`);
     setId = setDoc.docs[0].id;
-    setName = setDoc.docs[0].name || setCode;
+    const setNameValue = setDoc.docs[0].name;
+    setName = typeof setNameValue === "string" && setNameValue.trim().length > 0 ? setNameValue : setCode;
     setTotal = Number(setDoc.docs[0].cardCountOfficial || setDoc.docs[0].cardCountTotal || 0);
   }
 
