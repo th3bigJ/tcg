@@ -227,7 +227,14 @@ export function CardGrid({
 
         <div className="mx-auto flex h-full w-full max-w-[1460px] flex-col gap-3 px-2 py-2 md:grid md:grid-cols-[minmax(320px,1fr)_680px] md:items-center md:gap-8 md:px-20 md:py-3">
           <div className="md:hidden">
-            <p className="mb-1.5 text-center text-[11px] text-white/65">Swipe down to close.</p>
+            <button
+              type="button"
+              onClick={closeModal}
+              className="mb-1.5 block w-full bg-transparent text-center text-[11px] text-white/65"
+              aria-label="Close card preview"
+            >
+              Swipe down to close.
+            </button>
             <div className="flex items-start justify-between gap-3 rounded-lg border border-white/20 bg-black/40 p-3 text-white">
               <div className="min-w-0">
                 <h3 className="truncate text-xl font-semibold">
