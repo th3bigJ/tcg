@@ -41,3 +41,12 @@ body {
   contain-intrinsic-size: 140px 187px;
 }
 
+.card-viewer-overlay {
+  background-color: rgba(0, 0, 0, 0.92);
+}
+
+.card-viewer-icon-button {
+  border-radius: 9999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+

@@ -17,6 +17,8 @@ import { MasterCardList } from "./collections/MasterCardList";
 import { CardMedia } from "./collections/CardMedia";
 import { SetLogoMedia } from "./collections/SetLogoMedia";
 import { SetSymbolMedia } from "./collections/SetSymbolMedia";
+import { PokemonMedia } from "./collections/PokemonMedia";
+import { Pokemon } from "./collections/Pokemon";
 
 import { SiteSettings } from "./globals/SiteSettings";
 
@@ -31,6 +33,12 @@ if (process.env.NODE_ENV === "production" && !resolvedServerURL) {
 
 const hasR2Config =
   Boolean(process.env.R2_BUCKET) &&
+  Boolean(process.env.R2_ACCESS_KEY_ID) &&
+  Boolean(process.env.R2_SECRET_ACCESS_KEY) &&
+  Boolean(process.env.R2_ENDPOINT);
+
+const hasPokemonR2Config =
+  Boolean(process.env.R2_POKEMON_BUCKET) &&
   Boolean(process.env.R2_ACCESS_KEY_ID) &&
   Boolean(process.env.R2_SECRET_ACCESS_KEY) &&
   Boolean(process.env.R2_ENDPOINT);
@@ -53,6 +61,8 @@ export default buildConfig({
     CardMedia,
     SetLogoMedia,
     SetSymbolMedia,
+    PokemonMedia,
+    Pokemon,
     Brands,
     Series,
     Sets,
@@ -63,33 +73,56 @@ export default buildConfig({
   ],
   globals: [SiteSettings],
   editor: lexicalEditor(),
-  plugins: hasR2Config
-    ? [
-        s3Storage({
-          bucket: process.env.R2_BUCKET || "",
-          collections: {
-            "card-media": {
-              prefix: "cards",
+  plugins: [
+    ...(hasR2Config
+      ? [
+          s3Storage({
+            bucket: process.env.R2_BUCKET || "",
+            collections: {
+              "card-media": {
+                prefix: "cards",
+              },
+              "set-logo-media": {
+                prefix: "sets/logo",
+              },
+              "set-symbol-media": {
+                prefix: "sets/symbol",
+              },
             },
-            "set-logo-media": {
-              prefix: "sets/logo",
+            config: {
+              credentials: {
+                accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+                secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+              },
+              endpoint: process.env.R2_ENDPOINT,
+              forcePathStyle: true,
+              region: process.env.R2_REGION || "auto",
             },
-            "set-symbol-media": {
-              prefix: "sets/symbol",
+          }),
+        ]
+      : []),
+    ...(hasPokemonR2Config
+      ? [
+          s3Storage({
+            bucket: process.env.R2_POKEMON_BUCKET || "",
+            collections: {
+              "pokemon-media": {
+                prefix: "",
+              },
             },
-          },
-          config: {
-            credentials: {
-              accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
-              secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+            config: {
+              credentials: {
+                accessKeyId: process.env.R2_ACCESS_KEY_ID || "",
+                secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || "",
+              },
+              endpoint: process.env.R2_ENDPOINT,
+              forcePathStyle: true,
+              region: process.env.R2_REGION || "auto",
             },
-            endpoint: process.env.R2_ENDPOINT,
-            forcePathStyle: true,
-            region: process.env.R2_REGION || "auto",
-          },
-        }),
-      ]
-    : [],
+          }),
+        ]
+      : []),
+  ],
   secret: process.env.PAYLOAD_SECRET || "",
   db: postgresAdapter({
     pool: {

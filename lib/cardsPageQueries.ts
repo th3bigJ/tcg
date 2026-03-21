@@ -5,12 +5,20 @@ import { resolveMediaURL } from "@/lib/media";
 
 export type CardsPageCardEntry = {
   set: string;
+  setName?: string;
+  setLogoSrc?: string;
+  cardNumber?: string;
   filename: string;
   src: string;
   lowSrc: string;
   highSrc: string;
   rarity: string;
   cardName: string;
+  category?: string;
+  stage?: string;
+  hp?: number;
+  elementTypes?: string[];
+  dexIds?: number[];
 };
 
 type ImageRelation = {
@@ -25,6 +33,10 @@ export const CARDS_PER_PAGE = 80;
 
 const FILTER_FACETS_CACHE_KEY = "master-card-list-filter-facets-v1";
 const FILTER_FACETS_REVALIDATE_SEC = 300;
+const POKEMON_DEX_INDEX_CACHE_KEY = "master-card-list-pokemon-dex-index-v1";
+const POKEMON_DEX_INDEX_REVALIDATE_SEC = 300;
+const DEFAULT_CARD_ORDER_CACHE_KEY = "master-card-list-default-order-v1";
+const DEFAULT_CARD_ORDER_REVALIDATE_SEC = 300;
 
 function normalizeFilterValue(value: string): string {
   return value.trim().replace(/\s+/g, " ");
@@ -34,10 +46,17 @@ function toDocumentId(id: string | number): string {
   return typeof id === "string" ? id : String(id);
 }
 
-/**
- * Payload Postgres adapter does not support nested paths like `set.code` on relationships.
- * Resolve `sets.code` → document id, then filter with `set: { equals: id }`.
- */
+function getRelationshipDocumentId(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  if (value && typeof value === "object" && "id" in value) {
+    const id = (value as { id?: unknown }).id;
+    if (typeof id === "string") return id;
+    if (typeof id === "number") return String(id);
+  }
+  return null;
+}
+
 function buildMasterCardsWhere(
   setDocumentId: string | null,
   activeRarity: string,
@@ -65,17 +84,134 @@ function buildMasterCardsWhere(
   return { and: clauses };
 }
 
-async function loadFilterFacets(): Promise<{
-  setCodes: string[];
-  rarityDisplayValues: string[];
-}> {
+function extractDexIdValues(dexId: unknown): number[] {
+  if (!Array.isArray(dexId)) return [];
+
+  const toFiniteNumber = (value: unknown): number | null => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
+      const parsed = Number.parseInt(value.trim(), 10);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+    return null;
+  };
+
+  const values: number[] = [];
+  for (const item of dexId) {
+    const direct = toFiniteNumber(item);
+    if (direct !== null) {
+      values.push(direct);
+      continue;
+    }
+
+    if (item && typeof item === "object" && "value" in item) {
+      const nested = toFiniteNumber((item as { value?: unknown }).value);
+      if (nested !== null) values.push(nested);
+    }
+  }
+
+  return values;
+}
+
+type PokemonDexIndexEntry = {
+  id: string;
+  setId: string | null;
+  rarity: string;
+  cardNameLower: string;
+};
+
+type PokemonDexIndex = Record<string, PokemonDexIndexEntry[]>;
+
+async function loadPokemonDexIndex(): Promise<PokemonDexIndex> {
   const payloadConfig = (await import("../payload.config")).default;
   const { getPayload } = await import("payload");
   const payload = await getPayload({ config: payloadConfig });
 
-  const setCodesSeen = new Set<string>();
-  const rarityMap = new Map<string, string>();
+  const index: PokemonDexIndex = {};
 
+  let page = 1;
+  let hasNextPage = true;
+  while (hasNextPage) {
+    const result = await payload.find({
+      collection: "master-card-list",
+      depth: 0,
+      limit: 1000,
+      page,
+      overrideAccess: true,
+      select: {
+        id: true,
+        set: true,
+        rarity: true,
+        cardName: true,
+        dexId: true,
+      },
+      where: {
+        imageLow: {
+          exists: true,
+        },
+      },
+      sort: "id",
+    });
+
+    for (const doc of result.docs) {
+      const docId = getRelationshipDocumentId((doc as { id?: unknown }).id);
+      if (!docId) continue;
+
+      const entry: PokemonDexIndexEntry = {
+        id: docId,
+        setId: getRelationshipDocumentId((doc as { set?: unknown }).set),
+        rarity: typeof doc.rarity === "string" ? doc.rarity.trim() : "",
+        cardNameLower:
+          typeof doc.cardName === "string" ? doc.cardName.trim().toLocaleLowerCase() : "",
+      };
+
+      const dexIds = extractDexIdValues((doc as { dexId?: unknown }).dexId);
+      for (const dexId of dexIds) {
+        const key = String(dexId);
+        if (!index[key]) index[key] = [];
+        index[key].push(entry);
+      }
+    }
+
+    hasNextPage = result.hasNextPage;
+    page += 1;
+  }
+
+  return index;
+}
+
+const getCachedPokemonDexIndex = unstable_cache(
+  async () => loadPokemonDexIndex(),
+  [POKEMON_DEX_INDEX_CACHE_KEY],
+  { revalidate: POKEMON_DEX_INDEX_REVALIDATE_SEC },
+);
+
+type DefaultCardOrderEntry = {
+  id: string;
+  setReleaseTimestamp: number;
+  setCode: string;
+  cardNumberRank: number;
+};
+
+function getCardNumberRank(cardNumber: unknown): number {
+  if (typeof cardNumber !== "string") return -1;
+  const trimmed = cardNumber.trim();
+  if (!trimmed) return -1;
+
+  const beforeSlash = trimmed.split("/")[0] ?? trimmed;
+  const match = beforeSlash.match(/\d+/);
+  if (!match) return -1;
+
+  const parsed = Number.parseInt(match[0], 10);
+  return Number.isFinite(parsed) ? parsed : -1;
+}
+
+async function loadDefaultCardOrder(): Promise<DefaultCardOrderEntry[]> {
+  const payloadConfig = (await import("../payload.config")).default;
+  const { getPayload } = await import("payload");
+  const payload = await getPayload({ config: payloadConfig });
+
+  const rows: DefaultCardOrderEntry[] = [];
   let page = 1;
   let hasNextPage = true;
 
@@ -87,7 +223,124 @@ async function loadFilterFacets(): Promise<{
       page,
       overrideAccess: true,
       select: {
+        id: true,
         set: true,
+        cardNumber: true,
+      },
+      where: {
+        imageLow: {
+          exists: true,
+        },
+      },
+      sort: "id",
+    });
+
+    for (const doc of result.docs) {
+      const id = getRelationshipDocumentId((doc as { id?: unknown }).id);
+      if (!id) continue;
+
+      const setReleaseTimestamp =
+        typeof doc.set === "object" &&
+        doc.set &&
+        "releaseDate" in doc.set &&
+        typeof doc.set.releaseDate === "string"
+          ? new Date(doc.set.releaseDate).getTime()
+          : 0;
+
+      const setCode =
+        typeof doc.set === "object" &&
+        doc.set &&
+        "code" in doc.set &&
+        typeof doc.set.code === "string"
+          ? doc.set.code
+          : "";
+
+      rows.push({
+        id,
+        setReleaseTimestamp: Number.isFinite(setReleaseTimestamp) ? setReleaseTimestamp : 0,
+        setCode,
+        cardNumberRank: getCardNumberRank((doc as { cardNumber?: unknown }).cardNumber),
+      });
+    }
+
+    hasNextPage = result.hasNextPage;
+    page += 1;
+  }
+
+  return rows.sort((a, b) => {
+    if (a.setReleaseTimestamp !== b.setReleaseTimestamp) {
+      return b.setReleaseTimestamp - a.setReleaseTimestamp;
+    }
+    if (a.setCode !== b.setCode) {
+      return a.setCode.localeCompare(b.setCode);
+    }
+    if (a.cardNumberRank !== b.cardNumberRank) {
+      return b.cardNumberRank - a.cardNumberRank;
+    }
+    return b.id.localeCompare(a.id);
+  });
+}
+
+const getCachedDefaultCardOrder = unstable_cache(
+  async () => loadDefaultCardOrder(),
+  [DEFAULT_CARD_ORDER_CACHE_KEY],
+  { revalidate: DEFAULT_CARD_ORDER_REVALIDATE_SEC },
+);
+
+async function loadFilterFacets(): Promise<{
+  setCodes: string[];
+  rarityDisplayValues: string[];
+}> {
+  const payloadConfig = (await import("../payload.config")).default;
+  const { getPayload } = await import("payload");
+  const payload = await getPayload({ config: payloadConfig });
+
+  const setCodesSeen = new Set<string>();
+  const rarityMap = new Map<string, string>();
+
+  const setsResult = await payload.find({
+    collection: "sets",
+    depth: 0,
+    limit: 2000,
+    page: 1,
+    overrideAccess: true,
+    select: {
+      code: true,
+      setImage: true,
+    },
+    where: {
+      and: [
+        {
+          code: {
+            exists: true,
+          },
+        },
+        {
+          setImage: {
+            exists: true,
+          },
+        },
+      ],
+    },
+    sort: "name",
+  });
+
+  for (const setDoc of setsResult.docs) {
+    const code = typeof setDoc.code === "string" ? setDoc.code.trim() : "";
+    if (code && code !== "unknown") setCodesSeen.add(code);
+  }
+
+  let page = 1;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const result = await payload.find({
+      collection: "master-card-list",
+      depth: 0,
+      limit: 1000,
+      page,
+      overrideAccess: true,
+      select: {
         rarity: true,
       },
       where: {
@@ -98,17 +351,6 @@ async function loadFilterFacets(): Promise<{
     });
 
     for (const doc of result.docs) {
-      const setCode =
-        typeof doc.set === "object" &&
-        doc.set &&
-        "code" in doc.set &&
-        typeof doc.set.code === "string"
-          ? doc.set.code
-          : null;
-      if (setCode && setCode !== "unknown") {
-        setCodesSeen.add(setCode);
-      }
-
       const rarity = typeof doc.rarity === "string" ? doc.rarity.trim() : "";
       if (rarity) {
         const normalizedDisplay = normalizeFilterValue(rarity);
@@ -141,6 +383,8 @@ export async function fetchMasterCardsPage(params: {
   activeSet: string;
   activeRarity: string;
   activeSearch: string;
+  activePokemonDex: number | null;
+  activePokemonName: string | null;
   page: number;
 }): Promise<{ entries: CardsPageCardEntry[]; totalDocs: number }> {
   const payloadConfig = (await import("../payload.config")).default;
@@ -161,42 +405,19 @@ export async function fetchMasterCardsPage(params: {
         },
       },
     });
+
     const setDoc = setMatch.docs[0];
-    if (!setDoc) {
-      return { entries: [], totalDocs: 0 };
-    }
+    if (!setDoc) return { entries: [], totalDocs: 0 };
     setDocumentId = toDocumentId(setDoc.id);
   }
 
-  const where = buildMasterCardsWhere(
-    setDocumentId,
-    params.activeRarity,
-    params.activeSearch,
-  );
+  const where = buildMasterCardsWhere(setDocumentId, params.activeRarity, params.activeSearch);
 
-  const result = await payload.find({
-    collection: "master-card-list",
-    depth: 1,
-    limit: CARDS_PER_PAGE,
-    page: params.page,
-    overrideAccess: true,
-    select: {
-      set: true,
-      imageLow: true,
-      imageHigh: true,
-      rarity: true,
-      cardName: true,
-    },
-    sort: "id",
-    where,
-  });
-
-  const entries: CardsPageCardEntry[] = [];
-
-  for (const doc of result.docs) {
+  const toEntry = (doc: Record<string, unknown>): CardsPageCardEntry | null => {
     const relation = isImageRelation(doc.imageLow) ? doc.imageLow : null;
     const lowUrl = typeof relation?.url === "string" ? relation.url : "";
-    if (!lowUrl) continue;
+    if (!lowUrl) return null;
+
     const highRelation = isImageRelation(doc.imageHigh) ? doc.imageHigh : null;
     const highUrl = typeof highRelation?.url === "string" ? highRelation.url : lowUrl;
 
@@ -204,7 +425,7 @@ export async function fetchMasterCardsPage(params: {
     const filename =
       (typeof relation?.filename === "string" && relation.filename) ||
       cleanPath.split("/").pop();
-    if (!filename) continue;
+    if (!filename) return null;
 
     const set =
       typeof doc.set === "object" &&
@@ -214,16 +435,183 @@ export async function fetchMasterCardsPage(params: {
         ? doc.set.code
         : "unknown";
 
-    entries.push({
+    return {
       set,
+      setName:
+        typeof doc.set === "object" &&
+        doc.set &&
+        "name" in doc.set &&
+        typeof doc.set.name === "string"
+          ? doc.set.name
+          : undefined,
+      setLogoSrc:
+        typeof doc.set === "object" &&
+        doc.set &&
+        "setImage" in doc.set &&
+        typeof doc.set.setImage === "object" &&
+        doc.set.setImage &&
+        "url" in doc.set.setImage &&
+        typeof doc.set.setImage.url === "string"
+          ? resolveMediaURL(doc.set.setImage.url)
+          : undefined,
+      cardNumber: typeof doc.cardNumber === "string" ? doc.cardNumber.trim() : undefined,
       filename,
       src: resolveMediaURL(lowUrl),
       lowSrc: resolveMediaURL(lowUrl),
       highSrc: resolveMediaURL(highUrl),
       rarity: typeof doc.rarity === "string" ? doc.rarity.trim() : "",
       cardName: typeof doc.cardName === "string" ? doc.cardName.trim() : "",
+      category: typeof doc.category === "string" ? doc.category.trim() : undefined,
+      stage: typeof doc.stage === "string" ? doc.stage.trim() : undefined,
+      hp: typeof doc.hp === "number" && Number.isFinite(doc.hp) ? doc.hp : undefined,
+      elementTypes: Array.isArray(doc.elementTypes)
+        ? doc.elementTypes.filter((item): item is string => typeof item === "string")
+        : undefined,
+      dexIds: extractDexIdValues((doc as { dexId?: unknown }).dexId),
+    };
+  };
+
+  if (params.activePokemonDex === null) {
+    const isDefaultUnfiltered =
+      !params.activeSet && !params.activeRarity && !params.activeSearch;
+    if (isDefaultUnfiltered) {
+      const orderedRows = await getCachedDefaultCardOrder();
+      const totalDocs = orderedRows.length;
+      const startIndex = (params.page - 1) * CARDS_PER_PAGE;
+      const endIndex = startIndex + CARDS_PER_PAGE;
+      const pageRows = orderedRows.slice(startIndex, endIndex);
+      const pageIds = pageRows.map((row) => row.id);
+      if (pageIds.length === 0) {
+        return { entries: [], totalDocs };
+      }
+
+      const pageResult = await payload.find({
+        collection: "master-card-list",
+        depth: 1,
+        limit: pageIds.length,
+        page: 1,
+        overrideAccess: true,
+        select: {
+          set: true,
+          imageLow: true,
+          imageHigh: true,
+          rarity: true,
+          cardNumber: true,
+          cardName: true,
+          category: true,
+          stage: true,
+          hp: true,
+          elementTypes: true,
+          dexId: true,
+        },
+        where: {
+          id: {
+            in: pageIds,
+          },
+        },
+      });
+
+      const docsById = new Map<string, Record<string, unknown>>();
+      for (const doc of pageResult.docs) {
+        const docId = getRelationshipDocumentId((doc as { id?: unknown }).id);
+        if (docId) docsById.set(docId, doc as unknown as Record<string, unknown>);
+      }
+
+      const entries = pageIds
+        .map((id) => docsById.get(id))
+        .filter((doc): doc is Record<string, unknown> => Boolean(doc))
+        .map((doc) => toEntry(doc))
+        .filter((entry): entry is CardsPageCardEntry => Boolean(entry));
+
+      return { entries, totalDocs };
+    }
+
+    const result = await payload.find({
+      collection: "master-card-list",
+      depth: 1,
+      limit: CARDS_PER_PAGE,
+      page: params.page,
+      overrideAccess: true,
+      select: {
+        set: true,
+        imageLow: true,
+        imageHigh: true,
+        rarity: true,
+        cardNumber: true,
+        cardName: true,
+        category: true,
+        stage: true,
+        hp: true,
+        elementTypes: true,
+        dexId: true,
+      },
+      sort: "id",
+      where,
     });
+
+    const entries = result.docs
+      .map((doc) => toEntry(doc as unknown as Record<string, unknown>))
+      .filter((entry): entry is CardsPageCardEntry => Boolean(entry));
+
+    return { entries, totalDocs: result.totalDocs };
   }
 
-  return { entries, totalDocs: result.totalDocs };
+  const dexIndex = await getCachedPokemonDexIndex();
+  const candidates = dexIndex[String(params.activePokemonDex)] ?? [];
+  const searchQuery = params.activeSearch.trim().toLocaleLowerCase();
+  const filteredCandidates = candidates.filter((entry) => {
+    if (setDocumentId && entry.setId !== setDocumentId) return false;
+    if (params.activeRarity && entry.rarity !== params.activeRarity) return false;
+    if (searchQuery && !entry.cardNameLower.includes(searchQuery)) return false;
+    return true;
+  });
+
+  const totalDocs = filteredCandidates.length;
+  const startIndex = (params.page - 1) * CARDS_PER_PAGE;
+  const endIndex = startIndex + CARDS_PER_PAGE;
+  const pageCandidates = filteredCandidates.slice(startIndex, endIndex);
+  if (pageCandidates.length === 0) {
+    return { entries: [], totalDocs };
+  }
+
+  const pageIds = pageCandidates.map((entry) => entry.id);
+  const pageResult = await payload.find({
+    collection: "master-card-list",
+    depth: 1,
+    limit: pageIds.length,
+    page: 1,
+    overrideAccess: true,
+    select: {
+      set: true,
+      imageLow: true,
+      imageHigh: true,
+      rarity: true,
+      cardNumber: true,
+      cardName: true,
+      category: true,
+      stage: true,
+      hp: true,
+      elementTypes: true,
+      dexId: true,
+    },
+    where: {
+      id: {
+        in: pageIds,
+      },
+    },
+  });
+
+  const docsById = new Map<string, Record<string, unknown>>();
+  for (const doc of pageResult.docs) {
+    const docId = getRelationshipDocumentId((doc as { id?: unknown }).id);
+    if (docId) docsById.set(docId, doc as unknown as Record<string, unknown>);
+  }
+
+  const entries = pageIds
+    .map((id) => docsById.get(id))
+    .filter((doc): doc is Record<string, unknown> => Boolean(doc))
+    .map((doc) => toEntry(doc))
+    .filter((entry): entry is CardsPageCardEntry => Boolean(entry));
+
+  return { entries, totalDocs };
 }

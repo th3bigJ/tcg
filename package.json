@@ -7,7 +7,7 @@
     "node": ">=20.9.0"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "dev:webpack": "next dev --webpack",
     "build": "next build",
     "start": "next start",
@@ -31,6 +31,8 @@
     "rewrite:set-slugs": "node --import tsx/esm scripts/rewriteSetSlugsFromName.ts",
     "merge:set-details": "node --import tsx/esm scripts/mergeSetDetails.ts",
     "sync:media:r2": "node --import tsx/esm scripts/syncMediaToR2.ts",
+    "setup:pokemon:media": "node --import tsx/esm scripts/setupPokemonMedia.ts",
+    "import:pokemon:csv": "node --import tsx/esm scripts/importPokemonCsv.ts",
     "payload": "payload",
     "migrate": "payload migrate",
     "migrate:create": "payload migrate:create"

@@ -1,12 +1,13 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { CardGrid } from "@/components/CardGrid";
+import { CardFiltersPanel } from "@/components/CardFiltersPanel";
 import {
   CARDS_PER_PAGE,
-  type CardsPageCardEntry,
   fetchMasterCardsPage,
   getCachedFilterFacets,
 } from "@/lib/cardsPageQueries";
-import { resolveMediaURL } from "@/lib/media";
+import { resolveMediaURL, resolvePokemonMediaURL } from "@/lib/media";
 
 type ImageRelation = {
   url?: string | null;
@@ -22,6 +23,12 @@ type SetFilterOption = {
   seriesName: string;
   cardCountOfficial: number | null;
   cardCountTotal: number | null;
+};
+
+type PokemonFilterOption = {
+  nationalDexNumber: number;
+  name: string;
+  imageUrl: string;
 };
 
 const isImageRelation = (value: unknown): value is ImageRelation =>
@@ -106,10 +113,61 @@ async function getSetFilterOptions(setCodes: string[]): Promise<SetFilterOption[
     });
 }
 
+async function getPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
+  const payloadConfig = (await import("../../../payload.config")).default;
+  const { getPayload } = await import("payload");
+  const payload = await getPayload({ config: payloadConfig });
+
+  const result = await payload.find({
+    collection: "pokemon",
+    depth: 1,
+    limit: 1200,
+    page: 1,
+    overrideAccess: true,
+    select: {
+      nationalDexNumber: true,
+      name: true,
+      pokemonMedia: true,
+      imageUrl: true,
+    },
+    sort: "nationalDexNumber",
+  });
+
+  const deduped = new Map<number, PokemonFilterOption>();
+
+  for (const doc of result.docs) {
+    const dex = typeof doc.nationalDexNumber === "number" ? doc.nationalDexNumber : null;
+    const name = typeof doc.name === "string" ? doc.name.trim() : "";
+    const mediaRelation = isImageRelation(doc.pokemonMedia) ? doc.pokemonMedia : null;
+    const mediaUrl = typeof mediaRelation?.url === "string" ? mediaRelation.url.trim() : "";
+    const fallbackUrl = typeof doc.imageUrl === "string" ? doc.imageUrl.trim() : "";
+    const imageUrl = mediaUrl || fallbackUrl;
+    if (!dex || !name || !imageUrl || deduped.has(dex)) continue;
+    deduped.set(dex, { nationalDexNumber: dex, name, imageUrl: resolvePokemonMediaURL(imageUrl) });
+  }
+
+  return [...deduped.values()].sort(
+    (a, b) => a.nationalDexNumber - b.nationalDexNumber || a.name.localeCompare(b.name),
+  );
+}
+
+const getCachedSetFilterOptions = unstable_cache(
+  async (setCodes: string[]) => getSetFilterOptions(setCodes),
+  ["cards-page-set-filter-options-v1"],
+  { revalidate: 300 },
+);
+
+const getCachedPokemonFilterOptions = unstable_cache(
+  async () => getPokemonFilterOptions(),
+  ["cards-page-pokemon-filter-options-v1"],
+  { revalidate: 300 },
+);
+
 type CardsPageProps = {
   searchParams?: Promise<{
     page?: string;
     set?: string;
+    pokemon?: string;
     rarity?: string;
     search?: string;
   }>;
@@ -118,67 +176,39 @@ type CardsPageProps = {
 export default async function CardsPage({ searchParams }: CardsPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const selectedSet = (resolvedSearchParams.set ?? "").trim();
+  const selectedPokemon = (resolvedSearchParams.pokemon ?? "").trim();
   const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();
   const selectedSearch = (resolvedSearchParams.search ?? "").trim();
   const { setCodes: availableSetCodes, rarityDisplayValues: rarityOptions } =
     await getCachedFilterFacets();
-  const setFilterOptions = await getSetFilterOptions(availableSetCodes);
+  const setFilterOptions = await getCachedSetFilterOptions(availableSetCodes);
+  const setLogosByCode = Object.fromEntries(
+    setFilterOptions.map((option) => [option.code, option.logoSrc]),
+  );
+  const pokemonFilterOptions = await getCachedPokemonFilterOptions();
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
+  const parsedPokemonDex = Number.parseInt(selectedPokemon, 10);
+  const hasSelectedPokemon = Number.isFinite(parsedPokemonDex) && parsedPokemonDex > 0;
+  const activePokemonOption = hasSelectedPokemon
+    ? pokemonFilterOptions.find(
+        (option) => option.nationalDexNumber === parsedPokemonDex,
+      ) ?? null
+    : null;
   const hasSelectedRarity = rarityOptions.includes(selectedRarity);
   const activeSet = hasSelectedSet ? selectedSet : "";
+  const activePokemon = hasSelectedPokemon ? String(parsedPokemonDex) : "";
+  const activePokemonDex = hasSelectedPokemon ? parsedPokemonDex : null;
+  const activePokemonName = activePokemonOption?.name ?? null;
   const activeRarity = hasSelectedRarity ? selectedRarity : "";
   const activeSearch = selectedSearch;
-  const activeSetOption = setFilterOptions.find((option) => option.code === activeSet) ?? null;
-  const groupedSetOptions = (() => {
-    const groups = new Map<string, SetFilterOption[]>();
-    for (const option of setFilterOptions) {
-      const key = option.seriesName || "Uncategorized";
-      const options = groups.get(key) ?? [];
-      options.push(option);
-      groups.set(key, options);
-    }
-
-    return [...groups.entries()]
-      .map(([seriesName, options]) => {
-        const sortedOptions = [...options].sort((a, b) => {
-          const yearA = a.releaseYear ?? 0;
-          const yearB = b.releaseYear ?? 0;
-          if (yearA !== yearB) return yearB - yearA;
-          return a.name.localeCompare(b.name);
-        });
-
-        return {
-          seriesName,
-          options: sortedOptions,
-          oldestYear: Math.min(...sortedOptions.map((option) => option.releaseYear ?? 9999)),
-        };
-      })
-      .sort((a, b) => {
-        // Newest series first: sort groups by the oldest set in each series (descending year).
-        if (a.oldestYear !== b.oldestYear) return b.oldestYear - a.oldestYear;
-        return a.seriesName.localeCompare(b.seriesName);
-      });
-  })();
-  const otherSetsInSeries = activeSetOption
-    ? setFilterOptions
-        .filter(
-          (option) =>
-            option.seriesName === activeSetOption.seriesName && option.code !== activeSetOption.code,
-        )
-        .sort((a, b) => {
-          const yearA = a.releaseYear ?? 0;
-          const yearB = b.releaseYear ?? 0;
-          if (yearA !== yearB) return yearB - yearA;
-          return a.name.localeCompare(b.name);
-        })
-    : [];
-
   const rawPageParsed = Number.parseInt(resolvedSearchParams.page ?? "1", 10);
   const requestedPage =
     Number.isFinite(rawPageParsed) && rawPageParsed > 0 ? rawPageParsed : 1;
 
   let { entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
     activeSet,
+    activePokemonDex,
+    activePokemonName,
     activeRarity,
     activeSearch,
     page: requestedPage,
@@ -190,6 +220,8 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   if (currentPage !== requestedPage) {
     ({ entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
       activeSet,
+      activePokemonDex,
+      activePokemonName,
       activeRarity,
       activeSearch,
       page: currentPage,
@@ -201,6 +233,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const createCardsHref = (page: number) => {
     const params = new URLSearchParams();
     if (activeSet) params.set("set", activeSet);
+    if (activePokemon) params.set("pokemon", activePokemon);
     if (activeRarity) params.set("rarity", activeRarity);
     if (activeSearch) params.set("search", activeSearch);
     if (page > 1) params.set("page", String(page));
@@ -210,7 +243,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const previousHref = createCardsHref(currentPage - 1);
   const nextHref = createCardsHref(currentPage + 1);
 
-  const changeSetHref = (() => {
+  const resetFiltersHref = (() => {
     const params = new URLSearchParams();
     if (activeRarity) params.set("rarity", activeRarity);
     if (activeSearch) params.set("search", activeSearch);
@@ -225,135 +258,30 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
           <aside className="flex min-h-0 h-full flex-col rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2">
             <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">Filters</h2>
-              {activeSetOption ? (
+              {activeSet || activePokemon ? (
                 <Link
-                  href={changeSetHref}
+                  href={resetFiltersHref}
                   prefetch={false}
                   className="inline-flex rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-2 py-1 text-xs font-medium transition hover:bg-[var(--foreground)]/18"
                 >
-                  Change set
+                  Clear
                 </Link>
               ) : null}
             </div>
-            <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto pr-1">
-              {activeSetOption ? (
-                <div className="flex flex-col gap-3">
-                  <div className="rounded-lg border border-[var(--foreground)]/15 bg-[var(--foreground)]/6 p-3 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
-                    <img
-                      src={activeSetOption.logoSrc}
-                      alt={activeSetOption.name}
-                      className="mx-auto h-16 w-full object-contain"
-                    />
-                  </div>
-                  <div className="rounded-lg border border-[var(--foreground)]/15 bg-[var(--foreground)]/4 p-4 text-xs shadow-[0_6px_20px_rgba(0,0,0,0.16)]">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold tracking-wide">{activeSetOption.name}</p>
-                      {activeSetOption.symbolSrc ? (
-                        <img
-                          src={activeSetOption.symbolSrc}
-                          alt={`${activeSetOption.name} symbol`}
-                          className="h-5 w-auto shrink-0 object-contain"
-                        />
-                      ) : null}
-                    </div>
-                    <dl className="space-y-2 text-[var(--foreground)]/85">
-                      <div className="flex items-center justify-between gap-2 rounded-md bg-[var(--foreground)]/6 px-2 py-1.5">
-                        <dt>Series</dt>
-                        <dd className="text-right font-medium">{activeSetOption.seriesName}</dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-2 rounded-md bg-[var(--foreground)]/6 px-2 py-1.5">
-                        <dt>Release year</dt>
-                        <dd className="font-medium">{activeSetOption.releaseYear ?? "Unknown"}</dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-2 rounded-md bg-[var(--foreground)]/6 px-2 py-1.5">
-                        <dt>Main Set Count</dt>
-                        <dd className="font-medium">{activeSetOption.cardCountOfficial ?? "Unknown"}</dd>
-                      </div>
-                      <div className="flex items-center justify-between gap-2 rounded-md bg-[var(--foreground)]/6 px-2 py-1.5">
-                        <dt>Master Set Count</dt>
-                        <dd className="font-medium">{activeSetOption.cardCountTotal ?? "Unknown"}</dd>
-                      </div>
-                    </dl>
-                  </div>
-                  {otherSetsInSeries.length > 0 ? (
-                    <div className="rounded-lg border border-[var(--foreground)]/15 bg-[var(--foreground)]/4 p-4 shadow-[0_6px_20px_rgba(0,0,0,0.12)]">
-                      <p className="mb-3 text-xs font-medium text-[var(--foreground)]/70">
-                        Other sets in this series
-                      </p>
-                      <ul className="grid grid-cols-2 gap-1.5">
-                        {otherSetsInSeries.map((setOption) => {
-                          const params = new URLSearchParams();
-                          params.set("set", setOption.code);
-                          if (activeRarity) params.set("rarity", activeRarity);
-                          if (activeSearch) params.set("search", activeSearch);
-                          const href = `/cards?${params.toString()}`;
-                          return (
-                            <li key={setOption.code}>
-                              <Link
-                                href={href}
-                                prefetch={false}
-                                className="flex items-center justify-center rounded-md border border-[var(--foreground)]/15 p-1.5 transition hover:bg-[var(--foreground)]/6"
-                                title={setOption.name}
-                                aria-label={`View ${setOption.name}`}
-                              >
-                                <img
-                                  src={setOption.logoSrc}
-                                  alt={setOption.name}
-                                  className="mx-auto h-7 w-auto max-w-[88px] object-contain"
-                                  loading="lazy"
-                                />
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-8">
-                  {groupedSetOptions.map((group) => (
-                    <section key={group.seriesName}>
-                      <h4 className="mb-3 text-[11px] font-semibold text-[var(--foreground)]/65">
-                        {group.seriesName}
-                      </h4>
-                      <ul className="grid grid-cols-2 gap-1.5">
-                        {group.options.map((setOption) => {
-                          const params = new URLSearchParams();
-                          params.set("set", setOption.code);
-                          if (activeRarity) params.set("rarity", activeRarity);
-                          if (activeSearch) params.set("search", activeSearch);
-                          const href = `/cards?${params.toString()}`;
-                          return (
-                            <li key={setOption.code}>
-                              <Link
-                                href={href}
-                                prefetch={false}
-                                className="flex items-center justify-center rounded-md border border-[var(--foreground)]/15 p-1.5 transition hover:bg-[var(--foreground)]/6"
-                                title={`${setOption.name}${setOption.releaseYear ? ` (${setOption.releaseYear})` : ""}`}
-                                aria-label={`Filter by ${setOption.name}`}
-                              >
-                                <img
-                                  src={setOption.logoSrc}
-                                  alt={setOption.name}
-                                  className="mx-auto h-7 w-auto max-w-[88px] object-contain"
-                                  loading="lazy"
-                                />
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </section>
-                  ))}
-                </div>
-              )}
-            </div>
+            <CardFiltersPanel
+              sets={setFilterOptions}
+              pokemon={pokemonFilterOptions}
+              activeSet={activeSet}
+              activePokemonDex={activePokemon}
+              activeRarity={activeRarity}
+              activeSearch={activeSearch}
+            />
           </aside>
           <section className="flex min-h-0 flex-col lg:pr-1">
             <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <form method="get" action="/cards" className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                 {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
+                {activePokemon ? <input type="hidden" name="pokemon" value={activePokemon} /> : null}
                 <input
                   type="search"
                   name="search"
@@ -408,11 +336,15 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 Showing {showingFrom}-{showingTo} of {filteredCount} card
                 {filteredCount === 1 ? "" : "s"} in {setFilterOptions.length} set
                 {setFilterOptions.length === 1 ? "" : "s"}
-                {activeSet || activeRarity || activeSearch ? " (filtered)" : ""}
+                {activeSet || activePokemon || activeRarity || activeSearch ? " (filtered)" : ""}
               </p>
             </div>
             <div className="scrollbar-hide min-h-0 overflow-y-auto">
-              <CardGrid cards={cardsForGrid} />
+              <CardGrid
+                cards={cardsForGrid}
+                setLogosByCode={setLogosByCode}
+                similarMode={activePokemon ? "pokemon" : "set"}
+              />
             </div>
             <div className="mt-4 shrink-0 flex items-center justify-between gap-3 text-sm">
               {currentPage > 1 ? (

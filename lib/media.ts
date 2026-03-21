@@ -1,10 +1,7 @@
 const trimTrailingSlash = (value: string): string => value.replace(/\/+$/, "");
 
-const getMediaBaseURL = (): string | null => {
-  const explicitBase =
-    process.env.R2_PUBLIC_BASE_URL ||
-    process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL ||
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
+const getFirstValidBaseURL = (candidates: Array<string | undefined>): string | null => {
+  const explicitBase = candidates.find((value) => Boolean(value));
 
   const hasPlaceholder =
     typeof explicitBase === "string" &&
@@ -17,11 +14,37 @@ const getMediaBaseURL = (): string | null => {
   return null;
 };
 
+const getMediaBaseURL = (): string | null =>
+  getFirstValidBaseURL([
+    process.env.R2_PUBLIC_BASE_URL,
+    process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL,
+    process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
+  ]);
+
+const getPokemonMediaBaseURL = (): string | null =>
+  getFirstValidBaseURL([
+    process.env.R2_POKEMON_PUBLIC_BASE_URL,
+    process.env.NEXT_PUBLIC_R2_POKEMON_PUBLIC_BASE_URL,
+    process.env.R2_PUBLIC_BASE_URL,
+    process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL,
+    process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
+  ]);
+
 export const resolveMediaURL = (value: string | null | undefined): string => {
   if (!value) return "";
   if (/^https?:\/\//i.test(value)) return value;
 
   const base = getMediaBaseURL();
+  if (!base) return value;
+
+  return `${base}/${value.replace(/^\/+/, "")}`;
+};
+
+export const resolvePokemonMediaURL = (value: string | null | undefined): string => {
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const base = getPokemonMediaBaseURL();
   if (!base) return value;
 
   return `${base}/${value.replace(/^\/+/, "")}`;
