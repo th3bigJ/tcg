@@ -63,11 +63,11 @@ export function CardsMobileControls({
             defaultValue={activeSearch}
             placeholder="Search card name"
             aria-label="Search card name"
-            className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 text-xs shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_8px_20px_rgba(0,0,0,0.18)] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20"
+            className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2.5 py-2 text-sm shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_8px_20px_rgba(0,0,0,0.18)] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20"
           />
           <button
             type="submit"
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 transition hover:bg-[var(--foreground)]/20"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 transition hover:bg-[var(--foreground)]/20"
             aria-label="Search"
           >
             <svg
@@ -88,7 +88,7 @@ export function CardsMobileControls({
           <Link
             href="/cards"
             prefetch={false}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-red-400/50 bg-red-500/15 text-red-300 transition hover:bg-red-500/25 hover:text-red-200"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-red-400/50 bg-red-500/15 text-red-300 transition hover:bg-red-500/25 hover:text-red-200"
             aria-label="Reset filters"
           >
             <svg
@@ -109,7 +109,7 @@ export function CardsMobileControls({
           <button
             type="button"
             onClick={() => setIsFilterModalOpen(true)}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 transition hover:bg-[var(--foreground)]/20"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 transition hover:bg-[var(--foreground)]/20"
             aria-label="Open filters"
           >
             <svg
@@ -139,7 +139,7 @@ export function CardsMobileControls({
               id="rarity-mobile"
               name="rarity"
               defaultValue={activeRarity}
-              className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 pr-7 text-xs shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 [appearance:none] [-webkit-appearance:none] [background-image:none]"
+              className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2.5 py-2 pr-8 text-sm shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 [appearance:none] [-webkit-appearance:none] [background-image:none]"
               onChange={(event) => event.currentTarget.form?.requestSubmit()}
             >
               <option value="">All rarities</option>
