@@ -4,7 +4,7 @@ Tracks which card sets have been imported into `master-card-list` and which are 
 
 | Set Code | Set Name | Status | Source | Created | Updated | Skipped | Image Links Updated | Last Imported (UTC) |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| base1 | Base Set | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| base1 | Base Set | completed | local-json + tcgdex-enrichment | 0 | 0 | 102 | 0 | 2026-03-20T22:53:32.130Z |
 | base2 | Jungle | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | base3 | Fossil | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | base4 | Base Set 2 | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
@@ -24,7 +24,7 @@ Tracks which card sets have been imported into `master-card-list` and which are 
 | bw8 | Plasma Storm | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | bw9 | Plasma Freeze | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | bwp | BW Black Star Promos | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| cel25 | Celebrations | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| cel25 | Celebrations | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 26 | 0 | 25 | 0 | 2026-03-20T23:38:45.372Z |
 | col1 | Call of Legends | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | dc1 | Double Crisis | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | det1 | Detective Pikachu | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
@@ -38,10 +38,10 @@ Tracks which card sets have been imported into `master-card-list` and which are 
 | dpp | DP Black Star Promos | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | dv1 | Dragon Vault | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | ecard1 | Expedition Base Set | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| ecard2 | Aquapolis | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| ecard2 | Aquapolis | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 17 | 0 | 169 | 0 | 2026-03-20T23:39:15.002Z |
 | ecard3 | Skyridge | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | ex1 | Ruby & Sapphire | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| ex10 | Unseen Forces | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| ex10 | Unseen Forces | completed | local-json + tcgdex-enrichment | 0 | 0 | 173 | 0 | 2026-03-20T22:53:34.224Z |
 | ex11 | Delta Species | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | ex12 | Legend Maker | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | ex13 | Holon Phantoms | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
@@ -79,7 +79,7 @@ Tracks which card sets have been imported into `master-card-list` and which are 
 | mcd21 | Macdonald's Collection 2021 | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | me1 | Mega Evolution | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | me2 | Phantasmal Flames | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| me2pt5 | Ascended Heroes | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 295 | 0 | 0 | 295 | 2026-03-20T11:38:47.967Z |
+| me2pt5 | Ascended Heroes | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | mep | MEP Black Star Promos | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | neo1 | Neo Genesis | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | neo2 | Neo Discovery | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
@@ -104,26 +104,26 @@ Tracks which card sets have been imported into `master-card-list` and which are 
 | rsv10pt5 | White Flare | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | ru1 | Pokémon Rumble | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | si1 | Southern Islands | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm1 | Sun & Moon | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm10 | Unbroken Bonds | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm11 | Unified Minds | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| sm1 | Sun & Moon | completed | local-json + tcgdex-enrichment | 0 | 0 | 173 | 0 | 2026-03-20T22:53:37.479Z |
+| sm10 | Unbroken Bonds | completed | local-json + tcgdex-enrichment | 0 | 0 | 242 | 0 | 2026-03-20T22:53:43.378Z |
+| sm11 | Unified Minds | completed | local-json + tcgdex-enrichment | 0 | 0 | 264 | 0 | 2026-03-20T22:53:45.818Z |
 | sm115 | Hidden Fates | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm12 | Cosmic Eclipse | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm2 | Guardians Rising | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm3 | Burning Shadows | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm35 | Shining Legends | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm4 | Crimson Invasion | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm5 | Ultra Prism | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm6 | Forbidden Light | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm7 | Celestial Storm | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm75 | Dragon Majesty | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm8 | Lost Thunder | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sm9 | Team Up | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| sm12 | Cosmic Eclipse | completed | local-json + tcgdex-enrichment | 0 | 0 | 273 | 0 | 2026-03-20T22:53:46.122Z |
+| sm2 | Guardians Rising | completed | local-json + tcgdex-enrichment | 0 | 0 | 186 | 0 | 2026-03-20T22:53:38.022Z |
+| sm3 | Burning Shadows | completed | local-json + tcgdex-enrichment | 0 | 0 | 182 | 0 | 2026-03-20T22:53:37.890Z |
+| sm35 | Shining Legends | completed | local-json + tcgdex-enrichment | 0 | 0 | 162 | 0 | 2026-03-20T22:54:15.653Z |
+| sm4 | Crimson Invasion | completed | local-json + tcgdex-enrichment | 0 | 0 | 126 | 0 | 2026-03-20T22:54:21.833Z |
+| sm5 | Ultra Prism | completed | local-json + tcgdex-enrichment | 0 | 0 | 182 | 0 | 2026-03-20T22:54:26.508Z |
+| sm6 | Forbidden Light | completed | local-json + tcgdex-enrichment | 0 | 0 | 153 | 0 | 2026-03-20T22:54:24.257Z |
+| sm7 | Celestial Storm | completed | local-json + tcgdex-enrichment | 0 | 0 | 190 | 0 | 2026-03-20T22:54:27.423Z |
+| sm75 | Dragon Majesty | completed | local-json + tcgdex-enrichment | 0 | 0 | 160 | 0 | 2026-03-20T22:54:15.503Z |
+| sm8 | Lost Thunder | completed | local-json + tcgdex-enrichment | 0 | 0 | 243 | 0 | 2026-03-20T22:54:31.696Z |
+| sm9 | Team Up | completed | local-json + tcgdex-enrichment | 0 | 0 | 200 | 0 | 2026-03-20T22:54:28.506Z |
 | sma | Yellow A Alternate | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| smp | SM Black Star Promos | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| smp | SM Black Star Promos | completed | local-json + tcgdex-enrichment | 0 | 0 | 257 | 0 | 2026-03-20T22:54:32.860Z |
 | sp | Sample | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | sv1 | Scarlet & Violet | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| sv10 | Destined Rivals | completed | local-json + tcgdex-enrichment | 244 | 0 | 0 | 244 | 2026-03-20T12:58:53.898Z |
+| sv10 | Destined Rivals | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | sv2 | Paldea Evolved | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | sv3 | Obsidian Flames | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | sv3pt5 | 151 | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
@@ -136,23 +136,23 @@ Tracks which card sets have been imported into `master-card-list` and which are 
 | sv8 | Surging Sparks | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | sv8pt5 | Prismatic Evolutions | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | sv9 | Journey Together | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| svp | SVP Black Star Promos | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| svp | SVP Black Star Promos | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 54 | 0 | 165 | 29 | 2026-03-20T23:40:50.554Z |
 | swsh1 | Sword & Shield | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| swsh10 | Astral Radiance | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| swsh11 | Lost Origin | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| swsh12 | Silver Tempest | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| swsh12pt5 | Crown Zenith | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| swsh10 | Astral Radiance | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 30 | 0 | 216 | 30 | 2026-03-20T23:42:14.265Z |
+| swsh11 | Lost Origin | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 30 | 0 | 217 | 30 | 2026-03-20T23:43:40.862Z |
+| swsh12 | Silver Tempest | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 30 | 0 | 215 | 30 | 2026-03-20T23:45:10.154Z |
+| swsh12pt5 | Crown Zenith | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 230 | 0 | 0 | 230 | 2026-03-21T00:08:36.552Z |
 | swsh2 | Rebel Clash | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | swsh3 | Darkness Ablaze | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | swsh35 | Champion's Path | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | swsh4 | Vivid Voltage | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| swsh45 | Shining Fates | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| swsh45 | Shining Fates | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 195 | 0 | 0 | 195 | 2026-03-20T23:55:46.031Z |
 | swsh5 | Battle Styles | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | swsh6 | Chilling Reign | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | swsh7 | Evolving Skies | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | swsh8 | Fusion Strike | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| swsh9 | Brilliant Stars | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| swshp | SWSH Black Star Promos | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| swsh9 | Brilliant Stars | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 30 | 0 | 186 | 30 | 2026-03-20T23:57:06.266Z |
+| swshp | SWSH Black Star Promos | completed | local-json + tcgdex-enrichment | 0 | 0 | 316 | 0 | 2026-03-20T22:55:17.246Z |
 | tk-bw-e | BW trainer Kit (Excadrill) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | tk-bw-z | BW trainer Kit (Zoroark) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | tk-dp-l | DP trainer Kit (Lucario) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
@@ -161,32 +161,32 @@ Tracks which card sets have been imported into `master-card-list` and which are 
 | tk-hs-r | HS trainer Kit (Raichu) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | tk-sm-l | SM trainer Kit (Lycanroc) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | tk-sm-r | SM trainer Kit (Alolan Raichu) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| tk-xy-b | XY trainer Kit (Bisharp) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| tk-xy-latia | XY trainer Kit (Latias) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| tk-xy-b | XY trainer Kit (Bisharp) | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 30 | 0 | 0 | 0 | 2026-03-20T22:08:06.651Z |
+| tk-xy-latia | XY trainer Kit (Latias) | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 30 | 0 | 0 | 0 | 2026-03-20T22:08:06.652Z |
 | tk-xy-latio | XY trainer Kit (Latios) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| tk-xy-n | XY trainer Kit (Noivern) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| tk-xy-n | XY trainer Kit (Noivern) | completed | tcgdex-data + local-json-images-with-tcgdex-fallback | 30 | 0 | 0 | 0 | 2026-03-20T22:08:06.685Z |
 | tk-xy-p | XY trainer Kit (Pikachu Libre) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | tk-xy-su | XY trainer Kit (Suicune) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | tk-xy-sy | XY trainer Kit (Sylveon) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | tk-xy-w | XY trainer Kit (Wigglytuff) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| tk1a | EX trainer Kit (Latias) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| tk1b | EX trainer Kit (Latios) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| tk2a | EX trainer Kit 2 (Plusle) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| tk2b | EX trainer Kit 2 (Minun) | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| tk1a | EX trainer Kit (Latias) | completed | local-json + tcgdex-enrichment | 10 | 0 | 10 | 10 | 2026-03-20T22:08:10.284Z |
+| tk1b | EX trainer Kit (Latios) | completed | local-json + tcgdex-enrichment | 10 | 0 | 10 | 10 | 2026-03-20T22:55:14.873Z |
+| tk2a | EX trainer Kit 2 (Plusle) | completed | local-json + tcgdex-enrichment | 12 | 0 | 12 | 12 | 2026-03-20T22:55:18.843Z |
+| tk2b | EX trainer Kit 2 (Minun) | completed | local-json + tcgdex-enrichment | 12 | 0 | 12 | 12 | 2026-03-20T22:55:18.022Z |
 | wp | W Promotional | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy0 | Kalos Starter Set | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy1 | XY | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy10 | Fates Collide | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy11 | Steam Siege | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy12 | Evolutions | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy2 | Flashfire | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy3 | Furious Fists | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy4 | Phantom Forces | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy5 | Primal Clash | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy6 | Roaring Skies | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy7 | Ancient Origins | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy8 | BREAKthrough | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xy9 | BREAKpoint | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| xy0 | Kalos Starter Set | completed | local-json + tcgdex-enrichment | 39 | 0 | 0 | 39 | 2026-03-20T23:02:53.804Z |
+| xy1 | XY | completed | local-json + tcgdex-enrichment | 146 | 0 | 0 | 146 | 2026-03-20T23:06:46.645Z |
+| xy10 | Fates Collide | completed | local-json + tcgdex-enrichment | 129 | 0 | 0 | 129 | 2026-03-20T23:06:15.669Z |
+| xy11 | Steam Siege | completed | local-json + tcgdex-enrichment | 116 | 0 | 0 | 116 | 2026-03-20T23:05:43.371Z |
+| xy12 | Evolutions | completed | local-json + tcgdex-enrichment | 113 | 0 | 0 | 113 | 2026-03-20T23:05:34.827Z |
+| xy2 | Flashfire | completed | local-json + tcgdex-enrichment | 110 | 0 | 0 | 110 | 2026-03-20T23:05:39.227Z |
+| xy3 | Furious Fists | completed | local-json + tcgdex-enrichment | 114 | 0 | 0 | 114 | 2026-03-20T23:05:39.011Z |
+| xy4 | Phantom Forces | completed | local-json + tcgdex-enrichment | 124 | 0 | 0 | 124 | 2026-03-20T23:06:02.330Z |
+| xy5 | Primal Clash | completed | local-json + tcgdex-enrichment | 164 | 0 | 0 | 164 | 2026-03-20T23:07:27.961Z |
+| xy6 | Roaring Skies | completed | local-json + tcgdex-enrichment | 112 | 0 | 0 | 112 | 2026-03-20T23:05:40.613Z |
+| xy7 | Ancient Origins | completed | local-json + tcgdex-enrichment | 101 | 0 | 0 | 101 | 2026-03-20T23:11:21.729Z |
+| xy8 | BREAKthrough | completed | local-json + tcgdex-enrichment | 165 | 0 | 0 | 165 | 2026-03-20T23:13:24.471Z |
+| xy9 | BREAKpoint | completed | local-json + tcgdex-enrichment | 126 | 0 | 0 | 126 | 2026-03-20T23:12:08.977Z |
 | xya | Yello A Alternate | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| xyp | XY Black Star Promos | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| zsv10pt5 | Black Bolt | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| xyp | XY Black Star Promos | completed | local-json + tcgdex-enrichment | 216 | 0 | 3 | 216 | 2026-03-20T23:14:55.047Z |
+| zsv10pt5 | Black Bolt | completed | local-json + tcgdex-enrichment | 172 | 0 | 172 | 172 | 2026-03-20T23:13:31.504Z |

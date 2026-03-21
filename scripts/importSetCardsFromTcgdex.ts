@@ -200,6 +200,7 @@ export default async function importSetCardsFromTcgdex() {
   const limitArg = getArg("limit");
   const limit = limitArg ? Number(limitArg) : undefined;
   const dryRun = process.argv.includes("--dry-run");
+  const skipExisting = process.argv.includes("--skip-existing");
 
   const payloadConfig = (await import("../payload.config")).default;
   const { getPayload } = await import("payload");
@@ -334,6 +335,10 @@ export default async function importSetCardsFromTcgdex() {
     let masterId: RelId | undefined;
     if (existing.totalDocs > 0) {
       masterId = existing.docs[0].id;
+      if (skipExisting) {
+        skipped++;
+        continue;
+      }
       if (!dryRun) {
         await payload.update({
           collection: "master-card-list",

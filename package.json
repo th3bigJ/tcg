@@ -14,6 +14,9 @@
     "seed:cards": "node --import tsx/esm scripts/seedCards.ts",
     "import:cards:tcgdex": "node --import tsx/esm scripts/importSetCardsFromTcgdex.ts",
     "status:cards:refresh": "node --import tsx/esm scripts/refreshCardImportStatus.ts",
+    "audit:sets:completeness": "node --import tsx/esm scripts/auditSetImportCompleteness.ts",
+    "audit:cards:external-id-dupes": "node --import tsx/esm scripts/auditMasterCardExternalIdDuplicates.ts",
+    "dedupe:swsh12pt5": "node --import tsx/esm scripts/dedupeSwsh12pt5MasterCards.ts",
     "import:cards:json": "node --import tsx/esm scripts/importSetCardsFromJson.ts",
     "seed:cards:all-sets": "node --import tsx/esm scripts/seedAllSetCards.ts",
     "seed:card-images": "node --import tsx/esm scripts/seedCardImages.ts",
@@ -50,6 +53,8 @@
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.0",
+    "@types/pg": "^8.11.10",
+    "pg": "^8.13.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

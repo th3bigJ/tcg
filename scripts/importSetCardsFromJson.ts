@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { spawn } from "child_process";
 import nextEnvImport from "@next/env";
 import TCGdex from "@tcgdex/sdk";
 import type { Payload } from "payload";
@@ -142,6 +143,39 @@ const loadJsonCards = async (filePath: string): Promise<JsonCard[]> => {
   return parsed as JsonCard[];
 };
 
+const fileExists = async (filePath: string): Promise<boolean> => {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const runTcgdexFallbackImport = async (params: {
+  setCode: string;
+  dryRun: boolean;
+  limit?: number;
+  skipExisting?: boolean;
+}): Promise<void> => {
+  const scriptPath = path.resolve(process.cwd(), "scripts/importSetCardsFromTcgdex.ts");
+  const args = ["--import", "tsx/esm", scriptPath, `--set=${params.setCode}`];
+  if (typeof params.limit === "number" && Number.isFinite(params.limit) && params.limit > 0) {
+    args.push(`--limit=${params.limit}`);
+  }
+  if (params.dryRun) args.push("--dry-run");
+  if (params.skipExisting) args.push("--skip-existing");
+
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(process.execPath, args, { stdio: "inherit" });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`TCGdex fallback import failed with exit code ${code ?? "unknown"}`));
+    });
+  });
+};
+
 const getCardMediaId = async (
   payload: Payload,
   params: {
@@ -192,10 +226,18 @@ export default async function importSetCardsFromJson() {
 
   const setCode = getArg("set") || "base1";
   const dryRun = process.argv.includes("--dry-run");
+  const skipExisting = process.argv.includes("--skip-existing");
   const limitArg = getArg("limit");
   const limit = limitArg ? Number(limitArg) : undefined;
   const sourceFile = path.resolve(process.cwd(), `data/cards/en/${setCode}.json`);
   const reportPath = path.resolve(process.cwd(), `docs/card-import-report-${setCode}.md`);
+
+  const hasLocalJson = await fileExists(sourceFile);
+  if (!hasLocalJson) {
+    console.log(`Local JSON missing for set=${setCode}; falling back to TCGdex import.`);
+    await runTcgdexFallbackImport({ setCode, dryRun, limit, skipExisting });
+    return;
+  }
 
   const jsonCards = await loadJsonCards(sourceFile);
   const tcgdex = new TCGdex("en");
@@ -250,6 +292,7 @@ export default async function importSetCardsFromJson() {
 
   let created = 0;
   let updated = 0;
+  let skippedExisting = 0;
   let unmatched = 0;
   let ambiguous = 0;
   let errors = 0;
@@ -370,6 +413,10 @@ export default async function importSetCardsFromJson() {
       let masterId: RelId;
       if (existing.totalDocs > 0) {
         masterId = existing.docs[0].id;
+        if (skipExisting) {
+          skippedExisting++;
+          continue;
+        }
         await payload!.update({
           collection: "master-card-list",
           id: masterId,
@@ -424,6 +471,7 @@ export default async function importSetCardsFromJson() {
   reportLines.push("");
   reportLines.push(`- Created: ${created}`);
   reportLines.push(`- Updated: ${updated}`);
+  reportLines.push(`- Skipped Existing: ${skippedExisting}`);
   reportLines.push(`- Unmatched: ${unmatched}`);
   reportLines.push(`- Ambiguous: ${ambiguous}`);
   reportLines.push(`- Errors: ${errors}`);
@@ -436,7 +484,7 @@ export default async function importSetCardsFromJson() {
       source: "local-json + tcgdex-enrichment",
       created,
       updated,
-      skipped: unmatched + ambiguous + errors,
+      skipped: skippedExisting + unmatched + ambiguous + errors,
       imageLinksUpdated: created + updated,
     });
   }
@@ -445,6 +493,7 @@ export default async function importSetCardsFromJson() {
   console.log(`Import complete for set=${setCode} (${dryRun ? "dry-run" : "write mode"})`);
   console.log(`Created: ${created}`);
   console.log(`Updated: ${updated}`);
+  console.log(`Skipped Existing: ${skippedExisting}`);
   console.log(`Unmatched: ${unmatched}`);
   console.log(`Ambiguous: ${ambiguous}`);
   console.log(`Errors: ${errors}`);

@@ -25,3 +25,13 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Scroll areas keep scrolling but hide visible scrollbars (WebKit + Firefox). */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+

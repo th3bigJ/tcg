@@ -72,10 +72,10 @@ export function CardGrid({ cards }: { cards: CardEntry[] }) {
 
   return (
     <>
-      <ul className="grid grid-cols-5 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
+      <ul className="grid grid-cols-5 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8">
         {normalizedCards.map((card, index) => (
           <li
-            key={`${card.set}/${card.filename}`}
+            key={`${card.set}/${card.filename}/${index}`}
             className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md"
           >
             <div className="pointer-events-none absolute inset-0">

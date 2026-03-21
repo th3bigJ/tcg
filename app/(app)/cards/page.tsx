@@ -9,7 +9,6 @@ type CardEntry = {
   lowSrc: string;
   highSrc: string;
   rarity: string;
-  illustrator: string;
   cardName: string;
 };
 
@@ -22,14 +21,40 @@ type SetFilterOption = {
   code: string;
   name: string;
   logoSrc: string;
+  symbolSrc: string;
+  releaseYear: number | null;
+  seriesName: string;
+  cardCountOfficial: number | null;
+  cardCountTotal: number | null;
 };
 
-const CARDS_PER_PAGE = 120;
+const normalizeFilterValue = (value: string): string => value.trim().replace(/\s+/g, " ");
+
+function getUniqueRarityOptions(cards: CardEntry[]): string[] {
+  const rarityMap = new Map<string, string>();
+
+  for (const card of cards) {
+    const normalizedDisplay = normalizeFilterValue(card.rarity);
+    if (!normalizedDisplay) continue;
+    const normalizedKey = normalizedDisplay.toLocaleLowerCase();
+    if (!rarityMap.has(normalizedKey)) {
+      rarityMap.set(normalizedKey, normalizedDisplay);
+    }
+  }
+
+  return [...rarityMap.values()].sort((a, b) => a.localeCompare(b));
+}
+
+const CARDS_PER_PAGE = 80;
+const LOW_RES_CACHE_TTL_MS = 5 * 60 * 1000;
+
+let lowResCardsCache: { value: CardEntry[]; expiresAt: number } | null = null;
+let lowResCardsPending: Promise<CardEntry[]> | null = null;
 
 const isImageRelation = (value: unknown): value is ImageRelation =>
   Boolean(value) && typeof value === "object";
 
-async function getLowResCards(): Promise<CardEntry[]> {
+async function loadLowResCards(): Promise<CardEntry[]> {
   const payloadConfig = (await import("../../../payload.config")).default;
   const { getPayload } = await import("payload");
   const payload = await getPayload({ config: payloadConfig });
@@ -50,7 +75,6 @@ async function getLowResCards(): Promise<CardEntry[]> {
         imageLow: true,
         imageHigh: true,
         rarity: true,
-        artist: true,
         cardName: true,
       },
       where: {
@@ -88,7 +112,6 @@ async function getLowResCards(): Promise<CardEntry[]> {
         lowSrc: resolveMediaURL(lowUrl),
         highSrc: resolveMediaURL(highUrl),
         rarity: typeof doc.rarity === "string" ? doc.rarity.trim() : "",
-        illustrator: typeof doc.artist === "string" ? doc.artist.trim() : "",
         cardName: typeof doc.cardName === "string" ? doc.cardName.trim() : "",
       });
     }
@@ -101,6 +124,32 @@ async function getLowResCards(): Promise<CardEntry[]> {
     if (a.set !== b.set) return a.set.localeCompare(b.set);
     return a.filename.localeCompare(b.filename, undefined, { numeric: true });
   });
+}
+
+async function getLowResCards(): Promise<CardEntry[]> {
+  const now = Date.now();
+
+  if (lowResCardsCache && lowResCardsCache.expiresAt > now) {
+    return lowResCardsCache.value;
+  }
+
+  if (lowResCardsPending) {
+    return lowResCardsPending;
+  }
+
+  lowResCardsPending = loadLowResCards()
+    .then((cards) => {
+      lowResCardsCache = {
+        value: cards,
+        expiresAt: Date.now() + LOW_RES_CACHE_TTL_MS,
+      };
+      return cards;
+    })
+    .finally(() => {
+      lowResCardsPending = null;
+    });
+
+  return lowResCardsPending;
 }
 
 async function getSetFilterOptions(setCodes: string[]): Promise<SetFilterOption[]> {
@@ -119,6 +168,11 @@ async function getSetFilterOptions(setCodes: string[]): Promise<SetFilterOption[
       code: true,
       name: true,
       setImage: true,
+      symbolImage: true,
+      releaseDate: true,
+      cardCountTotal: true,
+      cardCountOfficial: true,
+      serieName: true,
     },
     where: {
       and: [
@@ -142,15 +196,39 @@ async function getSetFilterOptions(setCodes: string[]): Promise<SetFilterOption[
       const name = typeof doc.name === "string" ? doc.name : code;
       const image = isImageRelation(doc.setImage) ? doc.setImage : null;
       const imageUrl = typeof image?.url === "string" ? image.url : "";
+      const symbolImage = isImageRelation(doc.symbolImage) ? doc.symbolImage : null;
+      const symbolUrl = typeof symbolImage?.url === "string" ? symbolImage.url : "";
+      const releaseYear =
+        typeof doc.releaseDate === "string" ? new Date(doc.releaseDate).getUTCFullYear() : null;
+      const seriesName =
+        typeof doc.serieName === "object" &&
+        doc.serieName &&
+        "name" in doc.serieName &&
+        typeof doc.serieName.name === "string"
+          ? doc.serieName.name
+          : "Uncategorized";
+      const cardCountOfficial =
+        typeof doc.cardCountOfficial === "number" ? doc.cardCountOfficial : null;
+      const cardCountTotal = typeof doc.cardCountTotal === "number" ? doc.cardCountTotal : null;
       if (!code || !imageUrl) return null;
       return {
         code,
         name,
         logoSrc: resolveMediaURL(imageUrl),
+        symbolSrc: symbolUrl ? resolveMediaURL(symbolUrl) : "",
+        releaseYear: Number.isFinite(releaseYear) ? releaseYear : null,
+        seriesName,
+        cardCountOfficial,
+        cardCountTotal,
       };
     })
     .filter((option): option is SetFilterOption => Boolean(option))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => {
+      const yearA = a.releaseYear ?? 0;
+      const yearB = b.releaseYear ?? 0;
+      if (yearA !== yearB) return yearB - yearA;
+      return a.name.localeCompare(b.name);
+    });
 }
 
 type CardsPageProps = {
@@ -158,7 +236,6 @@ type CardsPageProps = {
     page?: string;
     set?: string;
     rarity?: string;
-    illustrator?: string;
     search?: string;
   }>;
 };
@@ -168,29 +245,66 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const cards = await getLowResCards();
   const selectedSet = (resolvedSearchParams.set ?? "").trim();
   const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();
-  const selectedIllustrator = (resolvedSearchParams.illustrator ?? "").trim();
   const selectedSearch = (resolvedSearchParams.search ?? "").trim();
   const availableSetCodes = [...new Set(cards.map((card) => card.set))].filter(
     (setCode) => setCode && setCode !== "unknown",
   );
-  const rarityOptions = [...new Set(cards.map((card) => card.rarity))].filter(Boolean).sort();
-  const illustratorOptions = [...new Set(cards.map((card) => card.illustrator))]
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b));
+  const rarityOptions = getUniqueRarityOptions(cards);
   const setFilterOptions = await getSetFilterOptions(availableSetCodes);
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
   const hasSelectedRarity = rarityOptions.includes(selectedRarity);
-  const hasSelectedIllustrator = illustratorOptions.includes(selectedIllustrator);
   const activeSet = hasSelectedSet ? selectedSet : "";
   const activeRarity = hasSelectedRarity ? selectedRarity : "";
-  const activeIllustrator = hasSelectedIllustrator ? selectedIllustrator : "";
   const activeSearch = selectedSearch;
   const activeSearchLower = activeSearch.toLocaleLowerCase();
+  const activeSetOption = setFilterOptions.find((option) => option.code === activeSet) ?? null;
+  const groupedSetOptions = (() => {
+    const groups = new Map<string, SetFilterOption[]>();
+    for (const option of setFilterOptions) {
+      const key = option.seriesName || "Uncategorized";
+      const options = groups.get(key) ?? [];
+      options.push(option);
+      groups.set(key, options);
+    }
+
+    return [...groups.entries()]
+      .map(([seriesName, options]) => {
+        const sortedOptions = [...options].sort((a, b) => {
+          const yearA = a.releaseYear ?? 0;
+          const yearB = b.releaseYear ?? 0;
+          if (yearA !== yearB) return yearB - yearA;
+          return a.name.localeCompare(b.name);
+        });
+
+        return {
+          seriesName,
+          options: sortedOptions,
+          oldestYear: Math.min(...sortedOptions.map((option) => option.releaseYear ?? 9999)),
+        };
+      })
+      .sort((a, b) => {
+        // Newest series first: sort groups by the oldest set in each series (descending year).
+        if (a.oldestYear !== b.oldestYear) return b.oldestYear - a.oldestYear;
+        return a.seriesName.localeCompare(b.seriesName);
+      });
+  })();
+  const otherSetsInSeries = activeSetOption
+    ? setFilterOptions
+        .filter(
+          (option) =>
+            option.seriesName === activeSetOption.seriesName && option.code !== activeSetOption.code,
+        )
+        .sort((a, b) => {
+          const yearA = a.releaseYear ?? 0;
+          const yearB = b.releaseYear ?? 0;
+          if (yearA !== yearB) return yearB - yearA;
+          return a.name.localeCompare(b.name);
+        })
+    : [];
 
   const filteredCards = cards.filter((card) => {
     if (activeSet && card.set !== activeSet) return false;
     if (activeRarity && card.rarity !== activeRarity) return false;
-    if (activeIllustrator && card.illustrator !== activeIllustrator) return false;
     if (activeSearchLower && !card.cardName.toLocaleLowerCase().includes(activeSearchLower)) {
       return false;
     }
@@ -209,7 +323,6 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     const params = new URLSearchParams();
     if (activeSet) params.set("set", activeSet);
     if (activeRarity) params.set("rarity", activeRarity);
-    if (activeIllustrator) params.set("illustrator", activeIllustrator);
     if (activeSearch) params.set("search", activeSearch);
     if (page > 1) params.set("page", String(page));
     const query = params.toString();
@@ -218,159 +331,215 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const previousHref = createCardsHref(currentPage - 1);
   const nextHref = createCardsHref(currentPage + 1);
 
+  const changeSetHref = (() => {
+    const params = new URLSearchParams();
+    if (activeRarity) params.set("rarity", activeRarity);
+    if (activeSearch) params.set("search", activeSearch);
+    const query = params.toString();
+    return query ? `/cards?${query}` : "/cards";
+  })();
+
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--background)] text-[var(--foreground)]">
-      <header className="shrink-0 border-b border-[var(--foreground)]/10 bg-[var(--background)] px-4 py-4">
-        <div className="flex w-full items-center justify-between">
-          <h1 className="text-xl font-semibold">Low-res card gallery</h1>
-          <Link
-            href="/"
-            className="text-sm underline underline-offset-2 hover:no-underline"
-          >
-            ← Home
-          </Link>
-        </div>
-      </header>
-      <main className="min-h-0 flex-1 w-full px-4 py-6">
-        <div className="grid h-full items-start gap-4 lg:grid-cols-[20%_minmax(0,1fr)]">
-          <aside className="rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2 lg:min-h-0 lg:overflow-y-auto">
-            <h2 className="mb-3 text-sm font-semibold">Filters</h2>
-            <form method="get" action="/cards" className="mb-3 space-y-2 rounded-md border border-[var(--foreground)]/10 p-2">
-              <div>
-                <label htmlFor="search" className="mb-1 block text-xs font-medium text-[var(--foreground)]/80">
-                  Search card name
-                </label>
-                <input
-                  id="search"
-                  name="search"
-                  type="search"
-                  defaultValue={activeSearch}
-                  placeholder="e.g. Charizard"
-                  className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 text-xs"
-                />
-              </div>
-              <div>
-                <label htmlFor="rarity" className="mb-1 block text-xs font-medium text-[var(--foreground)]/80">
-                  Rarity
-                </label>
-                <select
-                  id="rarity"
-                  name="rarity"
-                  defaultValue={activeRarity}
-                  className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 text-xs"
+    <div className="flex h-screen flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+      <main className="min-h-0 w-full flex-1 overflow-hidden px-4 py-4">
+        <div className="grid h-full min-h-0 items-stretch gap-4 lg:grid-cols-[20%_minmax(0,1fr)]">
+          <aside className="flex min-h-0 h-full flex-col rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2">
+            <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold">Filters</h2>
+              {activeSetOption ? (
+                <Link
+                  href={changeSetHref}
+                  prefetch={false}
+                  className="inline-flex rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-2 py-1 text-xs font-medium transition hover:bg-[var(--foreground)]/18"
                 >
-                  <option value="">All rarities</option>
-                  {rarityOptions.map((rarity) => (
-                    <option key={rarity} value={rarity}>
-                      {rarity}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="illustrator"
-                  className="mb-1 block text-xs font-medium text-[var(--foreground)]/80"
-                >
-                  Illustrator
-                </label>
-                <select
-                  id="illustrator"
-                  name="illustrator"
-                  defaultValue={activeIllustrator}
-                  className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 text-xs"
-                >
-                  <option value="">All illustrators</option>
-                  {illustratorOptions.map((illustrator) => (
-                    <option key={illustrator} value={illustrator}>
-                      {illustrator}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
-              <button
-                type="submit"
-                className="w-full rounded-md border border-[var(--foreground)]/20 px-2 py-1.5 text-xs font-medium hover:bg-[var(--foreground)]/5"
-              >
-                Apply filters
-              </button>
-              <Link
-                href="/cards"
-                className="block text-center text-xs text-[var(--foreground)]/70 underline underline-offset-2 hover:no-underline"
-              >
-                Clear all filters
-              </Link>
-            </form>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]/70">
-              Set
-            </h3>
-            <div className="space-y-2">
-              <Link
-                href={
-                  (() => {
-                    const params = new URLSearchParams();
-                    if (activeRarity) params.set("rarity", activeRarity);
-                    if (activeIllustrator) params.set("illustrator", activeIllustrator);
-                    if (activeSearch) params.set("search", activeSearch);
-                    const query = params.toString();
-                    return query ? `/cards?${query}` : "/cards";
-                  })()
-                }
-                className={`flex items-center justify-center rounded-md border px-2 py-1.5 text-xs transition hover:bg-[var(--foreground)]/5 ${
-                  activeSet
-                    ? "border-[var(--foreground)]/15"
-                    : "border-[var(--foreground)]/30 bg-[var(--foreground)]/10 font-semibold"
-                }`}
-              >
-                All sets
-              </Link>
-              <ul className="grid grid-cols-2 gap-1.5">
-                {setFilterOptions.map((setOption) => {
-                  const isActive = activeSet === setOption.code;
-                  const params = new URLSearchParams();
-                  params.set("set", setOption.code);
-                  if (activeRarity) params.set("rarity", activeRarity);
-                  if (activeIllustrator) params.set("illustrator", activeIllustrator);
-                  if (activeSearch) params.set("search", activeSearch);
-                  const href = `/cards?${params.toString()}`;
-                  return (
-                    <li key={setOption.code}>
-                      <Link
-                        href={href}
-                        className={`flex items-center justify-center rounded-md border p-1.5 transition hover:bg-[var(--foreground)]/5 ${
-                          isActive
-                            ? "border-[var(--foreground)]/30 bg-[var(--foreground)]/10"
-                            : "border-[var(--foreground)]/15"
-                        }`}
-                        title={setOption.name}
-                        aria-label={`Filter by ${setOption.name}`}
-                      >
+                  Change set
+                </Link>
+              ) : null}
+            </div>
+            <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto pr-1">
+              {activeSetOption ? (
+                <div className="flex flex-col gap-3">
+                  <div className="rounded-lg border border-[var(--foreground)]/15 bg-[var(--foreground)]/6 p-3 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+                    <img
+                      src={activeSetOption.logoSrc}
+                      alt={activeSetOption.name}
+                      className="mx-auto h-16 w-full object-contain"
+                    />
+                  </div>
+                  <div className="rounded-lg border border-[var(--foreground)]/15 bg-[var(--foreground)]/4 p-4 text-xs shadow-[0_6px_20px_rgba(0,0,0,0.16)]">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold tracking-wide">{activeSetOption.name}</p>
+                      {activeSetOption.symbolSrc ? (
                         <img
-                          src={setOption.logoSrc}
-                          alt={setOption.name}
-                          className="mx-auto h-7 w-auto max-w-[88px] object-contain"
-                          loading="lazy"
+                          src={activeSetOption.symbolSrc}
+                          alt={`${activeSetOption.name} symbol`}
+                          className="h-5 w-auto shrink-0 object-contain"
                         />
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+                      ) : null}
+                    </div>
+                    <dl className="space-y-2 text-[var(--foreground)]/85">
+                      <div className="flex items-center justify-between gap-2 rounded-md bg-[var(--foreground)]/6 px-2 py-1.5">
+                        <dt>Series</dt>
+                        <dd className="text-right font-medium">{activeSetOption.seriesName}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 rounded-md bg-[var(--foreground)]/6 px-2 py-1.5">
+                        <dt>Release year</dt>
+                        <dd className="font-medium">{activeSetOption.releaseYear ?? "Unknown"}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 rounded-md bg-[var(--foreground)]/6 px-2 py-1.5">
+                        <dt>Main Set Count</dt>
+                        <dd className="font-medium">{activeSetOption.cardCountOfficial ?? "Unknown"}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 rounded-md bg-[var(--foreground)]/6 px-2 py-1.5">
+                        <dt>Master Set Count</dt>
+                        <dd className="font-medium">{activeSetOption.cardCountTotal ?? "Unknown"}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                  {otherSetsInSeries.length > 0 ? (
+                    <div className="rounded-lg border border-[var(--foreground)]/15 bg-[var(--foreground)]/4 p-4 shadow-[0_6px_20px_rgba(0,0,0,0.12)]">
+                      <p className="mb-3 text-xs font-medium text-[var(--foreground)]/70">
+                        Other sets in this series
+                      </p>
+                      <ul className="grid grid-cols-2 gap-1.5">
+                        {otherSetsInSeries.map((setOption) => {
+                          const params = new URLSearchParams();
+                          params.set("set", setOption.code);
+                          if (activeRarity) params.set("rarity", activeRarity);
+                          if (activeSearch) params.set("search", activeSearch);
+                          const href = `/cards?${params.toString()}`;
+                          return (
+                            <li key={setOption.code}>
+                              <Link
+                                href={href}
+                                prefetch={false}
+                                className="flex items-center justify-center rounded-md border border-[var(--foreground)]/15 p-1.5 transition hover:bg-[var(--foreground)]/6"
+                                title={setOption.name}
+                                aria-label={`View ${setOption.name}`}
+                              >
+                                <img
+                                  src={setOption.logoSrc}
+                                  alt={setOption.name}
+                                  className="mx-auto h-7 w-auto max-w-[88px] object-contain"
+                                  loading="lazy"
+                                />
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-8">
+                  {groupedSetOptions.map((group) => (
+                    <section key={group.seriesName}>
+                      <h4 className="mb-3 text-[11px] font-semibold text-[var(--foreground)]/65">
+                        {group.seriesName}
+                      </h4>
+                      <ul className="grid grid-cols-2 gap-1.5">
+                        {group.options.map((setOption) => {
+                          const params = new URLSearchParams();
+                          params.set("set", setOption.code);
+                          if (activeRarity) params.set("rarity", activeRarity);
+                          if (activeSearch) params.set("search", activeSearch);
+                          const href = `/cards?${params.toString()}`;
+                          return (
+                            <li key={setOption.code}>
+                              <Link
+                                href={href}
+                                prefetch={false}
+                                className="flex items-center justify-center rounded-md border border-[var(--foreground)]/15 p-1.5 transition hover:bg-[var(--foreground)]/6"
+                                title={`${setOption.name}${setOption.releaseYear ? ` (${setOption.releaseYear})` : ""}`}
+                                aria-label={`Filter by ${setOption.name}`}
+                              >
+                                <img
+                                  src={setOption.logoSrc}
+                                  alt={setOption.name}
+                                  className="mx-auto h-7 w-auto max-w-[88px] object-contain"
+                                  loading="lazy"
+                                />
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              )}
             </div>
           </aside>
-          <section className="lg:min-h-0 lg:overflow-y-auto lg:pr-1">
-            <p className="mb-6 text-sm text-[var(--foreground)]/70">
-              Showing {showingFrom}-{showingTo} of {filteredCards.length} card
-              {filteredCards.length === 1 ? "" : "s"} in {setFilterOptions.length} set
-              {setFilterOptions.length === 1 ? "" : "s"}
-              {activeSet || activeRarity || activeIllustrator || activeSearch ? " (filtered)" : ""}
-            </p>
-            <CardGrid cards={paginatedCards} />
-            <div className="mt-6 flex items-center justify-between gap-3 text-sm">
+          <section className="flex min-h-0 flex-col lg:pr-1">
+            <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <form method="get" action="/cards" className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
+                <input
+                  type="search"
+                  name="search"
+                  defaultValue={activeSearch}
+                  placeholder="Search card name"
+                  aria-label="Search card name"
+                  className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 text-xs shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_8px_20px_rgba(0,0,0,0.18)] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 sm:w-72"
+                />
+                <div className="relative w-28 max-w-28 min-w-28">
+                  <select
+                    id="rarity"
+                    name="rarity"
+                    defaultValue={activeRarity}
+                    className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 pr-7 text-xs shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 [appearance:none] [-webkit-appearance:none] [background-image:none]"
+                  >
+                    <option value="">All rarities</option>
+                    {rarityOptions.map((rarity) => (
+                      <option key={rarity} value={rarity}>
+                        {rarity}
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--foreground)]/55"
+                    aria-hidden="true"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </div>
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--foreground)]/20"
+                >
+                  Search
+                </button>
+                <Link
+                  href="/cards"
+                  prefetch={false}
+                  className="inline-flex items-center justify-center rounded-md border border-red-400/50 bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-500/25 hover:text-red-200"
+                >
+                  Reset
+                </Link>
+              </form>
+              <p className="text-right text-sm text-[var(--foreground)]/70">
+                Showing {showingFrom}-{showingTo} of {filteredCards.length} card
+                {filteredCards.length === 1 ? "" : "s"} in {setFilterOptions.length} set
+                {setFilterOptions.length === 1 ? "" : "s"}
+                {activeSet || activeRarity || activeSearch ? " (filtered)" : ""}
+              </p>
+            </div>
+            <div className="scrollbar-hide min-h-0 overflow-y-auto">
+              <CardGrid cards={paginatedCards} />
+            </div>
+            <div className="mt-4 shrink-0 flex items-center justify-between gap-3 text-sm">
               {currentPage > 1 ? (
                 <Link
                   href={previousHref}
+                  prefetch={false}
                   className="rounded-md border border-[var(--foreground)]/20 px-3 py-2 hover:bg-[var(--foreground)]/5"
                 >
                   Previous
@@ -386,6 +555,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               {currentPage < totalPages ? (
                 <Link
                   href={nextHref}
+                  prefetch={false}
                   className="rounded-md border border-[var(--foreground)]/20 px-3 py-2 hover:bg-[var(--foreground)]/5"
                 >
                   Next
