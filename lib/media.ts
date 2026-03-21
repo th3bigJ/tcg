@@ -45,7 +45,7 @@ export const resolvePokemonMediaURL = (value: string | null | undefined): string
   if (/^https?:\/\//i.test(value)) return value;
 
   const base = getPokemonMediaBaseURL();
-  if (!base) return value;
+  if (!base) return value.startsWith("/") ? value : `/${value}`;
 
   return `${base}/${value.replace(/^\/+/, "")}`;
 };
