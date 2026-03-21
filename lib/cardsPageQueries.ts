@@ -118,6 +118,7 @@ type PokemonDexIndexEntry = {
   setId: string | null;
   rarity: string;
   cardNameLower: string;
+  cardNumberRank: number;
 };
 
 type PokemonDexIndex = Record<string, PokemonDexIndexEntry[]>;
@@ -163,6 +164,7 @@ async function loadPokemonDexIndex(): Promise<PokemonDexIndex> {
         rarity: typeof doc.rarity === "string" ? doc.rarity.trim() : "",
         cardNameLower:
           typeof doc.cardName === "string" ? doc.cardName.trim().toLocaleLowerCase() : "",
+        cardNumberRank: getCardNumberRank((doc as { cardNumber?: unknown }).cardNumber),
       };
 
       const dexIds = extractDexIdValues((doc as { dexId?: unknown }).dexId);
@@ -526,34 +528,64 @@ export async function fetchMasterCardsPage(params: {
       return { entries, totalDocs };
     }
 
-    const result = await payload.find({
-      collection: "master-card-list",
-      depth: 1,
-      limit: CARDS_PER_PAGE,
-      page: params.page,
-      overrideAccess: true,
-      select: {
-        set: true,
-        imageLow: true,
-        imageHigh: true,
-        rarity: true,
-        cardNumber: true,
-        cardName: true,
-        category: true,
-        stage: true,
-        hp: true,
-        elementTypes: true,
-        dexId: true,
-      },
-      sort: "id",
-      where,
+    // For filtered views, compute full match set and paginate after numeric card number sort.
+    const matchedDocs: Record<string, unknown>[] = [];
+    let filterPage = 1;
+    let hasNextPage = true;
+    while (hasNextPage) {
+      const result = await payload.find({
+        collection: "master-card-list",
+        depth: 1,
+        limit: 1000,
+        page: filterPage,
+        overrideAccess: true,
+        select: {
+          set: true,
+          imageLow: true,
+          imageHigh: true,
+          rarity: true,
+          cardNumber: true,
+          cardName: true,
+          category: true,
+          stage: true,
+          hp: true,
+          elementTypes: true,
+          dexId: true,
+        },
+        sort: "id",
+        where,
+      });
+
+      matchedDocs.push(...(result.docs as unknown as Record<string, unknown>[]));
+      hasNextPage = result.hasNextPage;
+      filterPage += 1;
+    }
+
+    matchedDocs.sort((a, b) => {
+      const rankA = getCardNumberRank((a as { cardNumber?: unknown }).cardNumber);
+      const rankB = getCardNumberRank((b as { cardNumber?: unknown }).cardNumber);
+      if (rankA !== rankB) return rankB - rankA;
+
+      const nameA =
+        typeof (a as { cardName?: unknown }).cardName === "string"
+          ? (a as { cardName: string }).cardName
+          : "";
+      const nameB =
+        typeof (b as { cardName?: unknown }).cardName === "string"
+          ? (b as { cardName: string }).cardName
+          : "";
+      return nameA.localeCompare(nameB);
     });
 
-    const entries = result.docs
-      .map((doc) => toEntry(doc as unknown as Record<string, unknown>))
+    const totalDocs = matchedDocs.length;
+    const startIndex = (params.page - 1) * CARDS_PER_PAGE;
+    const endIndex = startIndex + CARDS_PER_PAGE;
+    const entries = matchedDocs
+      .slice(startIndex, endIndex)
+      .map((doc) => toEntry(doc))
       .filter((entry): entry is CardsPageCardEntry => Boolean(entry));
 
-    return { entries, totalDocs: result.totalDocs };
+    return { entries, totalDocs };
   }
 
   const dexIndex = await getCachedPokemonDexIndex();
@@ -565,6 +597,7 @@ export async function fetchMasterCardsPage(params: {
     if (searchQuery && !entry.cardNameLower.includes(searchQuery)) return false;
     return true;
   });
+  filteredCandidates.sort((a, b) => b.cardNumberRank - a.cardNumberRank || a.id.localeCompare(b.id));
 
   const totalDocs = filteredCandidates.length;
   const startIndex = (params.page - 1) * CARDS_PER_PAGE;
