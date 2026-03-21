@@ -2,6 +2,7 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { CardGrid } from "@/components/CardGrid";
 import { CardFiltersPanel } from "@/components/CardFiltersPanel";
+import { CardsMobileControls } from "@/components/CardsMobileControls";
 import {
   CARDS_PER_PAGE,
   fetchMasterCardsPage,
@@ -255,7 +256,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     <div className="flex h-screen flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       <main className="min-h-0 w-full flex-1 overflow-hidden px-4 py-4">
         <div className="grid h-full min-h-0 items-stretch gap-4 lg:grid-cols-[20%_minmax(0,1fr)]">
-          <aside className="flex min-h-0 h-full flex-col rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2">
+          <aside className="hidden min-h-0 h-full flex-col rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2 lg:flex">
             <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">Filters</h2>
               {activeSet || activePokemon ? (
@@ -278,7 +279,17 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
             />
           </aside>
           <section className="flex min-h-0 flex-col lg:pr-1">
-            <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardsMobileControls
+              activeSet={activeSet}
+              activePokemon={activePokemon}
+              activeRarity={activeRarity}
+              activeSearch={activeSearch}
+              rarityOptions={rarityOptions}
+              resetFiltersHref={resetFiltersHref}
+              setFilterOptions={setFilterOptions}
+              pokemonFilterOptions={pokemonFilterOptions}
+            />
+            <div className="mb-4 hidden shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:flex">
               <form method="get" action="/cards" className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                 {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
                 {activePokemon ? <input type="hidden" name="pokemon" value={activePokemon} /> : null}

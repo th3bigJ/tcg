@@ -24,6 +24,7 @@ type CardFiltersPanelProps = {
   activePokemonDex: string;
   activeRarity: string;
   activeSearch: string;
+  onSelection?: () => void;
 };
 
 function normalizeName(value: string): string {
@@ -55,6 +56,7 @@ export function CardFiltersPanel({
   activePokemonDex,
   activeRarity,
   activeSearch,
+  onSelection,
 }: CardFiltersPanelProps) {
   const [activeTab, setActiveTab] = useState<"sets" | "pokemon">("sets");
   const [setSearchText, setSetSearchText] = useState("");
@@ -156,6 +158,7 @@ export function CardFiltersPanel({
                           search: activeSearch,
                         })}
                         prefetch={false}
+                        onClick={onSelection}
                         className={`flex items-center justify-center rounded-md border p-1.5 transition ${
                           setOption.code === activeSet
                             ? "border-[var(--foreground)]/40 bg-[var(--foreground)]/12"
@@ -202,6 +205,7 @@ export function CardFiltersPanel({
                       search: activeSearch,
                     })}
                     prefetch={false}
+                    onClick={onSelection}
                     className={`flex flex-col items-center justify-center gap-1 rounded-md border p-1.5 text-center transition ${
                       isActive
                         ? "border-[var(--foreground)]/40 bg-[var(--foreground)]/12"

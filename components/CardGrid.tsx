@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
 
 export type CardEntry = {
@@ -69,6 +69,8 @@ export function CardGrid({
 
   const openModal = (index: number) => setSelectedIndex(index);
   const closeModal = () => setSelectedIndex(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchDeltaRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const viewPrevious = () => {
     setSelectedIndex((current) => {
       if (current === null || current <= 0) return current;
@@ -80,6 +82,46 @@ export function CardGrid({
       if (current === null || current >= normalizedCards.length - 1) return current;
       return current + 1;
     });
+  };
+
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    touchDeltaRef.current = { x: 0, y: 0 };
+  };
+
+  const handleTouchMove = (event: TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current;
+    if (!start) return;
+    const touch = event.touches[0];
+    touchDeltaRef.current = {
+      x: touch.clientX - start.x,
+      y: touch.clientY - start.y,
+    };
+  };
+
+  const handleTouchEnd = () => {
+    const start = touchStartRef.current;
+    if (!start) return;
+
+    const { x, y } = touchDeltaRef.current;
+    const absX = Math.abs(x);
+    const absY = Math.abs(y);
+    const horizontalThreshold = 50;
+    const verticalThreshold = 70;
+
+    if (absY > absX && y > verticalThreshold) {
+      closeModal();
+    } else if (absX > absY && absX > horizontalThreshold) {
+      if (x < 0) {
+        viewNext();
+      } else {
+        viewPrevious();
+      }
+    }
+
+    touchStartRef.current = null;
+    touchDeltaRef.current = { x: 0, y: 0 };
   };
 
   useEffect(() => {
@@ -143,11 +185,14 @@ export function CardGrid({
       <div
         className="relative flex h-full w-full items-center"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <button
           type="button"
           onClick={closeModal}
-          className="card-viewer-icon-button absolute right-3 top-3 z-30 inline-flex h-12 w-12 items-center justify-center border border-white/60 bg-black/75 text-white transition hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+          className="card-viewer-icon-button absolute right-3 top-3 z-30 hidden h-12 w-12 items-center justify-center border border-white/60 bg-black/75 text-white transition hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 md:inline-flex"
           aria-label="Close"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
@@ -160,7 +205,7 @@ export function CardGrid({
           type="button"
           onClick={viewPrevious}
           disabled={!hasPrevious}
-          className="card-viewer-icon-button absolute left-3 top-1/2 z-20 inline-flex h-16 w-16 -translate-y-1/2 items-center justify-center border border-white/55 bg-black/45 text-white transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:cursor-not-allowed disabled:opacity-40"
+          className="card-viewer-icon-button absolute left-3 top-1/2 z-20 hidden h-16 w-16 -translate-y-1/2 items-center justify-center border border-white/55 bg-black/45 text-white transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:cursor-not-allowed disabled:opacity-40 md:inline-flex"
           aria-label="Previous card"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.35" strokeLinecap="round" strokeLinejoin="round">
@@ -172,7 +217,7 @@ export function CardGrid({
           type="button"
           onClick={viewNext}
           disabled={!hasNext}
-          className="card-viewer-icon-button absolute right-3 top-1/2 z-20 inline-flex h-16 w-16 -translate-y-1/2 items-center justify-center border border-white/55 bg-black/45 text-white transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:cursor-not-allowed disabled:opacity-40"
+          className="card-viewer-icon-button absolute right-3 top-1/2 z-20 hidden h-16 w-16 -translate-y-1/2 items-center justify-center border border-white/55 bg-black/45 text-white transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:cursor-not-allowed disabled:opacity-40 md:inline-flex"
           aria-label="Next card"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.35" strokeLinecap="round" strokeLinejoin="round">
@@ -180,17 +225,65 @@ export function CardGrid({
           </svg>
         </button>
 
-        <div className="mx-auto grid h-full w-full max-w-[1460px] grid-cols-1 items-center gap-6 px-14 py-3 md:grid-cols-[minmax(320px,1fr)_680px] md:gap-8 md:px-20">
-          <div className="flex h-[86vh] items-center justify-center md:justify-end">
+        <div className="mx-auto flex h-full w-full max-w-[1460px] flex-col gap-3 px-2 py-2 md:grid md:grid-cols-[minmax(320px,1fr)_680px] md:items-center md:gap-8 md:px-20 md:py-3">
+          <div className="md:hidden">
+            <p className="mb-1.5 text-center text-[11px] text-white/65">Swipe down to close.</p>
+            <div className="flex items-start justify-between gap-3 rounded-lg border border-white/20 bg-black/40 p-3 text-white">
+              <div className="min-w-0">
+                <h3 className="truncate text-xl font-semibold">
+                  {selectedCard.cardName || "Unknown card"}
+                </h3>
+                <p className="mt-1 text-sm text-white/80">
+                  {selectedCard.setName || selectedCard.set} /{" "}
+                  {selectedCard.cardNumber || selectedCard.filename.replace(/\.[^.]+$/, "")}
+                </p>
+              </div>
+              {(selectedCard.setLogoSrc || setLogosByCode?.[selectedCard.set]) ? (
+                <div className="w-24 shrink-0 rounded-md border border-white/20 bg-black/30 p-1.5">
+                  <img
+                    src={selectedCard.setLogoSrc || setLogosByCode?.[selectedCard.set]}
+                    alt={`${selectedCard.setName || selectedCard.set} logo`}
+                    className="h-9 w-full object-contain"
+                  />
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="relative flex h-[58vh] shrink-0 items-center justify-center md:h-[86vh] md:justify-end">
+            <button
+              type="button"
+              onClick={viewPrevious}
+              disabled={!hasPrevious}
+              className="card-viewer-icon-button absolute left-1 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/55 bg-black/45 text-white transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:cursor-not-allowed disabled:opacity-40 md:hidden"
+              aria-label="Previous card"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.35" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+            </button>
+
             <img
               src={selectedCard.highSrc}
               alt={`${selectedCard.set} ${selectedCard.filename}`}
-              className="block max-h-full w-auto max-w-full rounded-lg object-contain shadow-2xl"
+              className="block max-h-full w-auto max-w-[calc(100vw-5.5rem)] rounded-lg object-contain shadow-2xl md:max-w-full"
             />
+
+            <button
+              type="button"
+              onClick={viewNext}
+              disabled={!hasNext}
+              className="card-viewer-icon-button absolute right-1 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/55 bg-black/45 text-white transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 disabled:cursor-not-allowed disabled:opacity-40 md:hidden"
+              aria-label="Next card"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.35" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </button>
           </div>
 
-          <div className="h-[86vh] w-full max-w-[680px] overflow-y-auto rounded-lg border border-white/20 bg-black/40 p-5 text-white backdrop-blur-[1px] md:justify-self-start">
-            <div className="flex items-start justify-between gap-3">
+          <div className="min-h-0 w-full flex-1 rounded-lg border border-white/20 bg-black/40 p-3 text-white backdrop-blur-[1px] md:h-[86vh] md:max-w-[680px] md:flex-none md:overflow-y-auto md:p-5 md:justify-self-start">
+            <div className="hidden items-start justify-between gap-3 md:flex">
               <div className="min-w-0">
                 <h3 className="text-2xl font-semibold">{selectedCard.cardName || "Unknown card"}</h3>
                 <p className="mt-1 text-sm text-white/80">
@@ -209,7 +302,57 @@ export function CardGrid({
               ) : null}
             </div>
 
-            <div className="mt-5 flex min-h-0 flex-1 flex-col gap-4">
+            <div className="md:hidden flex flex-col gap-2">
+              <section className="rounded-md border border-white/15 bg-black/30 p-2.5">
+                <h4 className="text-xs font-semibold text-white">Card details</h4>
+                <dl className="mt-2 grid grid-cols-3 gap-2 text-[11px]">
+                  <div className="min-w-0">
+                    <dt className="text-white/65">Set</dt>
+                    <dd className="mt-0.5 truncate text-sm">{selectedCard.setName || selectedCard.set}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-white/65">Card</dt>
+                    <dd className="mt-0.5 truncate text-sm">
+                      {selectedCard.cardNumber || selectedCard.filename.replace(/\.[^.]+$/, "")}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-white/65">Rarity</dt>
+                    <dd className="mt-0.5 truncate text-sm">{selectedCard.rarity || "Unknown"}</dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section className="rounded-md border border-white/15 bg-black/30 p-2.5">
+                <h4 className="text-xs font-semibold text-white">Pokemon details</h4>
+                <dl className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="min-w-0">
+                    <dt className="text-white/65">Category</dt>
+                    <dd className="mt-0.5 truncate text-sm">{selectedCard.category || "Unknown"}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-white/65">Stage</dt>
+                    <dd className="mt-0.5 truncate text-sm">{selectedCard.stage || "Unknown"}</dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-white/65">HP</dt>
+                    <dd className="mt-0.5 truncate text-sm">
+                      {typeof selectedCard.hp === "number" ? selectedCard.hp : "Unknown"}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-white/65">Type(s)</dt>
+                    <dd className="mt-0.5 truncate text-sm">
+                      {selectedCard.elementTypes && selectedCard.elementTypes.length > 0
+                        ? selectedCard.elementTypes.join(", ")
+                        : "Unknown"}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+            </div>
+
+            <div className="mt-5 hidden min-h-0 flex-1 flex-col gap-4 md:flex">
               <section className="rounded-md border border-white/15 bg-black/30 p-3">
                 <h4 className="text-sm font-semibold text-white">Card details</h4>
                 <dl className="mt-2 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
