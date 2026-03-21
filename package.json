@@ -17,6 +17,7 @@
     "status:cards:refresh": "node --import tsx/esm scripts/refreshCardImportStatus.ts",
     "audit:sets:completeness": "node --import tsx/esm scripts/auditSetImportCompleteness.ts",
     "audit:cards:external-id-dupes": "node --import tsx/esm scripts/auditMasterCardExternalIdDuplicates.ts",
+    "audit:pokemon:filter-images": "node --import tsx/esm scripts/auditPokemonFilterImageLinks.ts",
     "dedupe:swsh12pt5": "node --import tsx/esm scripts/dedupeSwsh12pt5MasterCards.ts",
     "import:cards:json": "node --import tsx/esm scripts/importSetCardsFromJson.ts",
     "seed:cards:all-sets": "node --import tsx/esm scripts/seedAllSetCards.ts",

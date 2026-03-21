@@ -153,16 +153,16 @@ async function getPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
       typeof mediaRelation?.filename === "string" ? mediaRelation.filename.trim() : "";
     const mediaUrl = typeof mediaRelation?.url === "string" ? mediaRelation.url.trim() : "";
     const fallbackUrl = typeof doc.imageUrl === "string" ? doc.imageUrl.trim() : "";
-    // Prefer Payload's file endpoint when we have a media filename.
-    // This avoids broken bare-filename URLs in production.
+    // Prefer filename-based resolution through the pokemon media resolver so
+    // public R2 bucket URLs (pokemon bucket) are used consistently in live.
     const resolvedFilename = imageFilename || mediaFilename;
     const imageUrl = resolvedFilename
-      ? `/api/pokemon-media/file/${encodeURIComponent(resolvedFilename)}`
+      ? resolvePokemonMediaURL(resolvedFilename)
       : looksLikeFilename(fallbackUrl)
-        ? `/api/pokemon-media/file/${encodeURIComponent(fallbackUrl)}`
-        : fallbackUrl || mediaUrl;
+        ? resolvePokemonMediaURL(fallbackUrl)
+        : resolvePokemonMediaURL(fallbackUrl || mediaUrl);
     if (!dex || !name || !imageUrl || deduped.has(dex)) continue;
-    deduped.set(dex, { nationalDexNumber: dex, name, imageUrl: resolvePokemonMediaURL(imageUrl) });
+    deduped.set(dex, { nationalDexNumber: dex, name, imageUrl });
   }
 
   return [...deduped.values()].sort(
