@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 
 export type CardEntry = {
   set: string;
@@ -48,11 +49,16 @@ export function CardGrid({
   cards,
   setLogosByCode,
   similarMode = "set",
+  previousPageHref,
+  nextPageHref,
 }: {
   cards: CardEntry[];
   setLogosByCode?: Record<string, string>;
   similarMode?: "set" | "pokemon";
+  previousPageHref?: string;
+  nextPageHref?: string;
 }) {
+  const router = useRouter();
   const normalizedCards = cards
     .map((card) => {
       const lowSrc = card.lowSrc || card.src || "";
@@ -71,6 +77,8 @@ export function CardGrid({
   const closeModal = () => setSelectedIndex(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const touchDeltaRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const gridTouchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const gridTouchDeltaRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const viewPrevious = () => {
     setSelectedIndex((current) => {
       if (current === null || current <= 0) return current;
@@ -122,6 +130,43 @@ export function CardGrid({
 
     touchStartRef.current = null;
     touchDeltaRef.current = { x: 0, y: 0 };
+  };
+
+  const handleGridTouchStart = (event: TouchEvent<HTMLUListElement>) => {
+    const touch = event.touches[0];
+    gridTouchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    gridTouchDeltaRef.current = { x: 0, y: 0 };
+  };
+
+  const handleGridTouchMove = (event: TouchEvent<HTMLUListElement>) => {
+    const start = gridTouchStartRef.current;
+    if (!start || selectedIndex !== null) return;
+    const touch = event.touches[0];
+    gridTouchDeltaRef.current = {
+      x: touch.clientX - start.x,
+      y: touch.clientY - start.y,
+    };
+  };
+
+  const handleGridTouchEnd = () => {
+    const start = gridTouchStartRef.current;
+    if (!start || selectedIndex !== null) return;
+
+    const { x, y } = gridTouchDeltaRef.current;
+    const absX = Math.abs(x);
+    const absY = Math.abs(y);
+    const horizontalThreshold = 55;
+
+    if (absX > absY && absX > horizontalThreshold) {
+      if (x < 0 && nextPageHref) {
+        router.push(nextPageHref);
+      } else if (x > 0 && previousPageHref) {
+        router.push(previousPageHref);
+      }
+    }
+
+    gridTouchStartRef.current = null;
+    gridTouchDeltaRef.current = { x: 0, y: 0 };
   };
 
   useEffect(() => {
@@ -487,7 +532,12 @@ export function CardGrid({
 
   return (
     <>
-      <ul className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8">
+      <ul
+        className="grid grid-cols-4 gap-2 sm:grid-cols-6 sm:gap-3 md:grid-cols-8 lg:grid-cols-8"
+        onTouchStart={handleGridTouchStart}
+        onTouchMove={handleGridTouchMove}
+        onTouchEnd={handleGridTouchEnd}
+      >
         {normalizedCards.map((card, index) => (
           <li
             key={`${card.set}/${card.filename}/${index}`}
