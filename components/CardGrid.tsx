@@ -76,16 +76,16 @@ export function CardGrid({ cards }: { cards: CardEntry[] }) {
         {normalizedCards.map((card, index) => (
           <li
             key={`${card.set}/${card.filename}/${index}`}
-            className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md"
+            className="card-grid-item group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md"
           >
             <div className="pointer-events-none absolute inset-0">
               <img
                 src={card.lowSrc}
                 alt={`${card.set} ${card.filename}`}
                 className="h-full w-full object-cover object-center"
-                loading={index < 24 ? "eager" : "lazy"}
+                loading={index < 12 ? "eager" : "lazy"}
                 decoding="async"
-                fetchPriority={index < 8 ? "high" : "auto"}
+                fetchPriority={index < 6 ? "high" : "auto"}
               />
               <span className="absolute bottom-0 left-0 right-0 bg-[var(--foreground)]/80 px-1 py-0.5 text-center text-xs text-[var(--background)] opacity-0 transition group-hover:opacity-100">
                 {card.set} / {card.filename.replace(/\.[^.]+$/, "")}

@@ -1,16 +1,12 @@
 import Link from "next/link";
 import { CardGrid } from "@/components/CardGrid";
+import {
+  CARDS_PER_PAGE,
+  type CardsPageCardEntry,
+  fetchMasterCardsPage,
+  getCachedFilterFacets,
+} from "@/lib/cardsPageQueries";
 import { resolveMediaURL } from "@/lib/media";
-
-type CardEntry = {
-  set: string;
-  filename: string;
-  src: string;
-  lowSrc: string;
-  highSrc: string;
-  rarity: string;
-  cardName: string;
-};
 
 type ImageRelation = {
   url?: string | null;
@@ -28,129 +24,8 @@ type SetFilterOption = {
   cardCountTotal: number | null;
 };
 
-const normalizeFilterValue = (value: string): string => value.trim().replace(/\s+/g, " ");
-
-function getUniqueRarityOptions(cards: CardEntry[]): string[] {
-  const rarityMap = new Map<string, string>();
-
-  for (const card of cards) {
-    const normalizedDisplay = normalizeFilterValue(card.rarity);
-    if (!normalizedDisplay) continue;
-    const normalizedKey = normalizedDisplay.toLocaleLowerCase();
-    if (!rarityMap.has(normalizedKey)) {
-      rarityMap.set(normalizedKey, normalizedDisplay);
-    }
-  }
-
-  return [...rarityMap.values()].sort((a, b) => a.localeCompare(b));
-}
-
-const CARDS_PER_PAGE = 80;
-const LOW_RES_CACHE_TTL_MS = 5 * 60 * 1000;
-
-let lowResCardsCache: { value: CardEntry[]; expiresAt: number } | null = null;
-let lowResCardsPending: Promise<CardEntry[]> | null = null;
-
 const isImageRelation = (value: unknown): value is ImageRelation =>
   Boolean(value) && typeof value === "object";
-
-async function loadLowResCards(): Promise<CardEntry[]> {
-  const payloadConfig = (await import("../../../payload.config")).default;
-  const { getPayload } = await import("payload");
-  const payload = await getPayload({ config: payloadConfig });
-
-  const entries: CardEntry[] = [];
-  let page = 1;
-  let hasNextPage = true;
-
-  while (hasNextPage) {
-    const result = await payload.find({
-      collection: "master-card-list",
-      depth: 1,
-      limit: 1000,
-      page,
-      overrideAccess: true,
-      select: {
-        set: true,
-        imageLow: true,
-        imageHigh: true,
-        rarity: true,
-        cardName: true,
-      },
-      where: {
-        imageLow: {
-          exists: true,
-        },
-      },
-    });
-
-    for (const doc of result.docs) {
-      const relation = isImageRelation(doc.imageLow) ? doc.imageLow : null;
-      const lowUrl = typeof relation?.url === "string" ? relation.url : "";
-      if (!lowUrl) continue;
-      const highRelation = isImageRelation(doc.imageHigh) ? doc.imageHigh : null;
-      const highUrl = typeof highRelation?.url === "string" ? highRelation.url : lowUrl;
-
-      const cleanPath = lowUrl.split("?")[0];
-      const filename =
-        (typeof relation?.filename === "string" && relation.filename) ||
-        cleanPath.split("/").pop();
-      if (!filename) continue;
-
-      const set =
-        typeof doc.set === "object" &&
-        doc.set &&
-        "code" in doc.set &&
-        typeof doc.set.code === "string"
-          ? doc.set.code
-          : "unknown";
-
-      entries.push({
-        set,
-        filename,
-        src: resolveMediaURL(lowUrl),
-        lowSrc: resolveMediaURL(lowUrl),
-        highSrc: resolveMediaURL(highUrl),
-        rarity: typeof doc.rarity === "string" ? doc.rarity.trim() : "",
-        cardName: typeof doc.cardName === "string" ? doc.cardName.trim() : "",
-      });
-    }
-
-    hasNextPage = result.hasNextPage;
-    page += 1;
-  }
-
-  return entries.sort((a, b) => {
-    if (a.set !== b.set) return a.set.localeCompare(b.set);
-    return a.filename.localeCompare(b.filename, undefined, { numeric: true });
-  });
-}
-
-async function getLowResCards(): Promise<CardEntry[]> {
-  const now = Date.now();
-
-  if (lowResCardsCache && lowResCardsCache.expiresAt > now) {
-    return lowResCardsCache.value;
-  }
-
-  if (lowResCardsPending) {
-    return lowResCardsPending;
-  }
-
-  lowResCardsPending = loadLowResCards()
-    .then((cards) => {
-      lowResCardsCache = {
-        value: cards,
-        expiresAt: Date.now() + LOW_RES_CACHE_TTL_MS,
-      };
-      return cards;
-    })
-    .finally(() => {
-      lowResCardsPending = null;
-    });
-
-  return lowResCardsPending;
-}
 
 async function getSetFilterOptions(setCodes: string[]): Promise<SetFilterOption[]> {
   if (setCodes.length === 0) return [];
@@ -242,21 +117,17 @@ type CardsPageProps = {
 
 export default async function CardsPage({ searchParams }: CardsPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
-  const cards = await getLowResCards();
   const selectedSet = (resolvedSearchParams.set ?? "").trim();
   const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();
   const selectedSearch = (resolvedSearchParams.search ?? "").trim();
-  const availableSetCodes = [...new Set(cards.map((card) => card.set))].filter(
-    (setCode) => setCode && setCode !== "unknown",
-  );
-  const rarityOptions = getUniqueRarityOptions(cards);
+  const { setCodes: availableSetCodes, rarityDisplayValues: rarityOptions } =
+    await getCachedFilterFacets();
   const setFilterOptions = await getSetFilterOptions(availableSetCodes);
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
   const hasSelectedRarity = rarityOptions.includes(selectedRarity);
   const activeSet = hasSelectedSet ? selectedSet : "";
   const activeRarity = hasSelectedRarity ? selectedRarity : "";
   const activeSearch = selectedSearch;
-  const activeSearchLower = activeSearch.toLocaleLowerCase();
   const activeSetOption = setFilterOptions.find((option) => option.code === activeSet) ?? null;
   const groupedSetOptions = (() => {
     const groups = new Map<string, SetFilterOption[]>();
@@ -302,23 +173,31 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
         })
     : [];
 
-  const filteredCards = cards.filter((card) => {
-    if (activeSet && card.set !== activeSet) return false;
-    if (activeRarity && card.rarity !== activeRarity) return false;
-    if (activeSearchLower && !card.cardName.toLocaleLowerCase().includes(activeSearchLower)) {
-      return false;
-    }
-    return true;
+  const rawPageParsed = Number.parseInt(resolvedSearchParams.page ?? "1", 10);
+  const requestedPage =
+    Number.isFinite(rawPageParsed) && rawPageParsed > 0 ? rawPageParsed : 1;
+
+  let { entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
+    activeSet,
+    activeRarity,
+    activeSearch,
+    page: requestedPage,
   });
-  const rawPage = Number.parseInt(resolvedSearchParams.page ?? "1", 10);
-  const totalPages = Math.max(1, Math.ceil(filteredCards.length / CARDS_PER_PAGE));
-  const currentPage = Number.isFinite(rawPage)
-    ? Math.min(Math.max(rawPage, 1), totalPages)
-    : 1;
+
+  const totalPages = Math.max(1, Math.ceil(filteredCount / CARDS_PER_PAGE));
+  const currentPage = Math.min(requestedPage, totalPages);
+
+  if (currentPage !== requestedPage) {
+    ({ entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
+      activeSet,
+      activeRarity,
+      activeSearch,
+      page: currentPage,
+    }));
+  }
   const startIndex = (currentPage - 1) * CARDS_PER_PAGE;
-  const paginatedCards = filteredCards.slice(startIndex, startIndex + CARDS_PER_PAGE);
-  const showingFrom = filteredCards.length === 0 ? 0 : startIndex + 1;
-  const showingTo = Math.min(startIndex + paginatedCards.length, filteredCards.length);
+  const showingFrom = filteredCount === 0 ? 0 : startIndex + 1;
+  const showingTo = Math.min(startIndex + cardsForGrid.length, filteredCount);
   const createCardsHref = (page: number) => {
     const params = new URLSearchParams();
     if (activeSet) params.set("set", activeSet);
@@ -526,20 +405,19 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 </Link>
               </form>
               <p className="text-right text-sm text-[var(--foreground)]/70">
-                Showing {showingFrom}-{showingTo} of {filteredCards.length} card
-                {filteredCards.length === 1 ? "" : "s"} in {setFilterOptions.length} set
+                Showing {showingFrom}-{showingTo} of {filteredCount} card
+                {filteredCount === 1 ? "" : "s"} in {setFilterOptions.length} set
                 {setFilterOptions.length === 1 ? "" : "s"}
                 {activeSet || activeRarity || activeSearch ? " (filtered)" : ""}
               </p>
             </div>
             <div className="scrollbar-hide min-h-0 overflow-y-auto">
-              <CardGrid cards={paginatedCards} />
+              <CardGrid cards={cardsForGrid} />
             </div>
             <div className="mt-4 shrink-0 flex items-center justify-between gap-3 text-sm">
               {currentPage > 1 ? (
                 <Link
                   href={previousHref}
-                  prefetch={false}
                   className="rounded-md border border-[var(--foreground)]/20 px-3 py-2 hover:bg-[var(--foreground)]/5"
                 >
                   Previous
@@ -555,7 +433,6 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               {currentPage < totalPages ? (
                 <Link
                   href={nextHref}
-                  prefetch={false}
                   className="rounded-md border border-[var(--foreground)]/20 px-3 py-2 hover:bg-[var(--foreground)]/5"
                 >
                   Next
