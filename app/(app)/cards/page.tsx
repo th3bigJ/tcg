@@ -140,10 +140,15 @@ async function getPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
     const dex = typeof doc.nationalDexNumber === "number" ? doc.nationalDexNumber : null;
     const name = typeof doc.name === "string" ? doc.name.trim() : "";
     const mediaRelation = isImageRelation(doc.pokemonMedia) ? doc.pokemonMedia : null;
+    const mediaFilename =
+      typeof mediaRelation?.filename === "string" ? mediaRelation.filename.trim() : "";
     const mediaUrl = typeof mediaRelation?.url === "string" ? mediaRelation.url.trim() : "";
     const fallbackUrl = typeof doc.imageUrl === "string" ? doc.imageUrl.trim() : "";
-    // Prefer the explicit public URL saved on the Pokemon record.
-    const imageUrl = fallbackUrl || mediaUrl;
+    // Prefer Payload's file endpoint when we have a media filename.
+    // This avoids broken bare-filename URLs in production.
+    const imageUrl = mediaFilename
+      ? `/api/pokemon-media/file/${encodeURIComponent(mediaFilename)}`
+      : fallbackUrl || mediaUrl;
     if (!dex || !name || !imageUrl || deduped.has(dex)) continue;
     deduped.set(dex, { nationalDexNumber: dex, name, imageUrl: resolvePokemonMediaURL(imageUrl) });
   }
@@ -188,14 +193,6 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
   const pokemonFilterOptions = await getCachedPokemonFilterOptions();
-  if (process.env.NODE_ENV === "production") {
-    const sample = pokemonFilterOptions.slice(0, 5).map((item) => ({
-      dex: item.nationalDexNumber,
-      name: item.name,
-      imageUrl: item.imageUrl,
-    }));
-    console.log("[cards-page] pokemon filter image url sample", sample);
-  }
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
   const parsedPokemonDex = Number.parseInt(selectedPokemon, 10);
   const hasSelectedPokemon = Number.isFinite(parsedPokemonDex) && parsedPokemonDex > 0;
