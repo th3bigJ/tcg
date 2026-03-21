@@ -35,6 +35,13 @@ type PokemonFilterOption = {
 const isImageRelation = (value: unknown): value is ImageRelation =>
   Boolean(value) && typeof value === "object";
 
+const looksLikeFilename = (value: string): boolean => {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (trimmed.includes("/") || /^https?:\/\//i.test(trimmed)) return false;
+  return /\.[a-z0-9]+$/i.test(trimmed);
+};
+
 async function getSetFilterOptions(setCodes: string[]): Promise<SetFilterOption[]> {
   if (setCodes.length === 0) return [];
 
@@ -129,6 +136,7 @@ async function getPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
       nationalDexNumber: true,
       name: true,
       pokemonMedia: true,
+      imageFilename: true,
       imageUrl: true,
     },
     sort: "nationalDexNumber",
@@ -139,6 +147,7 @@ async function getPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
   for (const doc of result.docs) {
     const dex = typeof doc.nationalDexNumber === "number" ? doc.nationalDexNumber : null;
     const name = typeof doc.name === "string" ? doc.name.trim() : "";
+    const imageFilename = typeof doc.imageFilename === "string" ? doc.imageFilename.trim() : "";
     const mediaRelation = isImageRelation(doc.pokemonMedia) ? doc.pokemonMedia : null;
     const mediaFilename =
       typeof mediaRelation?.filename === "string" ? mediaRelation.filename.trim() : "";
@@ -146,9 +155,12 @@ async function getPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
     const fallbackUrl = typeof doc.imageUrl === "string" ? doc.imageUrl.trim() : "";
     // Prefer Payload's file endpoint when we have a media filename.
     // This avoids broken bare-filename URLs in production.
-    const imageUrl = mediaFilename
-      ? `/api/pokemon-media/file/${encodeURIComponent(mediaFilename)}`
-      : fallbackUrl || mediaUrl;
+    const resolvedFilename = imageFilename || mediaFilename;
+    const imageUrl = resolvedFilename
+      ? `/api/pokemon-media/file/${encodeURIComponent(resolvedFilename)}`
+      : looksLikeFilename(fallbackUrl)
+        ? `/api/pokemon-media/file/${encodeURIComponent(fallbackUrl)}`
+        : fallbackUrl || mediaUrl;
     if (!dex || !name || !imageUrl || deduped.has(dex)) continue;
     deduped.set(dex, { nationalDexNumber: dex, name, imageUrl: resolvePokemonMediaURL(imageUrl) });
   }
