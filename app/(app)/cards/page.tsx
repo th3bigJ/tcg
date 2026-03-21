@@ -355,6 +355,8 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 cards={cardsForGrid}
                 setLogosByCode={setLogosByCode}
                 similarMode={activePokemon ? "pokemon" : "set"}
+                previousPageHref={currentPage > 1 ? previousHref : undefined}
+                nextPageHref={currentPage < totalPages ? nextHref : undefined}
               />
             </div>
             <div className="mt-4 shrink-0 flex items-center justify-between gap-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] text-sm lg:pb-0">
