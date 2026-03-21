@@ -142,7 +142,8 @@ async function getPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
     const mediaRelation = isImageRelation(doc.pokemonMedia) ? doc.pokemonMedia : null;
     const mediaUrl = typeof mediaRelation?.url === "string" ? mediaRelation.url.trim() : "";
     const fallbackUrl = typeof doc.imageUrl === "string" ? doc.imageUrl.trim() : "";
-    const imageUrl = mediaUrl || fallbackUrl;
+    // Prefer the explicit public URL saved on the Pokemon record.
+    const imageUrl = fallbackUrl || mediaUrl;
     if (!dex || !name || !imageUrl || deduped.has(dex)) continue;
     deduped.set(dex, { nationalDexNumber: dex, name, imageUrl: resolvePokemonMediaURL(imageUrl) });
   }
