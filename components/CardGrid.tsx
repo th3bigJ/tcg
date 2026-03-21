@@ -257,7 +257,7 @@ export function CardGrid({
             </div>
           </div>
 
-          <div className="relative flex h-[48vh] shrink-0 items-center justify-center md:h-[86vh] md:justify-end">
+          <div className="relative flex h-[44vh] shrink-0 items-center justify-center md:h-[86vh] md:justify-end">
             <button
               type="button"
               onClick={viewPrevious}
