@@ -188,6 +188,14 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
   const pokemonFilterOptions = await getCachedPokemonFilterOptions();
+  if (process.env.NODE_ENV === "production") {
+    const sample = pokemonFilterOptions.slice(0, 5).map((item) => ({
+      dex: item.nationalDexNumber,
+      name: item.name,
+      imageUrl: item.imageUrl,
+    }));
+    console.log("[cards-page] pokemon filter image url sample", sample);
+  }
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
   const parsedPokemonDex = Number.parseInt(selectedPokemon, 10);
   const hasSelectedPokemon = Number.isFinite(parsedPokemonDex) && parsedPokemonDex > 0;

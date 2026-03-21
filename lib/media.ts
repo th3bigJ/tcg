@@ -30,6 +30,29 @@ const getPokemonMediaBaseURL = (): string | null =>
     process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
   ]);
 
+const sanitizeAbsoluteMediaURL = (value: string): string => {
+  try {
+    const parsed = new URL(value);
+    const hostname = parsed.hostname.toLowerCase();
+
+    // Dev-seeded absolute URLs can leak into production records.
+    // Convert localhost URLs to root-relative so they resolve on the current host.
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+
+    // Avoid mixed-content failures on HTTPS deployments.
+    if (parsed.protocol === "http:") {
+      parsed.protocol = "https:";
+      return parsed.toString();
+    }
+  } catch {
+    // If URL parsing fails, fall back to original value.
+  }
+
+  return value;
+};
+
 export const resolveMediaURL = (value: string | null | undefined): string => {
   if (!value) return "";
   if (/^https?:\/\//i.test(value)) return value;
@@ -42,7 +65,7 @@ export const resolveMediaURL = (value: string | null | undefined): string => {
 
 export const resolvePokemonMediaURL = (value: string | null | undefined): string => {
   if (!value) return "";
-  if (/^https?:\/\//i.test(value)) return value;
+  if (/^https?:\/\//i.test(value)) return sanitizeAbsoluteMediaURL(value);
 
   const base = getPokemonMediaBaseURL();
   if (!base) return value.startsWith("/") ? value : `/${value}`;
