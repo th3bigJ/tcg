@@ -357,7 +357,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 similarMode={activePokemon ? "pokemon" : "set"}
               />
             </div>
-            <div className="mt-4 shrink-0 flex items-center justify-between gap-3 text-sm">
+            <div className="mt-4 shrink-0 flex items-center justify-between gap-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] text-sm lg:pb-0">
               {currentPage > 1 ? (
                 <Link
                   href={previousHref}

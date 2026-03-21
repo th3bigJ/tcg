@@ -257,7 +257,7 @@ export function CardGrid({
             </div>
           </div>
 
-          <div className="relative flex h-[58vh] shrink-0 items-center justify-center md:h-[86vh] md:justify-end">
+          <div className="relative flex h-[52vh] shrink-0 items-center justify-center md:h-[86vh] md:justify-end">
             <button
               type="button"
               onClick={viewPrevious}
@@ -273,7 +273,7 @@ export function CardGrid({
             <img
               src={selectedCard.highSrc}
               alt={`${selectedCard.set} ${selectedCard.filename}`}
-              className="block max-h-full w-auto max-w-[calc(100vw-5.5rem)] rounded-lg object-contain shadow-2xl md:max-w-full"
+              className="block max-h-full w-auto max-w-[calc(100vw-7rem)] rounded-lg object-contain shadow-2xl md:max-w-full"
             />
 
             <button
@@ -487,7 +487,7 @@ export function CardGrid({
 
   return (
     <>
-      <ul className="grid grid-cols-5 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8">
+      <ul className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-8">
         {normalizedCards.map((card, index) => (
           <li
             key={`${card.set}/${card.filename}/${index}`}
