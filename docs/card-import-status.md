@@ -80,7 +80,7 @@ Tracks which card sets have been imported into `master-card-list` and which are 
 | me1 | Mega Evolution | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | me2 | Phantasmal Flames | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | me2pt5 | Ascended Heroes | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
-| mep | MEP Black Star Promos | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
+| mep | MEP Black Star Promos | completed | local-ts + scrydex-images (seedMepCardsFromScrydex) | 18 | 27 | 0 | 45 | 2026-03-22T19:30:55.527Z |
 | neo1 | Neo Genesis | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | neo2 | Neo Discovery | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
 | neo3 | Neo Revelation | incomplete | pending | 0 | 0 | 0 | 0 | _never_ |
