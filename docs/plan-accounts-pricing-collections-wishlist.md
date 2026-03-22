@@ -6,7 +6,8 @@
 - `Users` collection exists but is **admin-only** (no public registration)
 - `/app/(app)/page.tsx` — Collection page is a stub
 - `/app/(app)/wishlist/page.tsx` — Wishlist page is a stub
-- Each `MasterCardList` record has an `externalId` field (e.g. `xyp-XY01`) — this is the pokemontcg.io card ID
+- Each `MasterCardList` record has an `externalId` field (e.g. `swsh3-136`) — this is the TCGdex card ID
+- `@tcgdex/sdk` is already installed at `^2.7.1`
 
 ## What We're Building
 
@@ -22,35 +23,26 @@ Four things in order:
 ## Phase A — Card Pricing Display
 
 > Show live TCGPlayer + Cardmarket prices when a user opens a card.
-> No store pricing, no SKUs. Just market data from an external API.
+> No store pricing, no SKUs. Just market data from TCGdex.
 
 ### How it works
 
-pokemontcg.io returns price data alongside card details. The card's `externalId`
-in your database is the pokemontcg.io card ID (e.g. `xyp-XY01`, `base1-4`).
+TCGdex includes a `pricing` field in every full card response. The card's
+`externalId` in your database is the TCGdex card ID (e.g. `swsh3-136`, `base1-4`).
+The `@tcgdex/sdk` is already installed — no new dependencies needed.
 
-**pokemontcg.io price response shape:**
+**TCGdex pricing response shape** (under the `pricing` key on a full card fetch):
 ```json
 {
-  "id": "base1-4",
-  "name": "Charizard",
-  "tcgplayer": {
-    "updatedAt": "2024/01/15",
-    "prices": {
-      "holofoil": {
-        "low": 180.00,
-        "mid": 250.00,
-        "high": 450.00,
-        "market": 230.00,
-        "directLow": null
-      },
-      "reverseHolofoil": { "low": ..., "mid": ..., "high": ..., "market": ... },
-      "normal": { "low": ..., "mid": ..., "high": ..., "market": ... }
-    }
-  },
-  "cardmarket": {
-    "updatedAt": "2024/01/15",
-    "prices": {
+  "pricing": {
+    "tcgplayer": {
+      "updatedAt": "2024/01/15",
+      "normal":       { "low": 1.50,   "mid": 3.00,   "high": 8.00,   "market": 2.80,  "directLow": 1.20 },
+      "holofoil":     { "low": 180.00, "mid": 250.00, "high": 450.00, "market": 230.00, "directLow": null },
+      "reverseHolofoil": { "low": 5.00, "mid": 8.00, "high": 20.00, "market": 7.50 }
+    },
+    "cardmarket": {
+      "updatedAt": "2024/01/15",
       "averageSellPrice": 220.00,
       "lowPrice": 150.00,
       "trendPrice": 235.00,
@@ -62,36 +54,34 @@ in your database is the pokemontcg.io card ID (e.g. `xyp-XY01`, `base1-4`).
 }
 ```
 
+Fields are omitted when there is no value. Not every card has all variants.
+
 ### A1 — Create `/app/api/card-prices/[externalId]/route.ts`
 
-A server-side proxy route that fetches price data from pokemontcg.io and returns
-only the price fields. Proxying server-side keeps your API key secret and lets you
-add caching later.
+A server-side proxy that fetches from TCGdex and returns only the pricing data.
+Keeps the fetch server-side so caching is applied consistently.
 
 ```typescript
-// GET /api/card-prices/base1-4
-export async function GET(req: Request, { params }: { params: { externalId: string } }) {
-  const res = await fetch(
-    `https://api.pokemontcg.io/v2/cards/${params.externalId}`,
-    {
-      headers: {
-        // Optional — add to .env.local as POKEMON_TCG_API_KEY
-        // Free tier works without it but has lower rate limits
-        ...(process.env.POKEMON_TCG_API_KEY
-          ? { 'X-Api-Key': process.env.POKEMON_TCG_API_KEY }
-          : {}),
-      },
-      next: { revalidate: 60 * 60 * 6 }, // cache for 6 hours — prices don't change that fast
-    }
-  )
+// GET /api/card-prices/swsh3-136
+import TCGdex from '@tcgdex/sdk'
 
-  if (!res.ok) return Response.json({ tcgplayer: null, cardmarket: null })
+const tcgdex = new TCGdex('en')
 
-  const { data } = await res.json()
-  return Response.json({
-    tcgplayer: data.tcgplayer ?? null,
-    cardmarket: data.cardmarket ?? null,
-  })
+export async function GET(
+  _req: Request,
+  { params }: { params: { externalId: string } }
+) {
+  try {
+    const card = await tcgdex.fetch('cards', params.externalId)
+    return Response.json({
+      tcgplayer: card?.pricing?.tcgplayer ?? null,
+      cardmarket: card?.pricing?.cardmarket ?? null,
+    }, {
+      headers: { 'Cache-Control': 's-maxage=21600, stale-while-revalidate' }, // 6 hours
+    })
+  } catch {
+    return Response.json({ tcgplayer: null, cardmarket: null })
+  }
 }
 ```
 
@@ -113,39 +103,27 @@ useEffect(() => {
 ```
 
 **Display:**
-- Show TCGPlayer market price as the headline price (most recognisable)
-- Show low/mid/high as a secondary range
-- Show Cardmarket trend price for European context
-- If the card has multiple printings (holofoil, reverse, normal), show a tab or
-  dropdown to switch between them
-- Show "Prices via TCGPlayer / Cardmarket" attribution + the `updatedAt` date
-- If `externalId` is missing or the API returns null prices: show "Price unavailable"
+- TCGPlayer market price as the headline (most recognisable to buyers)
+- Low / high as a secondary range
+- Cardmarket trend price for European context
+- If the card has multiple variants (holofoil, reverse, normal), show a toggle
+- Attribution: "Prices via TCGdex · TCGPlayer · Cardmarket" + `updatedAt` date
+- If `externalId` is missing or pricing is null: show "Price unavailable"
 
 **Example UI layout:**
 ```
 ┌─────────────────────────────┐
-│  TCGPlayer                  │
-│  Market  £230.00            │
-│  Low £180 · High £450       │
+│  TCGPlayer          USD     │
+│  Market  $230.00            │
+│  Low $180 · High $450       │
 │                             │
-│  Cardmarket                 │
-│  Trend   £235.00            │
-│  30-day avg  £215.00        │
+│  Cardmarket         EUR     │
+│  Trend   €235.00            │
+│  30-day avg  €215.00        │
 │                             │
-│  Updated 15 Jan 2024        │
+│  via TCGdex · Updated today │
 └─────────────────────────────┘
 ```
-
-### A3 — `.env.local` entry
-
-Add to `.env.local` (optional but recommended):
-```
-POKEMON_TCG_API_KEY=your_key_here
-```
-
-Free keys available at https://pokemontcg.io — raises rate limit from 1,000 to
-20,000 requests/day. The `next: { revalidate }` cache on the route handler means
-you won't hit limits in normal use.
 
 ---
 
@@ -366,6 +344,7 @@ On `/cards` page and card detail view, add a heart icon:
 - Read `node_modules/next/dist/docs/` before writing any Next.js code — this version has breaking changes
 - Use Payload Local API (not REST fetch) inside Server Components and Route Handlers
 - `Customers` must stay **separate** from `Users` — never merge them
-- pokemontcg.io `externalId` format matches your `MasterCardList.externalId` field exactly — no transformation needed
+- TCGdex card IDs match your `MasterCardList.externalId` field exactly — no transformation needed
+- TCGdex is free, no API key required. The `@tcgdex/sdk` is already installed
 - Cards with no `externalId` (manually added) will silently return no price — handle gracefully in the UI
 - Reuse `CardGrid` in both the collection and wishlist pages
