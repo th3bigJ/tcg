@@ -1,0 +1,62 @@
+import Link from "next/link";
+
+import type { ExpansionSeriesGroup } from "@/lib/expansionsPageQueries";
+
+export function ExpansionsList({ groups }: { groups: ExpansionSeriesGroup[] }) {
+  if (groups.length === 0) {
+    return (
+      <p className="mt-8 text-center text-sm text-[var(--foreground)]/65">
+        No expansions with artwork are available yet.
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-2 flex flex-col gap-8 pb-2">
+      {groups.map((group) => (
+        <section key={group.seriesName} aria-labelledby={`series-${slugifyHeadingId(group.seriesName)}`}>
+          <h2
+            id={`series-${slugifyHeadingId(group.seriesName)}`}
+            className="mb-3 text-center text-sm font-semibold tracking-wide text-[var(--foreground)]/85"
+          >
+            {group.seriesName}
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {group.sets.map((set) => (
+              <li key={set.code}>
+                <Link
+                  href={`/cards?set=${encodeURIComponent(set.code)}`}
+                  prefetch={false}
+                  className="flex items-center gap-3 rounded-xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-3 py-2.5 shadow-sm transition hover:border-[var(--foreground)]/22 hover:bg-[var(--foreground)]/8 active:opacity-90"
+                >
+                  <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--foreground)]/10 p-1.5">
+                    <img
+                      src={set.logoSrc}
+                      alt=""
+                      className="max-h-full max-w-full object-contain object-center"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-left text-[15px] font-semibold leading-snug text-[var(--foreground)]">
+                      {set.name}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function slugifyHeadingId(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .slice(0, 48);
+}

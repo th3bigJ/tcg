@@ -3,6 +3,8 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -56,6 +58,70 @@ function compareCardsForOtherStrip(a: CardEntry, b: CardEntry): number {
 function sameCardEntry(a: CardEntry | null, b: CardEntry | null): boolean {
   if (!a || !b) return false;
   return a.set === b.set && a.filename === b.filename;
+}
+
+function ModalCarouselSlide({
+  card,
+  slotWidth,
+  showMeta,
+  setLogosByCode,
+}: {
+  card: CardEntry | null;
+  slotWidth: number;
+  showMeta: boolean;
+  setLogosByCode?: Record<string, string>;
+}) {
+  const w = Math.max(1, slotWidth);
+  return (
+    <div
+      className="flex shrink-0 flex-col items-center gap-4 md:gap-5"
+      style={{ width: w, minWidth: w, maxWidth: w }}
+    >
+      <div className="relative flex min-h-[50vh] w-full items-center justify-center sm:min-h-[50vh] md:min-h-[min(82vh,820px)] md:max-h-[88vh]">
+        {card ? (
+          <img
+            src={card.highSrc || card.lowSrc || ""}
+            alt={`${card.set} ${card.filename}`}
+            className="block max-h-[min(64vh,640px)] w-auto max-w-[min(calc(100vw-1.5rem),100%)] rounded-[var(--card-viewer-image-radius)] object-contain shadow-2xl md:max-h-[min(86vh,900px)] md:max-w-full"
+            draggable={false}
+          />
+        ) : (
+          <div
+            className="aspect-[3/4] max-h-[min(64vh,640px)] w-[min(85%,240px)] rounded-[var(--card-viewer-image-radius)] bg-white/[0.06] md:max-h-[min(86vh,900px)]"
+            aria-hidden
+          />
+        )}
+      </div>
+      {showMeta && card ? (
+        (() => {
+          const modalSetLogoSrc = card.setLogoSrc || setLogosByCode?.[card.set] || "";
+          const modalSetLabel = card.setName || card.set;
+          const modalCardNumber = card.cardNumber || card.filename.replace(/\.[^.]+$/, "");
+          return (
+            <div className="w-full max-w-lg px-1 pb-1 text-center text-white md:max-w-none">
+              <h3 className="text-balance text-xl font-bold leading-tight md:text-2xl">
+                {card.cardName || "Unknown card"}
+              </h3>
+              <p className="mt-2.5 flex flex-wrap items-center justify-center gap-2 text-sm leading-snug text-white/75">
+                {modalSetLogoSrc ? (
+                  <img
+                    src={modalSetLogoSrc}
+                    alt={`${modalSetLabel} set logo`}
+                    className="h-7 max-h-8 w-auto max-w-[140px] object-contain"
+                  />
+                ) : null}
+                <span className="min-w-0 font-medium text-white/85">{modalSetLabel}</span>
+              </p>
+              <p className="mt-2 text-xs text-white/50">
+                {modalCardNumber}
+                {card.rarity ? ` · ${card.rarity}` : ""}
+              </p>
+            </div>
+          );
+        })()
+      ) : null}
+    </div>
+  );
 }
 
 function toPositiveNationalDexNumber(value: unknown): number | null {
@@ -275,6 +341,65 @@ export function CardGrid({
     ? stripIndex < nationalDexStrip.length - 1
     : selectedIndex !== null && selectedIndex < normalizedCards.length - 1;
 
+  const modalAdjacentCards = useMemo(() => {
+    if (!selectedCard) {
+      return { prev: null as CardEntry | null, next: null as CardEntry | null };
+    }
+
+    if (nationalDexStrip.length > 0 && !nationalDexStripLoading && stripIndex >= 0) {
+      return {
+        prev: stripIndex > 0 ? nationalDexStrip[stripIndex - 1] : null,
+        next:
+          stripIndex < nationalDexStrip.length - 1 ? nationalDexStrip[stripIndex + 1] : null,
+      };
+    }
+
+    if (selectedIndex !== null && standaloneModalCard === null) {
+      return {
+        prev: selectedIndex > 0 ? normalizedCards[selectedIndex - 1] : null,
+        next:
+          selectedIndex < normalizedCards.length - 1
+            ? normalizedCards[selectedIndex + 1]
+            : null,
+      };
+    }
+
+    return { prev: null as CardEntry | null, next: null as CardEntry | null };
+  }, [
+    nationalDexStrip,
+    nationalDexStripLoading,
+    normalizedCards,
+    selectedCard,
+    selectedIndex,
+    standaloneModalCard,
+    stripIndex,
+  ]);
+
+  const [carouselSlotWidth, setCarouselSlotWidth] = useState(0);
+  const carouselSlotWidthRef = useRef(360);
+  /** Measured column for carousel viewport width; must exist before layout effect. */
+  const leftColumnRef = useRef<HTMLDivElement>(null);
+  /** Scroll container for the modal (`overflow-y-auto` overlay); swipe-down-to-close only when scrolled to top. */
+  const modalScrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!selectedCard) {
+      setCarouselSlotWidth(0);
+      return;
+    }
+    const el = leftColumnRef.current;
+    if (!el) return;
+    const measure = () => {
+      const cw = el.clientWidth;
+      setCarouselSlotWidth(cw);
+      if (cw > 0) carouselSlotWidthRef.current = cw;
+    };
+    measure();
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [selectedCard?.filename, selectedCard?.set, selectedIndex, standaloneModalCard]);
+
   const openModal = useCallback((index: number) => {
     setStandaloneModalCard(null);
     setSelectedIndex(index);
@@ -295,10 +420,6 @@ export function CardGrid({
 
   const [dragOffsetX, setDragOffsetX] = useState(0);
   const [slideTransition, setSlideTransition] = useState(false);
-
-  const leftColumnRef = useRef<HTMLDivElement>(null);
-  /** Scroll container for the modal (`overflow-y-auto` overlay); swipe-down-to-close only when scrolled to top. */
-  const modalScrollContainerRef = useRef<HTMLDivElement>(null);
 
   const viewPrevious = useCallback(() => {
     const idx = selectedIndexRef.current;
@@ -457,15 +578,15 @@ export function CardGrid({
       swipeFromLeftColumnRef.current &&
       absX > absY
     ) {
-      const exitW = typeof window !== "undefined" ? window.innerWidth * 1.15 : 520;
+      const slot = carouselSlotWidthRef.current;
       if (x < -horizontalThreshold && hasNext) {
         pendingNavRef.current = "next";
         setSlideTransition(true);
-        setDragOffsetX(-exitW);
+        setDragOffsetX(-slot);
       } else if (x > horizontalThreshold && hasPrevious) {
         pendingNavRef.current = "prev";
         setSlideTransition(true);
-        setDragOffsetX(exitW);
+        setDragOffsetX(slot);
       } else {
         pendingNavRef.current = null;
         setSlideTransition(true);
@@ -485,6 +606,7 @@ export function CardGrid({
 
   const handleCardSlideTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
     if (event.propertyName !== "transform") return;
+    if (event.target !== event.currentTarget) return;
     const pending = pendingNavRef.current;
     if (pending === "next") {
       pendingNavRef.current = null;
@@ -599,18 +721,17 @@ export function CardGrid({
   }, [nationalDexFetchKey]);
 
   const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 400;
-  const slideOpacity: number = slideTransition
-    ? 1
-    : Math.abs(dragOffsetX) > 2
-      ? Math.max(0.52, 1 - Math.abs(dragOffsetX) / (viewportWidth * 0.72))
-      : 1;
+  const fallbackCarouselWidth = Math.max(280, viewportWidth - 32);
+  const carouselSlideWidth =
+    carouselSlotWidth > 0 ? carouselSlotWidth : fallbackCarouselWidth;
+  carouselSlotWidthRef.current = carouselSlideWidth;
 
   const cardSwipeStyle: CSSProperties = {
-    transform: `translate3d(${dragOffsetX}px, 0, 0)`,
+    width: carouselSlideWidth * 3,
+    transform: `translate3d(${-carouselSlideWidth + dragOffsetX}px, 0, 0)`,
     transition: slideTransition
-      ? "transform 0.26s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.22s ease"
+      ? "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)"
       : "none",
-    opacity: slideOpacity,
   };
 
   const modal = selectedCard && typeof document !== "undefined" && (
@@ -657,47 +778,31 @@ export function CardGrid({
             ref={leftColumnRef}
             className="flex w-full min-w-0 flex-col items-center gap-4 md:gap-5"
           >
-            <div
-              className="card-viewer-swipe-group flex w-full flex-col items-center gap-4 md:gap-5"
-              style={cardSwipeStyle}
-              onTransitionEnd={handleCardSlideTransitionEnd}
-            >
-              <div className="relative flex min-h-[50vh] w-full shrink-0 items-center justify-center sm:min-h-[50vh] md:min-h-[min(82vh,820px)] md:max-h-[88vh]">
-                <img
-                  src={selectedCard.highSrc || selectedCard.lowSrc || ""}
-                  alt={`${selectedCard.set} ${selectedCard.filename}`}
-                  className="block max-h-[min(64vh,640px)] w-auto max-w-[calc(100vw-1rem)] rounded-[var(--card-viewer-image-radius)] object-contain shadow-2xl md:max-h-[min(86vh,900px)] md:max-w-full"
+            <div className="w-full overflow-hidden">
+              <div
+                className="card-viewer-swipe-group flex will-change-transform"
+                style={cardSwipeStyle}
+                onTransitionEnd={handleCardSlideTransitionEnd}
+              >
+                <ModalCarouselSlide
+                  card={modalAdjacentCards.prev}
+                  slotWidth={carouselSlideWidth}
+                  showMeta={false}
+                  setLogosByCode={setLogosByCode}
+                />
+                <ModalCarouselSlide
+                  card={selectedCard}
+                  slotWidth={carouselSlideWidth}
+                  showMeta
+                  setLogosByCode={setLogosByCode}
+                />
+                <ModalCarouselSlide
+                  card={modalAdjacentCards.next}
+                  slotWidth={carouselSlideWidth}
+                  showMeta={false}
+                  setLogosByCode={setLogosByCode}
                 />
               </div>
-
-              {(() => {
-                const modalSetLogoSrc =
-                  selectedCard.setLogoSrc || setLogosByCode?.[selectedCard.set] || "";
-                const modalSetLabel = selectedCard.setName || selectedCard.set;
-                const modalCardNumber =
-                  selectedCard.cardNumber || selectedCard.filename.replace(/\.[^.]+$/, "");
-                return (
-                  <div className="w-full max-w-lg px-1 pb-1 text-center text-white md:max-w-none">
-                    <h3 className="text-balance text-xl font-bold leading-tight md:text-2xl">
-                      {selectedCard.cardName || "Unknown card"}
-                    </h3>
-                    <p className="mt-2.5 flex flex-wrap items-center justify-center gap-2 text-sm leading-snug text-white/75">
-                      {modalSetLogoSrc ? (
-                        <img
-                          src={modalSetLogoSrc}
-                          alt={`${modalSetLabel} set logo`}
-                          className="h-7 max-h-8 w-auto max-w-[140px] object-contain"
-                        />
-                      ) : null}
-                      <span className="min-w-0 font-medium text-white/85">{modalSetLabel}</span>
-                    </p>
-                    <p className="mt-2 text-xs text-white/50">
-                      {modalCardNumber}
-                      {selectedCard.rarity ? ` · ${selectedCard.rarity}` : ""}
-                    </p>
-                  </div>
-                );
-              })()}
             </div>
           </div>
 

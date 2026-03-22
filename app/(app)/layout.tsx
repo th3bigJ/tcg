@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { BottomNav } from "@/components/BottomNav";
@@ -15,9 +15,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+};
+
 export const metadata: Metadata = {
   title: "TCG",
   description: "Pokémon TCG",
+  applicationName: "TCG",
+  appleWebApp: {
+    capable: true,
+    title: "TCG",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export default function RootLayout({
@@ -31,7 +47,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <div className="flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)]">{children}</div>
+        <div className="relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)]">
+          {children}
+        </div>
         <BottomNav />
       </body>
     </html>

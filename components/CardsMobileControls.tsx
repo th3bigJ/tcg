@@ -141,7 +141,7 @@ export function CardsMobileControls({
 
       {isFilterModalOpen ? (
         <div
-          className="fixed inset-0 z-[110] flex flex-col bg-[var(--background)] p-3 text-[var(--foreground)] lg:hidden"
+          className="fixed inset-0 z-[1100] flex flex-col bg-[var(--background)] p-3 text-[var(--foreground)] lg:hidden"
           role="dialog"
           aria-modal="true"
           aria-label="Filter cards"

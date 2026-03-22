@@ -127,7 +127,7 @@ const items: NavItem[] = [
   },
   {
     href: "/expansions",
-    label: "Expansions",
+    label: "Sets",
     match: (p) => p === "/expansions" || p.startsWith("/expansions/"),
   },
   {
@@ -149,10 +149,10 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-[100] border-t border-[var(--foreground)]/10 bg-[var(--background)]/95 pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] backdrop-blur-md supports-[backdrop-filter]:bg-[var(--background)]/85 dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)]"
+      className="pointer-events-auto fixed inset-x-0 bottom-0 z-[1000] isolate border-t border-[var(--foreground)]/10 bg-[var(--background)] pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)]"
       aria-label="Main navigation"
     >
-      <div className="mx-auto flex h-14 max-w-lg items-stretch justify-around px-1">
+      <div className="pointer-events-auto mx-auto flex h-14 max-w-lg items-stretch justify-around px-1">
         {items.map((item, i) => {
           const active = item.match(pathname);
           const Icon = icons[i];
