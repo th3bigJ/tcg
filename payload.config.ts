@@ -8,6 +8,10 @@ import { fileURLToPath } from "url";
 import { createPayloadLogger } from "./lib/payloadLogger";
 
 import { Users } from "./collections/Users";
+import { Customers } from "./collections/Customers";
+import { CustomerCollections } from "./collections/CustomerCollections";
+import { CustomerWishlists } from "./collections/CustomerWishlists";
+import { CatalogCardPricing } from "./collections/CatalogCardPricing";
 
 import { Brands } from "./collections/Brands";
 import { ItemConditions } from "./collections/ItemConditions";
@@ -61,6 +65,7 @@ export default buildConfig({
   },
   collections: [
     Users,
+    Customers,
     CardMedia,
     SetLogoMedia,
     SetSymbolMedia,
@@ -73,6 +78,9 @@ export default buildConfig({
     ProductCategories,
     ItemConditions,
     MasterCardList,
+    CustomerCollections,
+    CustomerWishlists,
+    CatalogCardPricing,
   ],
   globals: [SiteSettings],
   editor: lexicalEditor(),

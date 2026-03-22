@@ -106,6 +106,17 @@ export const MasterCardList: CollectionConfig = {
               },
             },
             {
+              name: "cardmarketListingVersion",
+              type: "number",
+              min: 1,
+              max: 20,
+              label: "Cardmarket listing version (URL)",
+              admin: {
+                description:
+                  "Optional. Public Cardmarket singles URLs include `V{n}` before the collector suffix (e.g. `Mega-Dragonite-ex-V2-ASC271`). Leave empty to use V1.",
+              },
+            },
+            {
               name: "artist",
               type: "text",
               label: "Artist",

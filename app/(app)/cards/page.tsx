@@ -14,6 +14,13 @@ import {
   getCachedPokemonFilterOptions,
   getCachedSetFilterOptions,
 } from "@/lib/cardsFilterOptionsServer";
+import { getCurrentCustomer } from "@/lib/auth";
+import {
+  fetchCollectionCardEntries,
+  fetchItemConditionOptions,
+  fetchWishlistIdsByMasterCard,
+  groupCollectionLinesByMasterCardId,
+} from "@/lib/storefrontCardMaps";
 
 function parseExcludeCommonUncommon(value: string | undefined): boolean {
   const v = (value ?? "").trim().toLowerCase();
@@ -87,6 +94,14 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
 
   /** Plain JSON so RSC → CardGrid keeps fields like dexIds (avoids odd Payload/proxy shapes). */
   const cardsForClient = JSON.parse(JSON.stringify(cardsForGrid)) as typeof cardsForGrid;
+
+  const customer = await getCurrentCustomer();
+  const itemConditions = customer ? await fetchItemConditionOptions() : [];
+  const wishlistEntryIdsByMasterCardId = customer
+    ? await fetchWishlistIdsByMasterCard(customer.id)
+    : {};
+  const collectionEntriesForModal = customer ? await fetchCollectionCardEntries(customer.id) : [];
+  const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(collectionEntriesForModal);
 
   const showingCount = cardsForClient.length;
   const showingFrom = filteredCount === 0 ? 0 : 1;
@@ -222,7 +237,14 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               loadMoreStep={CARDS_LOAD_MORE_STEP}
               scrollRestoreKey={scrollRestoreKey}
             >
-              <CardGrid cards={cardsForClient} setLogosByCode={setLogosByCode} />
+              <CardGrid
+                cards={cardsForClient}
+                setLogosByCode={setLogosByCode}
+                customerLoggedIn={Boolean(customer)}
+                itemConditions={itemConditions}
+                wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
+                collectionLinesByMasterCardId={collectionLinesByMasterCardId}
+              />
             </CardsResultsScroll>
           </section>
         </div>

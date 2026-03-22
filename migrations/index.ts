@@ -15,6 +15,8 @@ import * as migration_1732030000000_drop_master_card_list_level_suffix from './1
 import * as migration_1732040000000_drop_master_card_list_supertype from './1732040000000_drop_master_card_list_supertype';
 import * as migration_1732050000000_drop_master_card_list_image_url_columns from './1732050000000_drop_master_card_list_image_url_columns';
 import * as migration_1732060000000_add_sets_tcgdex_id from './1732060000000_add_sets_tcgdex_id';
+import * as migration_1732070000000_add_catalog_card_pricing from './1732070000000_add_catalog_card_pricing';
+import * as migration_1732080000000_add_master_card_list_cardmarket_listing_version from './1732080000000_add_master_card_list_cardmarket_listing_version';
 
 export const migrations = [
   {
@@ -101,5 +103,15 @@ export const migrations = [
     up: migration_1732060000000_add_sets_tcgdex_id.up,
     down: migration_1732060000000_add_sets_tcgdex_id.down,
     name: '1732060000000_add_sets_tcgdex_id',
+  },
+  {
+    up: migration_1732070000000_add_catalog_card_pricing.up,
+    down: migration_1732070000000_add_catalog_card_pricing.down,
+    name: '1732070000000_add_catalog_card_pricing',
+  },
+  {
+    up: migration_1732080000000_add_master_card_list_cardmarket_listing_version.up,
+    down: migration_1732080000000_add_master_card_list_cardmarket_listing_version.down,
+    name: '1732080000000_add_master_card_list_cardmarket_listing_version',
   },
 ];

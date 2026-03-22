@@ -145,6 +145,7 @@ Stored locally so we are not dependent on the external API being available.
 - evolveFrom (text — name of previous stage, e.g. "Sentret")
 - artist (text)
 - externalId (text — TCGdex card id, used for deduplication)
+- cardmarketListingVersion (number, optional — `V{n}` segment in Cardmarket singles URLs, e.g. 2 for `…-V2-ASC271`; omit for V1)
 - imageLow (upload → Card Media)
 - imageHigh (upload → Card Media)
 - variants (group)
@@ -158,6 +159,15 @@ Stored locally so we are not dependent on the external API being available.
 - energyType (text — Energy cards only: Basic, Special)
 - dexId (array of number — Pokémon National Dex ID(s))
 - isActive (boolean, default: true)
+
+## Catalog Card Pricing
+Cached market snapshots in **GBP** for catalog cards (TCGPlayer + Cardmarket shapes after conversion).
+Storefront reads via Local API (`overrideAccess`); admin-only REST. One row per `externalId`.
+
+- masterCard (relationship → Master Card List, required)
+- externalId (text, required, unique — TCGdex card id, e.g. `me2pt5-271`)
+- setCode (text, required — denormalized `sets.code`, e.g. `me2pt5`, for scoped refresh jobs)
+- pricingGbp (json, required — `{ tcgplayer, cardmarket, currency: "GBP" }`, same shape as the storefront card-prices payload)
 
 ---
 

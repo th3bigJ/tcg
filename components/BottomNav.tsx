@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 
 type NavItem = {
   href: string;
@@ -94,6 +95,26 @@ function IconWishlist({ active }: { active: boolean }) {
   );
 }
 
+function IconAccount({ active }: { active: boolean }) {
+  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-6 w-6 ${c}`}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20a8 8 0 0 1 16 0" />
+    </svg>
+  );
+}
+
 function IconSearch({ active }: { active: boolean }) {
   const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
   return (
@@ -114,54 +135,70 @@ function IconSearch({ active }: { active: boolean }) {
   );
 }
 
-const items: NavItem[] = [
-  {
-    href: "/",
-    label: "Collection",
-    match: (p) => p === "/",
-  },
-  {
-    href: "/pokedex",
-    label: "Pokedex",
-    match: (p) => p === "/pokedex" || p.startsWith("/pokedex/"),
-  },
-  {
-    href: "/expansions",
-    label: "Sets",
-    match: (p) => p === "/expansions" || p.startsWith("/expansions/"),
-  },
-  {
-    href: "/wishlist",
-    label: "Wishlist",
-    match: (p) => p === "/wishlist" || p.startsWith("/wishlist/"),
-  },
-  {
-    href: "/cards",
-    label: "Search",
-    match: (p) => p === "/cards" || p.startsWith("/cards"),
-  },
-];
+const icons = [
+  IconSearch,
+  IconCollection,
+  IconPokedex,
+  IconExpansions,
+  IconWishlist,
+  IconAccount,
+] as const;
 
-const icons = [IconCollection, IconPokedex, IconExpansions, IconWishlist, IconSearch] as const;
-
-export function BottomNav() {
+export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname() ?? "";
+
+  const items = useMemo((): NavItem[] => {
+    const accountHref = isLoggedIn ? "/account" : "/login";
+    const accountLabel = isLoggedIn ? "Account" : "Sign in";
+    return [
+      {
+        href: "/cards",
+        label: "Search",
+        match: (p) => p === "/cards" || p.startsWith("/cards"),
+      },
+      {
+        href: "/",
+        label: "Collection",
+        match: (p) => p === "/",
+      },
+      {
+        href: "/pokedex",
+        label: "Pokedex",
+        match: (p) => p === "/pokedex" || p.startsWith("/pokedex/"),
+      },
+      {
+        href: "/expansions",
+        label: "Sets",
+        match: (p) => p === "/expansions" || p.startsWith("/expansions/"),
+      },
+      {
+        href: "/wishlist",
+        label: "Wishlist",
+        match: (p) => p === "/wishlist" || p.startsWith("/wishlist/"),
+      },
+      {
+        href: accountHref,
+        label: accountLabel,
+        match: (p) => p === "/account" || p === "/login",
+      },
+    ];
+  }, [isLoggedIn]);
 
   return (
     <nav
       className="pointer-events-auto fixed inset-x-0 bottom-0 z-[1000] isolate border-t border-[var(--foreground)]/10 bg-[var(--background)] pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)]"
       aria-label="Main navigation"
     >
-      <div className="pointer-events-auto mx-auto flex h-14 max-w-lg items-stretch justify-around px-1">
+      <div className="pointer-events-auto mx-auto flex h-14 max-w-2xl items-stretch justify-around px-0.5">
         {items.map((item, i) => {
           const active = item.match(pathname);
           const Icon = icons[i];
           return (
             <Link
-              key={item.href}
+              key={`${item.href}-${item.label}`}
               href={item.href}
               prefetch={item.href === "/cards" || item.href === "/"}
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-0.5 text-[10px] font-medium transition-colors ${
+              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-0.5 text-[9px] font-medium leading-tight transition-colors sm:text-[10px] ${
                 active
                   ? "text-[var(--foreground)]"
                   : "text-[var(--foreground)]/50 hover:text-[var(--foreground)]/75"

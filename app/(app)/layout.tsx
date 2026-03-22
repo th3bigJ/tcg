@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { BottomNav } from "@/components/BottomNav";
+import { getCurrentCustomer } from "@/lib/auth";
 
 import "./globals.css";
 
@@ -36,11 +37,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const customer = await getCurrentCustomer();
+
   return (
     <html
       lang="en"
@@ -50,7 +53,7 @@ export default function RootLayout({
         <div className="relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)]">
           {children}
         </div>
-        <BottomNav />
+        <BottomNav isLoggedIn={Boolean(customer)} />
       </body>
     </html>
   );

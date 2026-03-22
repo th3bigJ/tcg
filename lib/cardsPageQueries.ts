@@ -4,8 +4,20 @@ import type { Where } from "payload";
 import { resolveMediaURL } from "@/lib/media";
 
 export type CardsPageCardEntry = {
+  /** Payload `master-card-list` document id (for collection / wishlist APIs). */
+  masterCardId?: string;
+  /** TCGdex card id — used for market price API; omit when unknown. */
+  externalId?: string;
   set: string;
+  /** Payload `sets.slug` (kebab-case), when the populated set includes it. */
+  setSlug?: string;
   setName?: string;
+  /** Payload `sets.tcgdexId` when the populated set includes it. */
+  setTcgdexId?: string;
+  /** Payload `sets.cardCountOfficial` when the populated set includes it. */
+  setCardCountOfficial?: number;
+  /** Optional `V{n}` in Cardmarket singles product path (master card field). */
+  cardmarketListingVersion?: number;
   setLogoSrc?: string;
   /** Set release date from Payload (ISO), for display in card modal. */
   setReleaseDate?: string;
@@ -786,6 +798,8 @@ export function resolveCardsCategoryFilter(
 
 /** Payload `select` for hydrating a `master-card-list` doc into `CardsPageCardEntry`. */
 const MASTER_CARD_LIST_ENTRY_SELECT = {
+  id: true,
+  externalId: true,
   set: true,
   imageLow: true,
   imageHigh: true,
@@ -799,6 +813,7 @@ const MASTER_CARD_LIST_ENTRY_SELECT = {
   dexId: true,
   artist: true,
   regulationMark: true,
+  cardmarketListingVersion: true,
 } as const;
 
 export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): CardsPageCardEntry | null {
@@ -829,14 +844,35 @@ export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): Car
   const releaseRaw =
     setObj && typeof setObj.releaseDate === "string" ? setObj.releaseDate.trim() : "";
 
+  const masterCardId = getRelationshipDocumentId(doc.id);
+  const ext =
+    typeof doc.externalId === "string" && doc.externalId.trim() ? doc.externalId.trim() : undefined;
+
   return {
+    ...(masterCardId ? { masterCardId } : {}),
+    ...(ext ? { externalId: ext } : {}),
     set,
+    setSlug:
+      setObj && typeof setObj.slug === "string" && setObj.slug.trim()
+        ? setObj.slug.trim()
+        : undefined,
     setName:
       typeof doc.set === "object" &&
       doc.set &&
       "name" in doc.set &&
       typeof doc.set.name === "string"
         ? doc.set.name
+        : undefined,
+    setTcgdexId:
+      setObj && typeof setObj.tcgdexId === "string" && setObj.tcgdexId.trim()
+        ? setObj.tcgdexId.trim()
+        : undefined,
+    setCardCountOfficial:
+      setObj &&
+      typeof setObj.cardCountOfficial === "number" &&
+      Number.isFinite(setObj.cardCountOfficial) &&
+      setObj.cardCountOfficial >= 0
+        ? Math.floor(setObj.cardCountOfficial)
         : undefined,
     setLogoSrc:
       typeof doc.set === "object" &&
@@ -866,6 +902,12 @@ export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): Car
     artist: typeof doc.artist === "string" ? doc.artist.trim() : undefined,
     regulationMark:
       typeof doc.regulationMark === "string" ? doc.regulationMark.trim() : undefined,
+    cardmarketListingVersion:
+      typeof doc.cardmarketListingVersion === "number" &&
+      Number.isFinite(doc.cardmarketListingVersion) &&
+      doc.cardmarketListingVersion >= 1
+        ? Math.floor(doc.cardmarketListingVersion)
+        : undefined,
   };
 }
 
