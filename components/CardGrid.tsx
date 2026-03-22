@@ -117,31 +117,37 @@ function ModalCardPricing({
   useEffect(() => {
     if (!ext) return;
     let cancelled = false;
-    queueMicrotask(() => {
-      if (cancelled) return;
-      setPricingLoaded(false);
-      setPayload(null);
-      setVariant("normal");
-      fetch(`/api/card-prices/${encodeURIComponent(ext)}`)
-        .then((r) => r.json() as Promise<{ tcgplayer?: unknown; cardmarket?: unknown }>)
-        .then((j) => {
-          if (cancelled) return;
-          const tcgplayer = j.tcgplayer ?? null;
-          const cardmarket = j.cardmarket ?? null;
-          setPayload({ tcgplayer, cardmarket });
-          if (tcgplayer && typeof tcgplayer === "object") {
-            const tp = tcgplayer as Record<string, unknown>;
-            const firstWithPrice = TCG_VARIANTS.find((k) => tcgVariantHasMarketPrice(tp, k));
-            if (firstWithPrice) setVariant(firstWithPrice);
-          }
-        })
-        .catch(() => {
-          if (!cancelled) setPayload({ tcgplayer: null, cardmarket: null });
-        })
-        .finally(() => {
-          if (!cancelled) setPricingLoaded(true);
-        });
-    });
+
+    const load = async () => {
+      try {
+        setPricingLoaded(false);
+        setPayload(null);
+        setVariant("normal");
+        const r = await fetch(`/api/card-prices/${encodeURIComponent(ext)}`);
+        if (cancelled) return;
+        let j: { tcgplayer?: unknown; cardmarket?: unknown };
+        try {
+          j = (await r.json()) as { tcgplayer?: unknown; cardmarket?: unknown };
+        } catch {
+          j = {};
+        }
+        if (cancelled) return;
+        const tcgplayer = j.tcgplayer ?? null;
+        const cardmarket = j.cardmarket ?? null;
+        setPayload({ tcgplayer, cardmarket });
+        if (tcgplayer && typeof tcgplayer === "object") {
+          const tp = tcgplayer as Record<string, unknown>;
+          const firstWithPrice = TCG_VARIANTS.find((k) => tcgVariantHasMarketPrice(tp, k));
+          if (firstWithPrice) setVariant(firstWithPrice);
+        }
+      } catch {
+        if (!cancelled) setPayload({ tcgplayer: null, cardmarket: null });
+      } finally {
+        if (!cancelled) setPricingLoaded(true);
+      }
+    };
+
+    void load();
     return () => {
       cancelled = true;
     };
@@ -548,6 +554,87 @@ type ModalPrimaryActions = {
   wishPending: boolean;
 };
 
+function ModalCardHeadline({
+  card,
+  setLogosByCode,
+  primaryActions,
+}: {
+  card: CardEntry;
+  setLogosByCode?: Record<string, string>;
+  primaryActions?: ModalPrimaryActions | null;
+}) {
+  const modalSetLogoSrc = card.setLogoSrc || setLogosByCode?.[card.set] || "";
+  const modalSetLabel = card.setName || card.set;
+  const showSideActions = Boolean(primaryActions && card.masterCardId);
+
+  const titleAndSet = (
+    <>
+      <h3 className="text-balance break-words text-center text-xl font-bold leading-tight md:text-xl">
+        {card.cardName || "Unknown card"}
+      </h3>
+      <p className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm leading-snug text-white/75 md:mt-1.5 md:justify-center">
+        {modalSetLogoSrc ? (
+          <img
+            src={modalSetLogoSrc}
+            alt={`${modalSetLabel} set logo`}
+            className="h-7 max-h-8 w-auto max-w-[140px] object-contain"
+          />
+        ) : null}
+        <span className="min-w-0 font-medium text-white/85">{modalSetLabel}</span>
+      </p>
+    </>
+  );
+
+  if (showSideActions && primaryActions) {
+    return (
+      <div className="w-full min-w-0 max-w-full px-3 py-4 text-white sm:px-5 md:px-0 md:py-0">
+        <div className="mx-auto flex w-full min-w-0 max-w-full items-center gap-2 overflow-x-hidden sm:gap-3 sm:px-2 md:max-w-none md:items-center md:gap-3 md:overflow-visible md:px-0">
+          <button
+            type="button"
+            disabled={!card.masterCardId}
+            onClick={primaryActions.onAdd}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-xl font-semibold text-white transition hover:bg-white/20 disabled:opacity-40"
+            aria-label="Add to collection"
+          >
+            +
+          </button>
+          <div className="min-w-0 flex-1 text-center">{titleAndSet}</div>
+          <button
+            type="button"
+            disabled={primaryActions.wishPending || !card.masterCardId}
+            onClick={primaryActions.onWishlist}
+            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 disabled:opacity-40 ${
+              primaryActions.wishlistFilled ? "" : "text-white"
+            }`}
+            aria-label={primaryActions.wishlistFilled ? "Remove from wishlist" : "Add to wishlist"}
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill={primaryActions.wishlistFilled ? "currentColor" : "none"}
+              stroke={primaryActions.wishlistFilled ? "none" : "currentColor"}
+              strokeWidth={primaryActions.wishlistFilled ? undefined : 2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={primaryActions.wishlistFilled ? "text-red-500" : "text-white"}
+              aria-hidden
+            >
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full px-1 py-4 text-center text-white md:px-0 md:py-0 md:text-left">
+      {titleAndSet}
+    </div>
+  );
+}
+
 function ModalCarouselSlide({
   card,
   slotWidth,
@@ -564,99 +651,152 @@ function ModalCarouselSlide({
   const w = Math.max(1, slotWidth);
   return (
     <div
-      className="flex shrink-0 flex-col items-center gap-3 md:gap-5"
+      className="flex shrink-0 flex-col items-center gap-3 md:h-full md:min-h-0 md:gap-2"
       style={{ width: w, minWidth: w, maxWidth: w }}
     >
-      <div className="relative flex min-h-[50vh] w-full items-end justify-center pb-0 sm:min-h-[50vh] md:min-h-[min(82vh,820px)] md:max-h-[88vh] md:items-center md:pb-0">
+      <div className="relative flex min-h-[50vh] w-full items-end justify-center pb-0 sm:min-h-[50vh] md:min-h-0 md:max-h-[min(78vh,calc(100dvh-8.5rem))] md:flex-1 md:items-center md:justify-center md:pb-0">
         {card ? (
           <img
             src={card.highSrc || card.lowSrc || ""}
             alt={`${card.set} ${card.filename}`}
-            className="block max-h-[min(64vh,640px)] w-auto max-w-[min(calc(100vw-1.5rem),100%)] rounded-[var(--card-viewer-image-radius)] object-contain shadow-2xl md:max-h-[min(86vh,900px)] md:max-w-full"
+            className="block max-h-[min(64vh,640px)] w-auto max-w-full rounded-[var(--card-viewer-image-radius)] object-contain shadow-2xl md:mx-auto md:max-h-full md:max-w-full md:self-center"
             draggable={false}
           />
         ) : (
           <div
-            className="aspect-[3/4] max-h-[min(64vh,640px)] w-[min(85%,240px)] rounded-[var(--card-viewer-image-radius)] bg-white/[0.06] md:max-h-[min(86vh,900px)]"
+            className="aspect-[3/4] max-h-[min(64vh,640px)] w-[min(85%,240px)] rounded-[var(--card-viewer-image-radius)] bg-white/[0.06] md:mx-auto md:max-h-full md:max-w-full md:self-center"
             aria-hidden
           />
         )}
       </div>
       {showMeta && card ? (
-        (() => {
-          const modalSetLogoSrc = card.setLogoSrc || setLogosByCode?.[card.set] || "";
-          const modalSetLabel = card.setName || card.set;
-          const showSideActions = Boolean(primaryActions && card.masterCardId);
-
-          const titleAndSet = (
-            <>
-              <h3 className="text-balance text-xl font-bold leading-tight md:text-2xl">
-                {card.cardName || "Unknown card"}
-              </h3>
-              <p className="mt-2.5 flex flex-wrap items-center justify-center gap-2 text-sm leading-snug text-white/75">
-                {modalSetLogoSrc ? (
-                  <img
-                    src={modalSetLogoSrc}
-                    alt={`${modalSetLabel} set logo`}
-                    className="h-7 max-h-8 w-auto max-w-[140px] object-contain"
-                  />
-                ) : null}
-                <span className="min-w-0 font-medium text-white/85">{modalSetLabel}</span>
-              </p>
-            </>
-          );
-
-          if (showSideActions && primaryActions) {
-            return (
-              <div className="w-full max-w-lg px-3 py-4 text-white sm:px-5 md:max-w-none md:py-0 md:pb-1">
-                <div className="mx-auto flex w-full max-w-2xl items-center gap-2 sm:gap-3 sm:px-2 lg:max-w-3xl">
-                  <button
-                    type="button"
-                    disabled={!card.masterCardId}
-                    onClick={primaryActions.onAdd}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-xl font-semibold text-white transition hover:bg-white/20 disabled:opacity-40"
-                    aria-label="Add to collection"
-                  >
-                    +
-                  </button>
-                  <div className="min-w-0 flex-1 text-center">{titleAndSet}</div>
-                  <button
-                    type="button"
-                    disabled={primaryActions.wishPending || !card.masterCardId}
-                    onClick={primaryActions.onWishlist}
-                    className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 disabled:opacity-40 ${
-                      primaryActions.wishlistFilled ? "" : "text-white"
-                    }`}
-                    aria-label={primaryActions.wishlistFilled ? "Remove from wishlist" : "Add to wishlist"}
-                  >
-                    <svg
-                      width="22"
-                      height="22"
-                      viewBox="0 0 24 24"
-                      fill={primaryActions.wishlistFilled ? "currentColor" : "none"}
-                      stroke={primaryActions.wishlistFilled ? "none" : "currentColor"}
-                      strokeWidth={primaryActions.wishlistFilled ? undefined : 2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={primaryActions.wishlistFilled ? "text-red-500" : "text-white"}
-                      aria-hidden
-                    >
-                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            );
-          }
-
-          return (
-            <div className="w-full max-w-lg px-1 py-4 text-center text-white md:max-w-none md:py-0 md:pb-1">
-              {titleAndSet}
-            </div>
-          );
-        })()
+        <div className="w-full min-w-0 max-w-full md:hidden">
+          <ModalCardHeadline card={card} setLogosByCode={setLogosByCode} primaryActions={primaryActions} />
+        </div>
       ) : null}
     </div>
+  );
+}
+
+function ModalDexOtherCardsSection({
+  variant,
+  nationalDexStrip,
+  nationalDexStripLoading,
+  nationalDexStripError,
+  selectedCard,
+  normalizedCards,
+  setSelectedIndex,
+  setStandaloneModalCard,
+}: {
+  variant: "mobile" | "desktop";
+  nationalDexStrip: CardEntry[];
+  nationalDexStripLoading: boolean;
+  nationalDexStripError: boolean;
+  selectedCard: CardEntry;
+  normalizedCards: CardEntry[];
+  setSelectedIndex: (index: number | null) => void;
+  setStandaloneModalCard: (card: CardEntry | null) => void;
+}) {
+  const isDesktop = variant === "desktop";
+  const outer =
+    isDesktop
+      ? "hidden min-h-0 w-full shrink-0 flex-col items-center gap-1.5 pt-2 md:flex"
+      : "flex flex-col gap-3 md:hidden";
+  const titleClass = isDesktop
+    ? "text-xs font-bold tracking-tight text-white"
+    : "text-base font-bold tracking-tight text-white";
+  const hintClass = isDesktop ? "text-[10px] leading-snug text-white/55" : "text-xs text-white/55";
+  /* Desktop: scroll outer; inner row centers when shorter than full width (min-w-full + justify-center). */
+  /* @container so thumb width stays “5 per strip viewport” even with inner centered row. */
+  /* overflow-x-auto forces overflow-y to compute to auto; extra py keeps rounded thumbs inside the scrollport. */
+  const scrollOuterClass = isDesktop
+    ? "@container/strip scrollbar-hide w-full snap-x snap-mandatory overflow-x-auto py-2"
+    : "scrollbar-hide -mx-1 w-full snap-x snap-mandatory overflow-x-auto py-2";
+  const scrollInnerClass = isDesktop ? "flex min-w-full justify-center gap-2" : "flex gap-3";
+  /* Desktop: 5 thumbs across strip (4× gap-2); cqw = @container/strip width. */
+  const skelClass = isDesktop
+    ? "aspect-[3/4] w-[calc((100cqw-2rem)/5)] max-w-none shrink-0 animate-pulse snap-start rounded-[var(--card-viewer-image-radius)] bg-white/10"
+    : "aspect-[3/4] w-[36vw] max-w-[168px] shrink-0 animate-pulse snap-start rounded-[var(--card-viewer-image-radius)] bg-white/10";
+  const btnClass = (isCurrent: boolean) =>
+    isDesktop
+      ? `relative flex aspect-[3/4] w-[calc((100cqw-2rem)/5)] max-w-none shrink-0 snap-start items-center justify-center border-0 bg-transparent p-0 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${
+          isCurrent ? "opacity-100" : "opacity-55 hover:opacity-90"
+        }`
+      : `relative flex w-[36vw] max-w-[168px] shrink-0 snap-start flex-col items-stretch border-0 bg-transparent p-0 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${
+          isCurrent ? "opacity-100" : "opacity-60 hover:opacity-90"
+        }`;
+
+  const stripItems = nationalDexStripLoading ? (
+    Array.from({ length: isDesktop ? 5 : 6 }).map((_, i) => (
+      <div key={`dex-skel-${variant}-${i}`} className={skelClass} aria-hidden />
+    ))
+  ) : (
+    nationalDexStrip.map((card) => {
+      const isCurrent = sameCardEntry(card, selectedCard);
+      return (
+        <button
+          key={`${card.set}/${card.filename}-${variant}`}
+          type="button"
+          onClick={() => {
+            if (isCurrent) return;
+            const gi = normalizedCards.findIndex((c) => sameCardEntry(c, card));
+            if (gi >= 0) {
+              setStandaloneModalCard(null);
+              setSelectedIndex(gi);
+            } else {
+              setStandaloneModalCard(card);
+              setSelectedIndex(null);
+            }
+          }}
+          className={btnClass(isCurrent)}
+          aria-label={
+            isCurrent
+              ? `Current card: ${card.cardName || card.filename}`
+              : `View ${card.cardName || card.filename}`
+          }
+          aria-current={isCurrent ? "true" : undefined}
+        >
+          {isDesktop ? (
+            <img
+              src={card.lowSrc}
+              alt=""
+              className="block max-h-full max-w-full rounded-[var(--card-viewer-image-radius)] object-contain"
+              loading="lazy"
+            />
+          ) : (
+            <span className="relative block aspect-[3/4] w-full shrink-0 overflow-hidden rounded-[var(--card-viewer-image-radius)]">
+              <img
+                src={card.lowSrc}
+                alt=""
+                className="absolute inset-0 block h-full w-full object-contain"
+                loading="lazy"
+              />
+            </span>
+          )}
+          {!isDesktop ? (
+            <span className="mt-1 block w-full truncate text-center text-[10px] text-white/65">
+              {card.setName || card.set}
+            </span>
+          ) : null}
+        </button>
+      );
+    })
+  );
+
+  return (
+    <section className={outer}>
+      <h4 className={titleClass}>Other cards</h4>
+      {nationalDexStripError ? (
+        <p className={hintClass}>Could not load matching cards. Try again later.</p>
+      ) : nationalDexStripLoading ? (
+        <p className={hintClass}>Loading other printings…</p>
+      ) : nationalDexStrip.length <= 1 ? (
+        <p className={hintClass}>Only this printing is catalogued for this Dex ID.</p>
+      ) : null}
+      <div className={scrollOuterClass}>
+        <div className={scrollInnerClass}>{stripItems}</div>
+      </div>
+    </section>
   );
 }
 
@@ -821,11 +961,11 @@ function ModalAttributeRow({
 }) {
   const display = value.trim() ? value.trim() : "—";
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3">
+    <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 md:gap-2 md:px-2.5 md:py-2">
       {icon}
       <div className="min-w-0 flex-1">
-        <div className="text-[11px] font-medium uppercase tracking-wide text-white/50">{label}</div>
-        <div className="mt-0.5 text-sm font-medium leading-snug text-white">{display}</div>
+        <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">{label}</div>
+        <div className="mt-0.5 text-sm font-medium leading-snug text-white md:text-xs">{display}</div>
       </div>
     </div>
   );
@@ -1006,7 +1146,12 @@ export function CardGrid({
         }),
       });
       if (!res.ok) return;
-      const j = (await res.json()) as { doc?: { id?: string | number } };
+      let j: { doc?: { id?: string | number } };
+      try {
+        j = (await res.json()) as { doc?: { id?: string | number } };
+      } catch {
+        return;
+      }
       const rawId = j.doc?.id;
       const mid = selectedCard.masterCardId;
       if (rawId !== undefined && mid) {
@@ -1024,6 +1169,8 @@ export function CardGrid({
       }
       setAddSheetOpen(false);
       router.refresh();
+    } catch {
+      /* Network / aborted fetch — WebKit reports TypeError: Load failed */
     } finally {
       setAddPending(false);
     }
@@ -1069,6 +1216,8 @@ export function CardGrid({
             router.refresh();
           }
         }
+      } catch {
+        /* Network / aborted fetch */
       } finally {
         setAdjustingCollectionEntryId(null);
       }
@@ -1105,7 +1254,12 @@ export function CardGrid({
           body: JSON.stringify({ masterCardId: mid }),
         });
         if (res.ok) {
-          const j = (await res.json()) as { doc?: { id?: string | number } };
+          let j: { doc?: { id?: string | number } };
+          try {
+            j = (await res.json()) as { doc?: { id?: string | number } };
+          } catch {
+            j = {};
+          }
           const wid = j.doc?.id;
           if (wid !== undefined) {
             setLocalWishlistMap((m) => ({ ...m, [mid]: String(wid) }));
@@ -1113,6 +1267,8 @@ export function CardGrid({
           router.refresh();
         }
       }
+    } catch {
+      /* Network / aborted fetch */
     } finally {
       setWishPending(false);
     }
@@ -1341,12 +1497,19 @@ export function CardGrid({
     setNationalDexStripLoading(true);
     setNationalDexStripError(false);
 
-    fetch(`/api/cards/by-national-dex?ids=${encodeURIComponent(nationalDexFetchKey)}`)
-      .then(async (res) => {
+    const loadDexStrip = async () => {
+      try {
+        const res = await fetch(
+          `/api/cards/by-national-dex?ids=${encodeURIComponent(nationalDexFetchKey)}`,
+        );
+        if (cancelled) return;
         if (!res.ok) throw new Error("request failed");
-        return res.json() as Promise<{ cards?: CardEntry[] }>;
-      })
-      .then((data) => {
+        let data: { cards?: CardEntry[] };
+        try {
+          data = (await res.json()) as { cards?: CardEntry[] };
+        } catch {
+          throw new Error("json");
+        }
         if (cancelled) return;
         const raw = Array.isArray(data.cards) ? data.cards : [];
         const normalized = raw
@@ -1359,16 +1522,17 @@ export function CardGrid({
           .filter((card) => card.lowSrc);
         normalized.sort((a, b) => compareCardsForOtherStrip(a, b));
         setNationalDexStrip(normalized);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setNationalDexStrip([]);
           setNationalDexStripError(true);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setNationalDexStripLoading(false);
-      });
+      }
+    };
+
+    void loadDexStrip();
 
     return () => {
       cancelled = true;
@@ -1394,7 +1558,7 @@ export function CardGrid({
   const modal = selectedCard && typeof document !== "undefined" && (
     <div
       ref={modalScrollContainerRef}
-      className="card-viewer-overlay fixed inset-0 z-[9999] overflow-y-auto overscroll-y-contain"
+      className="card-viewer-overlay fixed inset-0 z-[9999] overflow-x-hidden overflow-y-auto overscroll-y-contain md:overflow-hidden"
       onClick={closeModal}
       role="dialog"
       aria-modal="true"
@@ -1402,8 +1566,11 @@ export function CardGrid({
     >
       <button
         type="button"
-        onClick={closeModal}
-        className="card-viewer-icon-button fixed right-4 top-4 z-[10000] hidden h-12 w-12 items-center justify-center border border-white/60 bg-black/75 text-white transition hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 md:inline-flex"
+        onClick={(e) => {
+          e.stopPropagation();
+          closeModal();
+        }}
+        className="card-viewer-icon-button fixed right-[max(1rem,env(safe-area-inset-right,0px))] top-[max(1rem,env(safe-area-inset-top,0px))] z-[10000] hidden h-11 w-11 items-center justify-center border border-white/60 bg-black/75 text-white transition hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:h-12 sm:w-12 md:inline-flex"
         aria-label="Close"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
@@ -1412,8 +1579,42 @@ export function CardGrid({
         </svg>
       </button>
 
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!hasPrevious) return;
+          viewPrevious();
+        }}
+        aria-label="Previous card"
+        aria-disabled={!hasPrevious}
+        tabIndex={hasPrevious ? 0 : -1}
+        className={`card-viewer-icon-button fixed left-[max(0.75rem,env(safe-area-inset-left,0px))] top-1/2 z-[10000] hidden h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/60 bg-black/75 text-white transition hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:left-[max(1rem,env(safe-area-inset-left,0px))] sm:h-12 sm:w-12 md:inline-flex ${!hasPrevious ? "cursor-not-allowed opacity-35" : ""}`}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!hasNext) return;
+          viewNext();
+        }}
+        aria-label="Next card"
+        aria-disabled={!hasNext}
+        tabIndex={hasNext ? 0 : -1}
+        className={`card-viewer-icon-button fixed right-[max(0.75rem,env(safe-area-inset-right,0px))] top-1/2 z-[10000] hidden h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/60 bg-black/75 text-white transition hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:right-[max(1rem,env(safe-area-inset-right,0px))] sm:h-12 sm:w-12 md:inline-flex ${!hasNext ? "cursor-not-allowed opacity-35" : ""}`}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </button>
+
       <div
-        className="relative mx-auto flex min-h-[100dvh] w-full max-w-[1460px] flex-col px-3 pb-14 pt-4 sm:px-6 md:px-10 md:pb-20 md:pt-8"
+        className="relative mx-auto flex min-h-[100dvh] w-full min-w-0 max-w-[1460px] flex-col overflow-x-hidden px-3 pb-14 pt-4 sm:px-6 md:h-[100dvh] md:max-h-[100dvh] md:min-h-0 md:overflow-hidden md:px-8 md:pb-5 md:pt-6"
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleModalTouchStart}
         onTouchMove={handleModalTouchMove}
@@ -1430,14 +1631,15 @@ export function CardGrid({
           </button>
         </div>
 
-        <div className="grid w-full gap-3 md:grid-cols-[minmax(260px,1fr)_minmax(280px,400px)] md:items-start md:gap-12">
+        <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-[1fr_minmax(16rem,24rem)_minmax(11rem,16rem)] md:flex-1 md:min-h-0 md:items-stretch md:gap-4 md:overflow-hidden">
           <div
             ref={leftColumnRef}
-            className="flex w-full min-w-0 flex-col items-center gap-3 md:gap-5"
+            className="flex w-full min-w-0 max-w-full flex-col items-center gap-3 overflow-x-hidden md:min-h-0 md:items-stretch md:gap-2 md:self-stretch md:overflow-x-visible"
           >
-            <div className="w-full overflow-hidden">
+            {/* Mobile: clip 3-slide row; desktop keeps horizontal swipe within column. */}
+            <div className="w-full min-w-0 max-w-full overflow-x-hidden md:flex md:min-h-0 md:flex-1 md:flex-col md:overflow-x-visible">
               <div
-                className="card-viewer-swipe-group flex will-change-transform"
+                className="card-viewer-swipe-group flex will-change-transform md:min-h-0 md:flex-1 md:items-stretch"
                 style={cardSwipeStyle}
                 onTransitionEnd={handleCardSlideTransitionEnd}
               >
@@ -1471,10 +1673,38 @@ export function CardGrid({
                 />
               </div>
             </div>
+            {modalNationalDexIds && modalNationalDexIds.length > 0 ? (
+              <ModalDexOtherCardsSection
+                variant="desktop"
+                nationalDexStrip={nationalDexStrip}
+                nationalDexStripLoading={nationalDexStripLoading}
+                nationalDexStripError={nationalDexStripError}
+                selectedCard={selectedCard}
+                normalizedCards={normalizedCards}
+                setSelectedIndex={setSelectedIndex}
+                setStandaloneModalCard={setStandaloneModalCard}
+              />
+            ) : null}
           </div>
 
-          <div className="flex w-full min-w-0 flex-col gap-6 rounded-xl border border-white/15 bg-black/35 p-4 pt-2 text-white shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-md sm:gap-8 sm:p-5 sm:pt-5 md:sticky md:top-6 md:self-start md:p-5">
-            <>
+          <div className="col-span-1 flex min-w-0 max-w-full flex-col gap-6 overflow-x-hidden rounded-xl border border-white/15 bg-black/35 p-4 pt-2 text-white shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-md sm:gap-8 sm:p-5 sm:pt-5 md:contents md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
+            <div className="flex w-full min-w-0 flex-col gap-6 sm:gap-8 md:min-h-0 md:gap-3 md:overflow-y-auto md:rounded-xl md:border md:border-white/15 md:bg-black/35 md:p-4 md:shadow-[0_20px_60px_rgba(0,0,0,0.45)] md:backdrop-blur-md">
+              <div className="hidden md:block">
+                <ModalCardHeadline
+                  card={selectedCard}
+                  setLogosByCode={setLogosByCode}
+                  primaryActions={
+                    selectedCard.masterCardId
+                      ? {
+                          onAdd: onOpenAddSheet,
+                          onWishlist: () => void toggleWishlist(),
+                          wishlistFilled: Boolean(localWishlistMap[selectedCard.masterCardId]),
+                          wishPending,
+                        }
+                      : null
+                  }
+                />
+              </div>
               <ModalYourCollectionSection
                 lines={collectionLinesForSelected}
                 variant={variant}
@@ -1503,159 +1733,91 @@ export function CardGrid({
                   cardmarketListingVersion: selectedCard.cardmarketListingVersion,
                 }}
               />
-            </>
-            <section className="flex flex-col gap-2">
-              <h4 className="text-base font-bold tracking-tight text-white">Attributes</h4>
-              <div className="flex flex-col gap-2">
-                <ModalAttributeRow
-                  icon={<AttributeIconIllustrator />}
-                  label="Illustrator"
-                  value={selectedCard.artist ?? ""}
-                />
-                <ModalAttributeRow
-                  icon={<AttributeIconCalendar />}
-                  label="Release date"
-                  value={formatSetReleaseDate(selectedCard.setReleaseDate)}
-                />
-                <ModalAttributeRow
-                  icon={<AttributeIconStar />}
-                  label="Rarity"
-                  value={selectedCard.rarity ?? ""}
-                />
-                <ModalAttributeRow
-                  icon={<AttributeIconHash />}
-                  label="National Dex ID"
-                  value={
-                    modalNationalDexIds && modalNationalDexIds.length > 0
-                      ? modalNationalDexIds.join(", ")
-                      : ""
-                  }
-                />
-                <ModalAttributeRow
-                  icon={<AttributeIconBolt />}
-                  label="Energy type"
-                  value={
-                    selectedCard.elementTypes && selectedCard.elementTypes.length > 0
-                      ? selectedCard.elementTypes.join(", ")
-                      : ""
-                  }
-                />
-                <ModalAttributeRow
-                  icon={<AttributeIconBadge />}
-                  label="Regulation mark"
-                  value={selectedCard.regulationMark ?? ""}
-                />
-                {selectedCard.category ? (
+            </div>
+
+            <div className="flex w-full min-w-0 flex-col gap-6 sm:gap-8 md:min-h-0 md:gap-2 md:overflow-y-auto md:rounded-xl md:border md:border-white/15 md:bg-black/35 md:p-4 md:shadow-[0_20px_60px_rgba(0,0,0,0.45)] md:backdrop-blur-md">
+              <section className="flex flex-col gap-2">
+                <h4 className="text-base font-bold tracking-tight text-white md:text-sm">Attributes</h4>
+                <div className="flex flex-col gap-2 md:gap-1.5">
                   <ModalAttributeRow
-                    icon={<AttributeIconLayers />}
-                    label="Category"
-                    value={selectedCard.category}
+                    icon={<AttributeIconIllustrator />}
+                    label="Illustrator"
+                    value={selectedCard.artist ?? ""}
                   />
-                ) : null}
-                {selectedCard.stage ? (
+                  <ModalAttributeRow
+                    icon={<AttributeIconCalendar />}
+                    label="Release date"
+                    value={formatSetReleaseDate(selectedCard.setReleaseDate)}
+                  />
+                  <ModalAttributeRow
+                    icon={<AttributeIconStar />}
+                    label="Rarity"
+                    value={selectedCard.rarity ?? ""}
+                  />
+                  <ModalAttributeRow
+                    icon={<AttributeIconHash />}
+                    label="National Dex ID"
+                    value={
+                      modalNationalDexIds && modalNationalDexIds.length > 0
+                        ? modalNationalDexIds.join(", ")
+                        : ""
+                    }
+                  />
+                  <ModalAttributeRow
+                    icon={<AttributeIconBolt />}
+                    label="Energy type"
+                    value={
+                      selectedCard.elementTypes && selectedCard.elementTypes.length > 0
+                        ? selectedCard.elementTypes.join(", ")
+                        : ""
+                    }
+                  />
                   <ModalAttributeRow
                     icon={<AttributeIconBadge />}
-                    label="Stage"
-                    value={selectedCard.stage}
+                    label="Regulation mark"
+                    value={selectedCard.regulationMark ?? ""}
                   />
-                ) : null}
-                {typeof selectedCard.hp === "number" ? (
-                  <ModalAttributeRow
-                    icon={<AttributeIconHeart />}
-                    label="HP"
-                    value={String(selectedCard.hp)}
-                  />
-                ) : null}
-              </div>
-            </section>
-
-            {modalNationalDexIds && modalNationalDexIds.length > 0 ? (
-              <section className="flex flex-col gap-3">
-                <h4 className="text-base font-bold tracking-tight text-white">Other cards</h4>
-                {nationalDexStripError ? (
-                  <p className="text-xs text-white/55">
-                    Could not load matching cards. Try again later.
-                  </p>
-                ) : nationalDexStripLoading ? (
-                  <p className="text-xs text-white/55">Loading other printings…</p>
-                ) : nationalDexStrip.length > 1 ? (
-                  <p className="text-xs text-white/55">
-                    Other printings in the catalog that share this National Dex ID (showing up to 500,
-                    newest sets first).
-                  </p>
-                ) : (
-                  <p className="text-xs text-white/55">Only this printing is catalogued for this Dex ID.</p>
-                )}
-                <div className="scrollbar-hide -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pt-1">
-                  {nationalDexStripLoading
-                    ? Array.from({ length: 6 }).map((_, i) => (
-                        <div
-                          key={`dex-skel-${i}`}
-                          className="aspect-[3/4] w-[30vw] max-w-[132px] shrink-0 animate-pulse snap-start rounded-lg bg-white/10"
-                          aria-hidden
-                        />
-                      ))
-                    : nationalDexStrip.map((card) => {
-                        const isCurrent = sameCardEntry(card, selectedCard);
-                        return (
-                          <button
-                            key={`${card.set}/${card.filename}`}
-                            type="button"
-                            onClick={() => {
-                              if (isCurrent) return;
-                              const gi = normalizedCards.findIndex((c) => sameCardEntry(c, card));
-                              if (gi >= 0) {
-                                setStandaloneModalCard(null);
-                                setSelectedIndex(gi);
-                              } else {
-                                setStandaloneModalCard(card);
-                                setSelectedIndex(null);
-                              }
-                            }}
-                            className={`relative aspect-[3/4] w-[30vw] max-w-[132px] shrink-0 snap-start overflow-hidden rounded-lg border bg-black/25 p-1.5 text-left transition ${
-                              isCurrent
-                                ? "border-white ring-2 ring-white/90"
-                                : "border-white/20 hover:border-white/45"
-                            }`}
-                            aria-label={
-                              isCurrent
-                                ? `Current card: ${card.cardName || card.filename}`
-                                : `View ${card.cardName || card.filename}`
-                            }
-                            aria-current={isCurrent ? "true" : undefined}
-                          >
-                            {isCurrent ? (
-                              <span className="absolute left-1/2 top-1/2 z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-black shadow-lg">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-                                  <path
-                                    d="M20 6 9 17l-5-5"
-                                    stroke="currentColor"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </span>
-                            ) : null}
-                            <img
-                              src={card.lowSrc}
-                              alt=""
-                              className={`h-full w-full object-contain ${isCurrent ? "opacity-55" : ""}`}
-                              loading="lazy"
-                            />
-                            <span className="mt-1 block truncate px-0.5 text-center text-[10px] text-white/65">
-                              {card.setName || card.set}
-                            </span>
-                          </button>
-                        );
-                      })}
+                  {selectedCard.category ? (
+                    <ModalAttributeRow
+                      icon={<AttributeIconLayers />}
+                      label="Category"
+                      value={selectedCard.category}
+                    />
+                  ) : null}
+                  {selectedCard.stage ? (
+                    <ModalAttributeRow
+                      icon={<AttributeIconBadge />}
+                      label="Stage"
+                      value={selectedCard.stage}
+                    />
+                  ) : null}
+                  {typeof selectedCard.hp === "number" ? (
+                    <ModalAttributeRow
+                      icon={<AttributeIconHeart />}
+                      label="HP"
+                      value={String(selectedCard.hp)}
+                    />
+                  ) : null}
                 </div>
               </section>
-            ) : (
-              <p className="text-sm text-white/55">
-                No National Dex ID is stored for this card, so other printings cannot be matched here.
-              </p>
-            )}
+
+              {modalNationalDexIds && modalNationalDexIds.length > 0 ? (
+                <ModalDexOtherCardsSection
+                  variant="mobile"
+                  nationalDexStrip={nationalDexStrip}
+                  nationalDexStripLoading={nationalDexStripLoading}
+                  nationalDexStripError={nationalDexStripError}
+                  selectedCard={selectedCard}
+                  normalizedCards={normalizedCards}
+                  setSelectedIndex={setSelectedIndex}
+                  setStandaloneModalCard={setStandaloneModalCard}
+                />
+              ) : (
+                <p className="text-sm text-white/55">
+                  No National Dex ID is stored for this card, so other printings cannot be matched here.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1744,7 +1906,7 @@ export function CardGrid({
 
   return (
     <>
-      <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3 md:grid-cols-8 lg:grid-cols-8">
+      <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3 md:grid-cols-7">
         {normalizedCards.map((card, index) => {
           return (
             <li

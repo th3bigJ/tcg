@@ -80,7 +80,12 @@ export function CardsResultsScroll({
         setIsLoadingMore(true);
         const el = scrollRef.current;
         if (el) sessionStorage.setItem(SCROLL_STORAGE_KEY, String(el.scrollTop));
-        router.push(loadMoreHref, { scroll: false });
+        try {
+          router.push(loadMoreHref, { scroll: false });
+        } catch {
+          loadMoreTriggeredRef.current = false;
+          setIsLoadingMore(false);
+        }
       },
       {
         root,
@@ -94,7 +99,10 @@ export function CardsResultsScroll({
   }, [canLoadMore, loadMoreHref, scrollRestoreKey, router]);
 
   return (
-    <div ref={scrollRef} className="scrollbar-hide min-h-0 overflow-y-auto">
+    <div
+      ref={scrollRef}
+      className="scrollbar-hide min-h-0 overflow-y-auto lg:min-h-0 lg:flex-1"
+    >
       {children}
       {canLoadMore ? (
         <div

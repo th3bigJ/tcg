@@ -36,18 +36,28 @@ export default async function WishlistPage() {
   }
 
   const entries = await fetchWishlistCardEntries(customer.id);
-  const cardsForClient = JSON.parse(JSON.stringify(entries)) as typeof entries;
-  const collectionEntries = await fetchCollectionCardEntries(customer.id);
+  const cardsForClient = structuredClone(entries) as typeof entries;
+
+  const [
+    collectionEntries,
+    itemConditions,
+    wishlistEntryIdsByMasterCardId,
+    facets,
+    payload,
+  ] = await Promise.all([
+    fetchCollectionCardEntries(customer.id),
+    fetchItemConditionOptions(),
+    fetchWishlistIdsByMasterCard(customer.id),
+    getCachedFilterFacets().then((r) => r ?? {}),
+    getPayload({ config }),
+  ]);
+
   const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(collectionEntries);
-  const itemConditions = await fetchItemConditionOptions();
-  const wishlistEntryIdsByMasterCardId = await fetchWishlistIdsByMasterCard(customer.id);
-  const facets = (await getCachedFilterFacets()) ?? {};
   const setFilterOptions = await getCachedSetFilterOptions(facets.setCodes ?? []);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
 
-  const payload = await getPayload({ config });
   const wishlistValue =
     entries.length > 0 ? await estimateCollectionMarketValueGbp(payload, entries) : null;
   const valueFormatted =

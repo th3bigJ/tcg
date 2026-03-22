@@ -55,11 +55,13 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const categoryMatchGroups = facets.categoryMatchGroups ?? {};
   const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
     resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
-  const setFilterOptions = await getCachedSetFilterOptions(availableSetCodes);
+  const [setFilterOptions, pokemonFilterOptions] = await Promise.all([
+    getCachedSetFilterOptions(availableSetCodes),
+    getCachedPokemonFilterOptions(),
+  ]);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
-  const pokemonFilterOptions = await getCachedPokemonFilterOptions();
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
   const parsedPokemonDex = Number.parseInt(selectedPokemon, 10);
   const hasSelectedPokemon = Number.isFinite(parsedPokemonDex) && parsedPokemonDex > 0;
@@ -80,27 +82,31 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     resolvedSearchParams.page,
   );
 
-  const { entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
-    activeSet,
-    activePokemonDex,
-    activePokemonName,
-    activeRarity,
-    activeSearch,
-    excludeCommonUncommon,
-    categoryQueryVariants,
-    page: 1,
-    perPage: requestedTake,
-  });
+  const [{ entries: cardsForGrid, totalDocs: filteredCount }, customer] = await Promise.all([
+    fetchMasterCardsPage({
+      activeSet,
+      activePokemonDex,
+      activePokemonName,
+      activeRarity,
+      activeSearch,
+      excludeCommonUncommon,
+      categoryQueryVariants,
+      page: 1,
+      perPage: requestedTake,
+    }),
+    getCurrentCustomer(),
+  ]);
 
-  /** Plain JSON so RSC → CardGrid keeps fields like dexIds (avoids odd Payload/proxy shapes). */
-  const cardsForClient = JSON.parse(JSON.stringify(cardsForGrid)) as typeof cardsForGrid;
+  /** Clone so RSC → CardGrid keeps plain fields like dexIds (avoids odd Payload/proxy shapes). */
+  const cardsForClient = structuredClone(cardsForGrid) as typeof cardsForGrid;
 
-  const customer = await getCurrentCustomer();
-  const itemConditions = customer ? await fetchItemConditionOptions() : [];
-  const wishlistEntryIdsByMasterCardId = customer
-    ? await fetchWishlistIdsByMasterCard(customer.id)
-    : {};
-  const collectionEntriesForModal = customer ? await fetchCollectionCardEntries(customer.id) : [];
+  const [itemConditions, wishlistEntryIdsByMasterCardId, collectionEntriesForModal] = customer
+    ? await Promise.all([
+        fetchItemConditionOptions(),
+        fetchWishlistIdsByMasterCard(customer.id),
+        fetchCollectionCardEntries(customer.id),
+      ])
+    : [[], {}, []];
   const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(collectionEntriesForModal);
 
   const showingCount = cardsForClient.length;
@@ -143,10 +149,10 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   })();
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-      <main className="min-h-0 w-full flex-1 overflow-hidden px-4 py-4">
-        <div className="grid h-full min-h-0 items-stretch gap-4 lg:grid-cols-[20%_minmax(0,1fr)]">
-          <aside className="hidden min-h-0 h-full flex-col rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2 lg:flex">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)] lg:box-border lg:flex lg:h-[calc(100dvh-var(--bottom-nav-offset))] lg:max-h-[calc(100dvh-var(--bottom-nav-offset))] lg:min-h-0 lg:shrink-0">
+      <main className="min-h-0 w-full flex-1 overflow-hidden px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <div className="grid h-full min-h-0 items-stretch gap-4 lg:grid-cols-[20%_minmax(0,1fr)] lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+          <aside className="hidden min-h-0 h-full flex-col overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2 lg:flex lg:min-h-0">
             <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">Filters</h2>
               {activeSet || activePokemon ? (
@@ -159,20 +165,22 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 </Link>
               ) : null}
             </div>
-            <CardFiltersPanel
-              sets={setFilterOptions}
-              pokemon={pokemonFilterOptions}
-              rarityOptions={rarityOptions}
-              categoryOptions={categoryOptions}
-              activeSet={activeSet}
-              activePokemonDex={activePokemon}
-              activeRarity={activeRarity}
-              activeSearch={activeSearch}
-              excludeCommonUncommon={excludeCommonUncommon}
-              activeCategory={activeCategory}
-            />
+            <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto lg:min-h-0">
+              <CardFiltersPanel
+                sets={setFilterOptions}
+                pokemon={pokemonFilterOptions}
+                rarityOptions={rarityOptions}
+                categoryOptions={categoryOptions}
+                activeSet={activeSet}
+                activePokemonDex={activePokemon}
+                activeRarity={activeRarity}
+                activeSearch={activeSearch}
+                excludeCommonUncommon={excludeCommonUncommon}
+                activeCategory={activeCategory}
+              />
+            </div>
           </aside>
-          <section className="flex min-h-0 flex-col lg:pr-1">
+          <section className="flex min-h-0 flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:pr-1">
             <CardsMobileControls
               activeSet={activeSet}
               activePokemon={activePokemon}
