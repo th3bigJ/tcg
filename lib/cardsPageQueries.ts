@@ -63,7 +63,8 @@ export function resolveCardsTakeFromParams(
 
 const FILTER_FACETS_CACHE_KEY = "master-card-list-filter-facets-v4";
 const FILTER_FACETS_REVALIDATE_SEC = 300;
-const POKEMON_DEX_INDEX_CACHE_KEY = "master-card-list-pokemon-dex-index-v4";
+/** Bumped when dex index shape changes; v5 stores tuple rows to stay under Next.js unstable_cache 2MB limit. */
+const POKEMON_DEX_INDEX_CACHE_KEY = "master-card-list-pokemon-dex-index-v5-packed";
 const POKEMON_DEX_INDEX_REVALIDATE_SEC = 300;
 const DEFAULT_CARD_ORDER_CACHE_KEY = "master-card-list-default-order-v1";
 const DEFAULT_CARD_ORDER_REVALIDATE_SEC = 300;
@@ -394,6 +395,41 @@ type PokemonDexIndexEntry = {
 
 type PokemonDexIndex = Record<string, PokemonDexIndexEntry[]>;
 
+/**
+ * One row per {@link PokemonDexIndexEntry}: [id, setId, rarity, categoryKey, cardNameLower, cardNumberRank].
+ * Tuple JSON is much smaller than repeated object keys — needed for Next.js `unstable_cache` (~2MB max).
+ */
+type PokemonDexIndexPackedRow = readonly [string, string | null, string, string, string, number];
+type PokemonDexIndexPacked = Record<string, PokemonDexIndexPackedRow[]>;
+
+function packPokemonDexIndex(index: PokemonDexIndex): PokemonDexIndexPacked {
+  const out: PokemonDexIndexPacked = {};
+  for (const [dexKey, entries] of Object.entries(index)) {
+    out[dexKey] = entries.map(
+      (e): PokemonDexIndexPackedRow =>
+        [e.id, e.setId, e.rarity, e.categoryKey, e.cardNameLower, e.cardNumberRank] as const,
+    );
+  }
+  return out;
+}
+
+function unpackPokemonDexIndex(packed: PokemonDexIndexPacked): PokemonDexIndex {
+  const out: PokemonDexIndex = {};
+  for (const [dexKey, rows] of Object.entries(packed)) {
+    out[dexKey] = rows.map(
+      (t): PokemonDexIndexEntry => ({
+        id: t[0],
+        setId: t[1],
+        rarity: t[2],
+        categoryKey: t[3],
+        cardNameLower: t[4],
+        cardNumberRank: t[5],
+      }),
+    );
+  }
+  return out;
+}
+
 async function loadPokemonDexIndex(): Promise<PokemonDexIndex> {
   const payloadConfig = (await import("../payload.config")).default;
   const { getPayload } = await import("payload");
@@ -456,11 +492,16 @@ async function loadPokemonDexIndex(): Promise<PokemonDexIndex> {
   return index;
 }
 
-const getCachedPokemonDexIndex = unstable_cache(
-  async () => loadPokemonDexIndex(),
+const getCachedPokemonDexIndexPacked = unstable_cache(
+  async () => packPokemonDexIndex(await loadPokemonDexIndex()),
   [POKEMON_DEX_INDEX_CACHE_KEY],
   { revalidate: POKEMON_DEX_INDEX_REVALIDATE_SEC },
 );
+
+async function getCachedPokemonDexIndex(): Promise<PokemonDexIndex> {
+  const packed = await getCachedPokemonDexIndexPacked();
+  return unpackPokemonDexIndex(packed);
+}
 
 type DefaultCardOrderEntry = {
   id: string;
