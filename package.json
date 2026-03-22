@@ -20,6 +20,7 @@
     "audit:pokemon:filter-images": "node --import tsx/esm scripts/auditPokemonFilterImageLinks.ts",
     "dedupe:swsh12pt5": "node --import tsx/esm scripts/dedupeSwsh12pt5MasterCards.ts",
     "import:cards:json": "node --import tsx/esm scripts/importSetCardsFromJson.ts",
+    "backfill:dex-from-json": "node --import tsx/esm scripts/backfillDexIdFromLocalJson.ts",
     "seed:cards:all-sets": "node --import tsx/esm scripts/seedAllSetCards.ts",
     "seed:card-images": "node --import tsx/esm scripts/seedCardImages.ts",
     "seed:sets": "node --import tsx/esm scripts/seedSets.ts",
