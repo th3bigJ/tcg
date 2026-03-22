@@ -1,4 +1,4 @@
-# Build Plan — Accounts, Pricing, Collections & Wishlist
+# Build Plan — Card Pricing, Accounts, Collection & Wishlist
 
 ## Current State
 
@@ -6,102 +6,146 @@
 - `Users` collection exists but is **admin-only** (no public registration)
 - `/app/(app)/page.tsx` — Collection page is a stub
 - `/app/(app)/wishlist/page.tsx` — Wishlist page is a stub
-- No SKU Items, Inventory, or pricing collections yet
+- Each `MasterCardList` record has an `externalId` field (e.g. `xyp-XY01`) — this is the pokemontcg.io card ID
 
 ## What We're Building
 
 Four things in order:
 
-1. **SKU Items + Pricing** — product listings with prices (Phase 4 from build-plan.md)
+1. **Card Pricing** — fetch and display live market prices when a card is opened
 2. **Customer Accounts** — public-facing registration, login, session
 3. **Collection** — authenticated users track cards they own
 4. **Wishlist** — authenticated users track cards they want
 
 ---
 
-## Phase A — SKU Items & Pricing (Phase 4 from build-plan.md)
+## Phase A — Card Pricing Display
 
-> Enables the store to have priced products. Required before checkout can exist.
+> Show live TCGPlayer + Cardmarket prices when a user opens a card.
+> No store pricing, no SKUs. Just market data from an external API.
 
-### A1 — Create `collections/SkuItems.ts`
+### How it works
 
-Fields per `docs/database.md`:
+pokemontcg.io returns price data alongside card details. The card's `externalId`
+in your database is the pokemontcg.io card ID (e.g. `xyp-XY01`, `base1-4`).
 
-```
-- title (text, required)
-- slug (text, required, unique) — auto-generate from title
-- skuCode (text, required, unique — e.g. "PKM-SVI-001-NM")
-- brand (relationship → Brands)
-- set (relationship → Sets)
-- productType (relationship → Product Types, required)
-- productCategory (relationship → Product Categories)
-- masterCard (relationship → MasterCardList, optional)
-- description (richText)
-- images (array of upload → Media)
-- isActive (boolean, default: true)
-- isPublished (boolean, default: false)
-- inventoryMode (select: quantity | unique, default: quantity) — only build quantity for v1
-- trackInventory (boolean, default: true)
-
-Pricing group:
-- price (number, required — GBP)
-- compareAtPrice (number)
-- costPrice (number)
-- taxClass (select: standard | zero | exempt, default: standard)
-
-Logistics group:
-- barcode (text)
-- weight (number — grams)
-- dimensions group: length, width, height (number — mm)
-
-Metadata:
-- attributes (json)
-- notes (textarea)
-```
-
-Access: read → `isPublished === true` for public; full access for admin.
-
-### A2 — Create `collections/Inventory.ts`
-
-Fields per `docs/database.md`:
-
-```
-- skuItem (relationship → SkuItems, required)
-- condition (relationship → ItemConditions, required)
-- language (select: English | Japanese | Korean | Chinese | German | French | Italian | Spanish | Portuguese, default: English)
-- printing (select: Standard | Reverse Holo | Holo | First Edition | Shadowless | other, default: Standard)
-
-Stock:
-- quantityOnHand (number, default: 0)
-  NOTE: quantityReserved and quantityAvailable are NOT in v1
-
-Grading:
-- gradingCompany (select: PSA | BGS | CGC | SGC | ACE | Other | none, default: none)
-- gradeValue (text — e.g. "9", "9.5", "10")
-
-Status:
-- status (select: active | sold_out | archived | damaged_hold, default: active)
-- notes (textarea)
-- lastUpdatedAt (date — auto-update on change via beforeChange hook)
+**pokemontcg.io price response shape:**
+```json
+{
+  "id": "base1-4",
+  "name": "Charizard",
+  "tcgplayer": {
+    "updatedAt": "2024/01/15",
+    "prices": {
+      "holofoil": {
+        "low": 180.00,
+        "mid": 250.00,
+        "high": 450.00,
+        "market": 230.00,
+        "directLow": null
+      },
+      "reverseHolofoil": { "low": ..., "mid": ..., "high": ..., "market": ... },
+      "normal": { "low": ..., "mid": ..., "high": ..., "market": ... }
+    }
+  },
+  "cardmarket": {
+    "updatedAt": "2024/01/15",
+    "prices": {
+      "averageSellPrice": 220.00,
+      "lowPrice": 150.00,
+      "trendPrice": 235.00,
+      "avg1": 240.00,
+      "avg7": 228.00,
+      "avg30": 215.00
+    }
+  }
+}
 ```
 
-Access: admin only (customers never see raw inventory records).
+### A1 — Create `/app/api/card-prices/[externalId]/route.ts`
 
-### A3 — Register both collections in `payload.config.ts`
+A server-side proxy route that fetches price data from pokemontcg.io and returns
+only the price fields. Proxying server-side keeps your API key secret and lets you
+add caching later.
 
-Add `SkuItems` and `Inventory` to the collections array.
+```typescript
+// GET /api/card-prices/base1-4
+export async function GET(req: Request, { params }: { params: { externalId: string } }) {
+  const res = await fetch(
+    `https://api.pokemontcg.io/v2/cards/${params.externalId}`,
+    {
+      headers: {
+        // Optional — add to .env.local as POKEMON_TCG_API_KEY
+        // Free tier works without it but has lower rate limits
+        ...(process.env.POKEMON_TCG_API_KEY
+          ? { 'X-Api-Key': process.env.POKEMON_TCG_API_KEY }
+          : {}),
+      },
+      next: { revalidate: 60 * 60 * 6 }, // cache for 6 hours — prices don't change that fast
+    }
+  )
 
-### A4 — Product listing page
+  if (!res.ok) return Response.json({ tcgplayer: null, cardmarket: null })
 
-- `/app/(app)/shop/page.tsx` — grid of published SKU Items
-- Fetch via Payload Local API: `payload.find({ collection: 'sku-items', where: { isPublished: { equals: true } } })`
-- Show: card image (from `masterCard.imageHigh`), title, price, condition
-- `/app/(app)/shop/[slug]/page.tsx` — product detail page
-- Show full details + price + add-to-wishlist button (wired up in Phase D)
+  const { data } = await res.json()
+  return Response.json({
+    tcgplayer: data.tcgplayer ?? null,
+    cardmarket: data.cardmarket ?? null,
+  })
+}
+```
 
-### A5 — Add Shop to BottomNav
+### A2 — Add price display to the card detail view
 
-Add a shop/bag icon route `/shop` to `components/BottomNav.tsx`.
+Find wherever a card is shown in detail (card modal, card detail page, or the
+card viewer in the carousel). Fetch prices client-side when the card opens:
+
+```typescript
+// In your card detail component
+const [prices, setPrices] = useState(null)
+
+useEffect(() => {
+  if (!card.externalId) return
+  fetch(`/api/card-prices/${card.externalId}`)
+    .then(r => r.json())
+    .then(setPrices)
+}, [card.externalId])
+```
+
+**Display:**
+- Show TCGPlayer market price as the headline price (most recognisable)
+- Show low/mid/high as a secondary range
+- Show Cardmarket trend price for European context
+- If the card has multiple printings (holofoil, reverse, normal), show a tab or
+  dropdown to switch between them
+- Show "Prices via TCGPlayer / Cardmarket" attribution + the `updatedAt` date
+- If `externalId` is missing or the API returns null prices: show "Price unavailable"
+
+**Example UI layout:**
+```
+┌─────────────────────────────┐
+│  TCGPlayer                  │
+│  Market  £230.00            │
+│  Low £180 · High £450       │
+│                             │
+│  Cardmarket                 │
+│  Trend   £235.00            │
+│  30-day avg  £215.00        │
+│                             │
+│  Updated 15 Jan 2024        │
+└─────────────────────────────┘
+```
+
+### A3 — `.env.local` entry
+
+Add to `.env.local` (optional but recommended):
+```
+POKEMON_TCG_API_KEY=your_key_here
+```
+
+Free keys available at https://pokemontcg.io — raises rate limit from 1,000 to
+20,000 requests/day. The `next: { revalidate }` cache on the route handler means
+you won't hit limits in normal use.
 
 ---
 
@@ -111,7 +155,8 @@ Add a shop/bag icon route `/shop` to `components/BottomNav.tsx`.
 
 ### B1 — Create `collections/Customers.ts`
 
-A new Payload auth collection for public users. **Do not modify the existing `Users` collection** — that stays admin-only.
+A new Payload auth collection for public users. **Do not modify the existing
+`Users` collection** — that stays admin-only.
 
 ```typescript
 // collections/Customers.ts
@@ -122,14 +167,14 @@ A new Payload auth collection for public users. **Do not modify the existing `Us
     useAPIKey: false,
   },
   access: {
-    create: () => true,         // public registration
-    read: isAdminOrSelf,        // can only read own record
+    create: () => true,       // public registration
+    read: isAdminOrSelf,      // can only read own record
     update: isAdminOrSelf,
     delete: isAdmin,
   },
   fields: [
     { name: 'firstName', type: 'text', required: true },
-    { name: 'lastName', type: 'text', required: true },
+    { name: 'lastName',  type: 'text', required: true },
     // email is auto-added by Payload auth
   ],
 }
@@ -138,50 +183,51 @@ A new Payload auth collection for public users. **Do not modify the existing `Us
 Add `isAdminOrSelf` helper to `lib/access.ts`:
 ```typescript
 export const isAdminOrSelf = ({ req }: { req: PayloadRequest }) => {
-  if (req.user && 'collection' in req.user && req.user.collection === 'users') return true;
-  if (req.user) return { id: { equals: req.user.id } };
-  return false;
-};
+  if (req.user && 'collection' in req.user && req.user.collection === 'users') return true
+  if (req.user) return { id: { equals: req.user.id } }
+  return false
+}
 ```
 
 Register `Customers` in `payload.config.ts`.
 
 ### B2 — Auth API routes
 
-Payload auto-generates these REST endpoints once `auth: true` is set:
-- `POST /api/customers/login` — login
-- `POST /api/customers/logout` — logout
-- `POST /api/customers` — register (create)
-- `GET /api/customers/me` — get current session
+Payload auto-generates these once `auth: true` is set — no extra code needed:
+- `POST /api/customers/login`
+- `POST /api/customers/logout`
+- `POST /api/customers` — register
+- `GET /api/customers/me`
 
 ### B3 — Auth UI pages
 
-- `/app/(app)/login/page.tsx` — login form
-  - Email + password fields
+- `/app/(app)/login/page.tsx`
+  - Email + password form
   - POST to `/api/customers/login`
-  - On success: store token in `httpOnly` cookie (use Next.js `cookies()` in a Server Action or Route Handler), redirect to `/`
-- `/app/(app)/register/page.tsx` — registration form
-  - First name, last name, email, password fields
-  - POST to `/api/customers` (Payload create endpoint)
-  - On success: auto-login (call login endpoint), redirect to `/`
-- `/app/(app)/account/page.tsx` — account page (protected)
+  - On success: store token in `httpOnly` cookie via a Server Action or Route Handler, redirect to `/`
+- `/app/(app)/register/page.tsx`
+  - First name, last name, email, password
+  - POST to `/api/customers`
+  - On success: auto-login, redirect to `/`
+- `/app/(app)/account/page.tsx` (protected)
   - Show name, email
-  - Link to collection and wishlist
+  - Links to collection and wishlist
 
 ### B4 — Session helper
 
 Create `lib/auth.ts`:
 ```typescript
-// Returns the current customer from the Payload token cookie
+// Returns the current customer validated server-side
 // Use in Server Components and Route Handlers
 export async function getCurrentCustomer(): Promise<Customer | null>
 ```
 
-Use `payload.auth({ headers: req.headers })` to validate the token server-side.
+Use `payload.auth({ headers: req.headers })` to validate the token.
 
 ### B5 — Update BottomNav
 
-Replace any hardcoded user icon with a link to `/account` (or `/login` if not authenticated). Read auth state server-side in the layout component.
+Add an account icon that links to `/account` when logged in, `/login` when not.
+Read auth state server-side in the layout.
 
 ---
 
@@ -196,95 +242,85 @@ Replace any hardcoded user icon with a link to `/account` (or `/login` if not au
 - masterCard (relationship → MasterCardList, required)
 - condition (relationship → ItemConditions)
 - printing (select: Standard | Reverse Holo | Holo | First Edition | Shadowless | other, default: Standard)
-- language (select: English | Japanese | ..., default: English)
+- language (select: English | Japanese | Korean | Chinese | German | French | Italian | Spanish | Portuguese, default: English)
 - quantity (number, default: 1)
 - gradingCompany (select: PSA | BGS | CGC | SGC | ACE | Other | none, default: none)
-- gradeValue (text)
+- gradeValue (text — e.g. "9", "9.5", "10")
 - notes (textarea)
 - addedAt (date — auto on create)
 ```
 
 Access:
-- create: authenticated customer (can only create for themselves)
-- read: own records only (`{ customer: { equals: req.user.id } }`)
-- update: own records only
-- delete: own records only
-- admin: full access
-
-Enforce "own records only" with a `beforeOperation` hook that sets `customer` to `req.user.id` on create.
+- `create`: authenticated customers only; `beforeChange` hook forces `customer = req.user.id`
+- `read/update/delete`: own records only (`{ customer: { equals: req.user.id } }`)
+- Admin: full access
 
 ### C2 — Collection API routes
 
-Create `/app/api/collection/route.ts`:
-- `GET` — list customer's collection (calls `payload.find` with customer filter)
+`/app/api/collection/route.ts`:
+- `GET` — return customer's collection (`payload.find` filtered by customer)
 - `POST` — add a card (`{ masterCardId, conditionId, quantity, printing, language }`)
-- `DELETE ?id=` — remove a card
+- `DELETE ?id=` — remove an entry
 
 ### C3 — Wire up `/app/(app)/page.tsx`
 
-Replace the stub with a real collection grid:
-- Fetch from `GET /api/collection`
-- If not logged in: show "Sign in to track your collection" with link to `/login`
-- If logged in: show card grid (reuse `CardGrid` component), grouped by set or sorted by date added
-- Each card shows: card image, name, set, condition badge, quantity
-- "Add to collection" button on each card in `/shop/[slug]/page.tsx` and `/cards` page
+- Not logged in → "Sign in to track your collection" + link to `/login`
+- Logged in → card grid using the existing `CardGrid` component
+  - Each card shows: image, name, set, condition badge, quantity
+  - Grouped by set or sorted by date added
 
-### C4 — Add card on the cards page
+### C4 — Add to collection UI
 
-On the `/cards` page card grid, add a small `+` icon on hover. On click:
-- If not logged in: redirect to `/login`
-- If logged in: open a small modal/sheet with condition + quantity selectors, then call `POST /api/collection`
+On the `/cards` page and card detail view, add a `+` button. On click:
+- Not logged in → redirect to `/login`
+- Logged in → small bottom sheet with condition + quantity + printing selectors → `POST /api/collection`
 
 ---
 
 ## Phase D — Wishlist (Cards I Want)
 
-> Authenticated customers save cards they want to buy.
+> Authenticated customers save cards they want to acquire.
 
 ### D1 — Create `collections/CustomerWishlists.ts`
 
 ```
 - customer (relationship → Customers, required)
 - masterCard (relationship → MasterCardList, required)
-- targetCondition (relationship → ItemConditions — condition they want)
+- targetCondition (relationship → ItemConditions)
 - targetPrinting (select: Standard | Reverse Holo | Holo | First Edition | Shadowless | other)
-- maxPrice (number — optional, GBP — won't buy above this price)
+- maxPrice (number — optional, GBP — alert if market drops below this)
 - priority (select: low | medium | high, default: medium)
 - notes (textarea)
 - addedAt (date — auto on create)
 ```
 
-Access: same pattern as `CustomerCollections` — own records only.
+Access: same own-records-only pattern as `CustomerCollections`.
 
 ### D2 — Wishlist API routes
 
-Create `/app/api/wishlist/route.ts`:
-- `GET` — list customer's wishlist
+`/app/api/wishlist/route.ts`:
+- `GET` — customer's wishlist
 - `POST` — add a card (`{ masterCardId, targetConditionId, targetPrinting, maxPrice, priority }`)
 - `DELETE ?id=` — remove
 
 ### D3 — Wire up `/app/(app)/wishlist/page.tsx`
 
-Replace the stub:
-- Fetch from `GET /api/wishlist`
-- If not logged in: show "Sign in to save cards to your wishlist"
-- If logged in: show card grid with priority badges, target condition, max price
-- "Move to collection" button — calls `POST /api/collection` then `DELETE /api/wishlist`
+- Not logged in → "Sign in to save cards to your wishlist"
+- Logged in → card grid with priority badges, target condition, current market price (reuse Phase A pricing component)
+- "Move to collection" button → `POST /api/collection` then `DELETE /api/wishlist`
 - "Remove" button
 
-### D4 — Add to wishlist button
+### D4 — Heart button
 
-On `/cards` page and `/shop/[slug]/page.tsx`, add a heart icon button:
-- Toggles the card in the wishlist (`POST /api/wishlist` or `DELETE /api/wishlist`)
-- Heart fills if already in wishlist
+On `/cards` page and card detail view, add a heart icon:
+- Filled = already in wishlist; hollow = not in wishlist
+- Click toggles: `POST /api/wishlist` or `DELETE /api/wishlist`
 
 ---
 
 ## File Checklist
 
 ### New collections
-- [ ] `collections/SkuItems.ts`
-- [ ] `collections/Inventory.ts`
 - [ ] `collections/Customers.ts`
 - [ ] `collections/CustomerCollections.ts`
 - [ ] `collections/CustomerWishlists.ts`
@@ -297,12 +333,11 @@ On `/cards` page and `/shop/[slug]/page.tsx`, add a heart icon button:
 - [ ] `lib/auth.ts` — `getCurrentCustomer()` helper
 
 ### New API routes
+- [ ] `app/api/card-prices/[externalId]/route.ts`
 - [ ] `app/api/collection/route.ts`
 - [ ] `app/api/wishlist/route.ts`
 
 ### New pages
-- [ ] `app/(app)/shop/page.tsx`
-- [ ] `app/(app)/shop/[slug]/page.tsx`
 - [ ] `app/(app)/login/page.tsx`
 - [ ] `app/(app)/register/page.tsx`
 - [ ] `app/(app)/account/page.tsx`
@@ -310,28 +345,27 @@ On `/cards` page and `/shop/[slug]/page.tsx`, add a heart icon button:
 ### Updated pages
 - [ ] `app/(app)/page.tsx` — wire up collection
 - [ ] `app/(app)/wishlist/page.tsx` — wire up wishlist
+- [ ] Card detail view — add price display + add-to-collection + heart button
 
 ### Updated components
-- [ ] `components/BottomNav.tsx` — add Shop + Account links
+- [ ] `components/BottomNav.tsx` — add Account link
 
 ---
 
 ## Build Order
 
-Build in this sequence — each step depends on the previous:
-
-1. `SkuItems` + `Inventory` collections → register in config → product listing page
-2. `Customers` collection → auth pages (login/register) → session helper
-3. `CustomerCollections` → collection API route → wire up collection page → add-to-collection UI
-4. `CustomerWishlists` → wishlist API route → wire up wishlist page → heart button UI
+1. Pricing route + price display on card detail → no auth needed, ships immediately
+2. `Customers` collection → login/register pages → session helper
+3. `CustomerCollections` → collection API → wire up collection page → add-to-collection UI
+4. `CustomerWishlists` → wishlist API → wire up wishlist page → heart button
 
 ---
 
 ## Notes
 
 - Read `node_modules/next/dist/docs/` before writing any Next.js code — this version has breaking changes
-- All prices are GBP
-- Use Payload Local API (not REST) inside Server Components and API routes — it's faster and avoids HTTP overhead
-- The `Customers` collection must be a **separate auth collection** from `Users` — never merge them. Admin users log in at `/admin`, customers log in at `/login`
-- Reuse the existing `CardGrid` component in both the collection and wishlist pages
-- Do not add `quantityReserved` or `quantityAvailable` to Inventory — that's a later phase
+- Use Payload Local API (not REST fetch) inside Server Components and Route Handlers
+- `Customers` must stay **separate** from `Users` — never merge them
+- pokemontcg.io `externalId` format matches your `MasterCardList.externalId` field exactly — no transformation needed
+- Cards with no `externalId` (manually added) will silently return no price — handle gracefully in the UI
+- Reuse `CardGrid` in both the collection and wishlist pages
