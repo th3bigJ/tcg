@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
+
 type SetFilterOption = {
   code: string;
   name: string;
@@ -36,17 +38,6 @@ function normalizeName(value: string): string {
     .split("-")
     .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : part))
     .join(" ");
-}
-
-function normalizePokemonImageSrc(value: string): string {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  if (trimmed.startsWith("/")) return trimmed;
-  if (/\.[a-z0-9]+$/i.test(trimmed)) {
-    return `/api/pokemon-media/file/${encodeURIComponent(trimmed)}`;
-  }
-  return `/${trimmed}`;
 }
 
 function buildCardsHref(params: {
@@ -336,11 +327,7 @@ export function CardFiltersPanel({
               return (
                 <li key={item.nationalDexNumber}>
                   <Link
-                    href={buildCardsHref({
-                      set: undefined,
-                      pokemon: dexValue,
-                      ...linkFilterState,
-                    })}
+                    href={`/pokedex/${encodeURIComponent(dexValue)}`}
                     prefetch={false}
                     onClick={onSelection}
                     className={`flex flex-col items-center justify-center gap-1 rounded-md border p-1.5 text-center transition ${

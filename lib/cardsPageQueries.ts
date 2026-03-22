@@ -1120,7 +1120,20 @@ export async function fetchMasterCardsPage(params: {
     if (categoryFilterKey && entry.categoryKey !== categoryFilterKey) return false;
     return true;
   });
-  filteredCandidates.sort((a, b) => b.cardNumberRank - a.cardNumberRank || a.id.localeCompare(b.id));
+
+  const orderedRows = await getCachedDefaultCardOrder();
+  const orderRank = new Map<string, number>();
+  orderedRows.forEach((row, index) => {
+    orderRank.set(row.id, index);
+  });
+  filteredCandidates.sort((a, b) => {
+    const ra = orderRank.get(a.id);
+    const rb = orderRank.get(b.id);
+    if (ra !== undefined && rb !== undefined && ra !== rb) return ra - rb;
+    if (ra === undefined && rb !== undefined) return 1;
+    if (rb === undefined && ra !== undefined) return -1;
+    return a.id.localeCompare(b.id);
+  });
 
   const totalDocs = filteredCandidates.length;
   const startIndex = (params.page - 1) * pageSize;

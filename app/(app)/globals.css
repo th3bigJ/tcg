@@ -46,6 +46,8 @@ body {
 .card-viewer-overlay {
   background-color: rgba(0, 0, 0, 0.92);
   --card-viewer-image-radius: 1.25rem;
+  /* Horizontal space between modal carousel slides (must match MODAL_CAROUSEL_GAP_PX in CardGrid). */
+  --card-viewer-carousel-gap: 20px;
   overscroll-behavior-y: contain;
 }
 

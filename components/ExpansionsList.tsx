@@ -25,7 +25,7 @@ export function ExpansionsList({ groups }: { groups: ExpansionSeriesGroup[] }) {
             {group.sets.map((set) => (
               <li key={set.code}>
                 <Link
-                  href={`/cards?set=${encodeURIComponent(set.code)}`}
+                  href={`/expansions/${encodeURIComponent(set.code)}`}
                   prefetch={false}
                   className="flex items-center gap-3 rounded-xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-3 py-2.5 shadow-sm transition hover:border-[var(--foreground)]/22 hover:bg-[var(--foreground)]/8 active:opacity-90"
                 >

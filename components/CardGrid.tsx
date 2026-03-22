@@ -60,6 +60,9 @@ function sameCardEntry(a: CardEntry | null, b: CardEntry | null): boolean {
   return a.set === b.set && a.filename === b.filename;
 }
 
+/** Keep in sync with `globals.css` `.card-viewer-overlay` `--card-viewer-carousel-gap` (used in transform math). */
+const MODAL_CAROUSEL_GAP_PX = 20;
+
 function ModalCarouselSlide({
   card,
   slotWidth,
@@ -578,7 +581,7 @@ export function CardGrid({
       swipeFromLeftColumnRef.current &&
       absX > absY
     ) {
-      const slot = carouselSlotWidthRef.current;
+      const slot = carouselSlotWidthRef.current + MODAL_CAROUSEL_GAP_PX;
       if (x < -horizontalThreshold && hasNext) {
         pendingNavRef.current = "next";
         setSlideTransition(true);
@@ -726,9 +729,11 @@ export function CardGrid({
     carouselSlotWidth > 0 ? carouselSlotWidth : fallbackCarouselWidth;
   carouselSlotWidthRef.current = carouselSlideWidth;
 
+  const carouselStepPx = carouselSlideWidth + MODAL_CAROUSEL_GAP_PX;
   const cardSwipeStyle: CSSProperties = {
-    width: carouselSlideWidth * 3,
-    transform: `translate3d(${-carouselSlideWidth + dragOffsetX}px, 0, 0)`,
+    width: carouselSlideWidth * 3 + MODAL_CAROUSEL_GAP_PX * 2,
+    gap: "var(--card-viewer-carousel-gap)",
+    transform: `translate3d(${-carouselStepPx + dragOffsetX}px, 0, 0)`,
     transition: slideTransition
       ? "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)"
       : "none",
