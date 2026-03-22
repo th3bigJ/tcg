@@ -61,7 +61,7 @@ function sameCardEntry(a: CardEntry | null, b: CardEntry | null): boolean {
 }
 
 /** Keep in sync with `globals.css` `.card-viewer-overlay` `--card-viewer-carousel-gap` (used in transform math). */
-const MODAL_CAROUSEL_GAP_PX = 20;
+const MODAL_CAROUSEL_GAP_PX = 32;
 
 function ModalCarouselSlide({
   card,
@@ -329,32 +329,15 @@ export function CardGrid({
   selectedIndexRef.current = selectedIndex;
   standaloneModalCardRef.current = standaloneModalCard;
 
-  const stripIndex =
-    nationalDexStrip.length > 0 && selectedCard && !nationalDexStripLoading
-      ? nationalDexStrip.findIndex((c) => sameCardEntry(c, selectedCard))
-      : -1;
+  /** Horizontal swipe / carousel follows the main grid order only (not the “Other cards” dex strip). */
+  const hasPrevious = selectedIndex !== null && selectedIndex > 0;
 
-  const useNationalNav = stripIndex >= 0;
-
-  const hasPrevious = useNationalNav
-    ? stripIndex > 0
-    : selectedIndex !== null && selectedIndex > 0;
-
-  const hasNext = useNationalNav
-    ? stripIndex < nationalDexStrip.length - 1
-    : selectedIndex !== null && selectedIndex < normalizedCards.length - 1;
+  const hasNext =
+    selectedIndex !== null && selectedIndex < normalizedCards.length - 1;
 
   const modalAdjacentCards = useMemo(() => {
     if (!selectedCard) {
       return { prev: null as CardEntry | null, next: null as CardEntry | null };
-    }
-
-    if (nationalDexStrip.length > 0 && !nationalDexStripLoading && stripIndex >= 0) {
-      return {
-        prev: stripIndex > 0 ? nationalDexStrip[stripIndex - 1] : null,
-        next:
-          stripIndex < nationalDexStrip.length - 1 ? nationalDexStrip[stripIndex + 1] : null,
-      };
     }
 
     if (selectedIndex !== null && standaloneModalCard === null) {
@@ -368,15 +351,7 @@ export function CardGrid({
     }
 
     return { prev: null as CardEntry | null, next: null as CardEntry | null };
-  }, [
-    nationalDexStrip,
-    nationalDexStripLoading,
-    normalizedCards,
-    selectedCard,
-    selectedIndex,
-    standaloneModalCard,
-    stripIndex,
-  ]);
+  }, [normalizedCards, selectedCard, selectedIndex, standaloneModalCard]);
 
   const [carouselSlotWidth, setCarouselSlotWidth] = useState(0);
   const carouselSlotWidthRef = useRef(360);
@@ -426,71 +401,20 @@ export function CardGrid({
 
   const viewPrevious = useCallback(() => {
     const idx = selectedIndexRef.current;
-    const standalone = standaloneModalCardRef.current;
-    const nc = normalizedCards;
-    const strip = nationalDexStrip;
-    const loading = nationalDexStripLoading;
-
-    const current =
-      standalone ?? (idx !== null ? (nc[idx] ?? null) : null);
-    if (!current) return;
-
-    const sIdx =
-      !loading && strip.length > 0
-        ? strip.findIndex((c) => sameCardEntry(c, current))
-        : -1;
-
-    if (sIdx > 0) {
-      const prev = strip[sIdx - 1];
-      const gi = nc.findIndex((c) => sameCardEntry(c, prev));
-      if (gi >= 0) {
-        setStandaloneModalCard(null);
-        setSelectedIndex(gi);
-      } else {
-        setStandaloneModalCard(prev);
-        setSelectedIndex(null);
-      }
-      return;
-    }
-
-    if (standalone === null && idx !== null && idx > 0) {
+    if (standaloneModalCardRef.current !== null) return;
+    if (idx !== null && idx > 0) {
       setSelectedIndex(idx - 1);
     }
-  }, [normalizedCards, nationalDexStrip, nationalDexStripLoading]);
+  }, []);
 
   const viewNext = useCallback(() => {
     const idx = selectedIndexRef.current;
-    const standalone = standaloneModalCardRef.current;
-    const nc = normalizedCards;
-    const strip = nationalDexStrip;
-    const loading = nationalDexStripLoading;
-
-    const current =
-      standalone ?? (idx !== null ? (nc[idx] ?? null) : null);
-    if (!current) return;
-
-    const sIdx =
-      !loading && strip.length > 0
-        ? strip.findIndex((c) => sameCardEntry(c, current))
-        : -1;
-
-    if (sIdx >= 0 && sIdx < strip.length - 1) {
-      const next = strip[sIdx + 1];
-      const gi = nc.findIndex((c) => sameCardEntry(c, next));
-      if (gi >= 0) {
-        setStandaloneModalCard(null);
-        setSelectedIndex(gi);
-      } else {
-        setStandaloneModalCard(next);
-        setSelectedIndex(null);
-      }
-      return;
-    }
-
-    if (standalone === null && idx !== null && idx < nc.length - 1) {
+    if (standaloneModalCardRef.current !== null) return;
+    const len = normalizedCards.length;
+    if (idx !== null && idx < len - 1) {
       setSelectedIndex(idx + 1);
     }
-  }, [normalizedCards, nationalDexStrip, nationalDexStripLoading]);
+  }, [normalizedCards.length]);
 
   const clampHorizontalDrag = useCallback(
     (rawX: number) => {
