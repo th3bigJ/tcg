@@ -255,7 +255,10 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     perPage: requestedTake,
   });
 
-  const showingCount = cardsForGrid.length;
+  /** Plain JSON so RSC → CardGrid keeps fields like dexIds (avoids odd Payload/proxy shapes). */
+  const cardsForClient = JSON.parse(JSON.stringify(cardsForGrid)) as typeof cardsForGrid;
+
+  const showingCount = cardsForClient.length;
   const showingFrom = filteredCount === 0 ? 0 : 1;
   const showingTo = showingCount;
   const nextTake = Math.min(filteredCount, showingCount + CARDS_LOAD_MORE_STEP);
@@ -389,7 +392,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               loadMoreStep={CARDS_LOAD_MORE_STEP}
               scrollRestoreKey={scrollRestoreKey}
             >
-              <CardGrid cards={cardsForGrid} setLogosByCode={setLogosByCode} />
+              <CardGrid cards={cardsForClient} setLogosByCode={setLogosByCode} />
             </CardsResultsScroll>
           </section>
         </div>

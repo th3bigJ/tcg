@@ -58,6 +58,54 @@ function sameCardEntry(a: CardEntry | null, b: CardEntry | null): boolean {
   return a.set === b.set && a.filename === b.filename;
 }
 
+function toPositiveNationalDexNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const n = Math.trunc(value);
+    return n > 0 ? n : null;
+  }
+  if (typeof value === "bigint") {
+    const n = Number(value);
+    return Number.isFinite(n) && n > 0 ? Math.trunc(n) : null;
+  }
+  if (typeof value === "string") {
+    const n = Number.parseInt(value.trim(), 10);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  return null;
+}
+
+/** Collect Dex numbers from Payload jsonb shapes: [25], [{ value: 25 }], nested, or split across dexId / dex_ids. */
+function collectNationalDexNumbers(raw: unknown, out: Set<number>, depth: number): void {
+  if (depth > 10 || raw === null || raw === undefined) return;
+  const single = toPositiveNationalDexNumber(raw);
+  if (single !== null) {
+    out.add(single);
+    return;
+  }
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      collectNationalDexNumbers(item, out, depth + 1);
+    }
+    return;
+  }
+  if (typeof raw === "object") {
+    const o = raw as Record<string, unknown>;
+    if ("value" in o) collectNationalDexNumbers(o.value, out, depth + 1);
+    if ("dexId" in o) collectNationalDexNumbers(o.dexId, out, depth + 1);
+    if ("dex_id" in o) collectNationalDexNumbers(o.dex_id, out, depth + 1);
+  }
+}
+
+function normalizedNationalDexIds(card: CardEntry): number[] | undefined {
+  const rec = card as CardEntry & Record<string, unknown>;
+  const out = new Set<number>();
+  collectNationalDexNumbers(rec.dexIds, out, 0);
+  collectNationalDexNumbers(rec.dexId, out, 0);
+  collectNationalDexNumbers(rec.dex_id, out, 0);
+  const sorted = [...out].sort((a, b) => a - b);
+  return sorted.length > 0 ? sorted : undefined;
+}
+
 function AttributeIconIllustrator() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="shrink-0 text-white/80" aria-hidden>
@@ -192,7 +240,8 @@ export function CardGrid({
     .map((card) => {
       const lowSrc = card.lowSrc || card.src || "";
       const highSrc = card.highSrc || lowSrc;
-      return { ...card, lowSrc, highSrc };
+      const dexIds = normalizedNationalDexIds(card);
+      return { ...card, lowSrc, highSrc, ...(dexIds ? { dexIds } : {}) };
     })
     .filter((card) => card.lowSrc);
 
@@ -248,6 +297,8 @@ export function CardGrid({
   const [slideTransition, setSlideTransition] = useState(false);
 
   const leftColumnRef = useRef<HTMLDivElement>(null);
+  /** Scroll container for the modal (`overflow-y-auto` overlay); swipe-down-to-close only when scrolled to top. */
+  const modalScrollContainerRef = useRef<HTMLDivElement>(null);
 
   const viewPrevious = useCallback(() => {
     const idx = selectedIndexRef.current;
@@ -382,7 +433,11 @@ export function CardGrid({
     const horizontalThreshold = 56;
     const verticalThreshold = 72;
 
+    const scrollTop = modalScrollContainerRef.current?.scrollTop ?? 0;
+    const modalScrolledToTop = scrollTop <= 1;
+
     const closeFromVertical =
+      modalScrolledToTop &&
       y > verticalThreshold &&
       absY > absX &&
       (axisLockRef.current === "v" || (!swipeFromLeftColumnRef.current && absY > absX));
@@ -491,9 +546,10 @@ export function CardGrid({
     };
   }, [isModalOpen]);
 
+  const modalNationalDexIds = selectedCard ? normalizedNationalDexIds(selectedCard) : undefined;
   const nationalDexFetchKey =
-    selectedCard?.dexIds?.length && isModalOpen
-      ? [...selectedCard.dexIds].sort((a, b) => a - b).join(",")
+    modalNationalDexIds && modalNationalDexIds.length > 0
+      ? [...modalNationalDexIds].sort((a, b) => a - b).join(",")
       : "";
 
   useEffect(() => {
@@ -520,7 +576,8 @@ export function CardGrid({
           .map((card) => {
             const lowSrc = card.lowSrc || card.src || "";
             const highSrc = card.highSrc || lowSrc;
-            return { ...card, lowSrc, highSrc };
+            const dexIds = normalizedNationalDexIds(card);
+            return { ...card, lowSrc, highSrc, ...(dexIds ? { dexIds } : {}) };
           })
           .filter((card) => card.lowSrc);
         normalized.sort((a, b) => compareCardsForOtherStrip(a, b));
@@ -558,6 +615,7 @@ export function CardGrid({
 
   const modal = selectedCard && typeof document !== "undefined" && (
     <div
+      ref={modalScrollContainerRef}
       className="card-viewer-overlay fixed inset-0 z-[9999] overflow-y-auto overscroll-y-contain"
       onClick={closeModal}
       role="dialog"
@@ -590,7 +648,7 @@ export function CardGrid({
             className="mb-2 block w-full bg-transparent text-center text-[11px] text-white/65"
             aria-label="Close card preview"
           >
-            Swipe down to close.
+            Swipe down from the top to close.
           </button>
         </div>
 
@@ -666,8 +724,8 @@ export function CardGrid({
                   icon={<AttributeIconHash />}
                   label="National Dex ID"
                   value={
-                    selectedCard.dexIds && selectedCard.dexIds.length > 0
-                      ? selectedCard.dexIds.join(", ")
+                    modalNationalDexIds && modalNationalDexIds.length > 0
+                      ? modalNationalDexIds.join(", ")
                       : ""
                   }
                 />
@@ -709,7 +767,7 @@ export function CardGrid({
               </div>
             </section>
 
-            {selectedCard.dexIds && selectedCard.dexIds.length > 0 ? (
+            {modalNationalDexIds && modalNationalDexIds.length > 0 ? (
               <section className="flex flex-col gap-3">
                 <h4 className="text-base font-bold tracking-tight text-white">Other cards</h4>
                 {nationalDexStripError ? (
