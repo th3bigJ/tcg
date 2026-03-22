@@ -1906,7 +1906,7 @@ export function CardGrid({
 
   return (
     <>
-      <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3 md:grid-cols-7">
+      <ul className="grid grid-cols-3 gap-2 md:grid-cols-5 md:gap-3 lg:grid-cols-7">
         {normalizedCards.map((card, index) => {
           return (
             <li
