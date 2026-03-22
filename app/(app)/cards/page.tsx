@@ -3,10 +3,13 @@ import { unstable_cache } from "next/cache";
 import { CardGrid } from "@/components/CardGrid";
 import { CardFiltersPanel } from "@/components/CardFiltersPanel";
 import { CardsMobileControls } from "@/components/CardsMobileControls";
+import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import {
-  CARDS_PER_PAGE,
+  CARDS_LOAD_MORE_STEP,
   fetchMasterCardsPage,
   getCachedFilterFacets,
+  resolveCardsCategoryFilter,
+  resolveCardsTakeFromParams,
 } from "@/lib/cardsPageQueries";
 import { resolveMediaURL, resolvePokemonMediaURL } from "@/lib/media";
 
@@ -182,13 +185,21 @@ const getCachedPokemonFilterOptions = unstable_cache(
   { revalidate: 300 },
 );
 
+function parseExcludeCommonUncommon(value: string | undefined): boolean {
+  const v = (value ?? "").trim().toLowerCase();
+  return v === "1" || v === "true" || v === "on" || v === "yes";
+}
+
 type CardsPageProps = {
   searchParams?: Promise<{
+    take?: string;
     page?: string;
     set?: string;
     pokemon?: string;
     rarity?: string;
     search?: string;
+    exclude_cu?: string;
+    category?: string;
   }>;
 };
 
@@ -198,8 +209,15 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const selectedPokemon = (resolvedSearchParams.pokemon ?? "").trim();
   const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();
   const selectedSearch = (resolvedSearchParams.search ?? "").trim();
-  const { setCodes: availableSetCodes, rarityDisplayValues: rarityOptions } =
-    await getCachedFilterFacets();
+  const excludeCommonUncommon = parseExcludeCommonUncommon(resolvedSearchParams.exclude_cu);
+  const selectedCategory = (resolvedSearchParams.category ?? "").trim();
+  const facets = (await getCachedFilterFacets()) ?? {};
+  const availableSetCodes = facets.setCodes ?? [];
+  const rarityOptions = facets.rarityDisplayValues ?? [];
+  const categoryOptions = facets.categoryDisplayValues ?? [];
+  const categoryMatchGroups = facets.categoryMatchGroups ?? {};
+  const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
+    resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
   const setFilterOptions = await getCachedSetFilterOptions(availableSetCodes);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
@@ -220,58 +238,64 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const activePokemonName = activePokemonOption?.name ?? null;
   const activeRarity = hasSelectedRarity ? selectedRarity : "";
   const activeSearch = selectedSearch;
-  const rawPageParsed = Number.parseInt(resolvedSearchParams.page ?? "1", 10);
-  const requestedPage =
-    Number.isFinite(rawPageParsed) && rawPageParsed > 0 ? rawPageParsed : 1;
+  const requestedTake = resolveCardsTakeFromParams(
+    resolvedSearchParams.take,
+    resolvedSearchParams.page,
+  );
 
-  let { entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
+  const { entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
     activeSet,
     activePokemonDex,
     activePokemonName,
     activeRarity,
     activeSearch,
-    page: requestedPage,
+    excludeCommonUncommon,
+    categoryQueryVariants,
+    page: 1,
+    perPage: requestedTake,
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredCount / CARDS_PER_PAGE));
-  const currentPage = Math.min(requestedPage, totalPages);
+  const showingCount = cardsForGrid.length;
+  const showingFrom = filteredCount === 0 ? 0 : 1;
+  const showingTo = showingCount;
+  const nextTake = Math.min(filteredCount, showingCount + CARDS_LOAD_MORE_STEP);
+  const canLoadMore = showingCount > 0 && showingCount < filteredCount;
 
-  if (currentPage !== requestedPage) {
-    ({ entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
-      activeSet,
-      activePokemonDex,
-      activePokemonName,
-      activeRarity,
-      activeSearch,
-      page: currentPage,
-    }));
-  }
-  const startIndex = (currentPage - 1) * CARDS_PER_PAGE;
-  const showingFrom = filteredCount === 0 ? 0 : startIndex + 1;
-  const showingTo = Math.min(startIndex + cardsForGrid.length, filteredCount);
-  const createCardsHref = (page: number) => {
+  const buildCardsHref = (take?: number) => {
     const params = new URLSearchParams();
     if (activeSet) params.set("set", activeSet);
     if (activePokemon) params.set("pokemon", activePokemon);
     if (activeRarity) params.set("rarity", activeRarity);
     if (activeSearch) params.set("search", activeSearch);
-    if (page > 1) params.set("page", String(page));
+    if (excludeCommonUncommon) params.set("exclude_cu", "1");
+    if (activeCategory) params.set("category", activeCategory);
+    if (take !== undefined && take > 0) params.set("take", String(take));
     const query = params.toString();
     return query ? `/cards?${query}` : "/cards";
   };
-  const previousHref = createCardsHref(currentPage - 1);
-  const nextHref = createCardsHref(currentPage + 1);
+  const loadMoreHref = buildCardsHref(nextTake);
+  const scrollRestoreKey = [
+    String(requestedTake),
+    activeSet,
+    activePokemon,
+    activeRarity,
+    activeSearch,
+    excludeCommonUncommon ? "1" : "",
+    activeCategory,
+  ].join("|");
 
   const resetFiltersHref = (() => {
     const params = new URLSearchParams();
     if (activeRarity) params.set("rarity", activeRarity);
     if (activeSearch) params.set("search", activeSearch);
+    if (excludeCommonUncommon) params.set("exclude_cu", "1");
+    if (activeCategory) params.set("category", activeCategory);
     const query = params.toString();
     return query ? `/cards?${query}` : "/cards";
   })();
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       <main className="min-h-0 w-full flex-1 overflow-hidden px-4 py-4">
         <div className="grid h-full min-h-0 items-stretch gap-4 lg:grid-cols-[20%_minmax(0,1fr)]">
           <aside className="hidden min-h-0 h-full flex-col rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2 lg:flex">
@@ -290,10 +314,14 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
             <CardFiltersPanel
               sets={setFilterOptions}
               pokemon={pokemonFilterOptions}
+              rarityOptions={rarityOptions}
+              categoryOptions={categoryOptions}
               activeSet={activeSet}
               activePokemonDex={activePokemon}
               activeRarity={activeRarity}
               activeSearch={activeSearch}
+              excludeCommonUncommon={excludeCommonUncommon}
+              activeCategory={activeCategory}
             />
           </aside>
           <section className="flex min-h-0 flex-col lg:pr-1">
@@ -303,6 +331,9 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               activeRarity={activeRarity}
               activeSearch={activeSearch}
               rarityOptions={rarityOptions}
+              categoryOptions={categoryOptions}
+              excludeCommonUncommon={excludeCommonUncommon}
+              activeCategory={activeCategory}
               resetFiltersHref={resetFiltersHref}
               setFilterOptions={setFilterOptions}
               pokemonFilterOptions={pokemonFilterOptions}
@@ -311,6 +342,11 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               <form method="get" action="/cards" className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                 {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
                 {activePokemon ? <input type="hidden" name="pokemon" value={activePokemon} /> : null}
+                {activeRarity ? <input type="hidden" name="rarity" value={activeRarity} /> : null}
+                {excludeCommonUncommon ? (
+                  <input type="hidden" name="exclude_cu" value="1" />
+                ) : null}
+                {activeCategory ? <input type="hidden" name="category" value={activeCategory} /> : null}
                 <input
                   type="search"
                   name="search"
@@ -319,34 +355,6 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                   aria-label="Search card name"
                   className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 text-xs shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_8px_20px_rgba(0,0,0,0.18)] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 sm:w-72"
                 />
-                <div className="relative w-28 max-w-28 min-w-28">
-                  <select
-                    id="rarity"
-                    name="rarity"
-                    defaultValue={activeRarity}
-                    className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 pr-7 text-xs shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 [appearance:none] [-webkit-appearance:none] [background-image:none]"
-                  >
-                    <option value="">All rarities</option>
-                    {rarityOptions.map((rarity) => (
-                      <option key={rarity} value={rarity}>
-                        {rarity}
-                      </option>
-                    ))}
-                  </select>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--foreground)]/55"
-                    aria-hidden="true"
-                  >
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </div>
                 <button
                   type="submit"
                   className="inline-flex items-center justify-center rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--foreground)]/20"
@@ -365,47 +373,24 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 Showing {showingFrom}-{showingTo} of {filteredCount} card
                 {filteredCount === 1 ? "" : "s"} in {setFilterOptions.length} set
                 {setFilterOptions.length === 1 ? "" : "s"}
-                {activeSet || activePokemon || activeRarity || activeSearch ? " (filtered)" : ""}
+                {activeSet ||
+                activePokemon ||
+                activeRarity ||
+                activeSearch ||
+                excludeCommonUncommon ||
+                activeCategory
+                  ? " (filtered)"
+                  : ""}
               </p>
             </div>
-            <div className="scrollbar-hide min-h-0 overflow-y-auto">
-              <CardGrid
-                cards={cardsForGrid}
-                setLogosByCode={setLogosByCode}
-                similarMode={activePokemon ? "pokemon" : "set"}
-                previousPageHref={currentPage > 1 ? previousHref : undefined}
-                nextPageHref={currentPage < totalPages ? nextHref : undefined}
-              />
-            </div>
-            <div className="mt-4 shrink-0 flex items-center justify-between gap-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] text-sm lg:pb-0">
-              {currentPage > 1 ? (
-                <Link
-                  href={previousHref}
-                  className="rounded-md border border-[var(--foreground)]/20 px-3 py-2 hover:bg-[var(--foreground)]/5"
-                >
-                  Previous
-                </Link>
-              ) : (
-                <span className="rounded-md border border-[var(--foreground)]/10 px-3 py-2 text-[var(--foreground)]/50">
-                  Previous
-                </span>
-              )}
-              <span className="text-[var(--foreground)]/70">
-                Page {currentPage} of {totalPages}
-              </span>
-              {currentPage < totalPages ? (
-                <Link
-                  href={nextHref}
-                  className="rounded-md border border-[var(--foreground)]/20 px-3 py-2 hover:bg-[var(--foreground)]/5"
-                >
-                  Next
-                </Link>
-              ) : (
-                <span className="rounded-md border border-[var(--foreground)]/10 px-3 py-2 text-[var(--foreground)]/50">
-                  Next
-                </span>
-              )}
-            </div>
+            <CardsResultsScroll
+              canLoadMore={canLoadMore}
+              loadMoreHref={loadMoreHref}
+              loadMoreStep={CARDS_LOAD_MORE_STEP}
+              scrollRestoreKey={scrollRestoreKey}
+            >
+              <CardGrid cards={cardsForGrid} setLogosByCode={setLogosByCode} />
+            </CardsResultsScroll>
           </section>
         </div>
       </main>

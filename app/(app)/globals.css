@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Fixed bottom nav: bar + safe area (matches BottomNav). */
+  --bottom-nav-offset: calc(3.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 @theme inline {
@@ -43,10 +45,24 @@ body {
 
 .card-viewer-overlay {
   background-color: rgba(0, 0, 0, 0.92);
+  --card-viewer-image-radius: 1.25rem;
+  overscroll-behavior-y: contain;
+}
+
+@media (min-width: 768px) {
+  .card-viewer-overlay {
+    --card-viewer-image-radius: 1.875rem;
+  }
 }
 
 .card-viewer-icon-button {
   border-radius: 9999px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* Allow horizontal card swipe in the modal without the browser stealing the gesture. */
+.card-viewer-swipe-group {
+  touch-action: pan-x pan-y;
+  will-change: transform, opacity;
 }
 

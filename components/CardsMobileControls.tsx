@@ -24,6 +24,9 @@ type CardsMobileControlsProps = {
   activeRarity: string;
   activeSearch: string;
   rarityOptions: string[];
+  categoryOptions: string[];
+  excludeCommonUncommon: boolean;
+  activeCategory: string;
   resetFiltersHref: string;
   setFilterOptions: SetFilterOption[];
   pokemonFilterOptions: PokemonFilterOption[];
@@ -35,6 +38,9 @@ export function CardsMobileControls({
   activeRarity,
   activeSearch,
   rarityOptions,
+  categoryOptions,
+  excludeCommonUncommon,
+  activeCategory,
   resetFiltersHref,
   setFilterOptions,
   pokemonFilterOptions,
@@ -56,7 +62,9 @@ export function CardsMobileControls({
         <form method="get" action="/cards" className="flex items-center gap-2">
           {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
           {activePokemon ? <input type="hidden" name="pokemon" value={activePokemon} /> : null}
-          <input type="hidden" name="rarity" value={activeRarity} />
+          {activeRarity ? <input type="hidden" name="rarity" value={activeRarity} /> : null}
+          {excludeCommonUncommon ? <input type="hidden" name="exclude_cu" value="1" /> : null}
+          {activeCategory ? <input type="hidden" name="category" value={activeCategory} /> : null}
           <input
             type="search"
             name="search"
@@ -129,41 +137,6 @@ export function CardsMobileControls({
             </svg>
           </button>
         </form>
-
-        <form method="get" action="/cards">
-          {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
-          {activePokemon ? <input type="hidden" name="pokemon" value={activePokemon} /> : null}
-          {activeSearch ? <input type="hidden" name="search" value={activeSearch} /> : null}
-          <div className="relative">
-            <select
-              id="rarity-mobile"
-              name="rarity"
-              defaultValue={activeRarity}
-              className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2.5 py-2 pr-8 text-sm shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 [appearance:none] [-webkit-appearance:none] [background-image:none]"
-              onChange={(event) => event.currentTarget.form?.requestSubmit()}
-            >
-              <option value="">All rarities</option>
-              {rarityOptions.map((rarity) => (
-                <option key={rarity} value={rarity}>
-                  {rarity}
-                </option>
-              ))}
-            </select>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--foreground)]/55"
-              aria-hidden="true"
-            >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
-          </div>
-        </form>
       </div>
 
       {isFilterModalOpen ? (
@@ -211,10 +184,14 @@ export function CardsMobileControls({
           <CardFiltersPanel
             sets={setFilterOptions}
             pokemon={pokemonFilterOptions}
+            rarityOptions={rarityOptions}
+            categoryOptions={categoryOptions}
             activeSet={activeSet}
             activePokemonDex={activePokemon}
             activeRarity={activeRarity}
             activeSearch={activeSearch}
+            excludeCommonUncommon={excludeCommonUncommon}
+            activeCategory={activeCategory}
             onSelection={() => setIsFilterModalOpen(false)}
           />
         </div>

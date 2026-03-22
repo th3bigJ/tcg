@@ -5,6 +5,8 @@ import { buildConfig } from "payload";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { createPayloadLogger } from "./lib/payloadLogger";
+
 import { Users } from "./collections/Users";
 
 import { Brands } from "./collections/Brands";
@@ -44,6 +46,7 @@ const hasPokemonR2Config =
   Boolean(process.env.R2_ENDPOINT);
 
 export default buildConfig({
+  logger: createPayloadLogger(),
   // When running seed scripts with `tsx`, Payload's type auto-generation
   // triggers its CLI bin which loads env files via `@next/env` in a way that
   // can crash in this execution context.

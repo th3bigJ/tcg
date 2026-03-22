@@ -24,6 +24,7 @@ function useQueryUpdater() {
       });
 
       params.delete("page");
+      params.delete("take");
 
       const query = params.toString();
       router.replace(query ? `${pathname}?${query}` : pathname);

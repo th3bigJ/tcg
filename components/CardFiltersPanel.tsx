@@ -20,10 +20,14 @@ type PokemonFilterOption = {
 type CardFiltersPanelProps = {
   sets: SetFilterOption[];
   pokemon: PokemonFilterOption[];
+  rarityOptions: string[];
+  categoryOptions?: string[];
   activeSet: string;
   activePokemonDex: string;
   activeRarity: string;
   activeSearch: string;
+  excludeCommonUncommon: boolean;
+  activeCategory: string;
   onSelection?: () => void;
 };
 
@@ -50,12 +54,17 @@ function buildCardsHref(params: {
   pokemon?: string;
   rarity: string;
   search: string;
+  excludeCommonUncommon: boolean;
+  category: string;
 }): string {
   const query = new URLSearchParams();
   if (params.set) query.set("set", params.set);
   if (params.pokemon) query.set("pokemon", params.pokemon);
   if (params.rarity) query.set("rarity", params.rarity);
   if (params.search) query.set("search", params.search);
+  if (params.excludeCommonUncommon) query.set("exclude_cu", "1");
+  const cat = params.category.trim();
+  if (cat) query.set("category", cat);
   const value = query.toString();
   return value ? `/cards?${value}` : "/cards";
 }
@@ -63,12 +72,17 @@ function buildCardsHref(params: {
 export function CardFiltersPanel({
   sets,
   pokemon,
+  rarityOptions,
+  categoryOptions: categoryOptionsProp,
   activeSet,
   activePokemonDex,
   activeRarity,
   activeSearch,
+  excludeCommonUncommon,
+  activeCategory,
   onSelection,
 }: CardFiltersPanelProps) {
+  const categoryOptions = categoryOptionsProp ?? [];
   const [activeTab, setActiveTab] = useState<"sets" | "pokemon">("sets");
   const [setSearchText, setSetSearchText] = useState("");
   const [pokemonSearchText, setPokemonSearchText] = useState("");
@@ -115,8 +129,122 @@ export function CardFiltersPanel({
     return pokemon.filter((item) => normalizeName(item.name).toLocaleLowerCase().includes(q));
   }, [pokemon, pokemonSearchText]);
 
+  const linkFilterState = {
+    rarity: activeRarity,
+    search: activeSearch,
+    excludeCommonUncommon,
+    category: activeCategory,
+  };
+
   return (
     <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto pr-1">
+      <form
+        method="get"
+        action="/cards"
+        className="mb-3 flex flex-col gap-3"
+        key={`filter-form-${activeRarity}-${excludeCommonUncommon ? "xcu" : ""}-${activeCategory}`}
+      >
+        {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
+        {activePokemonDex ? <input type="hidden" name="pokemon" value={activePokemonDex} /> : null}
+        {activeSearch ? <input type="hidden" name="search" value={activeSearch} /> : null}
+        <div>
+          <label
+            htmlFor="filter-panel-rarity"
+            className="mb-1.5 block text-[11px] font-medium text-[var(--foreground)]/65"
+          >
+            Rarity
+          </label>
+          <div className="relative">
+            <select
+              id="filter-panel-rarity"
+              name="rarity"
+              defaultValue={activeRarity}
+              onChange={(event) => {
+                event.currentTarget.form?.requestSubmit();
+                onSelection?.();
+              }}
+              className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 pr-7 text-xs shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 [appearance:none] [-webkit-appearance:none] [background-image:none]"
+            >
+              <option value="">All rarities</option>
+              {rarityOptions.map((rarity) => (
+                <option key={rarity} value={rarity}>
+                  {rarity}
+                </option>
+              ))}
+            </select>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--foreground)]/55"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </div>
+        </div>
+
+        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-2 py-2 text-xs text-[var(--foreground)]/90">
+          <input
+            type="checkbox"
+            name="exclude_cu"
+            value="1"
+            defaultChecked={excludeCommonUncommon}
+            onChange={(event) => {
+              event.currentTarget.form?.requestSubmit();
+              onSelection?.();
+            }}
+            className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-[var(--foreground)]/30"
+          />
+          <span>Exclude Common and Uncommon</span>
+        </label>
+
+        <div>
+          <label
+            htmlFor="filter-panel-category"
+            className="mb-1.5 block text-[11px] font-medium text-[var(--foreground)]/65"
+          >
+            Card type
+          </label>
+          <div className="relative">
+            <select
+              id="filter-panel-category"
+              name="category"
+              defaultValue={activeCategory}
+              onChange={(event) => {
+                event.currentTarget.form?.requestSubmit();
+                onSelection?.();
+              }}
+              className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 pr-7 text-xs shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 [appearance:none] [-webkit-appearance:none] [background-image:none]"
+            >
+              <option value="">All card types</option>
+              {categoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--foreground)]/55"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </div>
+        </div>
+      </form>
+
       <div className="mb-3 grid grid-cols-2 gap-1.5 rounded-md border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 p-1">
         <button
           type="button"
@@ -165,8 +293,7 @@ export function CardFiltersPanel({
                         href={buildCardsHref({
                           set: setOption.code,
                           pokemon: undefined,
-                          rarity: activeRarity,
-                          search: activeSearch,
+                          ...linkFilterState,
                         })}
                         prefetch={false}
                         onClick={onSelection}
@@ -212,8 +339,7 @@ export function CardFiltersPanel({
                     href={buildCardsHref({
                       set: undefined,
                       pokemon: dexValue,
-                      rarity: activeRarity,
-                      search: activeSearch,
+                      ...linkFilterState,
                     })}
                     prefetch={false}
                     onClick={onSelection}
