@@ -2,7 +2,13 @@ import Link from "next/link";
 
 import type { ExpansionSeriesGroup } from "@/lib/expansionsPageQueries";
 
-export function ExpansionsList({ groups }: { groups: ExpansionSeriesGroup[] }) {
+export function ExpansionsList({
+  groups,
+  uniqueOwnedBySetCode = null,
+}: {
+  groups: ExpansionSeriesGroup[];
+  uniqueOwnedBySetCode?: Record<string, number> | null;
+}) {
   if (groups.length === 0) {
     return (
       <p className="mt-8 text-center text-sm text-[var(--foreground)]/65">
@@ -22,30 +28,58 @@ export function ExpansionsList({ groups }: { groups: ExpansionSeriesGroup[] }) {
             {group.seriesName}
           </h2>
           <ul className="flex flex-col gap-2">
-            {group.sets.map((set) => (
-              <li key={set.code}>
-                <Link
-                  href={`/expansions/${encodeURIComponent(set.code)}`}
-                  prefetch={false}
-                  className="flex items-center gap-3 rounded-xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-3 py-2.5 shadow-sm transition hover:border-[var(--foreground)]/22 hover:bg-[var(--foreground)]/8 active:opacity-90"
-                >
-                  <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--foreground)]/10 p-1.5">
-                    <img
-                      src={set.logoSrc}
-                      alt=""
-                      className="max-h-full max-w-full object-contain object-center"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-left text-[15px] font-semibold leading-snug text-[var(--foreground)]">
-                      {set.name}
+            {group.sets.map((set) => {
+              const showProgress = Boolean(uniqueOwnedBySetCode);
+              const ownedCountRaw = uniqueOwnedBySetCode?.[set.code] ?? 0;
+              const totalCards = set.totalCards > 0 ? set.totalCards : 0;
+              const ownedCount = Math.max(
+                0,
+                totalCards > 0 ? Math.min(totalCards, ownedCountRaw) : ownedCountRaw,
+              );
+              const progressPct =
+                totalCards > 0 ? Math.max(0, Math.min(100, (ownedCount / totalCards) * 100)) : 0;
+
+              return (
+                <li key={set.code}>
+                  <Link
+                    href={`/expansions/${encodeURIComponent(set.code)}`}
+                    prefetch={false}
+                    className="flex items-center gap-3 rounded-xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-3 py-2.5 shadow-sm transition hover:border-[var(--foreground)]/22 hover:bg-[var(--foreground)]/8 active:opacity-90"
+                  >
+                    <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--foreground)]/10 p-1.5">
+                      <img
+                        src={set.logoSrc}
+                        alt=""
+                        className="max-h-full max-w-full object-contain object-center"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </span>
-                  </span>
-                </Link>
-              </li>
-            ))}
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-left text-[15px] font-semibold leading-snug text-[var(--foreground)]">
+                        {set.name}
+                      </span>
+                      {showProgress ? (
+                        <>
+                          <span className="mt-1.5 block text-left text-sm text-[var(--foreground)]/60">
+                            {ownedCount} of {totalCards > 0 ? totalCards : "?"}
+                          </span>
+                          <span
+                            className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-[var(--foreground)]/15"
+                            aria-hidden
+                          >
+                            <span
+                              className="block h-full rounded-full bg-[var(--accent)]"
+                              style={{ width: `${progressPct}%` }}
+                            />
+                          </span>
+                        </>
+                      ) : null}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </section>
       ))}

@@ -7,6 +7,8 @@ export type ExpansionSetRow = {
   name: string;
   logoSrc: string;
   seriesName: string;
+  /** `sets.cardCountTotal` (DB column `card_count_total`), 0 when unknown. */
+  totalCards: number;
   /** UTC ms for sorting (0 if no date). */
   releaseTime: number;
 };
@@ -35,6 +37,7 @@ async function loadExpansionSetRows(): Promise<ExpansionSetRow[]> {
       setImage: true,
       releaseDate: true,
       serieName: true,
+      cardCountTotal: true,
       isActive: true,
     },
     where: {
@@ -67,12 +70,18 @@ async function loadExpansionSetRows(): Promise<ExpansionSetRow[]> {
 
     const releaseRaw = typeof doc.releaseDate === "string" ? doc.releaseDate : "";
     const releaseTime = releaseRaw ? new Date(releaseRaw).getTime() : 0;
+    const totalCardsRaw =
+      typeof doc.cardCountTotal === "number" && Number.isFinite(doc.cardCountTotal)
+        ? doc.cardCountTotal
+        : 0;
+    const totalCards = totalCardsRaw > 0 ? Math.floor(totalCardsRaw) : 0;
 
     rows.push({
       code,
       name,
       logoSrc: resolveMediaURL(imageUrl),
       seriesName: seriesName || "Other",
+      totalCards,
       releaseTime: Number.isFinite(releaseTime) ? releaseTime : 0,
     });
   }

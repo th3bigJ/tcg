@@ -800,6 +800,7 @@ export function resolveCardsCategoryFilter(
 const MASTER_CARD_LIST_ENTRY_SELECT = {
   id: true,
   externalId: true,
+  localId: true,
   set: true,
   imageLow: true,
   imageHigh: true,
@@ -815,6 +816,14 @@ const MASTER_CARD_LIST_ENTRY_SELECT = {
   regulationMark: true,
   cardmarketListingVersion: true,
 } as const;
+
+function normalizeTcgdexLocalId(localIdRaw: unknown): string | null {
+  if (typeof localIdRaw !== "string") return null;
+  const trimmed = localIdRaw.trim();
+  if (!trimmed) return null;
+  if (/^\d+$/u.test(trimmed)) return trimmed.padStart(3, "0");
+  return trimmed;
+}
 
 export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): CardsPageCardEntry | null {
   const relation = isImageRelation(doc.imageLow) ? doc.imageLow : null;
@@ -845,8 +854,15 @@ export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): Car
     setObj && typeof setObj.releaseDate === "string" ? setObj.releaseDate.trim() : "";
 
   const masterCardId = getRelationshipDocumentId(doc.id);
-  const ext =
+  const extStored =
     typeof doc.externalId === "string" && doc.externalId.trim() ? doc.externalId.trim() : undefined;
+  const setTcgdexId =
+    setObj && typeof setObj.tcgdexId === "string" && setObj.tcgdexId.trim()
+      ? setObj.tcgdexId.trim()
+      : undefined;
+  const localIdNormalized = normalizeTcgdexLocalId(doc.localId);
+  const ext =
+    setTcgdexId && localIdNormalized ? `${setTcgdexId}-${localIdNormalized}` : extStored;
 
   return {
     ...(masterCardId ? { masterCardId } : {}),
@@ -863,10 +879,7 @@ export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): Car
       typeof doc.set.name === "string"
         ? doc.set.name
         : undefined,
-    setTcgdexId:
-      setObj && typeof setObj.tcgdexId === "string" && setObj.tcgdexId.trim()
-        ? setObj.tcgdexId.trim()
-        : undefined,
+    setTcgdexId,
     setCardCountOfficial:
       setObj &&
       typeof setObj.cardCountOfficial === "number" &&

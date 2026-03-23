@@ -1634,10 +1634,10 @@ export function CardGrid({
         <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-[1fr_minmax(16rem,24rem)_minmax(11rem,16rem)] md:flex-1 md:min-h-0 md:items-stretch md:gap-4 md:overflow-hidden">
           <div
             ref={leftColumnRef}
-            className="flex w-full min-w-0 max-w-full flex-col items-center gap-3 overflow-x-hidden md:min-h-0 md:items-stretch md:gap-2 md:self-stretch md:overflow-x-visible"
+            className="flex w-full min-w-0 max-w-full flex-col items-center gap-3 overflow-x-hidden md:min-h-0 md:items-stretch md:gap-2 md:self-stretch"
           >
-            {/* Mobile: clip 3-slide row; desktop keeps horizontal swipe within column. */}
-            <div className="w-full min-w-0 max-w-full overflow-x-hidden md:flex md:min-h-0 md:flex-1 md:flex-col md:overflow-x-visible">
+            {/* Keep the swipe track clipped to the carousel column on all breakpoints. */}
+            <div className="w-full min-w-0 max-w-full overflow-x-hidden md:flex md:min-h-0 md:flex-1 md:flex-col">
               <div
                 className="card-viewer-swipe-group flex will-change-transform md:min-h-0 md:flex-1 md:items-stretch"
                 style={cardSwipeStyle}
