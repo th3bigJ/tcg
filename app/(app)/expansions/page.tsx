@@ -9,10 +9,11 @@ import { fetchCollectionCardEntries } from "@/lib/storefrontCardMaps";
 export default async function ExpansionsPage() {
   const [rows, customer] = await Promise.all([getCachedExpansionSetRows(), getCurrentCustomer()]);
   const collectionEntries = customer ? await fetchCollectionCardEntries(customer.id) : [];
-  const uniqueOwnedBySetCode = customer ? ({} as Record<string, number>) : null;
+  let uniqueOwnedBySetCode: Record<string, number> | null = null;
   const seenBySetCode = new Map<string, Set<string>>();
 
   if (customer) {
+    uniqueOwnedBySetCode = {};
     for (const entry of collectionEntries) {
       const setCode = typeof entry.set === "string" ? entry.set.trim() : "";
       if (!setCode || setCode === "unknown") continue;
