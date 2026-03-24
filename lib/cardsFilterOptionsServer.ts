@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 
 import { resolveMediaURL, resolvePokemonMediaURL } from "@/lib/media";
+import { resolveCanonicalSetCodeFromFields } from "@/lib/setCanonicalCode";
 
 type ImageRelation = {
   url?: string | null;
@@ -48,6 +49,7 @@ async function getSetFilterOptions(setCodes: string[]): Promise<SetFilterOption[
     overrideAccess: true,
     select: {
       code: true,
+      tcgdexId: true,
       name: true,
       setImage: true,
       symbolImage: true,
@@ -59,9 +61,10 @@ async function getSetFilterOptions(setCodes: string[]): Promise<SetFilterOption[
     where: {
       and: [
         {
-          code: {
-            in: setCodes,
-          },
+          or: [
+            { code: { in: setCodes } },
+            { tcgdexId: { in: setCodes } },
+          ],
         },
         {
           setImage: {
@@ -74,7 +77,10 @@ async function getSetFilterOptions(setCodes: string[]): Promise<SetFilterOption[
 
   return result.docs
     .map((doc) => {
-      const code = typeof doc.code === "string" ? doc.code : "";
+      const code = resolveCanonicalSetCodeFromFields({
+        tcgdexId: doc.tcgdexId,
+        code: doc.code,
+      });
       const name = typeof doc.name === "string" ? doc.name : code;
       const image = isImageRelation(doc.setImage) ? doc.setImage : null;
       const imageUrl = typeof image?.url === "string" ? image.url : "";
@@ -162,7 +168,7 @@ async function getPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
 
 export const getCachedSetFilterOptions = unstable_cache(
   async (setCodes: string[]) => getSetFilterOptions(setCodes),
-  ["cards-page-set-filter-options-v1"],
+  ["cards-page-set-filter-options-v2"],
   { revalidate: 300 },
 );
 

@@ -16,26 +16,53 @@ function parseStoredPricingGbp(raw: unknown): CardPricingGbpPayload | null {
 /**
  * Storefront pricing: use `catalog-card-pricing` when present, otherwise live TCGdex + FX (same as before).
  */
+type ResolveCardPricingInput =
+  | string
+  | {
+      tcgdexId?: string | null;
+      externalId?: string | null;
+      legacyExternalId?: string | null;
+    };
+
+function normalizeId(value: string | null | undefined): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 export async function resolveCardPricingGbp(
   payload: Payload,
-  externalId: string,
+  input: ResolveCardPricingInput,
 ): Promise<CardPricingGbpPayload | null> {
-  const ext = externalId.trim();
-  if (!ext) return null;
+  const ids =
+    typeof input === "string"
+      ? [normalizeId(input)]
+      : [
+          normalizeId(input.tcgdexId),
+          normalizeId(input.externalId),
+          normalizeId(input.legacyExternalId),
+        ];
+  const orderedUniqueIds = [...new Set(ids.filter(Boolean))];
+  if (orderedUniqueIds.length === 0) return null;
 
-  const found = await payload.find({
-    collection: "catalog-card-pricing",
-    where: { externalId: { equals: ext } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  });
+  for (const id of orderedUniqueIds) {
+    const found = await payload.find({
+      collection: "catalog-card-pricing",
+      where: { externalId: { equals: id } },
+      limit: 1,
+      depth: 0,
+      overrideAccess: true,
+    });
 
-  const doc = found.docs[0] as { pricingGbp?: unknown } | undefined;
-  if (doc?.pricingGbp !== undefined && doc.pricingGbp !== null) {
-    const parsed = parseStoredPricingGbp(doc.pricingGbp);
-    if (parsed) return parsed;
+    const doc = found.docs[0] as { pricingGbp?: unknown } | undefined;
+    if (doc?.pricingGbp !== undefined && doc.pricingGbp !== null) {
+      const parsed = parseStoredPricingGbp(doc.pricingGbp);
+      if (parsed) return parsed;
+    }
   }
 
-  return fetchLiveCardPricingGbp(ext);
+  for (const id of orderedUniqueIds) {
+    const live = await fetchLiveCardPricingGbp(id);
+    if (live) return live;
+  }
+
+  return null;
 }

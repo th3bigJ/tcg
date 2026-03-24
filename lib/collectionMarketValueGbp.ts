@@ -49,8 +49,13 @@ function estimateUnitGbpFromConvertedPricing(tcgplayer: unknown, cardmarket: unk
 async function unitPriceGbpForExternalId(
   payload: Payload,
   externalId: string,
+  legacyExternalId?: string,
 ): Promise<number | null> {
-  const resolved = await resolveCardPricingGbp(payload, externalId);
+  const resolved = await resolveCardPricingGbp(payload, {
+    tcgdexId: externalId,
+    externalId,
+    legacyExternalId,
+  });
   if (!resolved) return null;
   return estimateUnitGbpFromConvertedPricing(resolved.tcgplayer, resolved.cardmarket);
 }
@@ -94,7 +99,7 @@ export async function estimateCollectionMarketValueGbp(
   payload: Payload,
   entries: StorefrontCardEntry[],
 ): Promise<CollectionMarketValueResult> {
-  const qtyByExternalId = new Map<string, number>();
+  const qtyByExternalId = new Map<string, { quantity: number; legacyExternalId?: string }>();
   let rowsWithoutExternalId = 0;
 
   for (const e of entries) {
@@ -107,7 +112,16 @@ export async function estimateCollectionMarketValueGbp(
       rowsWithoutExternalId += 1;
       continue;
     }
-    qtyByExternalId.set(ext, (qtyByExternalId.get(ext) ?? 0) + q);
+    const legacy = e.legacyExternalId?.trim() || undefined;
+    const prev = qtyByExternalId.get(ext);
+    if (prev) {
+      qtyByExternalId.set(ext, {
+        quantity: prev.quantity + q,
+        legacyExternalId: prev.legacyExternalId ?? legacy,
+      });
+    } else {
+      qtyByExternalId.set(ext, { quantity: q, legacyExternalId: legacy });
+    }
   }
 
   const ids = [...qtyByExternalId.keys()];
@@ -120,17 +134,20 @@ export async function estimateCollectionMarketValueGbp(
     };
   }
 
-  const unitPrices = await mapWithConcurrency(ids, 6, async (ext) => ({
-    ext,
-    unit: await unitPriceGbpForExternalId(payload, ext),
-  }));
+  const unitPrices = await mapWithConcurrency(ids, 6, async (ext) => {
+    const row = qtyByExternalId.get(ext);
+    return {
+      ext,
+      unit: await unitPriceGbpForExternalId(payload, ext, row?.legacyExternalId),
+    };
+  });
 
   let totalGbp = 0;
   let pricedCardCount = 0;
   let missingPriceForId = 0;
 
   for (const { ext, unit } of unitPrices) {
-    const qty = qtyByExternalId.get(ext) ?? 0;
+    const qty = qtyByExternalId.get(ext)?.quantity ?? 0;
     if (unit === null) {
       missingPriceForId += 1;
       continue;

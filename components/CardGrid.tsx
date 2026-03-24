@@ -102,9 +102,11 @@ function MarketplacePricingLogo({ which }: { which: keyof typeof MARKETPLACE_LOG
 
 function ModalCardPricing({
   externalId,
+  legacyExternalId,
   ebayCardContext,
 }: {
   externalId?: string;
+  legacyExternalId?: string;
   ebayCardContext: EbayPokemonCardSearchParts;
 }) {
   const ext = externalId?.trim() ?? "";
@@ -123,7 +125,12 @@ function ModalCardPricing({
         setPricingLoaded(false);
         setPayload(null);
         setVariant("normal");
-        const r = await fetch(`/api/card-prices/${encodeURIComponent(ext)}`);
+        const params = new URLSearchParams();
+        const legacy = legacyExternalId?.trim() ?? "";
+        if (legacy) params.set("fallbackExternalId", legacy);
+        const r = await fetch(
+          `/api/card-prices/${encodeURIComponent(ext)}${params.size > 0 ? `?${params.toString()}` : ""}`,
+        );
         if (cancelled) return;
         let j: { tcgplayer?: unknown; cardmarket?: unknown };
         try {
@@ -151,7 +158,7 @@ function ModalCardPricing({
     return () => {
       cancelled = true;
     };
-  }, [ext]);
+  }, [ext, legacyExternalId]);
 
   const ebayQuery = buildPokemonEbaySoldSearchQuery(ebayCardContext);
   const ebayUrl =
@@ -1722,6 +1729,7 @@ export function CardGrid({
               <ModalCardPricing
                 key={selectedCard.masterCardId ?? `${selectedCard.set}/${selectedCard.filename}`}
                 externalId={selectedCard.externalId}
+                legacyExternalId={selectedCard.legacyExternalId}
                 ebayCardContext={{
                   setName: selectedCard.setName,
                   setSlug: selectedCard.setSlug,

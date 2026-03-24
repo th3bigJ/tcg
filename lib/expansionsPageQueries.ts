@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 
 import { resolveMediaURL } from "@/lib/media";
+import { resolveCanonicalSetCodeFromFields } from "@/lib/setCanonicalCode";
 
 export type ExpansionSetRow = {
   code: string;
@@ -33,6 +34,7 @@ async function loadExpansionSetRows(): Promise<ExpansionSetRow[]> {
     overrideAccess: true,
     select: {
       code: true,
+      tcgdexId: true,
       name: true,
       setImage: true,
       releaseDate: true,
@@ -43,7 +45,9 @@ async function loadExpansionSetRows(): Promise<ExpansionSetRow[]> {
     where: {
       and: [
         { isActive: { equals: true } },
-        { code: { exists: true } },
+        {
+          or: [{ tcgdexId: { exists: true } }, { code: { exists: true } }],
+        },
         { setImage: { exists: true } },
       ],
     },
@@ -53,8 +57,11 @@ async function loadExpansionSetRows(): Promise<ExpansionSetRow[]> {
   const rows: ExpansionSetRow[] = [];
 
   for (const doc of result.docs) {
-    const code = typeof doc.code === "string" ? doc.code.trim() : "";
-    if (!code || code === "unknown") continue;
+    const code = resolveCanonicalSetCodeFromFields({
+      tcgdexId: doc.tcgdexId,
+      code: doc.code,
+    });
+    if (!code) continue;
     const name = typeof doc.name === "string" ? doc.name.trim() : code;
     const image = isImageRelation(doc.setImage) ? doc.setImage : null;
     const imageUrl = typeof image?.url === "string" ? image.url : "";
@@ -123,6 +130,6 @@ export function groupExpansionSetsBySeries(rows: ExpansionSetRow[]): ExpansionSe
 
 export const getCachedExpansionSetRows = unstable_cache(
   async () => loadExpansionSetRows(),
-  ["public-expansions-set-rows-v1"],
+  ["public-expansions-set-rows-v2"],
   { revalidate: 300 },
 );

@@ -96,10 +96,10 @@ export const Sets: CollectionConfig = {
             {
               name: "code",
               type: "text",
-              label: "TCGdex set id",
+              label: "Legacy set code",
               admin: {
                 description:
-                  'TCGdex set id used for seeding (example: "swsh3" or "base1").',
+                  'Legacy/internal set code kept for backward compatibility (example: "swsh3" or "base1"). Prefer tcgdexId for API lookups.',
               },
             },
             {

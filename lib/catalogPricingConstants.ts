@@ -1,2 +1,2 @@
-/** DB `sets.code` for Ascended Heroes — scoped refresh / seed tests. */
-export const ASCENDED_HEROES_SET_CODE = "me2pt5";
+/** Series name used to scope catalog pricing refresh jobs. */
+export const MEGA_EVOLUTION_SERIES_NAME = "Mega Evolution";

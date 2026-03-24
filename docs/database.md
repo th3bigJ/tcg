@@ -76,8 +76,8 @@ All price fields default to GBP (£).
 ## Sets
 - name (text, required)
 - slug (text, required, unique)
-- code (text — set id used by the card API / seeding, e.g. "swsh3" or "base1")
-- tcgdexId (text, unique — canonical TCGdex set id, e.g. "me02.5")
+- code (text — legacy/internal set code for backward compatibility, e.g. "swsh3" or "base1")
+- tcgdexId (text, unique — canonical TCGdex set id used for external API lookups, e.g. "me02.5")
 - brand (relationship → Brands, required)
 - releaseDate (date)
 - symbolImage (upload → Set Symbols Media)
@@ -87,6 +87,11 @@ All price fields default to GBP (£).
 - serieName (relationship → Series)
 - isActive (boolean, default: true)
 - notes (textarea)
+
+### Set ID policy
+- Use `tcgdexId` as the canonical external set identifier in all TCGdex/API integrations.
+- Keep `code` only as a legacy/internal compatibility field during migration.
+- Approved exception: `mee` (Mega Evolution Energy) is a local custom set id not currently present in live TCGdex.
 
 ## Series
 - name (text, required, unique)
@@ -145,6 +150,8 @@ Stored locally so we are not dependent on the external API being available.
 - evolveFrom (text — name of previous stage, e.g. "Sentret")
 - artist (text)
 - externalId (text — TCGdex card id, used for deduplication)
+- tcgdex_id (text — canonical TCGdex card id once resolved, e.g. `base1-55`)
+- no_pricing (boolean, default false — true when the card exists on TCGdex but has no TCGPlayer/Cardmarket pricing in the API; false when pricing exists or tcgxdex_id is empty)
 - cardmarketListingVersion (number, optional — `V{n}` segment in Cardmarket singles URLs, e.g. 2 for `…-V2-ASC271`; omit for V1)
 - imageLow (upload → Card Media)
 - imageHigh (upload → Card Media)

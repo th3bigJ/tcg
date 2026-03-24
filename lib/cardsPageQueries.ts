@@ -2,12 +2,15 @@ import { unstable_cache } from "next/cache";
 import type { Where } from "payload";
 
 import { resolveMediaURL } from "@/lib/media";
+import { resolveCanonicalSetCodeFromSetRelation } from "@/lib/setCanonicalCode";
 
 export type CardsPageCardEntry = {
   /** Payload `master-card-list` document id (for collection / wishlist APIs). */
   masterCardId?: string;
   /** TCGdex card id — used for market price API; omit when unknown. */
   externalId?: string;
+  /** Backup id used when `externalId` misses in cache/API lookups. */
+  legacyExternalId?: string;
   set: string;
   /** Payload `sets.slug` (kebab-case), when the populated set includes it. */
   setSlug?: string;
@@ -73,12 +76,12 @@ export function resolveCardsTakeFromParams(
   return CARDS_INITIAL_TAKE;
 }
 
-const FILTER_FACETS_CACHE_KEY = "master-card-list-filter-facets-v4";
+const FILTER_FACETS_CACHE_KEY = "master-card-list-filter-facets-v5";
 const FILTER_FACETS_REVALIDATE_SEC = 300;
 /** Bumped when dex index shape changes; v5 stores tuple rows to stay under Next.js unstable_cache 2MB limit. */
 const POKEMON_DEX_INDEX_CACHE_KEY = "master-card-list-pokemon-dex-index-v5-packed";
 const POKEMON_DEX_INDEX_REVALIDATE_SEC = 300;
-const DEFAULT_CARD_ORDER_CACHE_KEY = "master-card-list-default-order-v1";
+const DEFAULT_CARD_ORDER_CACHE_KEY = "master-card-list-default-order-v2";
 const DEFAULT_CARD_ORDER_REVALIDATE_SEC = 300;
 
 function normalizeFilterValue(value: string): string {
@@ -548,8 +551,7 @@ function getMasterCardDocBrowseSortKeys(doc: Record<string, unknown>): {
     setObj && "releaseDate" in setObj && typeof setObj.releaseDate === "string"
       ? new Date(setObj.releaseDate).getTime()
       : 0;
-  const setCode =
-    setObj && "code" in setObj && typeof setObj.code === "string" ? setObj.code : "";
+  const setCode = resolveCanonicalSetCodeFromSetRelation(setObj);
   const id = getRelationshipDocumentId(doc.id) ?? "";
   return {
     setReleaseTimestamp: Number.isFinite(releaseRaw) ? releaseRaw : 0,
@@ -618,13 +620,9 @@ async function loadDefaultCardOrder(): Promise<DefaultCardOrderEntry[]> {
           ? new Date(doc.set.releaseDate).getTime()
           : 0;
 
-      const setCode =
-        typeof doc.set === "object" &&
-        doc.set &&
-        "code" in doc.set &&
-        typeof doc.set.code === "string"
-          ? doc.set.code
-          : "";
+      const setCode = resolveCanonicalSetCodeFromSetRelation(
+        typeof doc.set === "object" && doc.set ? doc.set : null,
+      );
 
       rows.push({
         id,
@@ -681,14 +679,13 @@ async function loadFilterFacets(): Promise<{
     overrideAccess: true,
     select: {
       code: true,
+      tcgdexId: true,
       setImage: true,
     },
     where: {
       and: [
         {
-          code: {
-            exists: true,
-          },
+          or: [{ tcgdexId: { exists: true } }, { code: { exists: true } }],
         },
         {
           setImage: {
@@ -701,8 +698,8 @@ async function loadFilterFacets(): Promise<{
   });
 
   for (const setDoc of setsResult.docs) {
-    const code = typeof setDoc.code === "string" ? setDoc.code.trim() : "";
-    if (code && code !== "unknown") setCodesSeen.add(code);
+    const code = resolveCanonicalSetCodeFromSetRelation(setDoc);
+    if (code) setCodesSeen.add(code);
   }
 
   let page = 1;
@@ -800,6 +797,7 @@ export function resolveCardsCategoryFilter(
 const MASTER_CARD_LIST_ENTRY_SELECT = {
   id: true,
   externalId: true,
+  tcgdex_id: true,
   localId: true,
   set: true,
   imageLow: true,
@@ -838,13 +836,7 @@ export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): Car
     (typeof relation?.filename === "string" && relation.filename) || cleanPath.split("/").pop();
   if (!filename) return null;
 
-  const set =
-    typeof doc.set === "object" &&
-    doc.set &&
-    "code" in doc.set &&
-    typeof doc.set.code === "string"
-      ? doc.set.code
-      : "unknown";
+  const set = resolveCanonicalSetCodeFromSetRelation(doc.set) || "unknown";
 
   const setObj =
     typeof doc.set === "object" && doc.set && !Array.isArray(doc.set)
@@ -854,6 +846,8 @@ export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): Car
     setObj && typeof setObj.releaseDate === "string" ? setObj.releaseDate.trim() : "";
 
   const masterCardId = getRelationshipDocumentId(doc.id);
+  const tcgdexStored =
+    typeof doc.tcgdex_id === "string" && doc.tcgdex_id.trim() ? doc.tcgdex_id.trim() : undefined;
   const extStored =
     typeof doc.externalId === "string" && doc.externalId.trim() ? doc.externalId.trim() : undefined;
   const setTcgdexId =
@@ -861,12 +855,16 @@ export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): Car
       ? setObj.tcgdexId.trim()
       : undefined;
   const localIdNormalized = normalizeTcgdexLocalId(doc.localId);
-  const ext =
-    setTcgdexId && localIdNormalized ? `${setTcgdexId}-${localIdNormalized}` : extStored;
+  const derivedFromSetAndLocal =
+    setTcgdexId && localIdNormalized ? `${setTcgdexId}-${localIdNormalized}` : undefined;
+  const ext = tcgdexStored ?? extStored ?? derivedFromSetAndLocal;
+  const legacyExternalId =
+    tcgdexStored !== undefined ? extStored ?? derivedFromSetAndLocal : derivedFromSetAndLocal;
 
   return {
     ...(masterCardId ? { masterCardId } : {}),
     ...(ext ? { externalId: ext } : {}),
+    ...(legacyExternalId ? { legacyExternalId } : {}),
     set,
     setSlug:
       setObj && typeof setObj.slug === "string" && setObj.slug.trim()
@@ -1039,9 +1037,10 @@ export async function fetchMasterCardsPage(params: {
       overrideAccess: true,
       select: { id: true },
       where: {
-        code: {
-          equals: params.activeSet,
-        },
+        or: [
+          { tcgdexId: { equals: params.activeSet } },
+          { code: { equals: params.activeSet } },
+        ],
       },
     });
 

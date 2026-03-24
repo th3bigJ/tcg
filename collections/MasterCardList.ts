@@ -106,6 +106,25 @@ export const MasterCardList: CollectionConfig = {
               },
             },
             {
+              name: "tcgdex_id",
+              type: "text",
+              label: "TCGdex ID",
+              admin: {
+                description:
+                  "Canonical TCGdex card id (e.g. base1-55) once resolved via the API. See “No pricing” if the card exists but has no TCGPlayer/Cardmarket data.",
+              },
+            },
+            {
+              name: "no_pricing",
+              type: "checkbox",
+              defaultValue: false,
+              label: "No pricing on TCGdex",
+              admin: {
+                description:
+                  "True when tcgdex_id resolves to a real card but TCGdex returns no TCGPlayer/Cardmarket pricing. False when pricing exists, or when tcgdex_id is empty.",
+              },
+            },
+            {
               name: "cardmarketListingVersion",
               type: "number",
               min: 1,
