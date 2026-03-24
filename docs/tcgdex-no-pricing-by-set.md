@@ -1,6 +1,6 @@
 # no_pricing cards by set (>0%)
 
-Generated at (UTC): **2026-03-24T06:36:54.819Z**
+Generated at (UTC): **2026-03-24T10:18:13.131Z**
 
 Only sets where `% no_pricing` is greater than 0 are listed below.
 
@@ -11,7 +11,7 @@ Only sets where `% no_pricing` is greater than 0 are listed below.
 | Base | Jungle | base2 | 64 | 1 | 1.6 |
 | Base | Wizards Black Star Promos | basep | 53 | 53 | 100 |
 | Black & White | Boundaries Crossed | bw7 | 153 | 13 | 8.5 |
-| Black & White | BW Black Star Promos | bwp | 101 | 99 | 98 |
+| Black & White | BW Black Star Promos | bwp | 101 | 101 | 100 |
 | Black & White | Dark Explorers | bw5 | 111 | 12 | 10.8 |
 | Black & White | Dragons Exalted | bw6 | 128 | 14 | 10.9 |
 | Black & White | Legendary Treasures | bw11 | 140 | 16 | 11.4 |
@@ -32,6 +32,7 @@ Only sets where `% no_pricing` is greater than 0 are listed below.
 | EX | Dragon Frontiers | ex15 | 101 | 5 | 5 |
 | EX | FireRed & LeafGreen | ex6 | 116 | 3 | 2.6 |
 | EX | Hidden Legends | ex5 | 102 | 3 | 2.9 |
+| EX | Holon Phantoms | ex13 | 111 | 1 | 0.9 |
 | EX | Team Magma vs Team Aqua | ex4 | 97 | 2 | 2.1 |
 | EX | Team Rocket Returns | ex7 | 111 | 1 | 0.9 |
 | Gym | Gym Challenge | gym2 | 132 | 2 | 1.5 |
@@ -92,5 +93,5 @@ Only sets where `% no_pricing` is greater than 0 are listed below.
 
 | | | | Cards total | no_pricing true | % no_pricing |
 | --- | --- | --- | ---: | ---: | ---: |
-| **All** | | | 9547 | 1342 | 14.1 |
+| **All** | | | 9658 | 1345 | 13.9 |
 

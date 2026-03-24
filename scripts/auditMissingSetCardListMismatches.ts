@@ -58,6 +58,15 @@ function normalizeLocalId(v: string): string {
   return v.trim().toLowerCase();
 }
 
+function canonicalizeLocalId(v: string): string {
+  const normalized = normalizeLocalId(v);
+  const match = /^([a-z]*)(\d+)([a-z]*)$/i.exec(normalized);
+  if (!match) return normalized;
+  const n = Number.parseInt(match[2], 10);
+  if (!Number.isFinite(n)) return normalized;
+  return `${match[1] ?? ""}${n}${match[3] ?? ""}`;
+}
+
 function summarize(audits: SetAudit[]) {
   let setsWithAnyMismatch = 0;
   let totalMissingInDb = 0;
@@ -158,6 +167,11 @@ async function run() {
         if (seen.has(id)) duplicates.add(id);
         else seen.add(id);
       }
+      const dbCanonicalToRaw = new Map<string, string>();
+      for (const id of dbSet) {
+        const key = canonicalizeLocalId(id);
+        if (!dbCanonicalToRaw.has(key)) dbCanonicalToRaw.set(key, id);
+      }
 
       let tcgdexLocalIds: string[] = [];
       let note: string | undefined;
@@ -172,8 +186,20 @@ async function run() {
       }
 
       const tcgdexSetIds = new Set<string>(tcgdexLocalIds);
-      const missingInDb = [...tcgdexSetIds].filter((id) => !dbSet.has(id)).sort();
-      const extraInDb = [...dbSet].filter((id) => !tcgdexSetIds.has(id)).sort();
+      const tcgdexCanonicalToRaw = new Map<string, string>();
+      for (const id of tcgdexSetIds) {
+        const key = canonicalizeLocalId(id);
+        if (!tcgdexCanonicalToRaw.has(key)) tcgdexCanonicalToRaw.set(key, id);
+      }
+
+      const missingInDb = [...tcgdexCanonicalToRaw.entries()]
+        .filter(([key]) => !dbCanonicalToRaw.has(key))
+        .map(([, raw]) => raw)
+        .sort();
+      const extraInDb = [...dbCanonicalToRaw.entries()]
+        .filter(([key]) => !tcgdexCanonicalToRaw.has(key))
+        .map(([, raw]) => raw)
+        .sort();
 
       audits.push({
         ...set,
@@ -217,6 +243,9 @@ async function run() {
     ];
 
     for (const a of audits) {
+      if (a.dbCount <= 0) {
+        continue;
+      }
       const esc = (s: string) => s.replaceAll("|", "\\|");
       const note = a.note ?? "";
       lines.push(

@@ -136,6 +136,9 @@ async function run() {
     let grandNoPricing = 0;
     for (const set of sortedSets) {
       const cov = setCoverage.get(set.id) ?? { total: 0, noPricing: 0 };
+      if (cov.total <= 0) {
+        continue;
+      }
       const pct = cov.total > 0 ? Math.round((cov.noPricing / cov.total) * 1000) / 10 : 0;
       if (pct <= 0) {
         continue;

@@ -202,6 +202,9 @@ export async function writeTcgdexIdProgressFiles(
 
     for (const name of sortedNames) {
       const cov = seriesCoverage.get(name) ?? { total: 0, withTcgdexId: 0 };
+      if (cov.total <= 0) {
+        continue;
+      }
       const without = cov.total - cov.withTcgdexId;
       const pct = percent(cov.withTcgdexId, cov.total);
       grandTotal += cov.total;
@@ -282,6 +285,9 @@ export async function writeTcgdexIdProgressFiles(
 
     for (const setRow of sortedSets) {
       const cov = setCoverage.get(setRow.id) ?? { total: 0, withTcgdexId: 0 };
+      if (cov.total <= 0) {
+        continue;
+      }
       const without = cov.total - cov.withTcgdexId;
       const pct = percent(cov.withTcgdexId, cov.total);
       if (pct >= 100) {
