@@ -29,3 +29,28 @@ export function getRelationshipDocumentId(value: unknown): string | null {
   }
   return null;
 }
+
+/**
+ * Normalizes a document id for `payload.update` / `payload.delete` with the Postgres adapter:
+ * numeric primary keys should stay as numbers so lookups match.
+ */
+export function toPayloadDocumentId(value: unknown): string | number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const s = getRelationshipDocumentId(value);
+  if (s !== null) {
+    if (/^\d+$/.test(s)) {
+      const n = Number(s);
+      if (Number.isSafeInteger(n)) return n;
+    }
+    return s;
+  }
+  if (typeof value === "string" && value.trim()) {
+    const t = value.trim();
+    if (/^\d+$/.test(t)) {
+      const n = Number(t);
+      if (Number.isSafeInteger(n)) return n;
+    }
+    return t;
+  }
+  throw new Error("Invalid Payload document id");
+}

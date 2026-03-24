@@ -44,7 +44,10 @@
     "payload": "payload",
     "migrate": "payload migrate",
     "migrate:create": "payload migrate:create",
-    "docs:tcgdex-sets": "node --import tsx/esm scripts/generateTcgdexSetsDoc.ts"
+    "docs:tcgdex-sets": "node --import tsx/esm scripts/generateTcgdexSetsDoc.ts",
+    "refresh:catalog-pricing:mega-evolution": "node --import tsx/esm scripts/refreshMegaEvolutionCatalogPricing.ts",
+    "refresh:catalog-pricing:ascended-heroes": "node --import tsx/esm scripts/refreshMegaEvolutionCatalogPricing.ts --set=me02.5",
+    "backfill:catalog-pricing:mep:scrydex": "node --import tsx/esm scripts/backfillMepCatalogPricingFromScrydex.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "^3.79.1",

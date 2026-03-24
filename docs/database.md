@@ -152,15 +152,8 @@ Stored locally so we are not dependent on the external API being available.
 - externalId (text — TCGdex card id, used for deduplication)
 - tcgdex_id (text — canonical TCGdex card id once resolved, e.g. `base1-55`)
 - no_pricing (boolean, default false — true when the card exists on TCGdex but has no TCGPlayer/Cardmarket pricing in the API; false when pricing exists or tcgxdex_id is empty)
-- cardmarketListingVersion (number, optional — `V{n}` segment in Cardmarket singles URLs, e.g. 2 for `…-V2-ASC271`; omit for V1)
 - imageLow (upload → Card Media)
 - imageHigh (upload → Card Media)
-- variants (group)
-  - firstEdition (boolean)
-  - holo (boolean)
-  - normal (boolean)
-  - reverse (boolean)
-  - wPromo (boolean)
 - regulationMark (text — e.g. "D")
 - trainerType (text — Trainer cards only, e.g. Item, Supporter)
 - energyType (text — Energy cards only: Basic, Special)
@@ -168,13 +161,14 @@ Stored locally so we are not dependent on the external API being available.
 - isActive (boolean, default: true)
 
 ## Catalog Card Pricing
-Cached market snapshots in **GBP** for catalog cards (TCGPlayer + Cardmarket shapes after conversion).
-Storefront reads via Local API (`overrideAccess`); admin-only REST. One row per `externalId`.
+Cached pricing snapshots for catalog cards. Storefront reads via Local API (`overrideAccess`); admin-only REST. One row per `externalId`. TCGdex rows keep raw `tcgplayer` / `cardmarket` inside `externalPricing`; GBP conversion runs when serving prices. Scrape rows use `externalPrice` (already GBP).
 
 - masterCard (relationship → Master Card List, required)
 - externalId (text, required, unique — TCGdex card id, e.g. `me2pt5-271`)
+- tcgdex_id (text — canonical TCGdex card id for this snapshot, aligned with Master Card List)
 - setCode (text, required — denormalized `sets.code`, e.g. `me2pt5`, for scoped refresh jobs)
-- pricingGbp (json, required — `{ tcgplayer, cardmarket, currency: "GBP" }`, same shape as the storefront card-prices payload)
+- externalPricing (json — raw TCGdex API `tcgplayer` / `cardmarket` blocks when sourced from TCGdex; or Scrydex scrape metadata)
+- externalPrice (json — per-variant GBP from scraped sources, USD converted; e.g. Scrydex MEP)
 
 ---
 

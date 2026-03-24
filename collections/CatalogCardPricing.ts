@@ -8,8 +8,8 @@ export const CatalogCardPricing: CollectionConfig = {
     useAsTitle: "externalId",
     group: "Storefront",
     description:
-      "Cached TCGdex market data in GBP per catalog card. Populated by refresh jobs; storefront reads via Local API.",
-    defaultColumns: ["externalId", "setCode", "masterCard", "updatedAt"],
+      "Cached market snapshots: TCGdex raw in externalPricing; Scrydex scrape in externalPrice as { variant: { raw, psa10 } } (GBP). Populated by refresh jobs.",
+    defaultColumns: ["externalId", "tcgdex_id", "setCode", "masterCard", "updatedAt"],
   },
   access: {
     admin: ({ req }) => isPayloadAdminUser(req),
@@ -41,6 +41,15 @@ export const CatalogCardPricing: CollectionConfig = {
       },
     },
     {
+      name: "tcgdex_id",
+      type: "text",
+      label: "TCGdex ID",
+      admin: {
+        description:
+          "Canonical TCGdex card id on this snapshot (e.g. base1-55), aligned with Master Card List `tcgdex_id`.",
+      },
+    },
+    {
       name: "setCode",
       type: "text",
       required: true,
@@ -50,13 +59,21 @@ export const CatalogCardPricing: CollectionConfig = {
       },
     },
     {
-      name: "pricingGbp",
+      name: "externalPricing",
       type: "json",
-      required: true,
-      label: "Pricing (GBP)",
+      label: "External pricing (raw)",
       admin: {
         description:
-          "Object: { tcgplayer, cardmarket, currency: \"GBP\" } — same shape as the storefront card-prices API after conversion.",
+          "Raw TCGdex-style pricing payload from the API before column extraction (TCGPlayer/Cardmarket blocks).",
+      },
+    },
+    {
+      name: "externalPrice",
+      type: "json",
+      label: "External scrape (GBP)",
+      admin: {
+        description:
+          "Scrape snapshot (GBP): `{ holofoil: { raw, psa10 }, normal: { raw, psa10 } }` — `raw` ≈ NM/list, `psa10` graded. Legacy flat `{ Holofoil: 12.3 }` still read by the storefront.",
       },
     },
   ],

@@ -11,11 +11,6 @@ export type EbayPokemonCardSearchParts = {
   setCardCountOfficial?: number;
   cardName: string;
   cardNumber?: string;
-  /**
-   * Cardmarket product slug includes `V{n}` before the `{prefix}{localId}` suffix (e.g. `V2` in
-   * `Mega-Dragonite-ex-V2-ASC271`). Default 1 when omitted; use 2+ when the listing matches an alt-art row.
-   */
-  cardmarketListingVersion?: number;
 };
 
 /**

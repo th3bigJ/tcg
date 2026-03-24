@@ -21,20 +21,7 @@ import {
   buildPokemonEbaySoldSearchQuery,
   type EbayPokemonCardSearchParts,
 } from "@/lib/ebaySoldSearchUrl";
-import {
-  buildCardmarketPokemonSinglesProductPathUrl,
-  buildCardmarketPokemonSinglesSearchUrl,
-  buildPokemonMarketplaceSearchQuery,
-  buildTcgplayerProductPageUrl,
-  buildTcgplayerPokemonProductSearchUrl,
-} from "@/lib/marketplaceSearchUrls";
 import type { CollectionLineSummary } from "@/lib/storefrontCardMaps";
-import {
-  getTcgplayerVariantBlock,
-  readTcgplayerProductIdFromBlock,
-  tcgVariantHasMarketPrice,
-} from "@/lib/tcgdexMarketLinks";
-import { TCG_PRICE_VARIANTS, type TcgPriceVariant } from "@/lib/tcgdexTcgplayerVariants";
 
 export type CardEntry = CardsPageCardEntry & {
   collectionEntryId?: string;
@@ -57,7 +44,6 @@ const PRINTING_OPTIONS = [
   "other",
 ] as const;
 
-const TCG_VARIANTS = TCG_PRICE_VARIANTS;
 
 function readUsdMarket(block: unknown): number | null {
   if (!block || typeof block !== "object") return null;
@@ -66,12 +52,29 @@ function readUsdMarket(block: unknown): number | null {
   return typeof m === "number" && Number.isFinite(m) ? m : null;
 }
 
+function readPsa10(block: unknown): number | null {
+  if (!block || typeof block !== "object") return null;
+  const o = block as Record<string, unknown>;
+  return typeof o.psa10 === "number" && Number.isFinite(o.psa10) ? o.psa10 : null;
+}
+
 function readUsdLowHigh(block: unknown): { low: number | null; high: number | null } {
   if (!block || typeof block !== "object") return { low: null, high: null };
   const o = block as Record<string, unknown>;
   const low = typeof o.low === "number" && Number.isFinite(o.low) ? o.low : null;
   const high = typeof o.high === "number" && Number.isFinite(o.high) ? o.high : null;
   return { low, high };
+}
+
+const VARIANT_LABELS: Record<string, string> = {
+  normal: "Normal",
+  holofoil: "Holofoil",
+  reverseHolofoil: "Reverse Holo",
+  staffStamp: "Staff Stamp",
+};
+
+function variantLabel(key: string): string {
+  return VARIANT_LABELS[key] ?? key;
 }
 
 function formatMoneyGbp(n: number): string {
@@ -101,36 +104,44 @@ function MarketplacePricingLogo({ which }: { which: keyof typeof MARKETPLACE_LOG
 }
 
 function ModalCardPricing({
+  masterCardId,
   externalId,
   legacyExternalId,
   ebayCardContext,
+  onVariantsLoaded,
 }: {
+  /** When set, pricing loads via indexed `catalog_card_pricing.master_card_id` (fast). */
+  masterCardId?: string;
   externalId?: string;
   legacyExternalId?: string;
   ebayCardContext: EbayPokemonCardSearchParts;
+  /** Called once pricing loads, with ordered variant keys that have a raw price. */
+  onVariantsLoaded?: (variants: string[]) => void;
 }) {
+  const mid = masterCardId?.trim() ?? "";
   const ext = externalId?.trim() ?? "";
-  const showDexRows = Boolean(ext);
+  const showDexRows = Boolean(mid || ext);
 
   const [payload, setPayload] = useState<{ tcgplayer: unknown; cardmarket: unknown } | null>(null);
-  const [variant, setVariant] = useState<TcgPriceVariant>("normal");
   const [pricingLoaded, setPricingLoaded] = useState(false);
+  const onVariantsLoadedRef = useRef(onVariantsLoaded);
+  onVariantsLoadedRef.current = onVariantsLoaded;
 
   useEffect(() => {
-    if (!ext) return;
+    if (!mid && !ext) return;
     let cancelled = false;
 
     const load = async () => {
       try {
         setPricingLoaded(false);
         setPayload(null);
-        setVariant("normal");
         const params = new URLSearchParams();
         const legacy = legacyExternalId?.trim() ?? "";
-        if (legacy) params.set("fallbackExternalId", legacy);
-        const r = await fetch(
-          `/api/card-prices/${encodeURIComponent(ext)}${params.size > 0 ? `?${params.toString()}` : ""}`,
-        );
+        if (legacy && !mid) params.set("fallbackExternalId", legacy);
+        const url = mid
+          ? `/api/card-pricing/by-master/${encodeURIComponent(mid)}`
+          : `/api/card-prices/${encodeURIComponent(ext)}${params.size > 0 ? `?${params.toString()}` : ""}`;
+        const r = await fetch(url);
         if (cancelled) return;
         let j: { tcgplayer?: unknown; cardmarket?: unknown };
         try {
@@ -139,16 +150,23 @@ function ModalCardPricing({
           j = {};
         }
         if (cancelled) return;
-        const tcgplayer = j.tcgplayer ?? null;
-        const cardmarket = j.cardmarket ?? null;
-        setPayload({ tcgplayer, cardmarket });
-        if (tcgplayer && typeof tcgplayer === "object") {
-          const tp = tcgplayer as Record<string, unknown>;
-          const firstWithPrice = TCG_VARIANTS.find((k) => tcgVariantHasMarketPrice(tp, k));
-          if (firstWithPrice) setVariant(firstWithPrice);
+        const tp = j.tcgplayer ?? null;
+        setPayload({ tcgplayer: tp, cardmarket: j.cardmarket ?? null });
+        const cb = onVariantsLoadedRef.current;
+        if (cb) {
+          const tpObj = tp && typeof tp === "object" ? (tp as Record<string, unknown>) : null;
+          const keys = tpObj
+            ? Object.entries(tpObj)
+                .filter(([, block]) => readUsdMarket(block) !== null)
+                .map(([k]) => k)
+            : [];
+          cb(keys);
         }
       } catch {
-        if (!cancelled) setPayload({ tcgplayer: null, cardmarket: null });
+        if (!cancelled) {
+          setPayload({ tcgplayer: null, cardmarket: null });
+          onVariantsLoadedRef.current?.([]);
+        }
       } finally {
         if (!cancelled) setPricingLoaded(true);
       }
@@ -158,7 +176,7 @@ function ModalCardPricing({
     return () => {
       cancelled = true;
     };
-  }, [ext, legacyExternalId]);
+  }, [mid, ext, legacyExternalId]);
 
   const ebayQuery = buildPokemonEbaySoldSearchQuery(ebayCardContext);
   const ebayUrl =
@@ -166,77 +184,21 @@ function ModalCardPricing({
       ? buildEbayUkSoldListingsUrl(ebayQuery)
       : null;
 
-  const marketplaceSearchQuery = useMemo(
-    () => buildPokemonMarketplaceSearchQuery(ebayCardContext),
-    [
-      ebayCardContext.cardName,
-      ebayCardContext.cardNumber,
-      ebayCardContext.setCode,
-      ebayCardContext.setName,
-    ],
-  );
-
   const tpRoot = payload?.tcgplayer;
-  const cmRoot = payload?.cardmarket;
-  const hasTp = tpRoot && typeof tpRoot === "object";
-  const hasCm = cmRoot && typeof cmRoot === "object";
-  const tpObj = hasTp ? (tpRoot as Record<string, unknown>) : null;
-  const cmObj = hasCm ? (cmRoot as Record<string, unknown>) : null;
+  const tpObj =
+    tpRoot && typeof tpRoot === "object" ? (tpRoot as Record<string, unknown>) : null;
 
-  const tcgplayerSearchUrl = useMemo(() => {
-    if (tpObj) {
-      const order: TcgPriceVariant[] = [variant, ...TCG_VARIANTS.filter((v) => v !== variant)];
-      for (const v of order) {
-        const block = getTcgplayerVariantBlock(tpObj, v);
-        const pid = readTcgplayerProductIdFromBlock(block);
-        if (pid !== null) {
-          return buildTcgplayerProductPageUrl({
-            productId: pid,
-            setTcgdexId: ebayCardContext.setTcgdexId,
-            setName: ebayCardContext.setName,
-            cardName: ebayCardContext.cardName,
-            cardNumber: ebayCardContext.cardNumber,
-            externalId: ext || undefined,
-            setCardCountOfficial: ebayCardContext.setCardCountOfficial,
-          });
-        }
-      }
-    }
-    return buildTcgplayerPokemonProductSearchUrl(marketplaceSearchQuery);
-  }, [
-    tpObj,
-    variant,
-    ext,
-    ebayCardContext.setTcgdexId,
-    ebayCardContext.setName,
-    ebayCardContext.setCardCountOfficial,
-    ebayCardContext.cardName,
-    ebayCardContext.cardNumber,
-    marketplaceSearchQuery,
-  ]);
-
-  const cardmarketSearchUrl = useMemo(() => {
-    const path = buildCardmarketPokemonSinglesProductPathUrl({
-      setSlug: ebayCardContext.setSlug,
-      setName: ebayCardContext.setName,
-      setCode: ebayCardContext.setCode,
-      cardName: ebayCardContext.cardName,
-      cardNumber: ebayCardContext.cardNumber,
-      externalId: ext || undefined,
-      listingVersion: ebayCardContext.cardmarketListingVersion,
-    });
-    if (path) return path;
-    return buildCardmarketPokemonSinglesSearchUrl(marketplaceSearchQuery);
-  }, [
-    ext,
-    ebayCardContext.setSlug,
-    ebayCardContext.setName,
-    ebayCardContext.setCode,
-    ebayCardContext.cardName,
-    ebayCardContext.cardNumber,
-    ebayCardContext.cardmarketListingVersion,
-    marketplaceSearchQuery,
-  ]);
+  /** All variant keys that have at least a raw price. */
+  const variantRows = useMemo(() => {
+    if (!tpObj) return [];
+    return Object.entries(tpObj)
+      .filter(([, block]) => readUsdMarket(block) !== null)
+      .map(([key, block]) => ({
+        key,
+        raw: readUsdMarket(block)!,
+        psa10: readPsa10(block),
+      }));
+  }, [tpObj]);
 
   const pricingResolved = !showDexRows || pricingLoaded;
 
@@ -247,10 +209,7 @@ function ModalCardPricing({
         <h4 className="text-sm font-bold tracking-tight text-white">Market prices</h4>
         <div className="flex flex-col gap-2">
           {showDexRows ? (
-            <>
-              <div className="h-[52px] animate-pulse rounded-2xl bg-white/10" />
-              <div className="h-[52px] animate-pulse rounded-2xl bg-white/10" />
-            </>
+            <div className="h-[52px] animate-pulse rounded-2xl bg-white/10" />
           ) : null}
           {ebayUrl ? (
             <a
@@ -273,114 +232,34 @@ function ModalCardPricing({
     );
   }
 
-  const variantBlock = tpObj ? getTcgplayerVariantBlock(tpObj, variant) : null;
-  /** Values from `/api/card-prices` are converted to GBP on the server. */
-  const marketGbp = readUsdMarket(variantBlock);
-  const { low: lowGbp, high: highGbp } = readUsdLowHigh(variantBlock);
-
-  const trendRaw =
-    cmObj &&
-    (typeof cmObj.trendPrice === "number"
-      ? cmObj.trendPrice
-      : typeof cmObj.trend === "number"
-        ? cmObj.trend
-        : null);
-  const avg30 =
-    cmObj && typeof cmObj.avg30 === "number" && Number.isFinite(cmObj.avg30) ? cmObj.avg30 : null;
-
-  const variantsAvailable = TCG_VARIANTS.filter((k) => tpObj && tcgVariantHasMarketPrice(tpObj, k));
-
-  const tcgPriceLabel =
-    marketGbp !== null
-      ? formatMoneyGbp(marketGbp)
-      : lowGbp !== null || highGbp !== null
-        ? `${lowGbp !== null ? formatMoneyGbp(lowGbp) : "—"} – ${highGbp !== null ? formatMoneyGbp(highGbp) : "—"}`
-        : null;
-
-  /** Cardmarket figures are EUR from TCGdex, converted to GBP in the API. */
-  const cmPrimary =
-    trendRaw !== null ? formatMoneyGbp(trendRaw) : avg30 !== null ? formatMoneyGbp(avg30) : null;
-
   if (!showDexRows && !ebayUrl) return null;
 
   return (
     <section className="flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-2">
-        <h4 className="text-sm font-bold tracking-tight text-white">Market prices</h4>
-        {showDexRows && variantsAvailable.length > 1 ? (
-          <label className="flex items-center gap-1.5 text-[10px] text-white/60">
-            <span className="sr-only">TCGPlayer variant</span>
-            <select
-              value={variant}
-              onChange={(e) => setVariant(e.target.value as TcgPriceVariant)}
-              className="max-w-[140px] rounded-md border border-white/20 bg-black/40 px-2 py-1 text-[11px] text-white"
-            >
-              {variantsAvailable.map((k) => (
-                <option key={k} value={k}>
-                  {k}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-      </div>
+      <h4 className="text-sm font-bold tracking-tight text-white">Market prices</h4>
       <div className="flex flex-col gap-2">
-        {showDexRows ? (
-          tcgplayerSearchUrl ? (
-            <a
-              href={tcgplayerSearchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 transition hover:bg-white/[0.12]"
-            >
-              <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                <MarketplacePricingLogo which="tcgplayer" />
-                <span className="text-sm font-medium text-white">TCGPlayer</span>
+        {showDexRows
+          ? variantRows.map(({ key, raw, psa10 }) => (
+              <div
+                key={key}
+                className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3"
+              >
+                <span className="min-w-0 flex-1 text-sm font-medium text-white">
+                  {variantLabel(key)}
+                </span>
+                <div className="flex shrink-0 flex-col items-end gap-0.5">
+                  <span className="text-sm font-semibold tabular-nums text-white">
+                    {formatMoneyGbp(raw)}
+                  </span>
+                  {psa10 !== null ? (
+                    <span className="text-xs tabular-nums text-white/60">
+                      PSA 10 {formatMoneyGbp(psa10)}
+                    </span>
+                  ) : null}
+                </div>
               </div>
-              <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-white">
-                {tcgPriceLabel ?? "—"}
-              </span>
-            </a>
-          ) : (
-            <div className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3">
-              <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                <MarketplacePricingLogo which="tcgplayer" />
-                <span className="text-sm font-medium text-white">TCGPlayer</span>
-              </div>
-              <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-white">
-                {tcgPriceLabel ?? "—"}
-              </span>
-            </div>
-          )
-        ) : null}
-        {showDexRows ? (
-          cardmarketSearchUrl ? (
-            <a
-              href={cardmarketSearchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 transition hover:bg-white/[0.12]"
-            >
-              <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                <MarketplacePricingLogo which="cardmarket" />
-                <span className="text-sm font-medium text-white">Cardmarket</span>
-              </div>
-              <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-white">
-                {cmPrimary ?? "—"}
-              </span>
-            </a>
-          ) : (
-            <div className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3">
-              <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                <MarketplacePricingLogo which="cardmarket" />
-                <span className="text-sm font-medium text-white">Cardmarket</span>
-              </div>
-              <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-white">
-                {cmPrimary ?? "—"}
-              </span>
-            </div>
-          )
-        ) : null}
+            ))
+          : null}
         {ebayUrl ? (
           <a
             href={ebayUrl}
@@ -1003,6 +882,10 @@ export function CardGrid({
   const [addPrinting, setAddPrinting] = useState<string>("Standard");
   const [addPending, setAddPending] = useState(false);
   const [wishPending, setWishPending] = useState(false);
+  const [wishSheetOpen, setWishSheetOpen] = useState(false);
+  const [wishVariant, setWishVariant] = useState<string>("");
+  /** Pricing variant keys loaded for the currently selected card (from ModalCardPricing). */
+  const [pricingVariants, setPricingVariants] = useState<string[]>([]);
   const [adjustingCollectionEntryId, setAdjustingCollectionEntryId] = useState<string | null>(null);
 
   const serializedWishlist = JSON.stringify(wishlistEntryIdsByMasterCardId);
@@ -1089,6 +972,11 @@ export function CardGrid({
   /** Scroll container for the modal (`overflow-y-auto` overlay); swipe-down-to-close only when scrolled to top. */
   const modalScrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Reset pricing variants when the selected card changes
+  useEffect(() => {
+    setPricingVariants([]);
+  }, [selectedCard?.masterCardId]);
+
   useLayoutEffect(() => {
     if (!selectedCard) {
       setCarouselSlotWidth(0);
@@ -1133,9 +1021,9 @@ export function CardGrid({
     if (!selectedCard?.masterCardId) return;
     setAddConditionId(itemConditions[0]?.id ?? "");
     setAddQuantity(1);
-    setAddPrinting("Standard");
+    setAddPrinting(pricingVariants[0] ?? "Standard");
     setAddSheetOpen(true);
-  }, [customerLoggedIn, goLogin, itemConditions, selectedCard?.masterCardId]);
+  }, [customerLoggedIn, goLogin, itemConditions, pricingVariants, selectedCard?.masterCardId]);
 
   const submitAddCollection = useCallback(async () => {
     if (!selectedCard?.masterCardId) return;
@@ -1240,9 +1128,10 @@ export function CardGrid({
     }
     const mid = selectedCard.masterCardId;
     const existingId = localWishlistMap[mid];
-    setWishPending(true);
-    try {
-      if (existingId) {
+    if (existingId) {
+      // Already wishlisted — remove immediately
+      setWishPending(true);
+      try {
         const res = await fetch(`/api/wishlist?id=${encodeURIComponent(existingId)}`, {
           method: "DELETE",
         });
@@ -1254,32 +1143,51 @@ export function CardGrid({
           });
           router.refresh();
         }
-      } else {
-        const res = await fetch("/api/wishlist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ masterCardId: mid }),
-        });
-        if (res.ok) {
-          let j: { doc?: { id?: string | number } };
-          try {
-            j = (await res.json()) as { doc?: { id?: string | number } };
-          } catch {
-            j = {};
-          }
-          const wid = j.doc?.id;
-          if (wid !== undefined) {
-            setLocalWishlistMap((m) => ({ ...m, [mid]: String(wid) }));
-          }
-          router.refresh();
+      } catch {
+        /* Network / aborted fetch */
+      } finally {
+        setWishPending(false);
+      }
+    } else {
+      // Open sheet to pick variant before adding
+      setWishVariant(pricingVariants[0] ?? "");
+      setWishSheetOpen(true);
+    }
+  }, [customerLoggedIn, goLogin, localWishlistMap, pricingVariants, router, selectedCard?.masterCardId]);
+
+  const submitAddWishlist = useCallback(async () => {
+    if (!selectedCard?.masterCardId) return;
+    const mid = selectedCard.masterCardId;
+    setWishPending(true);
+    try {
+      const res = await fetch("/api/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          masterCardId: mid,
+          targetPrinting: wishVariant || undefined,
+        }),
+      });
+      if (res.ok) {
+        let j: { doc?: { id?: string | number } };
+        try {
+          j = (await res.json()) as { doc?: { id?: string | number } };
+        } catch {
+          j = {};
         }
+        const wid = j.doc?.id;
+        if (wid !== undefined) {
+          setLocalWishlistMap((m) => ({ ...m, [mid]: String(wid) }));
+        }
+        router.refresh();
       }
     } catch {
       /* Network / aborted fetch */
     } finally {
       setWishPending(false);
+      setWishSheetOpen(false);
     }
-  }, [customerLoggedIn, goLogin, localWishlistMap, router, selectedCard?.masterCardId]);
+  }, [router, selectedCard?.masterCardId, wishVariant]);
 
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const touchDeltaRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -1728,8 +1636,10 @@ export function CardGrid({
               />
               <ModalCardPricing
                 key={selectedCard.masterCardId ?? `${selectedCard.set}/${selectedCard.filename}`}
+                masterCardId={selectedCard.masterCardId}
                 externalId={selectedCard.externalId}
                 legacyExternalId={selectedCard.legacyExternalId}
+                onVariantsLoaded={setPricingVariants}
                 ebayCardContext={{
                   setName: selectedCard.setName,
                   setSlug: selectedCard.setSlug,
@@ -1738,7 +1648,6 @@ export function CardGrid({
                   setCode: selectedCard.set,
                   cardName: selectedCard.cardName,
                   cardNumber: selectedCard.cardNumber,
-                  cardmarketListingVersion: selectedCard.cardmarketListingVersion,
                 }}
               />
             </div>
@@ -1876,17 +1785,23 @@ export function CardGrid({
               />
             </label>
             <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Printing</span>
+              <span className="font-medium">Version</span>
               <select
                 value={addPrinting}
                 onChange={(e) => setAddPrinting(e.target.value)}
                 className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
               >
-                {PRINTING_OPTIONS.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
+                {pricingVariants.length > 0
+                  ? pricingVariants.map((v) => (
+                      <option key={v} value={v}>
+                        {variantLabel(v)}
+                      </option>
+                    ))
+                  : PRINTING_OPTIONS.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
               </select>
             </label>
           </div>
@@ -1905,6 +1820,63 @@ export function CardGrid({
               className="flex-1 rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium disabled:opacity-50"
             >
               {addPending ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body,
+    );
+
+  const wishSheet =
+    wishSheetOpen &&
+    typeof document !== "undefined" &&
+    createPortal(
+      <div
+        className="fixed inset-0 z-[10001] flex flex-col justify-end bg-black/60"
+        onClick={() => setWishSheetOpen(false)}
+        role="presentation"
+      >
+        <div
+          className="max-h-[85dvh] overflow-y-auto rounded-t-2xl border border-[var(--foreground)]/15 bg-[var(--background)] p-4 text-[var(--foreground)] shadow-xl"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-label="Add to wishlist"
+        >
+          <h2 className="text-lg font-semibold">Add to wishlist</h2>
+          <p className="mt-1 text-sm text-[var(--foreground)]/65">{selectedCard?.cardName}</p>
+          {pricingVariants.length > 0 ? (
+            <div className="mt-4 flex flex-col gap-3">
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-medium">Version</span>
+                <select
+                  value={wishVariant}
+                  onChange={(e) => setWishVariant(e.target.value)}
+                  className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                >
+                  {pricingVariants.map((v) => (
+                    <option key={v} value={v}>
+                      {variantLabel(v)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          ) : null}
+          <div className="mt-6 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setWishSheetOpen(false)}
+              className="flex-1 rounded-md border border-[var(--foreground)]/25 px-4 py-2 text-sm font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={wishPending}
+              onClick={() => void submitAddWishlist()}
+              className="flex-1 rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium disabled:opacity-50"
+            >
+              {wishPending ? "Saving…" : "Save"}
             </button>
           </div>
         </div>
@@ -1951,6 +1923,7 @@ export function CardGrid({
       </ul>
       {modal && createPortal(modal, document.body)}
       {addSheet}
+      {wishSheet}
     </>
   );
 }

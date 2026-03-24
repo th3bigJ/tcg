@@ -63,15 +63,6 @@ async function run() {
         trainerType: card?.trainerType ?? undefined,
         energyType: card?.energyType ?? undefined,
         artist: card?.illustrator ?? undefined,
-        variants: card?.variants
-          ? {
-              firstEdition: card.variants.firstEdition ?? false,
-              holo: card.variants.holo ?? false,
-              normal: card.variants.normal ?? false,
-              reverse: card.variants.reverse ?? false,
-              wPromo: card.variants.wPromo ?? false,
-            }
-          : undefined,
         regulationMark: card?.regulationMark ?? undefined,
         dexId: Array.isArray(card?.dexId) ? card.dexId.map((value) => ({ value })) : [],
         isActive: true,

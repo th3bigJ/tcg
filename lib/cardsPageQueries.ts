@@ -19,8 +19,6 @@ export type CardsPageCardEntry = {
   setTcgdexId?: string;
   /** Payload `sets.cardCountOfficial` when the populated set includes it. */
   setCardCountOfficial?: number;
-  /** Optional `V{n}` in Cardmarket singles product path (master card field). */
-  cardmarketListingVersion?: number;
   setLogoSrc?: string;
   /** Set release date from Payload (ISO), for display in card modal. */
   setReleaseDate?: string;
@@ -812,7 +810,6 @@ const MASTER_CARD_LIST_ENTRY_SELECT = {
   dexId: true,
   artist: true,
   regulationMark: true,
-  cardmarketListingVersion: true,
 } as const;
 
 function normalizeTcgdexLocalId(localIdRaw: unknown): string | null {
@@ -913,12 +910,6 @@ export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): Car
     artist: typeof doc.artist === "string" ? doc.artist.trim() : undefined,
     regulationMark:
       typeof doc.regulationMark === "string" ? doc.regulationMark.trim() : undefined,
-    cardmarketListingVersion:
-      typeof doc.cardmarketListingVersion === "number" &&
-      Number.isFinite(doc.cardmarketListingVersion) &&
-      doc.cardmarketListingVersion >= 1
-        ? Math.floor(doc.cardmarketListingVersion)
-        : undefined,
   };
 }
 

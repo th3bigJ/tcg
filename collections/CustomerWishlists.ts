@@ -3,8 +3,11 @@ import type { CollectionConfig } from "payload";
 import { isAdminUser, isPayloadAdminUser } from "../lib/access";
 
 const TARGET_PRINTING_OPTIONS = [
+  { label: "Normal", value: "normal" },
+  { label: "Holofoil", value: "holofoil" },
+  { label: "Reverse Holo", value: "reverseHolofoil" },
+  { label: "Staff Stamp", value: "staffStamp" },
   { label: "Standard", value: "Standard" },
-  { label: "Reverse Holo", value: "Reverse Holo" },
   { label: "Holo", value: "Holo" },
   { label: "First Edition", value: "First Edition" },
   { label: "Shadowless", value: "Shadowless" },

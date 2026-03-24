@@ -18,6 +18,11 @@ import * as migration_1732060000000_add_sets_tcgdex_id from './1732060000000_add
 import * as migration_1732070000000_add_catalog_card_pricing from './1732070000000_add_catalog_card_pricing';
 import * as migration_1732080000000_add_master_card_list_cardmarket_listing_version from './1732080000000_add_master_card_list_cardmarket_listing_version';
 import * as migration_1732090000000_add_master_card_list_no_pricing from './1732090000000_add_master_card_list_no_pricing';
+import * as migration_1732100000000_add_catalog_card_pricing_tcgdex_external_pricing from './1732100000000_add_catalog_card_pricing_tcgdex_external_pricing';
+import * as migration_1732110000000_catalog_pricing_split_columns from './1732110000000_catalog_pricing_split_columns';
+import * as migration_1732120000000_drop_master_card_list_variants_columns from './1732120000000_drop_master_card_list_variants_columns';
+import * as migration_1732130000000_drop_master_card_list_cardmarket_listing_version from './1732130000000_drop_master_card_list_cardmarket_listing_version';
+import * as migration_1732140000000_drop_catalog_card_pricing_tcgplayer_cardmarket_columns from './1732140000000_drop_catalog_card_pricing_tcgplayer_cardmarket_columns';
 
 export const migrations = [
   {
@@ -119,5 +124,30 @@ export const migrations = [
     up: migration_1732090000000_add_master_card_list_no_pricing.up,
     down: migration_1732090000000_add_master_card_list_no_pricing.down,
     name: '1732090000000_add_master_card_list_no_pricing',
+  },
+  {
+    up: migration_1732100000000_add_catalog_card_pricing_tcgdex_external_pricing.up,
+    down: migration_1732100000000_add_catalog_card_pricing_tcgdex_external_pricing.down,
+    name: '1732100000000_add_catalog_card_pricing_tcgdex_external_pricing',
+  },
+  {
+    up: migration_1732110000000_catalog_pricing_split_columns.up,
+    down: migration_1732110000000_catalog_pricing_split_columns.down,
+    name: '1732110000000_catalog_pricing_split_columns',
+  },
+  {
+    up: migration_1732120000000_drop_master_card_list_variants_columns.up,
+    down: migration_1732120000000_drop_master_card_list_variants_columns.down,
+    name: '1732120000000_drop_master_card_list_variants_columns',
+  },
+  {
+    up: migration_1732130000000_drop_master_card_list_cardmarket_listing_version.up,
+    down: migration_1732130000000_drop_master_card_list_cardmarket_listing_version.down,
+    name: '1732130000000_drop_master_card_list_cardmarket_listing_version',
+  },
+  {
+    up: migration_1732140000000_drop_catalog_card_pricing_tcgplayer_cardmarket_columns.up,
+    down: migration_1732140000000_drop_catalog_card_pricing_tcgplayer_cardmarket_columns.down,
+    name: '1732140000000_drop_catalog_card_pricing_tcgplayer_cardmarket_columns',
   },
 ];

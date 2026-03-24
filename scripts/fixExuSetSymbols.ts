@@ -16,13 +16,6 @@ type TCGdexCard = {
   energyType?: string;
   regulationMark?: string;
   dexId?: number[];
-  variants?: {
-    firstEdition?: boolean;
-    holo?: boolean;
-    normal?: boolean;
-    reverse?: boolean;
-    wPromo?: boolean;
-  };
   pricing?: {
     tcgplayer?: unknown;
     cardmarket?: unknown;
@@ -136,15 +129,6 @@ async function run() {
           trainerType: card.trainerType ?? undefined,
           energyType: card.energyType ?? undefined,
           artist: card.illustrator ?? undefined,
-          variants: card.variants
-            ? {
-                firstEdition: card.variants.firstEdition ?? false,
-                holo: card.variants.holo ?? false,
-                normal: card.variants.normal ?? false,
-                reverse: card.variants.reverse ?? false,
-                wPromo: card.variants.wPromo ?? false,
-              }
-            : undefined,
           regulationMark: card.regulationMark ?? undefined,
           dexId: Array.isArray(card.dexId) ? card.dexId.map((value) => ({ value })) : [],
           isActive: true,
@@ -195,15 +179,6 @@ async function run() {
             trainerType: qCard.trainerType ?? undefined,
             energyType: qCard.energyType ?? undefined,
             artist: qCard.illustrator ?? undefined,
-            variants: qCard.variants
-              ? {
-                  firstEdition: qCard.variants.firstEdition ?? false,
-                  holo: qCard.variants.holo ?? false,
-                  normal: qCard.variants.normal ?? false,
-                  reverse: qCard.variants.reverse ?? false,
-                  wPromo: qCard.variants.wPromo ?? false,
-                }
-              : undefined,
             regulationMark: qCard.regulationMark ?? undefined,
             dexId: Array.isArray(qCard.dexId) ? qCard.dexId.map((value) => ({ value })) : [],
             isActive: true,

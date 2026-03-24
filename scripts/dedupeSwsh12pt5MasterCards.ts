@@ -63,7 +63,6 @@ type MasterRow = {
   dexId?: unknown;
   imageLow?: RelId | { id?: RelId } | null;
   imageHigh?: RelId | { id?: RelId } | null;
-  variants?: { firstEdition?: boolean; holo?: boolean; normal?: boolean; reverse?: boolean; wPromo?: boolean } | null;
 };
 
 const SET_CODE = "swsh12pt5";
@@ -119,32 +118,6 @@ const mergeFromLosers = (
           } else {
             out[field] = loserVal;
           }
-          break;
-        }
-      }
-    }
-  }
-  if ("variants" in keeper && keeper.variants) {
-    const vK = keeper.variants as Record<string, unknown>;
-    const merged: Record<string, boolean> = { ...vK } as Record<string, boolean>;
-    let changed = false;
-    for (const loser of losers) {
-      const vL = loser.variants as Record<string, unknown> | undefined;
-      if (!vL) continue;
-      for (const k of ["firstEdition", "holo", "normal", "reverse", "wPromo"] as const) {
-        if (!merged[k] && vL[k] === true) {
-          merged[k] = true;
-          changed = true;
-        }
-      }
-    }
-    if (changed) out.variants = merged;
-  } else {
-    for (const loser of losers) {
-      if (loser.variants && typeof loser.variants === "object") {
-        const v = loser.variants as Record<string, unknown>;
-        if (Object.values(v).some((x) => x === true)) {
-          out.variants = loser.variants;
           break;
         }
       }
@@ -240,7 +213,6 @@ export default async function dedupeSwsh12pt5MasterCards() {
         dexId: true,
         imageLow: true,
         imageHigh: true,
-        variants: true,
       },
       overrideAccess: true,
     });

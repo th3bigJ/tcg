@@ -16,13 +16,6 @@ type TCGdexCard = {
   energyType?: string;
   regulationMark?: string;
   dexId?: number[];
-  variants?: {
-    firstEdition?: boolean;
-    holo?: boolean;
-    normal?: boolean;
-    reverse?: boolean;
-    wPromo?: boolean;
-  };
   pricing?: {
     tcgplayer?: unknown;
     cardmarket?: unknown;
@@ -108,15 +101,6 @@ async function run() {
           trainerType: full.trainerType ?? undefined,
           energyType: full.energyType ?? undefined,
           artist: full.illustrator ?? undefined,
-          variants: full.variants
-            ? {
-                firstEdition: full.variants.firstEdition ?? false,
-                holo: full.variants.holo ?? false,
-                normal: full.variants.normal ?? false,
-                reverse: full.variants.reverse ?? false,
-                wPromo: full.variants.wPromo ?? false,
-              }
-            : undefined,
           regulationMark: full.regulationMark ?? undefined,
           dexId: (full.dexId ?? []).map((value) => ({ value })),
           isActive: true,

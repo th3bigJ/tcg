@@ -125,17 +125,6 @@ export const MasterCardList: CollectionConfig = {
               },
             },
             {
-              name: "cardmarketListingVersion",
-              type: "number",
-              min: 1,
-              max: 20,
-              label: "Cardmarket listing version (URL)",
-              admin: {
-                description:
-                  "Optional. Public Cardmarket singles URLs include `V{n}` before the collector suffix (e.g. `Mega-Dragonite-ex-V2-ASC271`). Leave empty to use V1.",
-              },
-            },
-            {
               name: "artist",
               type: "text",
               label: "Artist",
@@ -151,46 +140,6 @@ export const MasterCardList: CollectionConfig = {
               admin: {
                 description: "When disabled, this card will be hidden from listings.",
               },
-            },
-            {
-              name: "variants",
-              type: "group",
-              label: "Variants",
-              admin: {
-                description: "Print variants available for this card.",
-              },
-              fields: [
-                {
-                  name: "firstEdition",
-                  type: "checkbox",
-                  label: "First Edition",
-                  defaultValue: false,
-                },
-                {
-                  name: "holo",
-                  type: "checkbox",
-                  label: "Holo",
-                  defaultValue: false,
-                },
-                {
-                  name: "normal",
-                  type: "checkbox",
-                  label: "Normal",
-                  defaultValue: false,
-                },
-                {
-                  name: "reverse",
-                  type: "checkbox",
-                  label: "Reverse",
-                  defaultValue: false,
-                },
-                {
-                  name: "wPromo",
-                  type: "checkbox",
-                  label: "W Promo",
-                  defaultValue: false,
-                },
-              ],
             },
           ],
         },

@@ -3,15 +3,14 @@ import { getPayload } from "payload";
 
 import { resolveCardPricingGbp } from "@/lib/resolveCardPricingGbp";
 
+/** Catalog pricing for a master card (single lookup on `catalog_card_pricing.master_card_id`). */
 export async function GET(
-  request: Request,
-  context: { params: Promise<{ externalId: string }> },
+  _request: Request,
+  context: { params: Promise<{ masterCardId: string }> },
 ) {
-  const { externalId: raw } = await context.params;
-  const externalId = decodeURIComponent(raw ?? "").trim();
-  const fallbackExternalId =
-    new URL(request.url).searchParams.get("fallbackExternalId")?.trim() ?? "";
-  if (!externalId) {
+  const { masterCardId: raw } = await context.params;
+  const masterCardId = decodeURIComponent(raw ?? "").trim();
+  if (!masterCardId) {
     return Response.json(
       { tcgplayer: null, cardmarket: null, currency: "GBP" as const },
       {
@@ -22,11 +21,7 @@ export async function GET(
 
   try {
     const payload = await getPayload({ config });
-    const resolved = await resolveCardPricingGbp(payload, {
-      tcgdexId: externalId,
-      externalId,
-      legacyExternalId: fallbackExternalId,
-    });
+    const resolved = await resolveCardPricingGbp(payload, { masterCardId });
     if (!resolved) {
       return Response.json(
         { tcgplayer: null, cardmarket: null, currency: "GBP" as const },

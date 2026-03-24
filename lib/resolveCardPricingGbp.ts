@@ -1,24 +1,17 @@
 import type { Payload } from "payload";
 
+import { catalogDocToCardPricingGbpPayload } from "@/lib/catalogPricingStorefrontPayload";
 import type { CardPricingGbpPayload } from "@/lib/liveCardPricingGbp";
-import { fetchLiveCardPricingGbp } from "@/lib/liveCardPricingGbp";
-
-function parseStoredPricingGbp(raw: unknown): CardPricingGbpPayload | null {
-  if (!raw || typeof raw !== "object") return null;
-  const o = raw as Record<string, unknown>;
-  return {
-    tcgplayer: o.tcgplayer ?? null,
-    cardmarket: o.cardmarket ?? null,
-    currency: "GBP",
-  };
-}
+import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 
 /**
- * Storefront pricing: use `catalog-card-pricing` when present, otherwise live TCGdex + FX (same as before).
+ * Storefront pricing: read only from `catalog-card-pricing` (snapshots populated by refresh jobs).
  */
 type ResolveCardPricingInput =
   | string
   | {
+      /** Prefer this when set: one indexed lookup on `catalog-card-pricing.master_card_id`. */
+      masterCardId?: string | null;
       tcgdexId?: string | null;
       externalId?: string | null;
       legacyExternalId?: string | null;
@@ -32,6 +25,30 @@ export async function resolveCardPricingGbp(
   payload: Payload,
   input: ResolveCardPricingInput,
 ): Promise<CardPricingGbpPayload | null> {
+  const multipliers = await fetchGbpConversionMultipliers();
+
+  async function payloadFromDoc(doc: Record<string, unknown>): Promise<CardPricingGbpPayload | null> {
+    return catalogDocToCardPricingGbpPayload(doc, multipliers);
+  }
+
+  if (typeof input !== "string") {
+    const masterId = normalizeId(input.masterCardId);
+    if (masterId) {
+      const byMaster = await payload.find({
+        collection: "catalog-card-pricing",
+        where: { masterCard: { equals: masterId } },
+        limit: 1,
+        depth: 0,
+        overrideAccess: true,
+      });
+      const masterDoc = byMaster.docs[0] as Record<string, unknown> | undefined;
+      if (masterDoc) {
+        const parsed = await payloadFromDoc(masterDoc);
+        if (parsed) return parsed;
+      }
+    }
+  }
+
   const ids =
     typeof input === "string"
       ? [normalizeId(input)]
@@ -46,22 +63,19 @@ export async function resolveCardPricingGbp(
   for (const id of orderedUniqueIds) {
     const found = await payload.find({
       collection: "catalog-card-pricing",
-      where: { externalId: { equals: id } },
+      where: {
+        or: [{ externalId: { equals: id } }, { tcgdex_id: { equals: id } }],
+      },
       limit: 1,
       depth: 0,
       overrideAccess: true,
     });
 
-    const doc = found.docs[0] as { pricingGbp?: unknown } | undefined;
-    if (doc?.pricingGbp !== undefined && doc.pricingGbp !== null) {
-      const parsed = parseStoredPricingGbp(doc.pricingGbp);
+    const doc = found.docs[0] as Record<string, unknown> | undefined;
+    if (doc) {
+      const parsed = await payloadFromDoc(doc);
       if (parsed) return parsed;
     }
-  }
-
-  for (const id of orderedUniqueIds) {
-    const live = await fetchLiveCardPricingGbp(id);
-    if (live) return live;
   }
 
   return null;

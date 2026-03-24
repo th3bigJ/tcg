@@ -27,7 +27,6 @@ type FullCard = {
   illustrator?: string;
   rarity?: string;
   set?: { id?: string; name?: string; cardCount?: { total?: number; official?: number } };
-  variants?: { normal?: boolean; reverse?: boolean; holo?: boolean; firstEdition?: boolean; wPromo?: boolean };
   hp?: number;
   types?: string[];
   evolveFrom?: string;
@@ -370,15 +369,6 @@ export default async function seedAllSetCards() {
         energyType: fullCard.energyType ?? undefined,
         artist: fullCard.illustrator ?? undefined,
         externalId,
-        variants: fullCard.variants
-          ? {
-              firstEdition: fullCard.variants.firstEdition ?? false,
-              holo: fullCard.variants.holo ?? false,
-              normal: fullCard.variants.normal ?? false,
-              reverse: fullCard.variants.reverse ?? false,
-              wPromo: fullCard.variants.wPromo ?? false,
-            }
-          : undefined,
         regulationMark: fullCard.regulationMark ?? undefined,
         dexId: fullCard.dexId?.length ? fullCard.dexId.map((v) => ({ value: v })) : undefined,
         isActive: true,

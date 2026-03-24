@@ -15,10 +15,13 @@ function fallbackMultipliers(): { usdToGbp: number; eurToGbp: number } {
   return { usdToGbp, eurToGbp };
 }
 
-/**
- * How many GBP per 1 USD / 1 EUR (multiply source amount to get GBP).
- */
-export async function fetchGbpConversionMultipliers(): Promise<{ usdToGbp: number; eurToGbp: number }> {
+export type GbpConversionMultipliers = { usdToGbp: number; eurToGbp: number };
+
+const MULTIPLIER_CACHE_TTL_MS = 60_000;
+let multiplierCache: { value: GbpConversionMultipliers; at: number } | null = null;
+let multiplierFetchInFlight: Promise<GbpConversionMultipliers> | null = null;
+
+async function fetchGbpConversionMultipliersUncached(): Promise<GbpConversionMultipliers> {
   try {
     const res = await fetch("https://api.frankfurter.app/latest?from=GBP&to=USD,EUR", {
       next: { revalidate: 3600 },
@@ -33,6 +36,30 @@ export async function fetchGbpConversionMultipliers(): Promise<{ usdToGbp: numbe
     return { usdToGbp: 1 / usdPerGbp, eurToGbp: 1 / eurPerGbp };
   } catch {
     return fallbackMultipliers();
+  }
+}
+
+/**
+ * How many GBP per 1 USD / 1 EUR (multiply source amount to get GBP).
+ * Short in-process cache + in-flight dedupe so batch resolvers do not hammer Frankfurter.
+ */
+export async function fetchGbpConversionMultipliers(): Promise<GbpConversionMultipliers> {
+  const now = Date.now();
+  if (multiplierCache && now - multiplierCache.at < MULTIPLIER_CACHE_TTL_MS) {
+    return multiplierCache.value;
+  }
+  if (multiplierFetchInFlight) {
+    return multiplierFetchInFlight;
+  }
+  multiplierFetchInFlight = (async () => {
+    const value = await fetchGbpConversionMultipliersUncached();
+    multiplierCache = { value, at: Date.now() };
+    return value;
+  })();
+  try {
+    return await multiplierFetchInFlight;
+  } finally {
+    multiplierFetchInFlight = null;
   }
 }
 

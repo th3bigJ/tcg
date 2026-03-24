@@ -51,13 +51,6 @@ type TCGdexCardFull = {
   trainerType?: string;
   energyType?: string;
   regulationMark?: string;
-  variants?: {
-    firstEdition?: boolean;
-    holo?: boolean;
-    normal?: boolean;
-    reverse?: boolean;
-    wPromo?: boolean;
-  };
   dexId?: number[];
 };
 
@@ -375,15 +368,6 @@ export default async function importSetCardsFromJson() {
       trainerType: pickTrainerType(card.supertype, card.subtypes, tcgFull?.trainerType),
       energyType: pickEnergyType(card.supertype, card.subtypes, tcgFull?.energyType),
       artist: card.artist || tcgFull?.illustrator,
-      variants: tcgFull?.variants
-        ? {
-            firstEdition: tcgFull.variants.firstEdition ?? false,
-            holo: tcgFull.variants.holo ?? false,
-            normal: tcgFull.variants.normal ?? false,
-            reverse: tcgFull.variants.reverse ?? false,
-            wPromo: tcgFull.variants.wPromo ?? false,
-          }
-        : undefined,
       regulationMark: tcgFull?.regulationMark,
       dexId: (card.nationalPokedexNumbers || tcgFull?.dexId || []).map((value) => ({ value })),
       isActive: true,

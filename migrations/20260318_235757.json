@@ -1467,41 +1467,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "variants_first_edition": {
-          "name": "variants_first_edition",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "variants_holo": {
-          "name": "variants_holo",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "variants_normal": {
-          "name": "variants_normal",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "variants_reverse": {
-          "name": "variants_reverse",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "variants_w_promo": {
-          "name": "variants_w_promo",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
         "attacks": {
           "name": "attacks",
           "type": "jsonb",

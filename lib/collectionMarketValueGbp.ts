@@ -14,14 +14,30 @@ function readMarketFromVariantBlock(block: unknown): number | null {
 }
 
 /**
- * Single guide price in GBP (already converted). Collection totals use **TCGPlayer** first
- * (normal → holofoil → reverse holo `market`), then Cardmarket trend / averages if needed.
+ * Single guide price in GBP from catalog snapshots.
+ * If `printing` is set and matches a variant key in tcgplayer, uses that variant's raw price.
+ * Otherwise falls through TCGPlayer variants in order, then Cardmarket.
  */
-function estimateUnitGbpFromConvertedPricing(tcgplayer: unknown, cardmarket: unknown): number | null {
+function estimateUnitGbpFromConvertedPricing(
+  tcgplayer: unknown,
+  cardmarket: unknown,
+  printing?: string,
+): number | null {
   const tpObj = tcgplayer && typeof tcgplayer === "object" ? (tcgplayer as Record<string, unknown>) : null;
   if (tpObj) {
+    // Try the specific printing first
+    if (printing?.trim()) {
+      const specific = readMarketFromVariantBlock(tpObj[printing.trim()]);
+      if (specific !== null) return specific;
+    }
+    // Fall back to first available variant
     for (const k of TCG_PRICE_VARIANTS) {
       const v = readMarketFromVariantBlock(getTcgplayerVariantBlock(tpObj, k));
+      if (v !== null) return v;
+    }
+    // Also check any non-standard variant keys (e.g. staffStamp)
+    for (const [, block] of Object.entries(tpObj)) {
+      const v = readMarketFromVariantBlock(block);
       if (v !== null) return v;
     }
   }
@@ -50,14 +66,17 @@ async function unitPriceGbpForExternalId(
   payload: Payload,
   externalId: string,
   legacyExternalId?: string,
+  masterCardId?: string,
+  printing?: string,
 ): Promise<number | null> {
   const resolved = await resolveCardPricingGbp(payload, {
+    ...(masterCardId?.trim() ? { masterCardId: masterCardId.trim() } : {}),
     tcgdexId: externalId,
     externalId,
     legacyExternalId,
   });
   if (!resolved) return null;
-  return estimateUnitGbpFromConvertedPricing(resolved.tcgplayer, resolved.cardmarket);
+  return estimateUnitGbpFromConvertedPricing(resolved.tcgplayer, resolved.cardmarket, printing);
 }
 
 async function mapWithConcurrency<T, R>(
@@ -91,15 +110,20 @@ export type CollectionMarketValueResult = {
 };
 
 /**
- * Estimates total market value for a list of storefront card rows (e.g. collection or wishlist):
- * **catalog-card-pricing** when present, else live TCGdex. **TCGPlayer** variant market first,
- * then Cardmarket. Amounts in GBP. Quantities default to 1 when missing.
+ * Estimates total market value for a list of storefront card rows (e.g. collection or wishlist)
+ * from **catalog-card-pricing** only. **TCGPlayer** variant market first, then Cardmarket.
+ * Amounts in GBP. Quantities default to 1 when missing.
  */
 export async function estimateCollectionMarketValueGbp(
   payload: Payload,
   entries: StorefrontCardEntry[],
 ): Promise<CollectionMarketValueResult> {
-  const qtyByExternalId = new Map<string, { quantity: number; legacyExternalId?: string }>();
+  // Key by externalId + printing so each variant is priced separately
+  type RowKey = string; // `${externalId}::${printing}`
+  const rowMap = new Map<
+    RowKey,
+    { quantity: number; externalId: string; printing?: string; legacyExternalId?: string; masterCardId?: string }
+  >();
   let rowsWithoutExternalId = 0;
 
   for (const e of entries) {
@@ -112,20 +136,20 @@ export async function estimateCollectionMarketValueGbp(
       rowsWithoutExternalId += 1;
       continue;
     }
+    const printing = e.printing?.trim() || e.targetPrinting?.trim() || undefined;
     const legacy = e.legacyExternalId?.trim() || undefined;
-    const prev = qtyByExternalId.get(ext);
+    const mid = e.masterCardId?.trim() || undefined;
+    const key: RowKey = `${ext}::${printing ?? ""}`;
+    const prev = rowMap.get(key);
     if (prev) {
-      qtyByExternalId.set(ext, {
-        quantity: prev.quantity + q,
-        legacyExternalId: prev.legacyExternalId ?? legacy,
-      });
+      rowMap.set(key, { ...prev, quantity: prev.quantity + q });
     } else {
-      qtyByExternalId.set(ext, { quantity: q, legacyExternalId: legacy });
+      rowMap.set(key, { quantity: q, externalId: ext, printing, legacyExternalId: legacy, masterCardId: mid });
     }
   }
 
-  const ids = [...qtyByExternalId.keys()];
-  if (ids.length === 0) {
+  const rowKeys = [...rowMap.keys()];
+  if (rowKeys.length === 0) {
     return {
       totalGbp: 0,
       pricedCardCount: 0,
@@ -134,11 +158,17 @@ export async function estimateCollectionMarketValueGbp(
     };
   }
 
-  const unitPrices = await mapWithConcurrency(ids, 6, async (ext) => {
-    const row = qtyByExternalId.get(ext);
+  const unitPrices = await mapWithConcurrency(rowKeys, 6, async (key) => {
+    const row = rowMap.get(key)!;
     return {
-      ext,
-      unit: await unitPriceGbpForExternalId(payload, ext, row?.legacyExternalId),
+      key,
+      unit: await unitPriceGbpForExternalId(
+        payload,
+        row.externalId,
+        row.legacyExternalId,
+        row.masterCardId,
+        row.printing,
+      ),
     };
   });
 
@@ -146,8 +176,8 @@ export async function estimateCollectionMarketValueGbp(
   let pricedCardCount = 0;
   let missingPriceForId = 0;
 
-  for (const { ext, unit } of unitPrices) {
-    const qty = qtyByExternalId.get(ext)?.quantity ?? 0;
+  for (const { key, unit } of unitPrices) {
+    const qty = rowMap.get(key)?.quantity ?? 0;
     if (unit === null) {
       missingPriceForId += 1;
       continue;
@@ -157,12 +187,12 @@ export async function estimateCollectionMarketValueGbp(
   }
 
   const hasIncompleteData =
-    rowsWithoutExternalId > 0 || missingPriceForId > 0 || pricedCardCount < ids.length;
+    rowsWithoutExternalId > 0 || missingPriceForId > 0 || pricedCardCount < rowKeys.length;
 
   return {
     totalGbp,
     pricedCardCount,
-    attemptedCardCount: ids.length,
+    attemptedCardCount: rowKeys.length,
     hasIncompleteData,
   };
 }

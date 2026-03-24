@@ -1,6 +1,10 @@
 import TCGdex from "@tcgdex/sdk";
 
-import { fetchGbpConversionMultipliers, multiplyNumericLeaves } from "@/lib/marketPriceExchange";
+import {
+  type GbpConversionMultipliers,
+  fetchGbpConversionMultipliers,
+  multiplyNumericLeaves,
+} from "@/lib/marketPriceExchange";
 
 const tcgdex = new TCGdex("en");
 
@@ -80,22 +84,68 @@ export function extractTcgdexCardPricing(card: unknown): { tcgplayer: unknown; c
   };
 }
 
+/**
+ * When we know the expected TCGdex set id (e.g. from `sets.tcgdexId`), reject card payloads from
+ * another set. Otherwise lookup fallbacks like `me02-001` can match a different set than `me02.5-001`
+ * and pricing will be wrong.
+ */
+export function tcgdexCardMatchesExpectedSet(
+  card: unknown,
+  expectedSetId: string | null | undefined,
+): boolean {
+  const expected = typeof expectedSetId === "string" ? expectedSetId.trim() : "";
+  if (!expected) return true;
+  if (!card || typeof card !== "object") return false;
+  const c = card as { id?: unknown; set?: unknown };
+  const setObj = c.set;
+  if (setObj && typeof setObj === "object" && "id" in setObj) {
+    const sid = (setObj as { id?: unknown }).id;
+    if (typeof sid === "string" && sid === expected) return true;
+  }
+  const cid = typeof c.id === "string" ? c.id : "";
+  if (cid.startsWith(`${expected}-`)) return true;
+  return false;
+}
+
 export type CardPricingGbpPayload = {
   tcgplayer: unknown;
   cardmarket: unknown;
   currency: "GBP";
 };
 
+/** Result of a TCGdex card fetch when market pricing exists. */
+export type LiveCardPricingFetchResult = {
+  pricing: CardPricingGbpPayload;
+};
+
+export type LiveCardPricingFetchOptions = {
+  /** When set, skips Frankfurter fetch (use one call per bulk job). */
+  multipliers?: GbpConversionMultipliers;
+  /**
+   * If set, only accept a card whose `set.id` / `id` prefix matches this TCGdex set id.
+   * `fetchLiveCardPricingGbpForCard` also uses `input.setTcgdexId` when this is omitted.
+   */
+  expectedTcgdexSetId?: string | null;
+};
+
 /**
  * Fetches the card from TCGdex and returns TCGPlayer + Cardmarket pricing with numbers converted to GBP.
  */
-export async function fetchLiveCardPricingGbp(externalId: string): Promise<CardPricingGbpPayload | null> {
+export async function fetchLiveCardPricingGbp(
+  externalId: string,
+  options?: LiveCardPricingFetchOptions,
+): Promise<LiveCardPricingFetchResult | null> {
   const lookupIds = buildPricingLookupIds(externalId);
   if (lookupIds.length === 0) return null;
+
+  const expectedSet = options?.expectedTcgdexSetId;
 
   for (const id of lookupIds) {
     try {
       const card = await tcgdex.fetch("cards", id);
+      if (!tcgdexCardMatchesExpectedSet(card, expectedSet)) {
+        continue;
+      }
       const { tcgplayer, cardmarket } = extractTcgdexCardPricing(card);
 
       // Treat records with no market payloads as unavailable pricing.
@@ -103,7 +153,8 @@ export async function fetchLiveCardPricingGbp(externalId: string): Promise<CardP
         continue;
       }
 
-      const { usdToGbp, eurToGbp } = await fetchGbpConversionMultipliers();
+      const { usdToGbp, eurToGbp } =
+        options?.multipliers ?? (await fetchGbpConversionMultipliers());
       const tcgplayerGbp =
         tcgplayer !== null && tcgplayer !== undefined
           ? multiplyNumericLeaves(tcgplayer, usdToGbp)
@@ -114,9 +165,11 @@ export async function fetchLiveCardPricingGbp(externalId: string): Promise<CardP
           : cardmarket;
 
       return {
-        tcgplayer: tcgplayerGbp,
-        cardmarket: cardmarketGbp,
-        currency: "GBP",
+        pricing: {
+          tcgplayer: tcgplayerGbp,
+          cardmarket: cardmarketGbp,
+          currency: "GBP",
+        },
       };
     } catch {
       // Try next lookup id variant.
@@ -131,7 +184,8 @@ export async function fetchLiveCardPricingGbp(externalId: string): Promise<CardP
  */
 export async function fetchLiveCardPricingGbpForCard(
   input: PricingLookupInput,
-): Promise<CardPricingGbpPayload | null> {
+  options?: LiveCardPricingFetchOptions,
+): Promise<LiveCardPricingFetchResult | null> {
   const canonicalFromSet = buildCanonicalExternalIdFromSet(input);
   const lookupIds = new Set<string>();
 
@@ -147,9 +201,18 @@ export async function fetchLiveCardPricingGbpForCard(
   const resolvedLookupIds = Array.from(lookupIds);
   if (resolvedLookupIds.length === 0) return null;
 
+  const expectedSetFromInput =
+    typeof input.setTcgdexId === "string" && input.setTcgdexId.trim()
+      ? input.setTcgdexId.trim()
+      : undefined;
+  const expectedSet = options?.expectedTcgdexSetId ?? expectedSetFromInput;
+
   for (const id of resolvedLookupIds) {
     try {
       const card = await tcgdex.fetch("cards", id);
+      if (!tcgdexCardMatchesExpectedSet(card, expectedSet)) {
+        continue;
+      }
       const { tcgplayer, cardmarket } = extractTcgdexCardPricing(card);
 
       // Treat records with no market payloads as unavailable pricing.
@@ -157,7 +220,8 @@ export async function fetchLiveCardPricingGbpForCard(
         continue;
       }
 
-      const { usdToGbp, eurToGbp } = await fetchGbpConversionMultipliers();
+      const { usdToGbp, eurToGbp } =
+        options?.multipliers ?? (await fetchGbpConversionMultipliers());
       const tcgplayerGbp =
         tcgplayer !== null && tcgplayer !== undefined
           ? multiplyNumericLeaves(tcgplayer, usdToGbp)
@@ -168,9 +232,61 @@ export async function fetchLiveCardPricingGbpForCard(
           : cardmarket;
 
       return {
-        tcgplayer: tcgplayerGbp,
-        cardmarket: cardmarketGbp,
-        currency: "GBP",
+        pricing: {
+          tcgplayer: tcgplayerGbp,
+          cardmarket: cardmarketGbp,
+          currency: "GBP",
+        },
+      };
+    } catch {
+      // Try next lookup id variant.
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Raw TCGdex TCGPlayer + Cardmarket blocks (USD / EUR) before GBP conversion — for catalog column extraction.
+ */
+export async function fetchRawTcgdexCardPricingForCard(
+  input: PricingLookupInput,
+  options?: LiveCardPricingFetchOptions,
+): Promise<{ tcgplayer: unknown; cardmarket: unknown } | null> {
+  const canonicalFromSet = buildCanonicalExternalIdFromSet(input);
+  const lookupIds = new Set<string>();
+
+  if (canonicalFromSet) {
+    for (const id of buildPricingLookupIds(canonicalFromSet)) {
+      lookupIds.add(id);
+    }
+  }
+  for (const id of buildPricingLookupIds(input.externalId)) {
+    lookupIds.add(id);
+  }
+
+  const resolvedLookupIds = Array.from(lookupIds);
+  if (resolvedLookupIds.length === 0) return null;
+
+  const expectedSetFromInput =
+    typeof input.setTcgdexId === "string" && input.setTcgdexId.trim()
+      ? input.setTcgdexId.trim()
+      : undefined;
+  const expectedSet = options?.expectedTcgdexSetId ?? expectedSetFromInput;
+
+  for (const id of resolvedLookupIds) {
+    try {
+      const card = await tcgdex.fetch("cards", id);
+      if (!tcgdexCardMatchesExpectedSet(card, expectedSet)) {
+        continue;
+      }
+      const { tcgplayer, cardmarket } = extractTcgdexCardPricing(card);
+      if (tcgplayer === null && cardmarket === null) {
+        continue;
+      }
+      return {
+        tcgplayer: tcgplayer ?? null,
+        cardmarket: cardmarket ?? null,
       };
     } catch {
       // Try next lookup id variant.
