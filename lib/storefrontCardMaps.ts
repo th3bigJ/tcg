@@ -183,6 +183,13 @@ export async function fetchCollectionCardEntries(
     limit: 2000,
     sort: "-addedAt",
     overrideAccess: true,
+    select: {
+      masterCard: true,
+      condition: true,
+      quantity: true,
+      printing: true,
+      language: true,
+    },
   });
 
   return result.docs
@@ -202,6 +209,12 @@ export async function fetchWishlistCardEntries(
     limit: 2000,
     sort: "-addedAt",
     overrideAccess: true,
+    select: {
+      masterCard: true,
+      priority: true,
+      targetCondition: true,
+      targetPrinting: true,
+    },
   });
 
   return result.docs

@@ -169,11 +169,11 @@ async function getPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
 export const getCachedSetFilterOptions = unstable_cache(
   async (setCodes: string[]) => getSetFilterOptions(setCodes),
   ["cards-page-set-filter-options-v2"],
-  { revalidate: 300 },
+  { revalidate: 3600 },
 );
 
 export const getCachedPokemonFilterOptions = unstable_cache(
   async () => getPokemonFilterOptions(),
   ["cards-page-pokemon-filter-options-v1"],
-  { revalidate: 300 },
+  { revalidate: 3600 },
 );

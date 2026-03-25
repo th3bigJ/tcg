@@ -131,5 +131,5 @@ export function groupExpansionSetsBySeries(rows: ExpansionSetRow[]): ExpansionSe
 export const getCachedExpansionSetRows = unstable_cache(
   async () => loadExpansionSetRows(),
   ["public-expansions-set-rows-v2"],
-  { revalidate: 300 },
+  { revalidate: 3600 },
 );

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CardGrid } from "@/components/CardGrid";
+import { SearchCardGrid } from "@/components/SearchCardGrid";
 import { CardFiltersPanel } from "@/components/CardFiltersPanel";
 import { CardsMobileControls } from "@/components/CardsMobileControls";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
@@ -21,12 +21,7 @@ import {
 } from "@/lib/expansionsPageQueries";
 import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 import { getCurrentCustomer } from "@/lib/auth";
-import {
-  fetchCollectionCardEntries,
-  fetchItemConditionOptions,
-  fetchWishlistIdsByMasterCard,
-  groupCollectionLinesByMasterCardId,
-} from "@/lib/storefrontCardMaps";
+import type { StorefrontCardEntry } from "@/lib/storefrontCardMaps";
 
 function parseExcludeCommonUncommon(value: string | undefined): boolean {
   const v = (value ?? "").trim().toLowerCase();
@@ -127,16 +122,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     getCachedExpansionSetRows(),
   ]);
 
-  const cardsForClient = structuredClone(cardsForGrid) as typeof cardsForGrid;
+  const cardsForClient = cardsForGrid;
 
-  const [itemConditions, wishlistEntryIdsByMasterCardId, collectionEntriesForModal] = customer
-    ? await Promise.all([
-        fetchItemConditionOptions(),
-        fetchWishlistIdsByMasterCard(customer.id),
-        fetchCollectionCardEntries(customer.id),
-      ])
-    : [[], {}, []];
-  const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(collectionEntriesForModal);
+  const collectionEntriesForModal: StorefrontCardEntry[] = [];
 
   // ── Sets tab ──────────────────────────────────────────────────────────────
   const expansionGroups = groupExpansionSetsBySeries(expansionRows);
@@ -337,14 +325,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 loadMoreStep={CARDS_LOAD_MORE_STEP}
                 scrollRestoreKey={scrollRestoreKey}
               >
-                <CardGrid
+                <SearchCardGrid
                   cards={cardsForClient}
                   setLogosByCode={setLogosByCode}
                   setSymbolsByCode={setSymbolsByCode}
                   customerLoggedIn={Boolean(customer)}
-                  itemConditions={itemConditions}
-                  wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
-                  collectionLinesByMasterCardId={collectionLinesByMasterCardId}
                 />
               </CardsResultsScroll>
             </section>

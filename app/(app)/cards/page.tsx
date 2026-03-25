@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CardGrid } from "@/components/CardGrid";
+import { SearchCardGrid } from "@/components/SearchCardGrid";
 import { CardFiltersPanel } from "@/components/CardFiltersPanel";
 import { CardsMobileControls } from "@/components/CardsMobileControls";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
@@ -15,12 +15,6 @@ import {
   getCachedSetFilterOptions,
 } from "@/lib/cardsFilterOptionsServer";
 import { getCurrentCustomer } from "@/lib/auth";
-import {
-  fetchCollectionCardEntries,
-  fetchItemConditionOptions,
-  fetchWishlistIdsByMasterCard,
-  groupCollectionLinesByMasterCardId,
-} from "@/lib/storefrontCardMaps";
 
 function parseExcludeCommonUncommon(value: string | undefined): boolean {
   const v = (value ?? "").trim().toLowerCase();
@@ -37,6 +31,7 @@ type CardsPageProps = {
     search?: string;
     exclude_cu?: string;
     category?: string;
+    artist?: string;
   }>;
 };
 
@@ -48,6 +43,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const selectedSearch = (resolvedSearchParams.search ?? "").trim();
   const excludeCommonUncommon = parseExcludeCommonUncommon(resolvedSearchParams.exclude_cu);
   const selectedCategory = (resolvedSearchParams.category ?? "").trim();
+  const activeArtist = (resolvedSearchParams.artist ?? "").trim();
   const facets = (await getCachedFilterFacets()) ?? {};
   const availableSetCodes = facets.setCodes ?? [];
   const rarityOptions = facets.rarityDisplayValues ?? [];
@@ -80,6 +76,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const activePokemonName = activePokemonOption?.name ?? null;
   const activeRarity = hasSelectedRarity ? selectedRarity : "";
   const activeSearch = selectedSearch;
+
   const requestedTake = resolveCardsTakeFromParams(
     resolvedSearchParams.take,
     resolvedSearchParams.page,
@@ -92,6 +89,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
       activePokemonName,
       activeRarity,
       activeSearch,
+      activeArtist,
       excludeCommonUncommon,
       categoryQueryVariants,
       page: 1,
@@ -100,17 +98,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     getCurrentCustomer(),
   ]);
 
-  /** Clone so RSC → CardGrid keeps plain fields like dexIds (avoids odd Payload/proxy shapes). */
-  const cardsForClient = structuredClone(cardsForGrid) as typeof cardsForGrid;
-
-  const [itemConditions, wishlistEntryIdsByMasterCardId, collectionEntriesForModal] = customer
-    ? await Promise.all([
-        fetchItemConditionOptions(),
-        fetchWishlistIdsByMasterCard(customer.id),
-        fetchCollectionCardEntries(customer.id),
-      ])
-    : [[], {}, []];
-  const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(collectionEntriesForModal);
+  const cardsForClient = cardsForGrid;
 
   const showingCount = cardsForClient.length;
   const showingFrom = filteredCount === 0 ? 0 : 1;
@@ -124,6 +112,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     if (activePokemon) params.set("pokemon", activePokemon);
     if (activeRarity) params.set("rarity", activeRarity);
     if (activeSearch) params.set("search", activeSearch);
+    if (activeArtist) params.set("artist", activeArtist);
     if (excludeCommonUncommon) params.set("exclude_cu", "1");
     if (activeCategory) params.set("category", activeCategory);
     if (take !== undefined && take > 0) params.set("take", String(take));
@@ -137,6 +126,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     activePokemon,
     activeRarity,
     activeSearch,
+    activeArtist,
     excludeCommonUncommon ? "1" : "",
     activeCategory,
   ].join("|");
@@ -248,14 +238,11 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               loadMoreStep={CARDS_LOAD_MORE_STEP}
               scrollRestoreKey={scrollRestoreKey}
             >
-              <CardGrid
+              <SearchCardGrid
                 cards={cardsForClient}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
-                itemConditions={itemConditions}
-                wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
-                collectionLinesByMasterCardId={collectionLinesByMasterCardId}
               />
             </CardsResultsScroll>
           </section>

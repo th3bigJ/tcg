@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CardGrid } from "@/components/CardGrid";
+import { SearchCardGrid } from "@/components/SearchCardGrid";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import {
   getCachedPokemonFilterOptions,
@@ -14,12 +14,6 @@ import {
 } from "@/lib/cardsPageQueries";
 import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 import { getCurrentCustomer } from "@/lib/auth";
-import {
-  fetchCollectionCardEntries,
-  fetchItemConditionOptions,
-  fetchWishlistIdsByMasterCard,
-  groupCollectionLinesByMasterCardId,
-} from "@/lib/storefrontCardMaps";
 
 type PokedexPokemonCardsPageProps = {
   params: Promise<{ nationalDex: string }>;
@@ -72,15 +66,7 @@ export default async function PokedexPokemonCardsPage({
     getCurrentCustomer(),
   ]);
 
-  const cardsForClient = JSON.parse(JSON.stringify(cardsForGrid)) as typeof cardsForGrid;
-  const [itemConditions, wishlistEntryIdsByMasterCardId, collectionEntriesForModal] = customer
-    ? await Promise.all([
-        fetchItemConditionOptions(),
-        fetchWishlistIdsByMasterCard(customer.id),
-        fetchCollectionCardEntries(customer.id),
-      ])
-    : [[], {}, []];
-  const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(collectionEntriesForModal);
+  const cardsForClient = cardsForGrid;
 
   const showingCount = cardsForClient.length;
   const nextTake = Math.min(filteredCount, showingCount + CARDS_LOAD_MORE_STEP);
@@ -148,14 +134,11 @@ export default async function PokedexPokemonCardsPage({
               loadMoreStep={CARDS_LOAD_MORE_STEP}
               scrollRestoreKey={scrollRestoreKey}
             >
-              <CardGrid
+              <SearchCardGrid
                 cards={cardsForClient}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
-                itemConditions={itemConditions}
-                wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
-                collectionLinesByMasterCardId={collectionLinesByMasterCardId}
               />
             </CardsResultsScroll>
           </div>

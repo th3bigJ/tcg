@@ -23,6 +23,13 @@ export async function GET(request: NextRequest) {
     limit: 2000,
     sort: "-addedAt",
     overrideAccess: true,
+    select: {
+      masterCard: true,
+      condition: true,
+      quantity: true,
+      printing: true,
+      language: true,
+    },
   });
 
   return jsonResponseWithAuthCookies({ docs: result.docs }, authCookieResponse);

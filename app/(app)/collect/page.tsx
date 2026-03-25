@@ -35,15 +35,15 @@ export default async function CollectPage() {
     );
   }
 
-  const entries = await fetchCollectionCardEntries(customer.id);
+  const [entries, itemConditions, wishlistEntryIdsByMasterCardId, facets] = await Promise.all([
+    fetchCollectionCardEntries(customer.id),
+    fetchItemConditionOptions(),
+    fetchWishlistIdsByMasterCard(customer.id),
+    getCachedFilterFacets(),
+  ]);
   const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(entries);
-  const cardsForClient = mergeCollectionEntriesForGrid(
-    JSON.parse(JSON.stringify(entries)) as typeof entries,
-  );
-  const itemConditions = await fetchItemConditionOptions();
-  const wishlistEntryIdsByMasterCardId = await fetchWishlistIdsByMasterCard(customer.id);
-  const facets = (await getCachedFilterFacets()) ?? {};
-  const setFilterOptions = await getCachedSetFilterOptions(facets.setCodes ?? []);
+  const cardsForClient = mergeCollectionEntriesForGrid(entries);
+  const setFilterOptions = await getCachedSetFilterOptions((facets ?? {}).setCodes ?? []);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );

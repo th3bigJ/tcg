@@ -96,6 +96,7 @@ export const Sets: CollectionConfig = {
             {
               name: "code",
               type: "text",
+              index: true,
               label: "Legacy set code",
               admin: {
                 description:
@@ -106,6 +107,7 @@ export const Sets: CollectionConfig = {
               name: "tcgdexId",
               type: "text",
               unique: true,
+              index: true,
               label: "TCGdex canonical id",
               admin: {
                 description:

@@ -46,6 +46,7 @@ export const MasterCardList: CollectionConfig = {
               relationTo: "sets",
               hasMany: false,
               required: true,
+              index: true,
               label: "Set",
               filterOptions: ({ siblingData }) => {
                 if (siblingData && typeof siblingData === "object") {
@@ -127,6 +128,7 @@ export const MasterCardList: CollectionConfig = {
             {
               name: "artist",
               type: "text",
+              index: true,
               label: "Artist",
               admin: {
                 description: "Card artist name.",
@@ -149,6 +151,7 @@ export const MasterCardList: CollectionConfig = {
             {
               name: "category",
               type: "text",
+              index: true,
               label: "Category",
               admin: {
                 description: "Card category (e.g. Pokemon, Trainer, Energy).",
@@ -165,6 +168,7 @@ export const MasterCardList: CollectionConfig = {
             {
               name: "rarity",
               type: "text",
+              index: true,
               label: "Rarity",
               admin: {
                 description: "Rarity label (e.g. Double Rare).",
@@ -260,6 +264,7 @@ export const MasterCardList: CollectionConfig = {
               name: "imageLow",
               type: "upload",
               relationTo: "card-media",
+              index: true,
               label: "Card image (low)",
               admin: {
                 description: "Low-resolution card image (linked from Card Media).",

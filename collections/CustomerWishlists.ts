@@ -59,6 +59,7 @@ export const CustomerWishlists: CollectionConfig = {
               type: "relationship",
               relationTo: "customers",
               required: true,
+              index: true,
               label: "Customer",
               admin: {
                 description: "Who wants this card.",
@@ -69,6 +70,7 @@ export const CustomerWishlists: CollectionConfig = {
               type: "relationship",
               relationTo: "master-card-list",
               required: true,
+              index: true,
               label: "Card",
               admin: {
                 description: "Target catalog card.",

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  memo,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -642,7 +643,7 @@ function ModalDexOtherCardsSection({
               src={card.lowSrc}
               alt=""
               className="block max-h-full max-w-full rounded-[var(--card-viewer-image-radius)] object-contain"
-              loading="lazy"
+              loading="eager"
             />
           ) : (
             <span className="relative block aspect-[3/4] w-full shrink-0 overflow-hidden rounded-[var(--card-viewer-image-radius)]">
@@ -650,7 +651,7 @@ function ModalDexOtherCardsSection({
                 src={card.lowSrc}
                 alt=""
                 className="absolute inset-0 block h-full w-full object-contain"
-                loading="lazy"
+                loading="eager"
               />
             </span>
           )}
@@ -852,6 +853,56 @@ function ModalAttributeRow({
   );
 }
 
+const CardGridItem = memo(function CardGridItem({
+  card,
+  index,
+  variant,
+  unitPrice,
+  onOpen,
+}: {
+  card: CardEntry;
+  index: number;
+  variant: "browse" | "collection" | "wishlist";
+  unitPrice: number | null;
+  onOpen: (index: number) => void;
+}) {
+  return (
+    <li className="card-grid-item flex flex-col">
+      <div className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md">
+        {variant === "collection" && (card.quantity ?? 1) > 1 ? (
+          <span className="pointer-events-none absolute left-1 top-1 z-[5] rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">
+            ×{card.quantity}
+          </span>
+        ) : null}
+        <div className="pointer-events-none absolute inset-0">
+          <img
+            src={card.lowSrc}
+            alt={`${card.set} ${card.filename}`}
+            className="h-full w-full object-cover object-center"
+            loading={index < 12 ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={index < 6 ? "high" : "auto"}
+          />
+          <span className="absolute bottom-0 left-0 right-0 bg-[var(--foreground)]/80 px-1 py-0.5 text-center text-xs text-[var(--background)] opacity-0 transition group-hover:opacity-100">
+            {card.set} / {card.filename.replace(/\.[^.]+$/, "")}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="absolute inset-0 z-10 cursor-pointer border-0 bg-transparent p-0"
+          onClick={() => onOpen(index)}
+          aria-label={`View ${card.set} ${card.filename}`}
+        />
+      </div>
+      {unitPrice !== null ? (
+        <span className="mt-1 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
+          {formatMoneyGbp(unitPrice)}
+        </span>
+      ) : null}
+    </li>
+  );
+});
+
 export function CardGrid({
   cards,
   setLogosByCode,
@@ -889,37 +940,37 @@ export function CardGrid({
   const [pricingVariants, setPricingVariants] = useState<string[]>([]);
   const [adjustingCollectionEntryId, setAdjustingCollectionEntryId] = useState<string | null>(null);
 
-  const serializedWishlist = JSON.stringify(wishlistEntryIdsByMasterCardId);
+  const prevWishlistRef = useRef(wishlistEntryIdsByMasterCardId);
   useEffect(() => {
-    try {
-      setLocalWishlistMap(JSON.parse(serializedWishlist) as Record<string, string>);
-    } catch {
-      setLocalWishlistMap({});
+    if (wishlistEntryIdsByMasterCardId !== prevWishlistRef.current) {
+      prevWishlistRef.current = wishlistEntryIdsByMasterCardId;
+      setLocalWishlistMap(wishlistEntryIdsByMasterCardId);
     }
-  }, [serializedWishlist]);
+  }, [wishlistEntryIdsByMasterCardId]);
 
   const [localCollectionLinesByMasterCardId, setLocalCollectionLinesByMasterCardId] = useState<
     Record<string, CollectionLineSummary[]>
   >(collectionLinesByMasterCardId);
-  const serializedCollectionLines = JSON.stringify(collectionLinesByMasterCardId);
+  const prevCollectionRef = useRef(collectionLinesByMasterCardId);
   useEffect(() => {
-    try {
-      setLocalCollectionLinesByMasterCardId(
-        JSON.parse(serializedCollectionLines) as Record<string, CollectionLineSummary[]>,
-      );
-    } catch {
-      setLocalCollectionLinesByMasterCardId({});
+    if (collectionLinesByMasterCardId !== prevCollectionRef.current) {
+      prevCollectionRef.current = collectionLinesByMasterCardId;
+      setLocalCollectionLinesByMasterCardId(collectionLinesByMasterCardId);
     }
-  }, [serializedCollectionLines]);
+  }, [collectionLinesByMasterCardId]);
 
-  const normalizedCards = cards
-    .map((card) => {
-      const lowSrc = card.lowSrc || card.src || "";
-      const highSrc = card.highSrc || lowSrc;
-      const dexIds = normalizedNationalDexIds(card);
-      return { ...card, lowSrc, highSrc, ...(dexIds ? { dexIds } : {}) };
-    })
-    .filter((card) => card.lowSrc);
+  const normalizedCards = useMemo(
+    () =>
+      cards
+        .map((card) => {
+          const lowSrc = card.lowSrc || card.src || "";
+          const highSrc = card.highSrc || lowSrc;
+          const dexIds = normalizedNationalDexIds(card);
+          return { ...card, lowSrc, highSrc, ...(dexIds ? { dexIds } : {}) };
+        })
+        .filter((card) => card.lowSrc),
+    [cards],
+  );
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [standaloneModalCard, setStandaloneModalCard] = useState<CardEntry | null>(null);
@@ -1069,7 +1120,7 @@ export function CardGrid({
         setLocalCollectionLinesByMasterCardId((prev) => mergeCollectionLine(prev, mid, line));
       }
       setAddSheetOpen(false);
-      router.refresh();
+      if (variant !== "browse") router.refresh();
     } catch {
       /* Network / aborted fetch — WebKit reports TypeError: Load failed */
     } finally {
@@ -1104,7 +1155,7 @@ export function CardGrid({
             setLocalCollectionLinesByMasterCardId((prev) =>
               replaceCollectionLineQuantity(prev, mid, entryId, 0),
             );
-            router.refresh();
+            if (variant !== "browse") router.refresh();
           }
         } else {
           const res = await fetch("/api/collection", {
@@ -1116,7 +1167,7 @@ export function CardGrid({
             setLocalCollectionLinesByMasterCardId((prev) =>
               replaceCollectionLineQuantity(prev, mid, entryId, nextQty),
             );
-            router.refresh();
+            if (variant !== "browse") router.refresh();
           }
         }
       } catch {
@@ -1149,7 +1200,7 @@ export function CardGrid({
             delete next[mid];
             return next;
           });
-          router.refresh();
+          if (variant !== "browse") router.refresh();
         }
       } catch {
         /* Network / aborted fetch */
@@ -1171,7 +1222,7 @@ export function CardGrid({
           try { j = (await res.json()) as { doc?: { id?: string | number } }; } catch { j = {}; }
           const wid = j.doc?.id;
           if (wid !== undefined) setLocalWishlistMap((m) => ({ ...m, [mid]: String(wid) }));
-          router.refresh();
+          if (variant !== "browse") router.refresh();
         }
       } catch {
         /* Network / aborted fetch */
@@ -1209,7 +1260,7 @@ export function CardGrid({
         if (wid !== undefined) {
           setLocalWishlistMap((m) => ({ ...m, [mid]: String(wid) }));
         }
-        router.refresh();
+        if (variant !== "browse") router.refresh();
       }
     } catch {
       /* Network / aborted fetch */
@@ -1987,42 +2038,14 @@ export function CardGrid({
           const showPrice = (variant === "collection" || variant === "wishlist") && card.masterCardId && cardPricesByMasterCardId[card.masterCardId] !== undefined;
           const unitPrice = showPrice && card.masterCardId ? cardPricesByMasterCardId[card.masterCardId] : null;
           return (
-            <li
+            <CardGridItem
               key={card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
-              className="card-grid-item flex flex-col"
-            >
-              <div className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md">
-                {variant === "collection" && (card.quantity ?? 1) > 1 ? (
-                  <span className="pointer-events-none absolute left-1 top-1 z-[5] rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">
-                    ×{card.quantity}
-                  </span>
-                ) : null}
-                <div className="pointer-events-none absolute inset-0">
-                  <img
-                    src={card.lowSrc}
-                    alt={`${card.set} ${card.filename}`}
-                    className="h-full w-full object-cover object-center"
-                    loading={index < 12 ? "eager" : "lazy"}
-                    decoding="async"
-                    fetchPriority={index < 6 ? "high" : "auto"}
-                  />
-                  <span className="absolute bottom-0 left-0 right-0 bg-[var(--foreground)]/80 px-1 py-0.5 text-center text-xs text-[var(--background)] opacity-0 transition group-hover:opacity-100">
-                    {card.set} / {card.filename.replace(/\.[^.]+$/, "")}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="absolute inset-0 z-10 cursor-pointer border-0 bg-transparent p-0"
-                  onClick={() => openModal(index)}
-                  aria-label={`View ${card.set} ${card.filename}`}
-                />
-              </div>
-              {unitPrice !== null ? (
-                <span className="mt-1 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
-                  {formatMoneyGbp(unitPrice)}
-                </span>
-              ) : null}
-            </li>
+              card={card}
+              index={index}
+              variant={variant}
+              unitPrice={unitPrice ?? null}
+              onOpen={openModal}
+            />
           );
         })}
       </ul>

@@ -76,12 +76,12 @@ export function resolveCardsTakeFromParams(
 }
 
 const FILTER_FACETS_CACHE_KEY = "master-card-list-filter-facets-v5";
-const FILTER_FACETS_REVALIDATE_SEC = 300;
+const FILTER_FACETS_REVALIDATE_SEC = 3600;
 /** Bumped when dex index shape changes; v5 stores tuple rows to stay under Next.js unstable_cache 2MB limit. */
 const POKEMON_DEX_INDEX_CACHE_KEY = "master-card-list-pokemon-dex-index-v5-packed";
-const POKEMON_DEX_INDEX_REVALIDATE_SEC = 300;
+const POKEMON_DEX_INDEX_REVALIDATE_SEC = 3600;
 const DEFAULT_CARD_ORDER_CACHE_KEY = "master-card-list-default-order-v2";
-const DEFAULT_CARD_ORDER_REVALIDATE_SEC = 300;
+const DEFAULT_CARD_ORDER_REVALIDATE_SEC = 3600;
 
 function normalizeFilterValue(value: string): string {
   return value.trim().replace(/\s+/g, " ");
@@ -542,46 +542,6 @@ function getCardNumberRank(cardNumber: unknown): number {
   return Number.isFinite(parsed) ? parsed : -1;
 }
 
-/** Same ordering as `loadDefaultCardOrder` (newest set release first, then set code, card #, id). */
-function getMasterCardDocBrowseSortKeys(doc: Record<string, unknown>): {
-  setReleaseTimestamp: number;
-  setCode: string;
-  cardNumberRank: number;
-  id: string;
-} {
-  const setObj =
-    doc.set && typeof doc.set === "object" ? (doc.set as Record<string, unknown>) : null;
-  const releaseRaw =
-    setObj && "releaseDate" in setObj && typeof setObj.releaseDate === "string"
-      ? new Date(setObj.releaseDate).getTime()
-      : 0;
-  const setCode = resolveCanonicalSetCodeFromSetRelation(setObj);
-  const id = getRelationshipDocumentId(doc.id) ?? "";
-  return {
-    setReleaseTimestamp: Number.isFinite(releaseRaw) ? releaseRaw : 0,
-    setCode,
-    cardNumberRank: getCardNumberRank(doc.cardNumber),
-    id,
-  };
-}
-
-function compareMasterCardDocsByDefaultBrowseOrder(
-  a: Record<string, unknown>,
-  b: Record<string, unknown>,
-): number {
-  const ka = getMasterCardDocBrowseSortKeys(a);
-  const kb = getMasterCardDocBrowseSortKeys(b);
-  if (ka.setReleaseTimestamp !== kb.setReleaseTimestamp) {
-    return kb.setReleaseTimestamp - ka.setReleaseTimestamp;
-  }
-  if (ka.setCode !== kb.setCode) {
-    return ka.setCode.localeCompare(kb.setCode);
-  }
-  if (ka.cardNumberRank !== kb.cardNumberRank) {
-    return kb.cardNumberRank - ka.cardNumberRank;
-  }
-  return kb.id.localeCompare(ka.id);
-}
 
 async function loadDefaultCardOrder(): Promise<DefaultCardOrderEntry[]> {
   const payloadConfig = (await import("../payload.config")).default;
@@ -1114,52 +1074,65 @@ export async function fetchMasterCardsPage(params: {
       return { entries, totalDocs };
     }
 
-    // For filtered views, compute full match set and paginate after numeric card number sort.
-    const matchedDocs: Record<string, unknown>[] = [];
+    // For filtered views: fetch only matching IDs from DB (cheap), then use the
+    // cached default order to sort and paginate entirely in memory.
+    const matchedIds = new Set<string>();
     let filterPage = 1;
     let hasNextPage = true;
     while (hasNextPage) {
       const result = await payload.find({
         collection: "master-card-list",
-        depth: 1,
+        depth: 0,
         limit: 1000,
         page: filterPage,
         overrideAccess: true,
-        select: MASTER_CARD_LIST_ENTRY_SELECT,
+        select: { id: true },
         sort: "id",
         where,
       });
 
-      matchedDocs.push(...(result.docs as unknown as Record<string, unknown>[]));
+      for (const doc of result.docs) {
+        const docId = getRelationshipDocumentId((doc as { id?: unknown }).id);
+        if (docId) matchedIds.add(docId);
+      }
       hasNextPage = result.hasNextPage;
       filterPage += 1;
     }
 
-    if (params.excludeCommonUncommon) {
-      matchedDocs.sort(compareMasterCardDocsByDefaultBrowseOrder);
-    } else {
-      matchedDocs.sort((a, b) => {
-        const rankA = getCardNumberRank((a as { cardNumber?: unknown }).cardNumber);
-        const rankB = getCardNumberRank((b as { cardNumber?: unknown }).cardNumber);
-        if (rankA !== rankB) return rankB - rankA;
+    // Filter the cached order (already sorted correctly) to only matched IDs.
+    const orderedRows = await getCachedDefaultCardOrder();
+    const orderedMatchedIds = orderedRows
+      .filter((row) => matchedIds.has(row.id))
+      .map((row) => row.id);
 
-        const nameA =
-          typeof (a as { cardName?: unknown }).cardName === "string"
-            ? (a as { cardName: string }).cardName
-            : "";
-        const nameB =
-          typeof (b as { cardName?: unknown }).cardName === "string"
-            ? (b as { cardName: string }).cardName
-            : "";
-        return nameA.localeCompare(nameB);
-      });
-    }
-
-    const totalDocs = matchedDocs.length;
+    const totalDocs = orderedMatchedIds.length;
     const startIndex = (params.page - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    const entries = matchedDocs
-      .slice(startIndex, endIndex)
+    const pageIds = orderedMatchedIds.slice(startIndex, endIndex);
+
+    if (pageIds.length === 0) {
+      return { entries: [], totalDocs };
+    }
+
+    const pageResult = await payload.find({
+      collection: "master-card-list",
+      depth: 1,
+      limit: pageIds.length,
+      page: 1,
+      overrideAccess: true,
+      select: MASTER_CARD_LIST_ENTRY_SELECT,
+      where: { id: { in: pageIds } },
+    });
+
+    const docsById = new Map<string, Record<string, unknown>>();
+    for (const doc of pageResult.docs) {
+      const docId = getRelationshipDocumentId((doc as { id?: unknown }).id);
+      if (docId) docsById.set(docId, doc as unknown as Record<string, unknown>);
+    }
+
+    const entries = pageIds
+      .map((id) => docsById.get(id))
+      .filter((doc): doc is Record<string, unknown> => Boolean(doc))
       .map((doc) => masterCardDocToCardsPageEntry(doc))
       .filter((entry): entry is CardsPageCardEntry => Boolean(entry));
 

@@ -79,6 +79,7 @@ export const CustomerCollections: CollectionConfig = {
               type: "relationship",
               relationTo: "customers",
               required: true,
+              index: true,
               label: "Customer",
               admin: {
                 description: "Owner of this collection entry.",
@@ -89,6 +90,7 @@ export const CustomerCollections: CollectionConfig = {
               type: "relationship",
               relationTo: "master-card-list",
               required: true,
+              index: true,
               label: "Card",
               admin: {
                 description: "Catalog card this entry refers to.",
