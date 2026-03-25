@@ -49,6 +49,7 @@ export async function catalogDocToCardPricingGbpPayload(
     const sample = Object.values(ext)[0];
     const nestedExternal =
       sample !== undefined &&
+      sample !== null &&
       typeof sample === "object" &&
       !Array.isArray(sample) &&
       ("raw" in sample || "psa10" in sample);
