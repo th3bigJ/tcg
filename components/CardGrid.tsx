@@ -109,6 +109,9 @@ function ModalCardPricing({
   legacyExternalId,
   ebayCardContext,
   onVariantsLoaded,
+  onAdd,
+  onWishlist,
+  wishlistFilled,
 }: {
   /** When set, pricing loads via indexed `catalog_card_pricing.master_card_id` (fast). */
   masterCardId?: string;
@@ -117,6 +120,9 @@ function ModalCardPricing({
   ebayCardContext: EbayPokemonCardSearchParts;
   /** Called once pricing loads, with ordered variant keys that have a raw price. */
   onVariantsLoaded?: (variants: string[]) => void;
+  onAdd?: (variant: string) => void;
+  onWishlist?: (variant: string) => void;
+  wishlistFilled?: boolean;
 }) {
   const mid = masterCardId?.trim() ?? "";
   const ext = externalId?.trim() ?? "";
@@ -242,7 +248,7 @@ function ModalCardPricing({
           ? variantRows.map(({ key, raw, psa10 }) => (
               <div
                 key={key}
-                className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3"
+                className="flex min-h-[52px] items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3"
               >
                 <span className="min-w-0 flex-1 text-sm font-medium text-white">
                   {variantLabel(key)}
@@ -257,6 +263,39 @@ function ModalCardPricing({
                     </span>
                   ) : null}
                 </div>
+                {onAdd ? (
+                  <button
+                    type="button"
+                    onClick={() => onAdd(key)}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold text-white transition hover:bg-white/20"
+                    aria-label={`Add ${variantLabel(key)} to collection`}
+                  >
+                    +
+                  </button>
+                ) : null}
+                {onWishlist ? (
+                  <button
+                    type="button"
+                    onClick={() => onWishlist(key)}
+                    className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${wishlistFilled ? "" : "text-white"}`}
+                    aria-label={wishlistFilled ? "Remove from wishlist" : `Add ${variantLabel(key)} to wishlist`}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill={wishlistFilled ? "currentColor" : "none"}
+                      stroke={wishlistFilled ? "none" : "currentColor"}
+                      strokeWidth={wishlistFilled ? undefined : 2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={wishlistFilled ? "text-red-500" : "text-white"}
+                      aria-hidden
+                    >
+                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
+                    </svg>
+                  </button>
+                ) : null}
               </div>
             ))
           : null}
@@ -433,31 +472,34 @@ function sameCardEntry(a: CardEntry | null, b: CardEntry | null): boolean {
 /** Keep in sync with `globals.css` `.card-viewer-overlay` `--card-viewer-carousel-gap` (used in transform math). */
 const MODAL_CAROUSEL_GAP_PX = 32;
 
-type ModalPrimaryActions = {
-  onAdd: () => void;
-  onWishlist: () => void;
-  wishlistFilled: boolean;
-  wishPending: boolean;
-};
 
 function ModalCardHeadline({
   card,
   setLogosByCode,
-  primaryActions,
+  setSymbolsByCode,
 }: {
   card: CardEntry;
   setLogosByCode?: Record<string, string>;
-  primaryActions?: ModalPrimaryActions | null;
+  setSymbolsByCode?: Record<string, string>;
 }) {
   const modalSetLogoSrc = card.setLogoSrc || setLogosByCode?.[card.set] || "";
   const modalSetLabel = card.setName || card.set;
-  const showSideActions = Boolean(primaryActions && card.masterCardId);
+  const modalSetSymbolSrc = card.setSymbolSrc || setSymbolsByCode?.[card.set] || "";
 
-  const titleAndSet = (
-    <>
-      <h3 className="text-balance break-words text-center text-xl font-bold leading-tight md:text-xl">
-        {card.cardName || "Unknown card"}
-      </h3>
+  return (
+    <div className="w-full px-1 py-4 text-center text-white md:px-0 md:py-0 md:text-left">
+      <div className="flex items-center justify-center gap-2 md:justify-center">
+        <h3 className="text-balance break-words text-xl font-bold leading-tight md:text-xl">
+          {card.cardName || "Unknown card"}
+        </h3>
+        {modalSetSymbolSrc ? (
+          <img
+            src={modalSetSymbolSrc}
+            alt={`${modalSetLabel} symbol`}
+            className="h-6 w-auto max-w-[28px] shrink-0 object-contain opacity-80"
+          />
+        ) : null}
+      </div>
       <p className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm leading-snug text-white/75 md:mt-1.5 md:justify-center">
         {modalSetLogoSrc ? (
           <img
@@ -468,55 +510,6 @@ function ModalCardHeadline({
         ) : null}
         <span className="min-w-0 font-medium text-white/85">{modalSetLabel}</span>
       </p>
-    </>
-  );
-
-  if (showSideActions && primaryActions) {
-    return (
-      <div className="w-full min-w-0 max-w-full px-3 py-4 text-white sm:px-5 md:px-0 md:py-0">
-        <div className="mx-auto flex w-full min-w-0 max-w-full items-center gap-2 overflow-x-hidden sm:gap-3 sm:px-2 md:max-w-none md:items-center md:gap-3 md:overflow-visible md:px-0">
-          <button
-            type="button"
-            disabled={!card.masterCardId}
-            onClick={primaryActions.onAdd}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-xl font-semibold text-white transition hover:bg-white/20 disabled:opacity-40"
-            aria-label="Add to collection"
-          >
-            +
-          </button>
-          <div className="min-w-0 flex-1 text-center">{titleAndSet}</div>
-          <button
-            type="button"
-            disabled={primaryActions.wishPending || !card.masterCardId}
-            onClick={primaryActions.onWishlist}
-            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 disabled:opacity-40 ${
-              primaryActions.wishlistFilled ? "" : "text-white"
-            }`}
-            aria-label={primaryActions.wishlistFilled ? "Remove from wishlist" : "Add to wishlist"}
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill={primaryActions.wishlistFilled ? "currentColor" : "none"}
-              stroke={primaryActions.wishlistFilled ? "none" : "currentColor"}
-              strokeWidth={primaryActions.wishlistFilled ? undefined : 2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={primaryActions.wishlistFilled ? "text-red-500" : "text-white"}
-              aria-hidden
-            >
-              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full px-1 py-4 text-center text-white md:px-0 md:py-0 md:text-left">
-      {titleAndSet}
     </div>
   );
 }
@@ -526,13 +519,13 @@ function ModalCarouselSlide({
   slotWidth,
   showMeta,
   setLogosByCode,
-  primaryActions = null,
+  setSymbolsByCode,
 }: {
   card: CardEntry | null;
   slotWidth: number;
   showMeta: boolean;
   setLogosByCode?: Record<string, string>;
-  primaryActions?: ModalPrimaryActions | null;
+  setSymbolsByCode?: Record<string, string>;
 }) {
   const w = Math.max(1, slotWidth);
   return (
@@ -557,7 +550,7 @@ function ModalCarouselSlide({
       </div>
       {showMeta && card ? (
         <div className="w-full min-w-0 max-w-full md:hidden">
-          <ModalCardHeadline card={card} setLogosByCode={setLogosByCode} primaryActions={primaryActions} />
+          <ModalCardHeadline card={card} setLogosByCode={setLogosByCode} setSymbolsByCode={setSymbolsByCode} />
         </div>
       ) : null}
     </div>
@@ -860,6 +853,7 @@ function ModalAttributeRow({
 export function CardGrid({
   cards,
   setLogosByCode,
+  setSymbolsByCode,
   variant = "browse",
   customerLoggedIn = false,
   itemConditions = [],
@@ -869,6 +863,7 @@ export function CardGrid({
 }: {
   cards: CardEntry[];
   setLogosByCode?: Record<string, string>;
+  setSymbolsByCode?: Record<string, string>;
   variant?: "browse" | "collection" | "wishlist";
   customerLoggedIn?: boolean;
   itemConditions?: { id: string; name: string }[];
@@ -1015,7 +1010,7 @@ export function CardGrid({
     router.push("/login");
   }, [router]);
 
-  const onOpenAddSheet = useCallback(() => {
+  const onOpenAddSheet = useCallback((variant?: string) => {
     if (!customerLoggedIn) {
       goLogin();
       return;
@@ -1023,7 +1018,7 @@ export function CardGrid({
     if (!selectedCard?.masterCardId) return;
     setAddConditionId(itemConditions[0]?.id ?? "");
     setAddQuantity(1);
-    setAddPrinting(pricingVariants[0] ?? "Standard");
+    setAddPrinting(variant ?? pricingVariants[0] ?? "Standard");
     setAddSheetOpen(true);
   }, [customerLoggedIn, goLogin, itemConditions, pricingVariants, selectedCard?.masterCardId]);
 
@@ -1122,7 +1117,7 @@ export function CardGrid({
     [customerLoggedIn, localCollectionLinesByMasterCardId, router, selectedCard?.masterCardId],
   );
 
-  const toggleWishlist = useCallback(async () => {
+  const toggleWishlist = useCallback(async (variant?: string) => {
     if (!selectedCard?.masterCardId) return;
     if (!customerLoggedIn) {
       goLogin();
@@ -1150,8 +1145,30 @@ export function CardGrid({
       } finally {
         setWishPending(false);
       }
+    } else if (variant) {
+      // Variant specified directly — add immediately without sheet
+      setWishVariant(variant);
+      setWishPending(true);
+      try {
+        const res = await fetch("/api/wishlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ masterCardId: mid, targetPrinting: variant }),
+        });
+        if (res.ok) {
+          let j: { doc?: { id?: string | number } };
+          try { j = (await res.json()) as { doc?: { id?: string | number } }; } catch { j = {}; }
+          const wid = j.doc?.id;
+          if (wid !== undefined) setLocalWishlistMap((m) => ({ ...m, [mid]: String(wid) }));
+          router.refresh();
+        }
+      } catch {
+        /* Network / aborted fetch */
+      } finally {
+        setWishPending(false);
+      }
     } else {
-      // Open sheet to pick variant before adding
+      // No variant — open sheet to pick
       setWishVariant(pricingVariants[0] ?? "");
       setWishSheetOpen(true);
     }
@@ -1565,28 +1582,21 @@ export function CardGrid({
                   slotWidth={carouselSlideWidth}
                   showMeta={false}
                   setLogosByCode={setLogosByCode}
+                  setSymbolsByCode={setSymbolsByCode}
                 />
                 <ModalCarouselSlide
                   card={selectedCard}
                   slotWidth={carouselSlideWidth}
                   showMeta
                   setLogosByCode={setLogosByCode}
-                  primaryActions={
-                    selectedCard.masterCardId
-                      ? {
-                          onAdd: onOpenAddSheet,
-                          onWishlist: () => void toggleWishlist(),
-                          wishlistFilled: Boolean(localWishlistMap[selectedCard.masterCardId]),
-                          wishPending,
-                        }
-                      : null
-                  }
+                  setSymbolsByCode={setSymbolsByCode}
                 />
                 <ModalCarouselSlide
                   card={modalAdjacentCards.next}
                   slotWidth={carouselSlideWidth}
                   showMeta={false}
                   setLogosByCode={setLogosByCode}
+                  setSymbolsByCode={setSymbolsByCode}
                 />
               </div>
             </div>
@@ -1610,16 +1620,7 @@ export function CardGrid({
                 <ModalCardHeadline
                   card={selectedCard}
                   setLogosByCode={setLogosByCode}
-                  primaryActions={
-                    selectedCard.masterCardId
-                      ? {
-                          onAdd: onOpenAddSheet,
-                          onWishlist: () => void toggleWishlist(),
-                          wishlistFilled: Boolean(localWishlistMap[selectedCard.masterCardId]),
-                          wishPending,
-                        }
-                      : null
-                  }
+                  setSymbolsByCode={setSymbolsByCode}
                 />
               </div>
               <ModalYourCollectionSection
@@ -1642,6 +1643,9 @@ export function CardGrid({
                 externalId={selectedCard.externalId}
                 legacyExternalId={selectedCard.legacyExternalId}
                 onVariantsLoaded={setPricingVariants}
+                onAdd={selectedCard.masterCardId && customerLoggedIn !== false ? (v) => onOpenAddSheet(v) : undefined}
+                onWishlist={selectedCard.masterCardId ? (v) => void toggleWishlist(v) : undefined}
+                wishlistFilled={Boolean(selectedCard.masterCardId && localWishlistMap[selectedCard.masterCardId])}
                 ebayCardContext={{
                   setName: selectedCard.setName,
                   setSlug: selectedCard.setSlug,

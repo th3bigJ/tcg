@@ -273,6 +273,11 @@ const BULK_ALIASES: Record<string, string> = {
   pop01: "pop1", pop02: "pop2", pop03: "pop3", pop04: "pop4", pop05: "pop5",
   pop06: "pop6", pop07: "pop7", pop08: "pop8", pop09: "pop9",
   lc: "base6", legendarycollection: "base6",
+  // Sword & Shield dot-notation tcgdex_id variants
+  "swsh12.5": "swsh12pt5", "swsh4.5": "swsh45", "swsh3.5": "swsh35",
+  "swsh10.5": "pgo",
+  // Pokémon Futsal alternate id
+  fut2020: "fut20",
 };
 
 function resolveBulkConfig(raw: string): ScrydexExpansionListConfig | null {
@@ -440,11 +445,15 @@ function escRe(s: string): string {
 
 function normalizeCardKey(listPrefix: string, cardHrefId: string): string {
   const p = listPrefix.trim().toLowerCase();
-  const re = new RegExp(`^${escRe(p)}-(\\d+)$`, "i");
+  const re = new RegExp(`^${escRe(p)}-([A-Za-z0-9]+)$`, "i");
   const m = cardHrefId.trim().match(re);
   if (!m) return cardHrefId.trim().toLowerCase();
-  const n = Number.parseInt(m[1], 10);
-  return Number.isFinite(n) ? `${p}-${n}` : cardHrefId.trim().toLowerCase();
+  const suff = m[1];
+  const n = Number.parseInt(suff, 10);
+  // Numeric suffix: normalise to stripped integer (e.g. "001" → 1)
+  if (Number.isFinite(n) && String(n) === String(Number.parseInt(suff, 10))) return `${p}-${n}`;
+  // Alphanumeric suffix (e.g. "SWSH001"): keep as-is lowercased
+  return `${p}-${suff.toLowerCase()}`;
 }
 
 function buildLookupKeys(ext: string, listPrefix: string, tcgPrefixes: string[]): string[] {
@@ -454,13 +463,21 @@ function buildLookupKeys(ext: string, listPrefix: string, tcgPrefixes: string[])
   if (di > 0) {
     const suff = e.slice(di + 1);
     const n = Number.parseInt(suff, 10);
+    const lp = listPrefix.trim().toLowerCase();
     if (Number.isFinite(n)) {
-      const lp = listPrefix.trim().toLowerCase();
+      // Numeric suffix
       keys.add(`${lp}-${n}`);
       keys.add(`${lp}-${suff}`);
       for (const tp of tcgPrefixes) {
         const t = tp.trim().toLowerCase();
         if (t) { keys.add(`${t}-${n}`); keys.add(`${t}-${suff}`); }
+      }
+    } else {
+      // Alphanumeric suffix (e.g. "swsh001" from "swshp-swsh001")
+      keys.add(`${lp}-${suff}`);
+      for (const tp of tcgPrefixes) {
+        const t = tp.trim().toLowerCase();
+        if (t) keys.add(`${t}-${suff}`);
       }
     }
   }
@@ -470,7 +487,7 @@ function buildLookupKeys(ext: string, listPrefix: string, tcgPrefixes: string[])
 function parseExpansionListPrices(html: string, listPrefix: string): Map<string, Record<string, number>> {
   const out = new Map<string, Record<string, number>>();
   const anchorRe = new RegExp(
-    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escRe(listPrefix.trim())}-\\d+))(\\?[^"]*)?"`,
+    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escRe(listPrefix.trim())}-[A-Za-z0-9]+))(\\?[^"]*)?"`,
     "gi",
   );
   let m: RegExpExecArray | null;
@@ -499,7 +516,7 @@ function parseExpansionListPrices(html: string, listPrefix: string): Map<string,
 function parseExpansionListPaths(html: string, listPrefix: string): Map<string, string> {
   const out = new Map<string, string>();
   const anchorRe = new RegExp(
-    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escRe(listPrefix.trim())}-\\d+))(\\?[^"]*)?"`,
+    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escRe(listPrefix.trim())}-[A-Za-z0-9]+))(\\?[^"]*)?"`,
     "gi",
   );
   let m: RegExpExecArray | null;

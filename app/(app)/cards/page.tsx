@@ -62,6 +62,9 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
+  const setSymbolsByCode = Object.fromEntries(
+    setFilterOptions.map((option) => [option.code, option.symbolSrc]),
+  );
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
   const parsedPokemonDex = Number.parseInt(selectedPokemon, 10);
   const hasSelectedPokemon = Number.isFinite(parsedPokemonDex) && parsedPokemonDex > 0;
@@ -248,6 +251,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               <CardGrid
                 cards={cardsForClient}
                 setLogosByCode={setLogosByCode}
+                setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
                 itemConditions={itemConditions}
                 wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}

@@ -20,6 +20,7 @@ export type CardsPageCardEntry = {
   /** Payload `sets.cardCountOfficial` when the populated set includes it. */
   setCardCountOfficial?: number;
   setLogoSrc?: string;
+  setSymbolSrc?: string;
   /** Set release date from Payload (ISO), for display in card modal. */
   setReleaseDate?: string;
   cardNumber?: string;
@@ -891,6 +892,16 @@ export function masterCardDocToCardsPageEntry(doc: Record<string, unknown>): Car
       "url" in doc.set.setImage &&
       typeof doc.set.setImage.url === "string"
         ? resolveMediaURL(doc.set.setImage.url)
+        : undefined,
+    setSymbolSrc:
+      typeof doc.set === "object" &&
+      doc.set &&
+      "symbolImage" in doc.set &&
+      typeof doc.set.symbolImage === "object" &&
+      doc.set.symbolImage &&
+      "url" in doc.set.symbolImage &&
+      typeof doc.set.symbolImage.url === "string"
+        ? resolveMediaURL(doc.set.symbolImage.url)
         : undefined,
     setReleaseDate: releaseRaw || undefined,
     cardNumber: typeof doc.cardNumber === "string" ? doc.cardNumber.trim() : undefined,

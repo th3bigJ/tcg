@@ -78,6 +78,9 @@ export default async function WishlistPage() {
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
+  const setSymbolsByCode = Object.fromEntries(
+    setFilterOptions.map((option) => [option.code, option.symbolSrc]),
+  );
 
   const [wishlistValue, cardPricesByMasterCardId] = await Promise.all([
     entries.length > 0 ? estimateCollectionMarketValueGbp(payload, entries) : Promise.resolve(null),
@@ -131,6 +134,7 @@ export default async function WishlistPage() {
           <CardGrid
             cards={cardsForClient}
             setLogosByCode={setLogosByCode}
+            setSymbolsByCode={setSymbolsByCode}
             variant="wishlist"
             customerLoggedIn
             itemConditions={itemConditions}

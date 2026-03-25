@@ -86,6 +86,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
+  const setSymbolsByCode = Object.fromEntries(
+    setFilterOptions.map((option) => [option.code, option.symbolSrc]),
+  );
 
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
   const parsedPokemonDex = Number.parseInt(selectedPokemon, 10);
@@ -331,6 +334,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 <CardGrid
                   cards={cardsForClient}
                   setLogosByCode={setLogosByCode}
+                  setSymbolsByCode={setSymbolsByCode}
                   customerLoggedIn={Boolean(customer)}
                   itemConditions={itemConditions}
                   wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}

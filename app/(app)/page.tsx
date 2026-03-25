@@ -47,6 +47,9 @@ export default async function CollectionPage() {
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
+  const setSymbolsByCode = Object.fromEntries(
+    setFilterOptions.map((option) => [option.code, option.symbolSrc]),
+  );
 
   const payload = await getPayload({ config });
   const collectionValue =
@@ -109,6 +112,7 @@ export default async function CollectionPage() {
           <CardGrid
             cards={cardsForClient}
             setLogosByCode={setLogosByCode}
+            setSymbolsByCode={setSymbolsByCode}
             variant="collection"
             customerLoggedIn
             itemConditions={itemConditions}

@@ -47,6 +47,9 @@ export default async function CollectPage() {
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
+  const setSymbolsByCode = Object.fromEntries(
+    setFilterOptions.map((option) => [option.code, option.symbolSrc]),
+  );
 
   const payload = await getPayload({ config });
   const [collectionValue, cardPricesByMasterCardId] = await Promise.all([
@@ -116,6 +119,7 @@ export default async function CollectPage() {
           <CardGrid
             cards={cardsForClient}
             setLogosByCode={setLogosByCode}
+            setSymbolsByCode={setSymbolsByCode}
             variant="collection"
             customerLoggedIn
             itemConditions={itemConditions}

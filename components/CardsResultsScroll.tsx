@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { startTransition, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 const SCROLL_STORAGE_KEY = "tcg-cards-load-more-scroll-y";
 /** Dedupes rapid duplicate load-more navigations (e.g. React Strict Mode or IO firing twice). */
@@ -81,7 +81,9 @@ export function CardsResultsScroll({
         const el = scrollRef.current;
         if (el) sessionStorage.setItem(SCROLL_STORAGE_KEY, String(el.scrollTop));
         try {
-          router.push(loadMoreHref, { scroll: false });
+          startTransition(() => {
+            router.push(loadMoreHref, { scroll: false });
+          });
         } catch {
           loadMoreTriggeredRef.current = false;
           setIsLoadingMore(false);

@@ -48,6 +48,9 @@ export default async function PokedexPokemonCardsPage({
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
+  const setSymbolsByCode = Object.fromEntries(
+    setFilterOptions.map((option) => [option.code, option.symbolSrc]),
+  );
 
   const requestedTake = resolveCardsTakeFromParams(
     resolvedSearchParams.take,
@@ -148,6 +151,7 @@ export default async function PokedexPokemonCardsPage({
               <CardGrid
                 cards={cardsForClient}
                 setLogosByCode={setLogosByCode}
+                setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
                 itemConditions={itemConditions}
                 wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
