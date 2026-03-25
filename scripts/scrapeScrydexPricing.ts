@@ -676,8 +676,8 @@ function hasTcgdexOrCardmarket(doc: unknown): boolean {
 
 function cardPageConcurrency(): number {
   const raw = process.env.SCRYDEX_CARD_PAGE_CONCURRENCY;
-  const n = raw ? Number.parseInt(raw, 10) : 4;
-  return Number.isFinite(n) ? Math.max(1, Math.min(12, n)) : 4;
+  const n = raw ? Number.parseInt(raw, 10) : 20;
+  return Number.isFinite(n) ? Math.max(1, Math.min(20, n)) : 20;
 }
 
 type WorkItem = {
@@ -827,10 +827,17 @@ async function scrape(payload: Payload): Promise<void> {
   const conc = cardPageConcurrency();
   console.log(`\n[Scrydex] fetching ${pathsNeeded.size} card detail page(s) (concurrency=${conc})…`);
   const pathHtml = new Map<string, string>();
+  let fetched = 0;
+  const total = pathsNeeded.size;
   await mapPool([...pathsNeeded], conc, async (path) => {
     try { pathHtml.set(path, await fetchCardPageHtml(path)); }
     catch { pathHtml.set(path, ""); }
+    fetched++;
+    if (fetched % 50 === 0 || fetched === total) {
+      process.stdout.write(`\r[Scrydex] fetched ${fetched}/${total} card pages…`);
+    }
   });
+  console.log();
 
   // Apply pricing
   let skippedNoPrice = 0, skippedTcgdex = 0, markedOk = 0, markedNo = 0, created = 0, updated = 0;
