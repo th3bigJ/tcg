@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AccountSignOut } from "@/components/AccountSignOut";
-import { RefreshCatalogPricingButton } from "@/components/RefreshCatalogPricingButton";
 import { getCurrentCustomer } from "@/lib/auth";
 
 export default async function AccountPage() {
@@ -40,7 +39,6 @@ export default async function AccountPage() {
           Wishlist
         </Link>
       </div>
-      <RefreshCatalogPricingButton />
       <AccountSignOut />
     </div>
   );

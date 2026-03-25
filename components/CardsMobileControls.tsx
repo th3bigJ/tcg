@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CardFiltersPanel } from "@/components/CardFiltersPanel";
 
 type SetFilterOption = {
@@ -30,6 +30,8 @@ type CardsMobileControlsProps = {
   resetFiltersHref: string;
   setFilterOptions: SetFilterOption[];
   pokemonFilterOptions: PokemonFilterOption[];
+  formAction?: string;
+  extraHiddenInputs?: React.ReactNode;
 };
 
 export function CardsMobileControls({
@@ -44,6 +46,8 @@ export function CardsMobileControls({
   resetFiltersHref,
   setFilterOptions,
   pokemonFilterOptions,
+  formAction = "/cards",
+  extraHiddenInputs,
 }: CardsMobileControlsProps) {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
@@ -59,7 +63,8 @@ export function CardsMobileControls({
   return (
     <>
       <div className="mb-4 flex shrink-0 flex-col gap-2 lg:hidden">
-        <form method="get" action="/cards" className="flex items-center gap-2">
+        <form method="get" action={formAction} className="flex items-center gap-2">
+          {extraHiddenInputs}
           {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
           {activePokemon ? <input type="hidden" name="pokemon" value={activePokemon} /> : null}
           {activeRarity ? <input type="hidden" name="rarity" value={activeRarity} /> : null}
@@ -94,7 +99,7 @@ export function CardsMobileControls({
             </svg>
           </button>
           <Link
-            href="/cards"
+            href={resetFiltersHref}
             prefetch={false}
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-red-400/50 bg-red-500/15 text-red-300 transition hover:bg-red-500/25 hover:text-red-200"
             aria-label="Reset filters"

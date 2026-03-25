@@ -865,6 +865,7 @@ export function CardGrid({
   itemConditions = [],
   wishlistEntryIdsByMasterCardId = {},
   collectionLinesByMasterCardId = {},
+  cardPricesByMasterCardId = {},
 }: {
   cards: CardEntry[];
   setLogosByCode?: Record<string, string>;
@@ -873,6 +874,7 @@ export function CardGrid({
   itemConditions?: { id: string; name: string }[];
   wishlistEntryIdsByMasterCardId?: Record<string, string>;
   collectionLinesByMasterCardId?: Record<string, CollectionLineSummary[]>;
+  cardPricesByMasterCardId?: Record<string, number>;
 }) {
   const router = useRouter();
   const [localWishlistMap, setLocalWishlistMap] = useState(wishlistEntryIdsByMasterCardId);
@@ -1888,35 +1890,44 @@ export function CardGrid({
     <>
       <ul className="grid grid-cols-3 gap-2 md:grid-cols-5 md:gap-3 lg:grid-cols-7">
         {normalizedCards.map((card, index) => {
+          const showPrice = (variant === "collection" || variant === "wishlist") && card.masterCardId && cardPricesByMasterCardId[card.masterCardId] !== undefined;
+          const unitPrice = showPrice && card.masterCardId ? cardPricesByMasterCardId[card.masterCardId] : null;
           return (
             <li
               key={card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
-              className="card-grid-item group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md"
+              className="card-grid-item flex flex-col"
             >
-              {variant === "collection" && (card.quantity ?? 1) > 1 ? (
-                <span className="pointer-events-none absolute left-1 top-1 z-[5] rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">
-                  ×{card.quantity}
+              <div className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md">
+                {variant === "collection" && (card.quantity ?? 1) > 1 ? (
+                  <span className="pointer-events-none absolute left-1 top-1 z-[5] rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">
+                    ×{card.quantity}
+                  </span>
+                ) : null}
+                <div className="pointer-events-none absolute inset-0">
+                  <img
+                    src={card.lowSrc}
+                    alt={`${card.set} ${card.filename}`}
+                    className="h-full w-full object-cover object-center"
+                    loading={index < 12 ? "eager" : "lazy"}
+                    decoding="async"
+                    fetchPriority={index < 6 ? "high" : "auto"}
+                  />
+                  <span className="absolute bottom-0 left-0 right-0 bg-[var(--foreground)]/80 px-1 py-0.5 text-center text-xs text-[var(--background)] opacity-0 transition group-hover:opacity-100">
+                    {card.set} / {card.filename.replace(/\.[^.]+$/, "")}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="absolute inset-0 z-10 cursor-pointer border-0 bg-transparent p-0"
+                  onClick={() => openModal(index)}
+                  aria-label={`View ${card.set} ${card.filename}`}
+                />
+              </div>
+              {unitPrice !== null ? (
+                <span className="mt-1 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
+                  {formatMoneyGbp(unitPrice)}
                 </span>
               ) : null}
-              <div className="pointer-events-none absolute inset-0">
-                <img
-                  src={card.lowSrc}
-                  alt={`${card.set} ${card.filename}`}
-                  className="h-full w-full object-cover object-center"
-                  loading={index < 12 ? "eager" : "lazy"}
-                  decoding="async"
-                  fetchPriority={index < 6 ? "high" : "auto"}
-                />
-                <span className="absolute bottom-0 left-0 right-0 bg-[var(--foreground)]/80 px-1 py-0.5 text-center text-xs text-[var(--background)] opacity-0 transition group-hover:opacity-100">
-                  {card.set} / {card.filename.replace(/\.[^.]+$/, "")}
-                </span>
-              </div>
-              <button
-                type="button"
-                className="absolute inset-0 z-10 cursor-pointer border-0 bg-transparent p-0"
-                onClick={() => openModal(index)}
-                aria-label={`View ${card.set} ${card.filename}`}
-              />
             </li>
           );
         })}

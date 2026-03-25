@@ -62,7 +62,7 @@ export function ExpansionsList({
                       {showProgress ? (
                         <>
                           <span className="mt-1.5 block text-left text-sm text-[var(--foreground)]/60">
-                            {ownedCount} of {totalCards > 0 ? totalCards : "?"}
+                            {ownedCount} of {totalCards > 0 ? totalCards : "?"} collected
                           </span>
                           <span
                             className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-[var(--foreground)]/15"

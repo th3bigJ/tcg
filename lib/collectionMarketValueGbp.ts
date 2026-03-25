@@ -98,6 +98,38 @@ async function mapWithConcurrency<T, R>(
   return out;
 }
 
+/**
+ * Returns a map of masterCardId → unit price in GBP for display under each card.
+ */
+export async function estimateCardUnitPricesGbp(
+  payload: Payload,
+  entries: StorefrontCardEntry[],
+): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+  const seen = new Set<string>();
+  const tasks: { masterCardId: string; externalId: string; legacyExternalId?: string; printing?: string }[] = [];
+
+  for (const e of entries) {
+    const mid = e.masterCardId?.trim();
+    const ext = e.externalId?.trim();
+    if (!mid || !ext || seen.has(mid)) continue;
+    seen.add(mid);
+    tasks.push({
+      masterCardId: mid,
+      externalId: ext,
+      legacyExternalId: e.legacyExternalId?.trim() || undefined,
+      printing: e.printing?.trim() || undefined,
+    });
+  }
+
+  await mapWithConcurrency(tasks, 6, async (t) => {
+    const price = await unitPriceGbpForExternalId(payload, t.externalId, t.legacyExternalId, t.masterCardId, t.printing);
+    if (price !== null) out[t.masterCardId] = price;
+  });
+
+  return out;
+}
+
 export type CollectionMarketValueResult = {
   /** Sum of (quantity × unit estimate) for rows where a unit price was found. */
   totalGbp: number;
