@@ -133,6 +133,28 @@ export const CustomerCollections: CollectionConfig = {
                 description: "How many copies in this condition / printing.",
               },
             },
+            {
+              name: "purchaseType",
+              type: "select",
+              label: "How obtained",
+              options: [
+                { label: "Packed", value: "packed" },
+                { label: "Bought", value: "bought" },
+              ],
+              admin: {
+                description: "Whether the card was pulled from a pack or purchased.",
+              },
+            },
+            {
+              name: "pricePaid",
+              type: "number",
+              label: "Price paid (£)",
+              min: 0,
+              admin: {
+                description: "Purchase price in GBP, if bought.",
+                condition: (data) => data?.purchaseType === "bought",
+              },
+            },
           ],
         },
         {

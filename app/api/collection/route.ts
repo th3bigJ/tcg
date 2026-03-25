@@ -34,6 +34,8 @@ type CollectionPostBody = {
   quantity?: number;
   printing?: string;
   language?: string;
+  purchaseType?: string;
+  pricePaid?: number | null;
 };
 
 export async function POST(request: NextRequest) {
@@ -69,6 +71,12 @@ export async function POST(request: NextRequest) {
   const language = typeof body.language === "string" ? body.language : "English";
   const conditionId =
     typeof body.conditionId === "string" && body.conditionId.trim() ? body.conditionId.trim() : undefined;
+  const purchaseType =
+    body.purchaseType === "packed" || body.purchaseType === "bought" ? body.purchaseType : undefined;
+  const pricePaid =
+    purchaseType === "bought" && typeof body.pricePaid === "number" && Number.isFinite(body.pricePaid) && body.pricePaid >= 0
+      ? body.pricePaid
+      : undefined;
 
   const payload = await getPayload({ config });
 
@@ -91,6 +99,8 @@ export async function POST(request: NextRequest) {
   };
   const conditionRelId = conditionId ? toPayloadRelationshipId(conditionId) : undefined;
   if (conditionRelId !== undefined) data.condition = conditionRelId;
+  if (purchaseType !== undefined) data.purchaseType = purchaseType;
+  if (pricePaid !== undefined) data.pricePaid = pricePaid;
 
   try {
     const created = await payload.create({

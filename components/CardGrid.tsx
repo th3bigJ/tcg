@@ -250,17 +250,19 @@ function ModalCardPricing({
                 key={key}
                 className="flex min-h-[52px] items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3"
               >
-                <span className="min-w-0 flex-1 text-sm font-medium text-white">
+                <span className="shrink-0 text-sm font-medium text-white">
                   {variantLabel(key)}
                 </span>
-                <div className="flex shrink-0 flex-col items-end gap-0.5">
-                  <span className="text-sm font-semibold tabular-nums text-white">
-                    {formatMoneyGbp(raw)}
-                  </span>
+                <div className="flex flex-1 items-center justify-evenly">
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">Raw</span>
+                    <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(raw)}</span>
+                  </div>
                   {psa10 !== null ? (
-                    <span className="text-xs tabular-nums text-white/60">
-                      PSA 10 {formatMoneyGbp(psa10)}
-                    </span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">PSA 10</span>
+                      <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(psa10)}</span>
+                    </div>
                   ) : null}
                 </div>
                 {onAdd ? (
@@ -492,13 +494,6 @@ function ModalCardHeadline({
         <h3 className="text-balance break-words text-xl font-bold leading-tight md:text-xl">
           {card.cardName || "Unknown card"}
         </h3>
-        {modalSetSymbolSrc ? (
-          <img
-            src={modalSetSymbolSrc}
-            alt={`${modalSetLabel} symbol`}
-            className="h-6 w-auto max-w-[28px] shrink-0 object-contain opacity-80"
-          />
-        ) : null}
       </div>
       <p className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm leading-snug text-white/75 md:mt-1.5 md:justify-center">
         {modalSetLogoSrc ? (
@@ -509,6 +504,13 @@ function ModalCardHeadline({
           />
         ) : null}
         <span className="min-w-0 font-medium text-white/85">{modalSetLabel}</span>
+        {modalSetSymbolSrc ? (
+          <img
+            src={modalSetSymbolSrc}
+            alt={`${modalSetLabel} symbol`}
+            className="h-6 w-auto max-w-[28px] shrink-0 object-contain opacity-80"
+          />
+        ) : null}
       </p>
     </div>
   );
@@ -877,6 +879,8 @@ export function CardGrid({
   const [addConditionId, setAddConditionId] = useState("");
   const [addQuantity, setAddQuantity] = useState(1);
   const [addPrinting, setAddPrinting] = useState<string>("Standard");
+  const [addPurchaseType, setAddPurchaseType] = useState<"" | "packed" | "bought">("");
+  const [addPricePaid, setAddPricePaid] = useState<string>("");
   const [addPending, setAddPending] = useState(false);
   const [wishPending, setWishPending] = useState(false);
   const [wishSheetOpen, setWishSheetOpen] = useState(false);
@@ -1016,9 +1020,12 @@ export function CardGrid({
       return;
     }
     if (!selectedCard?.masterCardId) return;
-    setAddConditionId(itemConditions[0]?.id ?? "");
+    const nearMint = itemConditions.find((c) => /near\s*mint/i.test(c.name));
+    setAddConditionId(nearMint?.id ?? itemConditions[0]?.id ?? "");
     setAddQuantity(1);
     setAddPrinting(variant ?? pricingVariants[0] ?? "Standard");
+    setAddPurchaseType("");
+    setAddPricePaid("");
     setAddSheetOpen(true);
   }, [customerLoggedIn, goLogin, itemConditions, pricingVariants, selectedCard?.masterCardId]);
 
@@ -1035,6 +1042,8 @@ export function CardGrid({
           quantity: addQuantity,
           printing: addPrinting,
           language: "English",
+          purchaseType: addPurchaseType || undefined,
+          pricePaid: addPurchaseType === "bought" && addPricePaid !== "" ? parseFloat(addPricePaid) : undefined,
         }),
       });
       if (!res.ok) return;
@@ -1068,7 +1077,9 @@ export function CardGrid({
     }
   }, [
     addConditionId,
+    addPricePaid,
     addPrinting,
+    addPurchaseType,
     addQuantity,
     itemConditions,
     router,
@@ -1565,7 +1576,7 @@ export function CardGrid({
           </button>
         </div>
 
-        <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-[1fr_minmax(16rem,24rem)_minmax(11rem,16rem)] md:flex-1 md:min-h-0 md:items-stretch md:gap-4 md:overflow-hidden">
+        <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-[1fr_minmax(18rem,26rem)_minmax(9rem,13rem)] md:flex-1 md:min-h-0 md:items-stretch md:gap-4 md:overflow-hidden">
           <div
             ref={leftColumnRef}
             className="flex w-full min-w-0 max-w-full flex-col items-center gap-3 overflow-x-hidden md:min-h-0 md:items-stretch md:gap-2 md:self-stretch"
@@ -1662,11 +1673,31 @@ export function CardGrid({
               <section className="flex flex-col gap-2">
                 <h4 className="text-base font-bold tracking-tight text-white md:text-sm">Attributes</h4>
                 <div className="flex flex-col gap-2 md:gap-1.5">
-                  <ModalAttributeRow
-                    icon={<AttributeIconIllustrator />}
-                    label="Illustrator"
-                    value={selectedCard.artist ?? ""}
-                  />
+                  {selectedCard.artist ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeModal();
+                        router.push(`/search?tab=cards&artist=${encodeURIComponent(selectedCard.artist ?? "")}`);
+                      }}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 transition hover:bg-white/[0.10] md:gap-2 md:px-2.5 md:py-2">
+                        <AttributeIconIllustrator />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Illustrator</div>
+                          <div className="mt-0.5 text-sm font-medium leading-snug text-white underline decoration-white/30 underline-offset-2 md:text-xs">{selectedCard.artist}</div>
+                        </div>
+                        <span className="shrink-0 text-white/40">›</span>
+                      </div>
+                    </button>
+                  ) : (
+                    <ModalAttributeRow
+                      icon={<AttributeIconIllustrator />}
+                      label="Illustrator"
+                      value=""
+                    />
+                  )}
                   <ModalAttributeRow
                     icon={<AttributeIconCalendar />}
                     label="Release date"
@@ -1686,15 +1717,41 @@ export function CardGrid({
                         : ""
                     }
                   />
-                  <ModalAttributeRow
-                    icon={<AttributeIconBolt />}
-                    label="Energy type"
-                    value={
-                      selectedCard.elementTypes && selectedCard.elementTypes.length > 0
-                        ? selectedCard.elementTypes.join(", ")
-                        : ""
-                    }
-                  />
+                  {/* Energy type with symbols */}
+                  <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 md:gap-2 md:px-2.5 md:py-2">
+                    <AttributeIconBolt />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Energy type</div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                        {selectedCard.elementTypes && selectedCard.elementTypes.length > 0 ? (
+                          selectedCard.elementTypes.map((type: string) => {
+                            const elementTypeImageMap: Record<string, string> = {
+                              Colorless: "/media/images/40px-Colorless-attack.png",
+                              Darkness: "/media/images/40px-Darkness-attack.png",
+                              Dragon: "/media/images/dragon_type_symbol_tcg_by_jormxdos_dfgddc1-fullview.png",
+                              Fairy: "/media/images/Pokémon_Fairy_Type_Icon.svg.png",
+                              Fighting: "/media/images/40px-Fighting-attack.png",
+                              Fire: "/media/images/40px-Fire-attack.png",
+                              Grass: "/media/images/40px-Grass-attack.png",
+                              Lightning: "/media/images/40px-Lightning-attack.png",
+                              Metal: "/media/images/40px-Metal-attack.png",
+                              Psychic: "/media/images/40px-Psychic-attack.png",
+                              Water: "/media/images/40px-Water-attack.png",
+                            };
+                            const src = elementTypeImageMap[type];
+                            return (
+                              <span key={type} className="flex items-center gap-1 text-sm font-medium leading-snug text-white md:text-xs">
+                                {src && <img src={src} alt={type} className="h-4 w-4 object-contain" />}
+                                {type}
+                              </span>
+                            );
+                          })
+                        ) : (
+                          <span className="text-sm font-medium leading-snug text-white md:text-xs">—</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <ModalAttributeRow
                     icon={<AttributeIconBadge />}
                     label="Regulation mark"
@@ -1810,6 +1867,39 @@ export function CardGrid({
                     ))}
               </select>
             </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium">How obtained</span>
+              <div className="flex gap-2">
+                {(["", "packed", "bought"] as const).map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setAddPurchaseType(val)}
+                    className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition ${
+                      addPurchaseType === val
+                        ? "border-[var(--foreground)]/50 bg-[var(--foreground)]/15"
+                        : "border-[var(--foreground)]/20 bg-transparent opacity-60"
+                    }`}
+                  >
+                    {val === "" ? "—" : val.charAt(0).toUpperCase() + val.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </label>
+            {addPurchaseType === "bought" && (
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-medium">Price paid (£)</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  placeholder="0.00"
+                  value={addPricePaid}
+                  onChange={(e) => setAddPricePaid(e.target.value)}
+                  className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                />
+              </label>
+            )}
           </div>
           <div className="mt-6 flex gap-2">
             <button

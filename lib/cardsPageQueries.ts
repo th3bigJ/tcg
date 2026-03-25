@@ -140,6 +140,7 @@ function buildMasterCardsWhere(
   activeSearch: string,
   excludeCommonUncommon: boolean,
   categoryQueryVariants: string[],
+  activeArtist: string = "",
 ): Where {
   const clauses: Where[] = [{ imageLow: { exists: true } }];
 
@@ -171,6 +172,10 @@ function buildMasterCardsWhere(
   const q = activeSearch.trim();
   if (q) {
     clauses.push({ cardName: { contains: q } });
+  }
+
+  if (activeArtist) {
+    clauses.push({ artist: { equals: activeArtist } });
   }
 
   if (clauses.length === 1) {
@@ -1017,6 +1022,7 @@ export async function fetchMasterCardsPage(params: {
   activeSet: string;
   activeRarity: string;
   activeSearch: string;
+  activeArtist: string;
   activePokemonDex: number | null;
   activePokemonName: string | null;
   excludeCommonUncommon: boolean;
@@ -1057,6 +1063,7 @@ export async function fetchMasterCardsPage(params: {
     params.activeSearch,
     params.excludeCommonUncommon,
     params.categoryQueryVariants,
+    params.activeArtist,
   );
 
   if (params.activePokemonDex === null) {
@@ -1064,6 +1071,7 @@ export async function fetchMasterCardsPage(params: {
       !params.activeSet &&
       !params.activeRarity &&
       !params.activeSearch &&
+      !params.activeArtist &&
       !params.excludeCommonUncommon &&
       params.categoryQueryVariants.length === 0;
     if (isDefaultUnfiltered) {

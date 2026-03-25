@@ -44,6 +44,7 @@ type SearchPageProps = {
     search?: string;
     exclude_cu?: string;
     category?: string;
+    artist?: string;
   }>;
 };
 
@@ -70,6 +71,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const selectedSearch = (resolvedSearchParams.search ?? "").trim();
   const excludeCommonUncommon = parseExcludeCommonUncommon(resolvedSearchParams.exclude_cu);
   const selectedCategory = (resolvedSearchParams.category ?? "").trim();
+  const selectedArtist = (resolvedSearchParams.artist ?? "").trim();
 
   const facets = (await getCachedFilterFacets()) ?? {};
   const availableSetCodes = facets.setCodes ?? [];
@@ -103,6 +105,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const activePokemonName = activePokemonOption?.name ?? null;
   const activeRarity = hasSelectedRarity ? selectedRarity : "";
   const activeSearch = selectedSearch;
+  const activeArtist = selectedArtist;
   const requestedTake = resolveCardsTakeFromParams(
     resolvedSearchParams.take,
     resolvedSearchParams.page,
@@ -115,6 +118,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       activePokemonName,
       activeRarity,
       activeSearch,
+      activeArtist,
       excludeCommonUncommon,
       categoryQueryVariants,
       page: 1,
@@ -182,6 +186,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (activePokemon) params.set("pokemon", activePokemon);
     if (activeRarity) params.set("rarity", activeRarity);
     if (activeSearch) params.set("search", activeSearch);
+    if (activeArtist) params.set("artist", activeArtist);
     if (excludeCommonUncommon) params.set("exclude_cu", "1");
     if (activeCategory) params.set("category", activeCategory);
     if (take !== undefined && take > 0) params.set("take", String(take));
@@ -196,6 +201,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     activePokemon,
     activeRarity,
     activeSearch,
+    activeArtist,
     excludeCommonUncommon ? "1" : "",
     activeCategory,
   ].join("|");
@@ -363,7 +369,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           ) : (
             <div className="mb-4" aria-hidden />
           )}
-          <ul className="grid grid-cols-3 gap-3 sm:gap-4">
+          <ul className="grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-7">
             {pokemonFilterOptions.map((item) => (
               <li key={item.nationalDexNumber}>
                 <Link
