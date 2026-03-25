@@ -42,19 +42,35 @@ const SV_BY_CODE: Record<string, ScrydexExpansionListConfig> = (() => {
 
 /** Alternate Payload / legacy spellings → canonical tcg key in `SV_BY_CODE`. */
 const SV_ALIASES: Record<string, string> = {
+  // Zero-padded without dot
   sv01: "sv1",
   sv02: "sv2",
   sv03: "sv3",
-  "sv3.5": "sv3pt5",
   sv04: "sv4",
-  "sv4.5": "sv4pt5",
   sv05: "sv5",
   sv06: "sv6",
-  "sv6.5": "sv6pt5",
   sv07: "sv7",
   sv08: "sv8",
-  "sv8.5": "sv8pt5",
   sv09: "sv9",
+  sv10: "sv10",
+  // "pt5" half-sets — dot and no-dot, zero-padded and not
+  "sv3.5": "sv3pt5",
+  "sv03.5": "sv3pt5",
+  sv03pt5: "sv3pt5",
+  "sv4.5": "sv4pt5",
+  "sv04.5": "sv4pt5",
+  sv04pt5: "sv4pt5",
+  "sv6.5": "sv6pt5",
+  "sv06.5": "sv6pt5",
+  sv06pt5: "sv6pt5",
+  "sv8.5": "sv8pt5",
+  "sv08.5": "sv8pt5",
+  sv08pt5: "sv8pt5",
+  // sv10.5 variants (White Flare / Black Bolt) — dot and no-dot, zero-padded and not
+  "sv10.5w": "rsv10pt5",
+  "sv10.5b": "zsv10pt5",
+  sv10pt5w: "rsv10pt5",
+  sv10pt5b: "zsv10pt5",
 };
 
 function resolveSvKey(raw: string): string | null {

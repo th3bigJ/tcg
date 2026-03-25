@@ -194,6 +194,7 @@ const BULK_BY_CODE: Record<string, ScrydexExpansionListConfig> = (() => {
 })();
 
 const BULK_ALIASES: Record<string, string> = {
+  // --- Sword & Shield ---
   swsh01: "swsh1",
   swsh02: "swsh2",
   swsh03: "swsh3",
@@ -203,6 +204,7 @@ const BULK_ALIASES: Record<string, string> = {
   swsh07: "swsh7",
   swsh08: "swsh8",
   swsh09: "swsh9",
+  // --- Sun & Moon ---
   sm01: "sm1",
   sm02: "sm2",
   sm03: "sm3",
@@ -212,10 +214,53 @@ const BULK_ALIASES: Record<string, string> = {
   sm07: "sm7",
   sm08: "sm8",
   sm09: "sm9",
+  sm10: "sm10",
+  sm11: "sm11",
+  sm12: "sm12",
+  // --- XY ---
   xy01: "xy1",
   xy02: "xy2",
+  xy03: "xy3",
+  xy04: "xy4",
+  xy05: "xy5",
+  xy06: "xy6",
+  xy07: "xy7",
+  xy08: "xy8",
+  xy09: "xy9",
+  xy10: "xy10",
+  xy11: "xy11",
+  xy12: "xy12",
+  // --- Black & White ---
   bw01: "bw1",
+  bw02: "bw2",
+  bw03: "bw3",
+  bw04: "bw4",
+  bw05: "bw5",
+  bw06: "bw6",
+  bw07: "bw7",
+  bw08: "bw8",
+  bw09: "bw9",
+  bw10: "bw10",
+  bw11: "bw11",
+  // --- HeartGold & SoulSilver ---
+  hgss01: "hgss1",
+  hgss02: "hgss2",
+  hgss03: "hgss3",
+  hgss04: "hgss4",
+  // --- Platinum ---
+  pl01: "pl1",
+  pl02: "pl2",
+  pl03: "pl3",
+  pl04: "pl4",
+  // --- Diamond & Pearl ---
   dp01: "dp1",
+  dp02: "dp2",
+  dp03: "dp3",
+  dp04: "dp4",
+  dp05: "dp5",
+  dp06: "dp6",
+  dp07: "dp7",
+  // --- EX ---
   ex01: "ex1",
   ex02: "ex2",
   ex03: "ex3",
@@ -225,12 +270,33 @@ const BULK_ALIASES: Record<string, string> = {
   ex07: "ex7",
   ex08: "ex8",
   ex09: "ex9",
+  ex10: "ex10",
+  ex11: "ex11",
+  ex12: "ex12",
+  ex13: "ex13",
+  ex14: "ex14",
+  ex15: "ex15",
+  ex16: "ex16",
+  // --- Neo ---
   neo01: "neo1",
   neo02: "neo2",
   neo03: "neo3",
   neo04: "neo4",
+  // --- Gym ---
   gym01: "gym1",
   gym02: "gym2",
+  // --- Base ---
+  base01: "base1",
+  base02: "base2",
+  base03: "base3",
+  base04: "base4",
+  base05: "base5",
+  base06: "base6",
+  // --- E-Card ---
+  ecard01: "ecard1",
+  ecard02: "ecard2",
+  ecard03: "ecard3",
+  // --- POP ---
   pop01: "pop1",
   pop02: "pop2",
   pop03: "pop3",
@@ -240,6 +306,7 @@ const BULK_ALIASES: Record<string, string> = {
   pop07: "pop7",
   pop08: "pop8",
   pop09: "pop9",
+  // --- Alternate spellings ---
   lc: "base6",
   legendarycollection: "base6",
 };
