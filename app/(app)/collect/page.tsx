@@ -2,7 +2,7 @@ import Link from "next/link";
 import config from "@payload-config";
 import { getPayload } from "payload";
 
-import { CardGrid } from "@/components/CardGrid";
+import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCurrentCustomer } from "@/lib/auth";
 import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
@@ -144,18 +144,16 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
             scrollRestoreKey={scrollRestoreKey}
             scrollsWindow
           >
-            <div className="px-4 pb-4">
-              <CardGrid
+            <div className="pb-4">
+              <CollectCardGridWithTags
                 cards={cardsForClient}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 variant="collection"
-                customerLoggedIn
                 itemConditions={itemConditions}
                 wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
                 collectionLinesByMasterCardId={collectionLinesByMasterCardId}
                 cardPricesByMasterCardId={cardPricesByMasterCardId}
-                groupBySet
               />
             </div>
           </CardsResultsScroll>

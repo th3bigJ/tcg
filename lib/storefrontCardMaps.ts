@@ -15,6 +15,8 @@ export type StorefrontCardExtras = {
   priority?: "low" | "medium" | "high";
   targetConditionId?: string;
   targetPrinting?: string;
+  /** ISO timestamp of when the entry was added to collection/wishlist. */
+  addedAt?: string;
 };
 
 /** One saved row in the customer’s collection (for modal / summaries). */
@@ -69,12 +71,15 @@ export function mapCustomerCollectionDoc(doc: unknown): StorefrontCardEntry | nu
   const printing = typeof row.printing === "string" && row.printing.trim() ? row.printing.trim() : undefined;
   const language = typeof row.language === "string" && row.language.trim() ? row.language.trim() : undefined;
 
+  const addedAt = typeof row.addedAt === "string" && row.addedAt ? row.addedAt : undefined;
+
   return {
     ...base,
     ...(entryId ? { collectionEntryId: entryId } : {}),
     ...(conditionLabel ? { conditionLabel } : {}),
     ...(printing ? { printing } : {}),
     ...(language ? { language } : {}),
+    ...(addedAt ? { addedAt } : {}),
     quantity: qty,
   };
 }
@@ -162,12 +167,15 @@ export function mapCustomerWishlistDoc(doc: unknown): StorefrontCardEntry | null
   const targetConditionId = getRelationshipDocumentId(tcond);
   const targetPrinting = typeof row.targetPrinting === "string" ? row.targetPrinting : undefined;
 
+  const addedAt = typeof row.addedAt === "string" && row.addedAt ? row.addedAt : undefined;
+
   return {
     ...base,
     ...(entryId ? { wishlistEntryId: entryId } : {}),
     ...(priority ? { priority } : {}),
     ...(targetConditionId ? { targetConditionId } : {}),
     ...(targetPrinting ? { targetPrinting } : {}),
+    ...(addedAt ? { addedAt } : {}),
   };
 }
 
@@ -189,6 +197,7 @@ export async function fetchCollectionCardEntries(
       quantity: true,
       printing: true,
       language: true,
+      addedAt: true,
     },
   });
 
@@ -214,6 +223,7 @@ export async function fetchWishlistCardEntries(
       priority: true,
       targetCondition: true,
       targetPrinting: true,
+      addedAt: true,
     },
   });
 

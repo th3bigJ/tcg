@@ -87,19 +87,19 @@ export default async function PokedexPokemonCardsPage({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 py-4">
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pt-4">
         <div className="flex min-h-0 flex-1 flex-col">
-          <header className="mb-4 flex shrink-0 items-center gap-3 border-b border-[var(--foreground)]/10 pb-4">
+          <header className="mb-0 flex shrink-0 items-center gap-2 border-b border-[var(--foreground)]/10 pb-2">
             <Link
-              href="/pokedex"
+              href="/search?tab=pokedex"
               prefetch={false}
-              className="inline-flex h-11 min-w-[44px] shrink-0 items-center justify-center text-[var(--foreground)] transition hover:opacity-75 active:opacity-60"
+              className="inline-flex h-9 min-w-[36px] shrink-0 items-center justify-center text-[var(--foreground)] transition hover:opacity-75 active:opacity-60"
               aria-label="Back to Pokédex"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -111,7 +111,7 @@ export default async function PokedexPokemonCardsPage({
                 <path d="m15 18-6-6 6-6" />
               </svg>
             </Link>
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-16 sm:w-16">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center">
               <img
                 src={imageSrc}
                 alt=""
@@ -119,16 +119,16 @@ export default async function PokedexPokemonCardsPage({
               />
             </span>
             <div className="min-w-0 flex-1">
-              <h1 className="text-balance text-lg font-semibold leading-tight tracking-tight sm:text-xl">
+              <h1 className="text-balance text-sm font-semibold leading-tight tracking-tight sm:text-base">
                 {pokemonMeta.name}
               </h1>
-              <p className="mt-1 text-xs text-[var(--foreground)]/60 sm:text-sm">
+              <p className="text-xs text-[var(--foreground)]/60">
                 {filteredCount} card{filteredCount === 1 ? "" : "s"}
               </p>
             </div>
           </header>
 
-          <div className="min-h-0 flex-1">
+          <div className="mt-4 min-h-0 flex-1">
             <CardsResultsScroll
               canLoadMore={canLoadMore}
               loadMoreHref={loadMoreHref}

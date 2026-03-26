@@ -948,9 +948,6 @@ const CardGridItem = memo(function CardGridItem({
             decoding="async"
             fetchPriority={index < 6 ? "high" : "auto"}
           />
-          <span className="absolute bottom-0 left-0 right-0 bg-[var(--foreground)]/80 px-1 py-0.5 text-center text-xs text-[var(--background)] opacity-0 transition group-hover:opacity-100">
-            {card.set} / {card.filename.replace(/\.[^.]+$/, "")}
-          </span>
         </div>
         <button
           type="button"
@@ -989,6 +986,7 @@ export function CardGrid({
   collectionLinesByMasterCardId = EMPTY_COLLECTION,
   cardPricesByMasterCardId = EMPTY_PRICES,
   groupBySet = false,
+  collectedCountBySetCode,
 }: {
   cards: CardEntry[];
   setLogosByCode?: Record<string, string>;
@@ -1000,6 +998,8 @@ export function CardGrid({
   collectionLinesByMasterCardId?: Record<string, CollectionLineSummary[]>;
   cardPricesByMasterCardId?: Record<string, number>;
   groupBySet?: boolean;
+  /** When provided, shows "X collected" in grouped set headers */
+  collectedCountBySetCode?: Record<string, number>;
 }) {
   const router = useRouter();
   const [localWishlistMap, setLocalWishlistMap] = useState(wishlistEntryIdsByMasterCardId);
@@ -2167,6 +2167,8 @@ export function CardGrid({
             ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(groupValue)
             : null;
 
+          const collectedCount = collectedCountBySetCode?.[setCode];
+
           return (
             <section key={setCode}>
               <div className="mb-3 flex items-center gap-2.5">
@@ -2179,9 +2181,16 @@ export function CardGrid({
                 ) : (
                   <span className="text-sm font-semibold text-[var(--foreground)]">{setName}</span>
                 )}
-                {logoSrc ? (
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--foreground)]/70">{setName}</span>
-                ) : null}
+                <div className="min-w-0 flex-1">
+                  {logoSrc ? (
+                    <span className="block truncate text-sm font-medium text-[var(--foreground)]/70">{setName}</span>
+                  ) : null}
+                  {collectedCount !== undefined ? (
+                    <span className="block text-xs text-[var(--foreground)]/45">
+                      {collectedCount} collected
+                    </span>
+                  ) : null}
+                </div>
                 {groupValueFormatted ? (
                   <span className="ml-auto shrink-0 text-sm font-semibold tabular-nums text-[var(--foreground)]">
                     {groupValueFormatted}

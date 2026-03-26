@@ -2,7 +2,6 @@ import Link from "next/link";
 import { SearchTabSwipeContainer } from "@/components/SearchTabSwipeContainer";
 import { SearchCardGrid } from "@/components/SearchCardGrid";
 import { CardFiltersPanel } from "@/components/CardFiltersPanel";
-import { CardsMobileControls } from "@/components/CardsMobileControls";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { ExpansionsList } from "@/components/ExpansionsList";
 import {
@@ -164,8 +163,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // ── Cards tab helpers ─────────────────────────────────────────────────────
   const showingCount = cardsForClient.length;
-  const showingFrom = filteredCount === 0 ? 0 : 1;
-  const showingTo = showingCount;
   const nextTake = Math.min(filteredCount, showingCount + CARDS_LOAD_MORE_STEP);
   const canLoadMore = showingCount > 0 && showingCount < filteredCount;
 
@@ -195,12 +192,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     activeCategory,
   ].join("|");
 
+  // Used by desktop sidebar to clear set/pokemon filters (keeps rarity/search/category)
   const resetFiltersHref = (() => {
     const params = new URLSearchParams({ tab: "cards" });
     if (activeRarity) params.set("rarity", activeRarity);
     if (activeSearch) params.set("search", activeSearch);
     if (excludeCommonUncommon) params.set("exclude_cu", "1");
     if (activeCategory) params.set("category", activeCategory);
+    return `/search?${params.toString()}`;
+  })();
+
+  // Used by the tag row "Clear filters" — clears rarity/category/exclude_cu but keeps set/pokemon/search
+  const clearTagFiltersHref = (() => {
+    const params = new URLSearchParams({ tab: "cards" });
+    if (activeSet) params.set("set", activeSet);
+    if (activePokemon) params.set("pokemon", activePokemon);
+    if (activeSearch) params.set("search", activeSearch);
     return `/search?${params.toString()}`;
   })();
 
@@ -268,61 +275,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               </div>
             </aside>
             <section className="flex min-h-0 flex-1 flex-col overflow-hidden lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:pr-1">
-              <CardsMobileControls
-                activeSet={activeSet}
-                activePokemon={activePokemon}
-                activeRarity={activeRarity}
-                activeSearch={activeSearch}
-                rarityOptions={rarityOptions}
-                categoryOptions={categoryOptions}
-                excludeCommonUncommon={excludeCommonUncommon}
-                activeCategory={activeCategory}
-                resetFiltersHref={resetFiltersHref}
-                setFilterOptions={setFilterOptions}
-                pokemonFilterOptions={pokemonFilterOptions}
-                formAction="/search"
-                extraHiddenInputs={<input type="hidden" name="tab" value="cards" />}
-                showSetPokemonFilter={false}
-              />
-              <div className="mb-4 hidden shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:flex">
-                <form method="get" action="/search" className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-                  <input type="hidden" name="tab" value="cards" />
-                  {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
-                  {activePokemon ? <input type="hidden" name="pokemon" value={activePokemon} /> : null}
-                  {activeRarity ? <input type="hidden" name="rarity" value={activeRarity} /> : null}
-                  {excludeCommonUncommon ? <input type="hidden" name="exclude_cu" value="1" /> : null}
-                  {activeCategory ? <input type="hidden" name="category" value={activeCategory} /> : null}
-                  <input
-                    type="search"
-                    name="search"
-                    defaultValue={activeSearch}
-                    placeholder="Search card name"
-                    aria-label="Search card name"
-                    className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 text-xs shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_8px_20px_rgba(0,0,0,0.18)] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 sm:w-72"
-                  />
-                  <button
-                    type="submit"
-                    className="inline-flex items-center justify-center rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--foreground)]/20"
-                  >
-                    Search
-                  </button>
-                  <Link
-                    href="/search?tab=cards"
-                    prefetch={false}
-                    className="inline-flex items-center justify-center rounded-md border border-red-400/50 bg-red-500/15 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-500/25 hover:text-red-200"
-                  >
-                    Reset
-                  </Link>
-                </form>
-                <p className="text-right text-sm text-[var(--foreground)]/70">
-                  Showing {showingFrom}-{showingTo} of {filteredCount} card
-                  {filteredCount === 1 ? "" : "s"} in {setFilterOptions.length} set
-                  {setFilterOptions.length === 1 ? "" : "s"}
-                  {activeSet || activePokemon || activeRarity || activeSearch || excludeCommonUncommon || activeCategory
-                    ? " (filtered)"
-                    : ""}
-                </p>
-              </div>
               <CardsResultsScroll
                 canLoadMore={canLoadMore}
                 loadMoreHref={loadMoreHref}
@@ -334,6 +286,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   setLogosByCode={setLogosByCode}
                   setSymbolsByCode={setSymbolsByCode}
                   customerLoggedIn={Boolean(customer)}
+                  formAction="/search"
+                  extraHiddenFields={{ tab: "cards" }}
+                  activeSearch={activeSearch}
+                  activeSet={activeSet}
+                  activePokemon={activePokemon}
+                  activeRarity={activeRarity}
+                  activeCategory={activeCategory}
+                  excludeCommonUncommon={excludeCommonUncommon}
+                  rarityOptions={rarityOptions}
+                  categoryOptions={categoryOptions}
+                  resetHref={clearTagFiltersHref}
                 />
               </CardsResultsScroll>
             </section>
