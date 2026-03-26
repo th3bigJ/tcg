@@ -40,7 +40,6 @@ body {
 
 /* Skip off-screen layout work in long card grids (helps scroll + filter navigations). */
 .card-grid-item {
-  content-visibility: auto;
   contain-intrinsic-size: 140px 187px;
 }
 
