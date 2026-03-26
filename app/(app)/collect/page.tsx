@@ -3,6 +3,7 @@ import config from "@payload-config";
 import { getPayload } from "payload";
 
 import { CardGrid } from "@/components/CardGrid";
+import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCurrentCustomer } from "@/lib/auth";
 import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
@@ -15,7 +16,14 @@ import {
   mergeCollectionEntriesForGrid,
 } from "@/lib/storefrontCardMaps";
 
-export default async function CollectPage() {
+const INITIAL_TAKE = 30;
+const LOAD_MORE_STEP = 30;
+
+type CollectPageProps = {
+  searchParams?: Promise<{ take?: string }>;
+};
+
+export default async function CollectPage({ searchParams }: CollectPageProps) {
   const customer = await getCurrentCustomer();
 
   if (!customer) {
@@ -35,6 +43,10 @@ export default async function CollectPage() {
     );
   }
 
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const rawTake = Number.parseInt(resolvedSearchParams.take ?? "", 10);
+  const take = Number.isFinite(rawTake) && rawTake > 0 ? rawTake : INITIAL_TAKE;
+
   const [entries, itemConditions, wishlistEntryIdsByMasterCardId, facets] = await Promise.all([
     fetchCollectionCardEntries(customer.id),
     fetchItemConditionOptions(),
@@ -42,7 +54,10 @@ export default async function CollectPage() {
     getCachedFilterFacets(),
   ]);
   const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(entries);
-  const cardsForClient = mergeCollectionEntriesForGrid(entries);
+  const allCardsForGrid = mergeCollectionEntriesForGrid(entries);
+  const cardsForClient = allCardsForGrid.slice(0, take);
+  const totalCards = allCardsForGrid.length;
+
   const setFilterOptions = await getCachedSetFilterOptions((facets ?? {}).setCodes ?? []);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
@@ -70,7 +85,7 @@ export default async function CollectPage() {
         : 1;
     return sum + q;
   }, 0);
-  const uniqueCatalogCards = cardsForClient.length;
+  const uniqueCatalogCards = allCardsForGrid.length;
   const collectionCountLabel =
     totalCopies === 0
       ? null
@@ -78,9 +93,15 @@ export default async function CollectPage() {
         ? `${totalCopies} card${totalCopies === 1 ? "" : "s"}`
         : `${totalCopies} card${totalCopies === 1 ? "" : "s"} (${uniqueCatalogCards} Unique)`;
 
+  const showingCount = cardsForClient.length;
+  const nextTake = Math.min(totalCards, showingCount + LOAD_MORE_STEP);
+  const canLoadMore = showingCount > 0 && showingCount < totalCards;
+  const loadMoreHref = `/collect?take=${encodeURIComponent(String(nextTake))}`;
+  const scrollRestoreKey = [String(take), "collect"].join("|");
+
   return (
-    <div className="flex min-h-full flex-col bg-[var(--background)] px-4 py-6 text-[var(--foreground)]">
-      <div className="flex items-center justify-between">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+      <div className="flex shrink-0 items-center justify-between px-4 pt-[var(--mobile-page-top-offset)]">
         <h1 className="text-xl font-semibold">My collection</h1>
         <Link
           href="/wishlist"
@@ -103,31 +124,40 @@ export default async function CollectPage() {
         </Link>
       </div>
       {collectionCountLabel ? (
-        <p className="mt-2 text-sm text-[var(--foreground)]/65">{collectionCountLabel}</p>
+        <p className="mt-2 shrink-0 px-4 text-sm text-[var(--foreground)]/65">{collectionCountLabel}</p>
       ) : null}
       {valueFormatted ? (
-        <p className="mt-1 text-base font-semibold tabular-nums text-[var(--foreground)]">
+        <p className="mt-1 shrink-0 px-4 text-base font-semibold tabular-nums text-[var(--foreground)]">
           {valueFormatted}
         </p>
       ) : null}
-      {cardsForClient.length === 0 ? (
-        <p className="mt-4 max-w-md text-sm text-[var(--foreground)]/70">
+      {allCardsForGrid.length === 0 ? (
+        <p className="mt-4 px-4 max-w-md text-sm text-[var(--foreground)]/70">
           Nothing here yet. Open Search, tap a card, then use + to add copies you own.
         </p>
       ) : (
         <div className="mt-6 min-h-0 flex-1">
-          <CardGrid
-            cards={cardsForClient}
-            setLogosByCode={setLogosByCode}
-            setSymbolsByCode={setSymbolsByCode}
-            variant="collection"
-            customerLoggedIn
-            itemConditions={itemConditions}
-            wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
-            collectionLinesByMasterCardId={collectionLinesByMasterCardId}
-            cardPricesByMasterCardId={cardPricesByMasterCardId}
-            groupBySet
-          />
+          <CardsResultsScroll
+            canLoadMore={canLoadMore}
+            loadMoreHref={loadMoreHref}
+            loadMoreStep={LOAD_MORE_STEP}
+            scrollRestoreKey={scrollRestoreKey}
+          >
+            <div className="px-4 pb-4">
+              <CardGrid
+                cards={cardsForClient}
+                setLogosByCode={setLogosByCode}
+                setSymbolsByCode={setSymbolsByCode}
+                variant="collection"
+                customerLoggedIn
+                itemConditions={itemConditions}
+                wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
+                collectionLinesByMasterCardId={collectionLinesByMasterCardId}
+                cardPricesByMasterCardId={cardPricesByMasterCardId}
+                groupBySet
+              />
+            </div>
+          </CardsResultsScroll>
         </div>
       )}
     </div>
