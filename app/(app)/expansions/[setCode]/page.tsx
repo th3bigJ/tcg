@@ -134,6 +134,16 @@ export default async function ExpansionSetCardsPage({
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
+                formAction={`/expansions/${activeSet}`}
+                activeSearch=""
+                activeSet={activeSet}
+                activePokemon=""
+                activeRarity=""
+                activeCategory=""
+                excludeCommonUncommon={false}
+                rarityOptions={[]}
+                categoryOptions={[]}
+                resetHref={`/expansions/${activeSet}`}
               />
             </CardsResultsScroll>
           </div>

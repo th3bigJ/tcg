@@ -140,6 +140,16 @@ export default async function PokedexPokemonCardsPage({
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
+                formAction={`/pokedex/${dexNum}`}
+                activeSearch=""
+                activeSet=""
+                activePokemon={String(dexNum)}
+                activeRarity=""
+                activeCategory=""
+                excludeCommonUncommon={false}
+                rarityOptions={[]}
+                categoryOptions={[]}
+                resetHref={`/pokedex/${dexNum}`}
               />
             </CardsResultsScroll>
           </div>
