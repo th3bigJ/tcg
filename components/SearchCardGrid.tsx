@@ -99,8 +99,13 @@ export function SearchCardGrid({
         (b.setReleaseDate ?? "").localeCompare(a.setReleaseDate ?? ""),
       );
     }
+    if (sortOrder === "price-desc" && cardPrices) {
+      return [...cards].sort(
+        (a, b) => (cardPrices[b.masterCardId ?? ""] ?? 0) - (cardPrices[a.masterCardId ?? ""] ?? 0),
+      );
+    }
     return cards;
-  }, [cards, sortOrder, cardData?.cardPrices]);
+  }, [cards, sortOrder, cardPrices]);
 
   return (
     <>
