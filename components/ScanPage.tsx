@@ -31,7 +31,7 @@ export function ScanPage({ customerLoggedIn }: Props) {
         />
       )}
 
-      {showPreview && state.status !== "idle" && (state.status === "processing" || state.status === "searching") && (
+      {(state.status === "processing" || state.status === "searching") && (
         <div
           className="relative w-full max-w-xs self-center overflow-hidden rounded-xl border border-[var(--foreground)]/15"
           style={{ aspectRatio: "2 / 3" }}
