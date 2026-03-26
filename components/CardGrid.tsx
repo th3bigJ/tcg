@@ -2130,7 +2130,7 @@ export function CardGrid({
       );
     }
 
-    // Group cards by set code, preserving order of first appearance, tracking global index
+    // Group cards by set code, then sort groups newest-first by setReleaseDate
     type GroupEntry = { card: CardEntry; globalIndex: number };
     const groupOrder: string[] = [];
     const groupMap: Record<string, GroupEntry[]> = {};
@@ -2141,6 +2141,13 @@ export function CardGrid({
         groupMap[code] = [];
       }
       groupMap[code].push({ card, globalIndex });
+    });
+
+    // Sort groups newest-first by the release date of the first card in each group
+    groupOrder.sort((a, b) => {
+      const dateA = groupMap[a]?.[0]?.card.setReleaseDate ?? "";
+      const dateB = groupMap[b]?.[0]?.card.setReleaseDate ?? "";
+      return dateB.localeCompare(dateA);
     });
 
     return (
