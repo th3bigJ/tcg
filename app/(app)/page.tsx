@@ -98,7 +98,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
   const scrollRestoreKey = [String(take), "home-collection"].join("|");
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+    <div className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
       <h1 className="shrink-0 px-4 pt-[var(--mobile-page-top-offset)] text-xl font-semibold">
         My collection
       </h1>
@@ -131,12 +131,13 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
           Nothing here yet. Open Search, tap a card, then use + to add copies you own.
         </p>
       ) : (
-        <div className="mt-6 min-h-0 flex-1">
+        <div className="mt-6">
           <CardsResultsScroll
             canLoadMore={canLoadMore}
             loadMoreHref={loadMoreHref}
             loadMoreStep={LOAD_MORE_STEP}
             scrollRestoreKey={scrollRestoreKey}
+            scrollsWindow
           >
             <div className="px-4 pb-4">
               <CardGrid

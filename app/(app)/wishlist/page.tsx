@@ -114,7 +114,7 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   const scrollRestoreKey = [String(take), "wishlist"].join("|");
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+    <div className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
       <div className="flex shrink-0 items-center gap-3 px-4 pt-[var(--mobile-page-top-offset)]">
         <Link
           href="/collect"
@@ -150,12 +150,13 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
           Save cards from Search with the heart button on the card preview.
         </p>
       ) : (
-        <div className="mt-6 min-h-0 flex-1">
+        <div className="mt-6">
           <CardsResultsScroll
             canLoadMore={canLoadMore}
             loadMoreHref={loadMoreHref}
             loadMoreStep={LOAD_MORE_STEP}
             scrollRestoreKey={scrollRestoreKey}
+            scrollsWindow
           >
             <div className="px-4 pb-4">
               <CardGrid

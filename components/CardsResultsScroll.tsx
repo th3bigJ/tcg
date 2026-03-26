@@ -13,8 +13,13 @@ type CardsResultsScrollProps = {
   canLoadMore: boolean;
   loadMoreHref: string;
   loadMoreStep: number;
-  /** Must change when the /cards URL meaningfully changes (so we run after load-more navigation). */
+  /** Must change when the URL meaningfully changes (so we run after load-more navigation). */
   scrollRestoreKey: string;
+  /**
+   * Set to true when the page scrolls via the window rather than the inner div.
+   * Uses root:null (viewport) for IntersectionObserver and window.scrollY for restore.
+   */
+  scrollsWindow?: boolean;
 };
 
 export function CardsResultsScroll({
@@ -23,6 +28,7 @@ export function CardsResultsScroll({
   loadMoreStep,
   loadMoreHref,
   scrollRestoreKey,
+  scrollsWindow = false,
 }: CardsResultsScrollProps) {
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -42,15 +48,19 @@ export function CardsResultsScroll({
     if (raw === null) return;
     sessionStorage.removeItem(SCROLL_STORAGE_KEY);
     const y = Number.parseInt(raw, 10);
-    if (!Number.isFinite(y) || !scrollRef.current) return;
-    scrollRef.current.scrollTop = y;
-  }, [scrollRestoreKey]);
+    if (!Number.isFinite(y)) return;
+    if (scrollsWindow) {
+      window.scrollTo({ top: y, behavior: "instant" });
+    } else {
+      const el = scrollRef.current;
+      if (el) el.scrollTop = y;
+    }
+  }, [scrollRestoreKey, scrollsWindow]);
 
   useEffect(() => {
     if (!canLoadMore) return;
-    const root = scrollRef.current;
     const sentinel = sentinelRef.current;
-    if (!root || !sentinel) return;
+    if (!sentinel) return;
 
     // Small delay so the observer doesn't fire immediately on mount/tab-switch
     // before the scroll container has settled.
@@ -83,8 +93,8 @@ export function CardsResultsScroll({
 
         loadMoreTriggeredRef.current = true;
         setIsLoadingMore(true);
-        const el = scrollRef.current;
-        if (el) sessionStorage.setItem(SCROLL_STORAGE_KEY, String(el.scrollTop));
+        const scrollY = scrollsWindow ? window.scrollY : (scrollRef.current?.scrollTop ?? 0);
+        try { sessionStorage.setItem(SCROLL_STORAGE_KEY, String(scrollY)); } catch { /* ignore */ }
         try {
           startTransition(() => {
             router.push(loadMoreHref, { scroll: false });
@@ -95,7 +105,7 @@ export function CardsResultsScroll({
         }
       },
       {
-        root,
+        root: scrollsWindow ? null : scrollRef.current,
         rootMargin: "0px 0px 360px 0px",
         threshold: 0,
       },
@@ -106,7 +116,7 @@ export function CardsResultsScroll({
       clearTimeout(readyTimer);
       observer.disconnect();
     };
-  }, [canLoadMore, loadMoreHref, scrollRestoreKey, router]);
+  }, [canLoadMore, loadMoreHref, scrollRestoreKey, scrollsWindow, router]);
 
   return (
     <div
