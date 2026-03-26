@@ -31,6 +31,7 @@ type CardFiltersPanelProps = {
   excludeCommonUncommon: boolean;
   activeCategory: string;
   onSelection?: () => void;
+  showSetPokemonFilter?: boolean;
 };
 
 function normalizeName(value: string): string {
@@ -72,6 +73,7 @@ export function CardFiltersPanel({
   excludeCommonUncommon,
   activeCategory,
   onSelection,
+  showSetPokemonFilter = true,
 }: CardFiltersPanelProps) {
   const categoryOptions = categoryOptionsProp ?? [];
   const [activeTab, setActiveTab] = useState<"sets" | "pokemon">("sets");
@@ -236,6 +238,7 @@ export function CardFiltersPanel({
         </div>
       </form>
 
+      {showSetPokemonFilter ? (
       <div className="mb-3 grid grid-cols-2 gap-1.5 rounded-md border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 p-1">
         <button
           type="button"
@@ -260,8 +263,9 @@ export function CardFiltersPanel({
           Pokemon
         </button>
       </div>
+      ) : null}
 
-      {activeTab === "sets" ? (
+      {showSetPokemonFilter && activeTab === "sets" ? (
         <div>
           <input
             type="search"
@@ -310,7 +314,7 @@ export function CardFiltersPanel({
             ))}
           </div>
         </div>
-      ) : (
+      ) : showSetPokemonFilter ? (
         <div>
           <input
             type="search"
@@ -353,7 +357,7 @@ export function CardFiltersPanel({
             })}
           </ul>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

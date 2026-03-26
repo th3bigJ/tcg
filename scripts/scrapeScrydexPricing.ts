@@ -278,6 +278,16 @@ const BULK_ALIASES: Record<string, string> = {
   "swsh10.5": "pgo",
   // Pokémon Futsal alternate id
   fut2020: "fut20",
+  // McDonald's Collection tcgdex_id variants (stored as YYYYera in DB)
+  "2011bw": "mcd11",
+  "2012bw": "mcd12",
+  "2014xy": "mcd14",
+  "2015xy": "mcd15",
+  "2016xy": "mcd16",
+  "2017sm": "mcd17",
+  "2018sm": "mcd18",
+  "2019sm": "mcd19",
+  "2021swsh": "mcd21",
 };
 
 function resolveBulkConfig(raw: string): ScrydexExpansionListConfig | null {

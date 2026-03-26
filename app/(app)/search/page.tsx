@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SearchTabSwipeContainer } from "@/components/SearchTabSwipeContainer";
 import { SearchCardGrid } from "@/components/SearchCardGrid";
 import { CardFiltersPanel } from "@/components/CardFiltersPanel";
 import { CardsMobileControls } from "@/components/CardsMobileControls";
@@ -232,6 +233,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </div>
 
+      <SearchTabSwipeContainer activeTab={activeTab}>
       {/* ── All Cards tab ── */}
       {activeTab === "cards" && (
         <main className="min-h-0 w-full flex-1 overflow-hidden px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
@@ -261,6 +263,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   activeSearch={activeSearch}
                   excludeCommonUncommon={excludeCommonUncommon}
                   activeCategory={activeCategory}
+                  showSetPokemonFilter={false}
                 />
               </div>
             </aside>
@@ -279,6 +282,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 pokemonFilterOptions={pokemonFilterOptions}
                 formAction="/search"
                 extraHiddenInputs={<input type="hidden" name="tab" value="cards" />}
+                showSetPokemonFilter={false}
               />
               <div className="mb-4 hidden shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:flex">
                 <form method="get" action="/search" className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -379,6 +383,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           </ul>
         </main>
       )}
+      </SearchTabSwipeContainer>
     </div>
   );
 }
+

@@ -509,7 +509,7 @@ function ModalCardHeadline({
           <img
             src={modalSetSymbolSrc}
             alt={`${modalSetLabel} symbol`}
-            className="h-6 w-auto max-w-[28px] shrink-0 object-contain opacity-80"
+            className="h-8 w-auto max-w-[36px] shrink-0 object-contain opacity-80"
           />
         ) : null}
       </p>
@@ -853,11 +853,37 @@ function ModalAttributeRow({
   );
 }
 
+function readMarketPrice(obj: unknown): number | null {
+  if (!obj || typeof obj !== "object") return null;
+  const o = obj as Record<string, unknown>;
+  const m = o.market ?? o.marketPrice;
+  return typeof m === "number" && Number.isFinite(m) ? m : null;
+}
+
+function extractPriceFromPricingResponse(data: { tcgplayer?: unknown; cardmarket?: unknown }): number | null {
+  const tp = data.tcgplayer;
+  if (tp && typeof tp === "object") {
+    for (const block of Object.values(tp as Record<string, unknown>)) {
+      const v = readMarketPrice(block);
+      if (v !== null) return v;
+    }
+  }
+  const cm = data.cardmarket;
+  if (cm && typeof cm === "object") {
+    const o = cm as Record<string, unknown>;
+    const trend = typeof o.trendPrice === "number" ? o.trendPrice : typeof o.trend === "number" ? o.trend : null;
+    if (trend !== null && Number.isFinite(trend)) return trend;
+    if (typeof o.avg30 === "number" && Number.isFinite(o.avg30)) return o.avg30;
+    if (typeof o.averageSellPrice === "number" && Number.isFinite(o.averageSellPrice)) return o.averageSellPrice;
+  }
+  return null;
+}
+
 const CardGridItem = memo(function CardGridItem({
   card,
   index,
   variant,
-  unitPrice,
+  unitPrice: unitPriceProp,
   onOpen,
 }: {
   card: CardEntry;
@@ -866,8 +892,43 @@ const CardGridItem = memo(function CardGridItem({
   unitPrice: number | null;
   onOpen: (index: number) => void;
 }) {
+  const liRef = useRef<HTMLLIElement>(null);
+  const [lazyPrice, setLazyPrice] = useState<number | null>(null);
+  const fetchedRef = useRef(false);
+
+  // In browse mode, fetch this card's price lazily when it scrolls into view.
+  // Collection/wishlist prices are passed in via prop (server-fetched).
+  useEffect(() => {
+    if (variant !== "browse") return;
+    if (!card.externalId || fetchedRef.current) return;
+    const el = liRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting || fetchedRef.current) return;
+        fetchedRef.current = true;
+        observer.disconnect();
+        const url = `/api/card-prices/${encodeURIComponent(card.externalId!)}${card.legacyExternalId ? `?fallbackExternalId=${encodeURIComponent(card.legacyExternalId)}` : ""}`;
+        fetch(url)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (!data) return;
+            const price = extractPriceFromPricingResponse(data as { tcgplayer?: unknown; cardmarket?: unknown });
+            if (price !== null) setLazyPrice(price);
+          })
+          .catch(() => {});
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [variant, card.externalId, card.legacyExternalId]);
+
+  const unitPrice = variant === "browse" ? lazyPrice : unitPriceProp;
+
   return (
-    <li className="card-grid-item flex flex-col">
+    <li ref={liRef} className="card-grid-item flex flex-col">
       <div className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md">
         {variant === "collection" && (card.quantity ?? 1) > 1 ? (
           <span className="pointer-events-none absolute left-1 top-1 z-[5] rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">
@@ -894,8 +955,13 @@ const CardGridItem = memo(function CardGridItem({
           aria-label={`View ${card.set} ${card.filename}`}
         />
       </div>
+      {card.cardName ? (
+        <span className="mt-1 line-clamp-1 text-center text-[10px] font-medium text-[var(--foreground)]/80">
+          {card.cardName}
+        </span>
+      ) : null}
       {unitPrice !== null ? (
-        <span className="mt-1 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
+        <span className="mt-0.5 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
           {formatMoneyGbp(unitPrice)}
         </span>
       ) : null}
@@ -903,16 +969,21 @@ const CardGridItem = memo(function CardGridItem({
   );
 });
 
+const EMPTY_ARRAY: { id: string; name: string }[] = [];
+const EMPTY_WISHLIST: Record<string, string> = {};
+const EMPTY_COLLECTION: Record<string, CollectionLineSummary[]> = {};
+const EMPTY_PRICES: Record<string, number> = {};
+
 export function CardGrid({
   cards,
   setLogosByCode,
   setSymbolsByCode,
   variant = "browse",
   customerLoggedIn = false,
-  itemConditions = [],
-  wishlistEntryIdsByMasterCardId = {},
-  collectionLinesByMasterCardId = {},
-  cardPricesByMasterCardId = {},
+  itemConditions = EMPTY_ARRAY,
+  wishlistEntryIdsByMasterCardId = EMPTY_WISHLIST,
+  collectionLinesByMasterCardId = EMPTY_COLLECTION,
+  cardPricesByMasterCardId = EMPTY_PRICES,
 }: {
   cards: CardEntry[];
   setLogosByCode?: Record<string, string>;
@@ -2035,7 +2106,7 @@ export function CardGrid({
     <>
       <ul className="grid grid-cols-3 gap-2 md:grid-cols-5 md:gap-3 lg:grid-cols-7">
         {normalizedCards.map((card, index) => {
-          const showPrice = (variant === "collection" || variant === "wishlist") && card.masterCardId && cardPricesByMasterCardId[card.masterCardId] !== undefined;
+          const showPrice = card.masterCardId !== undefined && cardPricesByMasterCardId[card.masterCardId] !== undefined;
           const unitPrice = showPrice && card.masterCardId ? cardPricesByMasterCardId[card.masterCardId] : null;
           return (
             <CardGridItem

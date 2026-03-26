@@ -32,6 +32,7 @@ type CardsMobileControlsProps = {
   pokemonFilterOptions: PokemonFilterOption[];
   formAction?: string;
   extraHiddenInputs?: React.ReactNode;
+  showSetPokemonFilter?: boolean;
 };
 
 export function CardsMobileControls({
@@ -48,6 +49,7 @@ export function CardsMobileControls({
   pokemonFilterOptions,
   formAction = "/cards",
   extraHiddenInputs,
+  showSetPokemonFilter = true,
 }: CardsMobileControlsProps) {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
@@ -198,6 +200,7 @@ export function CardsMobileControls({
             excludeCommonUncommon={excludeCommonUncommon}
             activeCategory={activeCategory}
             onSelection={() => setIsFilterModalOpen(false)}
+            showSetPokemonFilter={showSetPokemonFilter}
           />
         </div>
       ) : null}
