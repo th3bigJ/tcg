@@ -22,6 +22,7 @@ import {
 } from "@/lib/expansionsPageQueries";
 import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 import { getCurrentCustomer } from "@/lib/auth";
+import { fetchCollectionCardEntries } from "@/lib/storefrontCardMaps";
 import type { StorefrontCardEntry } from "@/lib/storefrontCardMaps";
 
 function parseExcludeCommonUncommon(value: string | undefined): boolean {
@@ -107,7 +108,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     resolvedSearchParams.page,
   );
 
-  const [{ entries: cardsForGrid, totalDocs: filteredCount }, expansionRows] = await Promise.all([
+  const [{ entries: cardsForGrid, totalDocs: filteredCount }, expansionRows, collectionEntriesForModal] = await Promise.all([
     fetchMasterCardsPage({
       activeSet,
       activePokemonDex,
@@ -121,11 +122,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       perPage: requestedTake,
     }),
     getCachedExpansionSetRows(),
+    customer ? fetchCollectionCardEntries(customer.id) : Promise.resolve([] as StorefrontCardEntry[]),
   ]);
 
   const cardsForClient = cardsForGrid;
-
-  const collectionEntriesForModal: StorefrontCardEntry[] = [];
 
   // ── Sets tab ──────────────────────────────────────────────────────────────
   const expansionGroups = groupExpansionSetsBySeries(expansionRows);

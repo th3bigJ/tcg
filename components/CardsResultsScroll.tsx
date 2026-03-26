@@ -52,10 +52,15 @@ export function CardsResultsScroll({
     const sentinel = sentinelRef.current;
     if (!root || !sentinel) return;
 
+    // Small delay so the observer doesn't fire immediately on mount/tab-switch
+    // before the scroll container has settled.
+    let ready = false;
+    const readyTimer = setTimeout(() => { ready = true; }, 200);
+
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        if (!entry?.isIntersecting || loadMoreTriggeredRef.current) return;
+        if (!entry?.isIntersecting || loadMoreTriggeredRef.current || !ready) return;
 
         const now = Date.now();
         try {
@@ -97,7 +102,10 @@ export function CardsResultsScroll({
     );
 
     observer.observe(sentinel);
-    return () => observer.disconnect();
+    return () => {
+      clearTimeout(readyTimer);
+      observer.disconnect();
+    };
   }, [canLoadMore, loadMoreHref, scrollRestoreKey, router]);
 
   return (
