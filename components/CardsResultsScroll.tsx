@@ -121,7 +121,11 @@ export function CardsResultsScroll({
   return (
     <div
       ref={scrollRef}
-      className="scrollbar-hide min-h-0 overflow-y-auto lg:min-h-0 lg:flex-1"
+      className={
+        scrollsWindow
+          ? "min-h-0"
+          : "scrollbar-hide min-h-0 overflow-y-auto lg:min-h-0 lg:flex-1"
+      }
     >
       {children}
       {canLoadMore ? (
