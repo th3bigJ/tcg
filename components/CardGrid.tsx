@@ -112,7 +112,7 @@ function ModalCardPricing({
   onVariantsLoaded,
   onAdd,
   onWishlist,
-  wishlistFilled,
+  wishlistedVariant,
 }: {
   /** When set, pricing loads via indexed `catalog_card_pricing.master_card_id` (fast). */
   masterCardId?: string;
