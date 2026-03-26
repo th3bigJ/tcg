@@ -54,6 +54,7 @@ export default async function ExpansionSetCardsPage({
       activePokemonName: null,
       activeRarity: "",
       activeSearch: "",
+      activeArtist: "",
       excludeCommonUncommon: false,
       categoryQueryVariants: [],
       page: 1,

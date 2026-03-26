@@ -58,6 +58,7 @@ export default async function PokedexPokemonCardsPage({
       activePokemonName: pokemonMeta.name,
       activeRarity: "",
       activeSearch: "",
+      activeArtist: "",
       excludeCommonUncommon: false,
       categoryQueryVariants: [],
       page: 1,
