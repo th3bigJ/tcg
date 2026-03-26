@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     }, 8);
   }
 
-  // Stage 2: name only
+  // Stage 2: exact name string
   if (candidates.length === 0 && rawName) {
     candidates = await queryCards(payload, {
       and: [
@@ -97,9 +97,14 @@ export async function POST(request: Request) {
     }, 8);
   }
 
-  // Stage 3: tokenized fallback
+  // Stage 3: tokenized — try each word >= 4 chars individually, merge results.
+  // This handles noisy OCR where the name string itself won't match but individual
+  // words like "Pikachu" or "Dragonite" will.
   if (candidates.length === 0 && rawName) {
-    const tokens = rawName.split(/\s+/).filter((t) => t.length > 3);
+    const tokens = rawName
+      .split(/\s+/)
+      .map((t) => t.replace(/[^A-Za-zÀ-ÿ]/g, ""))
+      .filter((t) => t.length >= 4);
     const seen = new Set<string>();
     const merged: CardsPageCardEntry[] = [];
     for (const token of tokens) {

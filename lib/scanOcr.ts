@@ -9,102 +9,123 @@ const HP_RE = /HP\s*\d+/i;
 const ENERGY_CHAR_RE = /^[WFGLPSDRMC]$/;
 const BODY_TEXT_WORDS = /\b(ability|attack|evolves|trainer|item|supporter|stadium|rule|prize|damage|discard|energy|pokemon|knock|bench|active|shuffle|draw|search|reveal|hand|deck)\b/i;
 
-/**
- * Draws the image onto a canvas, converts to greyscale, and applies contrast
- * stretching to make text stand out against foil/holographic backgrounds.
- * Returns a Blob the OCR engine can consume.
- */
-async function preprocessImage(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file);
+/** Upscale factor applied to cropped strips before Tesseract — bigger = more detail. */
+const STRIP_UPSCALE = 3;
 
-  // Scale down if very large — Tesseract works well at ~1500px wide
-  const MAX_DIM = 1500;
-  const scale = Math.min(1, MAX_DIM / Math.max(bitmap.width, bitmap.height));
-  const w = Math.round(bitmap.width * scale);
-  const h = Math.round(bitmap.height * scale);
+/**
+ * Crop a horizontal strip of the image, upscale it, convert to greyscale,
+ * apply contrast stretching and an S-curve, then return as a PNG blob.
+ * @param bitmap  Source image
+ * @param yStart  Fraction of image height where the strip starts (0–1)
+ * @param yEnd    Fraction of image height where the strip ends (0–1)
+ */
+function processStrip(bitmap: ImageBitmap, yStart: number, yEnd: number): Promise<Blob> {
+  const srcY = Math.round(bitmap.height * yStart);
+  const srcH = Math.round(bitmap.height * (yEnd - yStart));
+  const srcW = bitmap.width;
+
+  const outW = srcW * STRIP_UPSCALE;
+  const outH = srcH * STRIP_UPSCALE;
 
   const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = outW;
+  canvas.height = outH;
   const ctx = canvas.getContext("2d")!;
 
-  ctx.drawImage(bitmap, 0, 0, w, h);
+  // Draw just the strip, upscaled
+  ctx.drawImage(bitmap, 0, srcY, srcW, srcH, 0, 0, outW, outH);
 
-  const imageData = ctx.getImageData(0, 0, w, h);
+  const imageData = ctx.getImageData(0, 0, outW, outH);
   const data = imageData.data;
 
-  // Convert to greyscale
+  // Greyscale
   for (let i = 0; i < data.length; i += 4) {
-    const grey = 0.299 * data[i]! + 0.587 * data[i + 1]! + 0.114 * data[i + 2]!;
-    data[i] = data[i + 1] = data[i + 2] = grey;
+    const g = 0.299 * data[i]! + 0.587 * data[i + 1]! + 0.114 * data[i + 2]!;
+    data[i] = data[i + 1] = data[i + 2] = g;
   }
 
-  // Find min/max for contrast stretching
+  // Contrast stretch
   let min = 255, max = 0;
   for (let i = 0; i < data.length; i += 4) {
-    const v = data[i]!;
-    if (v < min) min = v;
-    if (v > max) max = v;
+    if (data[i]! < min) min = data[i]!;
+    if (data[i]! > max) max = data[i]!;
   }
   const range = max - min || 1;
-
-  // Stretch contrast + apply sharpening-like boost around midpoint
   for (let i = 0; i < data.length; i += 4) {
-    // Contrast stretch
-    let v = ((data[i]! - min) / range) * 255;
-    // S-curve: push darks darker, lights lighter — improves text/background separation
-    v = 255 / (1 + Math.exp(-0.05 * (v - 128)));
-    data[i] = data[i + 1] = data[i + 2] = Math.round(v);
+    // Stretch then S-curve
+    const stretched = ((data[i]! - min) / range) * 255;
+    const curved = 255 / (1 + Math.exp(-0.06 * (stretched - 128)));
+    data[i] = data[i + 1] = data[i + 2] = Math.round(curved);
   }
 
   ctx.putImageData(imageData, 0, 0);
 
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error("canvas.toBlob failed"));
-    }, "image/png");
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/png");
   });
+}
+
+async function runTesseract(blob: Blob): Promise<string> {
+  const { createWorker } = await import("tesseract.js");
+  const worker = await createWorker("eng");
+  try {
+    await worker.setParameters({
+      // Restrict to printable ASCII + common accented chars to cut garbage symbols
+      tessedit_char_whitelist:
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,'-/éàèùâêîôûëïüçæœ",
+      preserve_interword_spaces: "1",
+    });
+    const result = await worker.recognize(blob);
+    return result.data.text;
+  } finally {
+    await worker.terminate();
+  }
+}
+
+/**
+ * From a noisy OCR line, extract the longest word or phrase that looks like
+ * a real card name token — filters single chars, pure numbers, and noise words.
+ */
+function extractBestNameFromLine(line: string): string {
+  return line
+    .replace(CARD_NUMBER_RE, "")
+    .replace(HP_RE, "")
+    .replace(/\bSTAGE\s*\d+\b/i, "")
+    .replace(/\bBASIC\b/i, "")
+    .replace(/\bTERA\b/i, "")
+    // Keep words that are at least 3 chars and not pure noise
+    .split(/\s+/)
+    .filter((w) => w.length >= 3 && !/^\d+$/.test(w) && !ENERGY_CHAR_RE.test(w))
+    .join(" ")
+    .trim();
 }
 
 function parseOcrText(raw: string): { cardName: string; cardNumber: string } {
   const numberMatch = raw.match(CARD_NUMBER_RE);
   const cardNumber = numberMatch ? numberMatch[0] : "";
 
-  const lines = raw.split(/[\n\r]+/).map((l) => l.trim());
+  const lines = raw.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
 
   // Strategy 1: line immediately before the HP line
   const hpIdx = lines.findIndex((l) => HP_RE.test(l));
   if (hpIdx > 0) {
     for (let i = hpIdx - 1; i >= 0; i--) {
-      const candidate = lines[i]!
-        .replace(CARD_NUMBER_RE, "")
-        .replace(/\bSTAGE\s*\d+\b/i, "")
-        .replace(/\bBASIC\b/i, "")
-        .trim();
-      if (
-        candidate.length > 2 &&
-        !ENERGY_CHAR_RE.test(candidate) &&
-        !/^\d+$/.test(candidate) &&
-        !BODY_TEXT_WORDS.test(candidate)
-      ) {
+      const candidate = extractBestNameFromLine(lines[i]!);
+      if (candidate.length > 2 && !BODY_TEXT_WORDS.test(candidate)) {
         return { cardName: candidate.replace(/\s+/g, " "), cardNumber };
       }
     }
   }
 
-  // Strategy 2: first non-noise line
-  const candidates = lines
-    .map((l) => l.replace(CARD_NUMBER_RE, "").replace(HP_RE, "").trim())
-    .filter(
-      (l) =>
-        l.length > 2 &&
-        !ENERGY_CHAR_RE.test(l) &&
-        !/^\d+$/.test(l) &&
-        !BODY_TEXT_WORDS.test(l),
-    );
+  // Strategy 2: first non-noise line with at least one word >= 4 chars
+  for (const line of lines) {
+    const candidate = extractBestNameFromLine(line);
+    if (candidate.length > 2 && !BODY_TEXT_WORDS.test(candidate)) {
+      return { cardName: candidate.replace(/\s+/g, " "), cardNumber };
+    }
+  }
 
-  return { cardName: candidates[0]?.replace(/\s+/g, " ") ?? "", cardNumber };
+  return { cardName: "", cardNumber };
 }
 
 export async function extractCardTextFromImage(file: File): Promise<OcrResult> {
@@ -123,26 +144,22 @@ export async function extractCardTextFromImage(file: File): Promise<OcrResult> {
     }
   }
 
-  // Tesseract fallback with image preprocessing
+  // Tesseract fallback — run on targeted strips rather than the full card image.
+  // Pokemon cards have a predictable layout:
+  //   top 0–18%:  card name (+ stage/HP line)
+  //   bottom 88–96%: card number (e.g. 295/217)
+  // Cropping + upscaling these thin bands massively improves accuracy on foil cards.
   if (!rawText) {
-    const processed = await preprocessImage(file);
-    const { createWorker } = await import("tesseract.js");
-    const worker = await createWorker("eng", 1, {
-      workerPath: "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js",
-      langPath: "https://tessdata.projectnaptha.com/4.0.0",
-      corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core-simd-lstm.wasm.js",
-    });
-    try {
-      await worker.setParameters({
-        tessedit_char_whitelist:
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,'-/éàèùâêîôûëïüçæœ",
-        preserve_interword_spaces: "1",
-      });
-      const result = await worker.recognize(processed);
-      rawText = result.data.text;
-    } finally {
-      await worker.terminate();
-    }
+    const bitmap = await createImageBitmap(file);
+    const [nameStrip, numberStrip] = await Promise.all([
+      processStrip(bitmap, 0, 0.20),   // name + HP line (top 20%)
+      processStrip(bitmap, 0.84, 1.0), // card number area (bottom 16%)
+    ]);
+    const [nameText, numberText] = await Promise.all([
+      runTesseract(nameStrip),
+      runTesseract(numberStrip),
+    ]);
+    rawText = nameText + "\n" + numberText;
   }
 
   const { cardName, cardNumber } = parseOcrText(rawText);
