@@ -236,8 +236,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <SearchTabSwipeContainer activeTab={activeTab}>
       {/* ── All Cards tab ── */}
       {activeTab === "cards" && (
-        <main className="min-h-0 w-full flex-1 overflow-hidden px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-          <div className="grid h-full min-h-0 items-stretch gap-4 lg:grid-cols-[20%_minmax(0,1fr)] lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+          <div className="grid min-h-0 flex-1 items-stretch gap-4 overflow-hidden lg:grid-cols-[20%_minmax(0,1fr)] lg:flex-1 lg:min-h-0 lg:overflow-hidden">
             <aside className="hidden min-h-0 h-full flex-col overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2 lg:flex lg:min-h-0">
               <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold">Filters</h2>
@@ -267,7 +267,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 />
               </div>
             </aside>
-            <section className="flex min-h-0 flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:pr-1">
+            <section className="flex min-h-0 flex-1 flex-col overflow-hidden lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:pr-1">
               <CardsMobileControls
                 activeSet={activeSet}
                 activePokemon={activePokemon}
