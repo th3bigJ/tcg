@@ -120,7 +120,26 @@ Logic:
 
 The effective price used at checkout = `manualPrice` if `pricingMode = manual`, else `autoPrice`.
 
-### 1.7 — SKU Generation
+### 1.7 — New Payload Collection: `StockTransactions`
+
+Append-only audit log of every stock movement. `stockQty` on `Inventory` remains the source of truth for reads — transactions are the receipt, not the ledger. Both are always written together.
+
+| Field | Type | Notes |
+|---|---|---|
+| `inventoryItem` | relationship → inventory | required |
+| `type` | select | `initial`, `sold`, `returned`, `manual_adjustment`, `reserved`, `released` |
+| `qty` | number | positive = stock added, negative = stock removed |
+| `order` | relationship → orders | nullable, set for `sold` and `returned` types |
+| `note` | textarea | required for `manual_adjustment`, optional otherwise |
+| `createdBy` | relationship → users | Payload admin user who triggered it, if manual |
+| `createdAt` | timestamp | auto-set, never editable |
+
+**Rules:**
+- Records are never edited or deleted — admin corrections are a new `manual_adjustment` row
+- Written automatically by hooks whenever `stockQty` changes on `Inventory`
+- Admin can view the full transaction history for any item in Payload
+
+### 1.8 — SKU Generation
 
 Auto-generated in a `beforeChange` hook on `Inventory`:
 - Cards: `CARD-XXXXX` (zero-padded 5-digit sequential number)
@@ -243,9 +262,10 @@ Events handled:
 
 | Event | Action |
 |---|---|
-| `checkout.session.completed` | Mark Order `paid`, decrement `stockQty` on each Inventory item/variant, set item `status: sold` if qty reaches 0, send confirmation email |
-| `payment_intent.payment_failed` | Mark Order `cancelled`, restore any reserved stock |
-| `charge.refunded` | (Phase 6) Hook for returns workflow |
+| `checkout.session.completed` | Mark Order `paid`, decrement `stockQty` on each Inventory item/variant, write `sold` StockTransaction per item, set item `status: sold` if qty reaches 0, send confirmation email |
+| `checkout.session.expired` | Mark Order `cancelled`, restore `stockQty`, write `released` StockTransaction per item |
+| `payment_intent.payment_failed` | Mark Order `cancelled`, restore `stockQty`, write `released` StockTransaction per item |
+| `charge.refunded` | (Phase 6) Increment `stockQty`, write `returned` StockTransaction linked to Order |
 
 Stripe webhook signature verified on every request using `STRIPE_WEBHOOK_SECRET`.
 
@@ -253,11 +273,12 @@ Stripe webhook signature verified on every request using `STRIPE_WEBHOOK_SECRET`
 
 **Approach: decrement on session creation, restore on failure/expiry.**
 
-- When Stripe session is created: decrement `stockQty` on each item
-- If `checkout.session.expired` fires (Stripe sends this after session timeout): restore stock, mark Order `cancelled`
-- If payment fails: restore stock, mark Order `cancelled`
+- When Stripe session is created: decrement `stockQty` + write `reserved` StockTransaction per item
+- If `checkout.session.expired`: restore `stockQty` + write `released` StockTransaction, mark Order `cancelled`
+- If payment fails: restore `stockQty` + write `released` StockTransaction, mark Order `cancelled`
+- If payment succeeds: write `sold` StockTransaction (the `reserved` + `sold` pair gives full traceability)
 
-Simple and sufficient for low-concurrency launch volume. Can migrate to a reservation + TTL model later if oversell becomes an issue.
+Every stock movement has a corresponding transaction row — if `stockQty` ever looks wrong, the transaction log shows exactly what happened and when.
 
 ---
 
@@ -307,16 +328,22 @@ Admin opens Payload → reviews drafts → flips status to for_sale if needed
 Customer browses /shop → adds items to basket (localStorage)
   └─ POST /api/shop/checkout
        └─ validate stock
-            └─ decrement stockQty
+            └─ decrement stockQty + write reserved StockTransaction per item
                  └─ create Order { status: pending_payment }
                       └─ create Stripe Checkout Session
                            └─ redirect to Stripe
 
+Stripe session expires / payment fails
+  └─ POST /api/webhooks/stripe
+       └─ restore stockQty + write released StockTransaction per item
+            └─ Order → cancelled
+
 Customer pays
   └─ POST /api/webhooks/stripe (checkout.session.completed)
        └─ Order → paid
-            └─ items at qty 0 → status: sold
-                 └─ send confirmation email (Phase 5)
+            └─ write sold StockTransaction per item
+                 └─ items at qty 0 → status: sold
+                      └─ send confirmation email (Phase 5)
 
 Customer views order history at /account/orders (Phase 6)
 ```
@@ -327,7 +354,7 @@ Customer views order history at /account/orders (Phase 6)
 
 | Phase | Scope | Depends On |
 |---|---|---|
-| 1 | Inventory collection, storeEnabled flag, collection hook, auto-price hook, SKU generation | — |
+| 1 | Inventory collection, StockTransactions collection, storeEnabled flag, collection hook, auto-price hook, SKU generation | — |
 | 2 | PostageTiers collection, weight fields | Phase 1 |
 | 3 | Shop UI, basket, Orders collection, checkout API (mock Stripe) | Phase 1, 2 |
 | 4 | Stripe integration, webhook handler, stock decrement | Phase 3 |
@@ -345,7 +372,7 @@ Customer views order history at /account/orders (Phase 6)
 | Card images in shop | Use existing MasterCardList images; Inventory-level image uploads for graded/sealed/products |
 | Authentication at checkout | Logged-in accounts only at launch |
 | Email provider | TBD — Resend recommended |
-| Stock reservation | Decrement on session creation, restore on failure/expiry |
+| Stock reservation | Decrement on session creation, restore on failure/expiry. All movements logged to StockTransactions |
 | Multiple admin accounts | All team members get Payload Users accounts with equal admin permissions |
 
 ---
