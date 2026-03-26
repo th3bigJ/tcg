@@ -126,6 +126,7 @@ export default async function CollectPage() {
             wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
             collectionLinesByMasterCardId={collectionLinesByMasterCardId}
             cardPricesByMasterCardId={cardPricesByMasterCardId}
+            groupBySet
           />
         </div>
       )}

@@ -118,6 +118,7 @@ export default async function CollectionPage() {
             itemConditions={itemConditions}
             wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
             collectionLinesByMasterCardId={collectionLinesByMasterCardId}
+            groupBySet
           />
         </div>
       )}

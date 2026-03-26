@@ -31,15 +31,18 @@ export async function GET(request: NextRequest) {
       depth: 0,
       limit: 2000,
       overrideAccess: true,
-      select: { masterCard: true },
+      select: { masterCard: true, targetPrinting: true },
     }),
   ]);
 
-  const wishlistMap: Record<string, string> = {};
+  const wishlistMap: Record<string, { id: string; printing?: string }> = {};
   for (const doc of wishlistResult.docs) {
     const wid = getRelationshipDocumentId((doc as { id?: unknown }).id);
     const mid = getRelationshipDocumentId((doc as { masterCard?: unknown }).masterCard);
-    if (wid && mid && wishlistMap[mid] === undefined) wishlistMap[mid] = wid;
+    const printing = (doc as { targetPrinting?: unknown }).targetPrinting;
+    if (wid && mid && wishlistMap[mid] === undefined) {
+      wishlistMap[mid] = { id: wid, printing: typeof printing === "string" ? printing : undefined };
+    }
   }
 
   const collectionLines = groupCollectionLinesByMasterCardId(collectionEntries);

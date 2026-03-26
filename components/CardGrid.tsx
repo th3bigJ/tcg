@@ -123,7 +123,8 @@ function ModalCardPricing({
   onVariantsLoaded?: (variants: string[]) => void;
   onAdd?: (variant: string) => void;
   onWishlist?: (variant: string) => void;
-  wishlistFilled?: boolean;
+  /** The specific variant key that is currently wishlisted, or null/undefined if none. */
+  wishlistedVariant?: string | null;
 }) {
   const mid = masterCardId?.trim() ?? "";
   const ext = externalId?.trim() ?? "";
@@ -246,61 +247,64 @@ function ModalCardPricing({
       <h4 className="text-sm font-bold tracking-tight text-white">Market prices</h4>
       <div className="flex flex-col gap-2">
         {showDexRows
-          ? variantRows.map(({ key, raw, psa10 }) => (
-              <div
-                key={key}
-                className="flex min-h-[52px] items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3"
-              >
-                <span className="shrink-0 text-sm font-medium text-white">
-                  {variantLabel(key)}
-                </span>
-                <div className="flex flex-1 items-center justify-evenly">
-                  <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">Raw</span>
-                    <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(raw)}</span>
-                  </div>
-                  {psa10 !== null ? (
+          ? variantRows.map(({ key, raw, psa10 }) => {
+              const isFilled = wishlistedVariant === key;
+              return (
+                <div
+                  key={key}
+                  className="flex min-h-[52px] items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3"
+                >
+                  <span className="shrink-0 text-sm font-medium text-white">
+                    {variantLabel(key)}
+                  </span>
+                  <div className="flex flex-1 items-center justify-evenly">
                     <div className="flex flex-col items-center">
-                      <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">PSA 10</span>
-                      <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(psa10)}</span>
+                      <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">Raw</span>
+                      <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(raw)}</span>
                     </div>
+                    {psa10 !== null ? (
+                      <div className="flex flex-col items-center">
+                        <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">PSA 10</span>
+                        <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(psa10)}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                  {onAdd ? (
+                    <button
+                      type="button"
+                      onClick={() => onAdd(key)}
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold text-white transition hover:bg-white/20"
+                      aria-label={`Add ${variantLabel(key)} to collection`}
+                    >
+                      +
+                    </button>
+                  ) : null}
+                  {onWishlist ? (
+                    <button
+                      type="button"
+                      onClick={() => onWishlist(key)}
+                      className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${isFilled ? "" : "text-white"}`}
+                      aria-label={isFilled ? "Remove from wishlist" : `Add ${variantLabel(key)} to wishlist`}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill={isFilled ? "currentColor" : "none"}
+                        stroke={isFilled ? "none" : "currentColor"}
+                        strokeWidth={isFilled ? undefined : 2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={isFilled ? "text-red-500" : "text-white"}
+                        aria-hidden
+                      >
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
+                      </svg>
+                    </button>
                   ) : null}
                 </div>
-                {onAdd ? (
-                  <button
-                    type="button"
-                    onClick={() => onAdd(key)}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold text-white transition hover:bg-white/20"
-                    aria-label={`Add ${variantLabel(key)} to collection`}
-                  >
-                    +
-                  </button>
-                ) : null}
-                {onWishlist ? (
-                  <button
-                    type="button"
-                    onClick={() => onWishlist(key)}
-                    className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${wishlistFilled ? "" : "text-white"}`}
-                    aria-label={wishlistFilled ? "Remove from wishlist" : `Add ${variantLabel(key)} to wishlist`}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill={wishlistFilled ? "currentColor" : "none"}
-                      stroke={wishlistFilled ? "none" : "currentColor"}
-                      strokeWidth={wishlistFilled ? undefined : 2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={wishlistFilled ? "text-red-500" : "text-white"}
-                      aria-hidden
-                    >
-                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
-                    </svg>
-                  </button>
-                ) : null}
-              </div>
-            ))
+              );
+            })
           : null}
         {ebayUrl ? (
           <a
@@ -970,7 +974,7 @@ const CardGridItem = memo(function CardGridItem({
 });
 
 const EMPTY_ARRAY: { id: string; name: string }[] = [];
-const EMPTY_WISHLIST: Record<string, string> = {};
+const EMPTY_WISHLIST: Record<string, { id: string; printing?: string }> = {};
 const EMPTY_COLLECTION: Record<string, CollectionLineSummary[]> = {};
 const EMPTY_PRICES: Record<string, number> = {};
 
@@ -984,6 +988,7 @@ export function CardGrid({
   wishlistEntryIdsByMasterCardId = EMPTY_WISHLIST,
   collectionLinesByMasterCardId = EMPTY_COLLECTION,
   cardPricesByMasterCardId = EMPTY_PRICES,
+  groupBySet = false,
 }: {
   cards: CardEntry[];
   setLogosByCode?: Record<string, string>;
@@ -991,9 +996,10 @@ export function CardGrid({
   variant?: "browse" | "collection" | "wishlist";
   customerLoggedIn?: boolean;
   itemConditions?: { id: string; name: string }[];
-  wishlistEntryIdsByMasterCardId?: Record<string, string>;
+  wishlistEntryIdsByMasterCardId?: Record<string, { id: string; printing?: string }>;
   collectionLinesByMasterCardId?: Record<string, CollectionLineSummary[]>;
   cardPricesByMasterCardId?: Record<string, number>;
+  groupBySet?: boolean;
 }) {
   const router = useRouter();
   const [localWishlistMap, setLocalWishlistMap] = useState(wishlistEntryIdsByMasterCardId);
@@ -1257,12 +1263,12 @@ export function CardGrid({
       return;
     }
     const mid = selectedCard.masterCardId;
-    const existingId = localWishlistMap[mid];
-    if (existingId) {
+    const existing = localWishlistMap[mid];
+    if (existing) {
       // Already wishlisted — remove immediately
       setWishPending(true);
       try {
-        const res = await fetch(`/api/wishlist?id=${encodeURIComponent(existingId)}`, {
+        const res = await fetch(`/api/wishlist?id=${encodeURIComponent(existing.id)}`, {
           method: "DELETE",
         });
         if (res.ok) {
@@ -1292,7 +1298,7 @@ export function CardGrid({
           let j: { doc?: { id?: string | number } };
           try { j = (await res.json()) as { doc?: { id?: string | number } }; } catch { j = {}; }
           const wid = j.doc?.id;
-          if (wid !== undefined) setLocalWishlistMap((m) => ({ ...m, [mid]: String(wid) }));
+          if (wid !== undefined) setLocalWishlistMap((m) => ({ ...m, [mid]: { id: String(wid), printing: variant } }));
           if (variant !== "browse") router.refresh();
         }
       } catch {
@@ -1329,7 +1335,7 @@ export function CardGrid({
         }
         const wid = j.doc?.id;
         if (wid !== undefined) {
-          setLocalWishlistMap((m) => ({ ...m, [mid]: String(wid) }));
+          setLocalWishlistMap((m) => ({ ...m, [mid]: { id: String(wid), printing: wishVariant || undefined } }));
         }
         if (variant !== "browse") router.refresh();
       }
@@ -1778,7 +1784,7 @@ export function CardGrid({
                 onVariantsLoaded={setPricingVariants}
                 onAdd={selectedCard.masterCardId && customerLoggedIn !== false ? (v) => onOpenAddSheet(v) : undefined}
                 onWishlist={selectedCard.masterCardId ? (v) => void toggleWishlist(v) : undefined}
-                wishlistFilled={Boolean(selectedCard.masterCardId && localWishlistMap[selectedCard.masterCardId])}
+                wishlistedVariant={selectedCard.masterCardId ? (localWishlistMap[selectedCard.masterCardId]?.printing ?? null) : null}
                 ebayCardContext={{
                   setName: selectedCard.setName,
                   setSlug: selectedCard.setSlug,
@@ -2102,24 +2108,105 @@ export function CardGrid({
       document.body,
     );
 
-  return (
-    <>
-      <ul className="grid grid-cols-3 gap-2 md:grid-cols-5 md:gap-3 lg:grid-cols-7">
-        {normalizedCards.map((card, index) => {
-          const showPrice = card.masterCardId !== undefined && cardPricesByMasterCardId[card.masterCardId] !== undefined;
-          const unitPrice = showPrice && card.masterCardId ? cardPricesByMasterCardId[card.masterCardId] : null;
+  const gridContent = (() => {
+    if (!groupBySet) {
+      return (
+        <ul className="grid grid-cols-3 gap-2 md:grid-cols-5 md:gap-3 lg:grid-cols-7">
+          {normalizedCards.map((card, index) => {
+            const showPrice = card.masterCardId !== undefined && cardPricesByMasterCardId[card.masterCardId] !== undefined;
+            const unitPrice = showPrice && card.masterCardId ? cardPricesByMasterCardId[card.masterCardId] : null;
+            return (
+              <CardGridItem
+                key={card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
+                card={card}
+                index={index}
+                variant={variant}
+                unitPrice={unitPrice ?? null}
+                onOpen={openModal}
+              />
+            );
+          })}
+        </ul>
+      );
+    }
+
+    // Group cards by set code, preserving order of first appearance, tracking global index
+    type GroupEntry = { card: CardEntry; globalIndex: number };
+    const groupOrder: string[] = [];
+    const groupMap: Record<string, GroupEntry[]> = {};
+    normalizedCards.forEach((card, globalIndex) => {
+      const code = card.set;
+      if (!groupMap[code]) {
+        groupOrder.push(code);
+        groupMap[code] = [];
+      }
+      groupMap[code].push({ card, globalIndex });
+    });
+
+    return (
+      <div className="flex flex-col gap-6">
+        {groupOrder.map((setCode) => {
+          const groupEntries = groupMap[setCode];
+          const firstCard = groupEntries[0]?.card;
+          const setName = firstCard?.setName || setCode;
+          const logoSrc = setLogosByCode?.[setCode] ?? firstCard?.setLogoSrc ?? "";
+          let groupValue = 0;
+          for (const { card } of groupEntries) {
+            if (card.masterCardId && cardPricesByMasterCardId[card.masterCardId] !== undefined) {
+              groupValue += cardPricesByMasterCardId[card.masterCardId];
+            }
+          }
+          const groupValueFormatted = groupValue > 0
+            ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(groupValue)
+            : null;
+
           return (
-            <CardGridItem
-              key={card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
-              card={card}
-              index={index}
-              variant={variant}
-              unitPrice={unitPrice ?? null}
-              onOpen={openModal}
-            />
+            <section key={setCode}>
+              <div className="mb-3 flex items-center gap-2.5">
+                {logoSrc ? (
+                  <img
+                    src={logoSrc}
+                    alt=""
+                    className="h-7 w-auto max-w-[80px] shrink-0 object-contain object-left"
+                  />
+                ) : (
+                  <span className="text-sm font-semibold text-[var(--foreground)]">{setName}</span>
+                )}
+                {logoSrc ? (
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--foreground)]/70">{setName}</span>
+                ) : null}
+                {groupValueFormatted ? (
+                  <span className="ml-auto shrink-0 text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                    {groupValueFormatted}
+                  </span>
+                ) : null}
+              </div>
+              <ul className="grid grid-cols-3 gap-2 md:grid-cols-5 md:gap-3 lg:grid-cols-7">
+                {groupEntries.map(({ card, globalIndex }) => {
+                  const showPrice = card.masterCardId !== undefined && cardPricesByMasterCardId[card.masterCardId] !== undefined;
+                  const unitPrice = showPrice && card.masterCardId ? cardPricesByMasterCardId[card.masterCardId] : null;
+                  return (
+                    <CardGridItem
+                      key={card.masterCardId ?? `${card.set}/${card.filename}/${globalIndex}`}
+                      card={card}
+                      index={globalIndex}
+                      variant={variant}
+                      unitPrice={unitPrice ?? null}
+                      onOpen={openModal}
+                    />
+                  );
+                })}
+              </ul>
+            </section>
           );
         })}
-      </ul>
+      </div>
+    );
+  })();
+
+  return (
+    <>
+      {gridContent}
       {modal && createPortal(modal, document.body)}
       {addSheet}
       {wishSheet}

@@ -141,6 +141,7 @@ export default async function WishlistPage() {
             wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
             collectionLinesByMasterCardId={collectionLinesByMasterCardId}
             cardPricesByMasterCardId={cardPricesByMasterCardId}
+            groupBySet
           />
         </div>
       )}

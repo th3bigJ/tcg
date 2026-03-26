@@ -7,7 +7,7 @@ import type { CollectionLineSummary } from "@/lib/storefrontCardMaps";
 
 type SearchCardData = {
   itemConditions: { id: string; name: string }[];
-  wishlistMap: Record<string, string>;
+  wishlistMap: Record<string, { id: string; printing?: string }>;
   collectionLines: Record<string, CollectionLineSummary[]>;
 };
 

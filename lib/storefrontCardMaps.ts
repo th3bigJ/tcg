@@ -224,7 +224,7 @@ export async function fetchWishlistCardEntries(
 
 export async function fetchWishlistIdsByMasterCard(
   customerPayloadId: string,
-): Promise<Record<string, string>> {
+): Promise<Record<string, { id: string; printing?: string }>> {
   const payload = await getPayload({ config });
   const customerRelId = toPayloadRelationshipId(customerPayloadId) ?? customerPayloadId;
   const result = await payload.find({
@@ -235,14 +235,18 @@ export async function fetchWishlistIdsByMasterCard(
     overrideAccess: true,
     select: {
       masterCard: true,
+      targetPrinting: true,
     },
   });
 
-  const map: Record<string, string> = {};
+  const map: Record<string, { id: string; printing?: string }> = {};
   for (const doc of result.docs) {
     const wid = getRelationshipDocumentId((doc as { id?: unknown }).id);
     const mid = getRelationshipDocumentId((doc as { masterCard?: unknown }).masterCard);
-    if (wid && mid && map[mid] === undefined) map[mid] = wid;
+    const printing = (doc as { targetPrinting?: unknown }).targetPrinting;
+    if (wid && mid && map[mid] === undefined) {
+      map[mid] = { id: wid, printing: typeof printing === "string" ? printing : undefined };
+    }
   }
   return map;
 }
