@@ -240,7 +240,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </div>
 
-      <SearchTabSwipeContainer activeTab={activeTab}>
+      <SearchTabSwipeContainer activeTab={activeTab} swipeEnabled={false}>
       {/* ── All Cards tab ── */}
       {activeTab === "cards" && (
         <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">

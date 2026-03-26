@@ -16,9 +16,11 @@ const SLIDE_DURATION = 180;
 export function SearchTabSwipeContainer({
   activeTab,
   children,
+  swipeEnabled = true,
 }: {
   activeTab: Tab;
   children: ReactNode;
+  swipeEnabled?: boolean;
 }) {
   const router = useRouter();
   const touchStartX = useRef<number | null>(null);
@@ -48,50 +50,65 @@ export function SearchTabSwipeContainer({
       ref={containerRef}
       className="flex min-h-0 flex-1 flex-col overflow-hidden"
       style={{
-        transform: translateX !== 0 ? `translateX(${translateX}px)` : undefined,
-        transition: animating ? `transform ${SLIDE_DURATION}ms ease-in` : undefined,
-        opacity: animating ? 0.6 : 1,
+        transform:
+          swipeEnabled && translateX !== 0 ? `translateX(${translateX}px)` : undefined,
+        transition:
+          swipeEnabled && animating ? `transform ${SLIDE_DURATION}ms ease-in` : undefined,
+        opacity: swipeEnabled && animating ? 0.6 : 1,
       }}
-      onTouchStart={(e) => {
-        if (animating) return;
-        touchStartX.current = e.touches[0].clientX;
-        touchStartY.current = e.touches[0].clientY;
-      }}
-      onTouchMove={(e) => {
-        if (animating || touchStartX.current === null || touchStartY.current === null) return;
-        const dx = e.touches[0].clientX - touchStartX.current;
-        const dy = e.touches[0].clientY - touchStartY.current;
-        // Only track horizontal swipes
-        if (Math.abs(dy) > MAX_SWIPE_Y) return;
-        // Clamp follow — only move if there's a valid tab to go to
-        const canGoLeft = dx < 0 && tabIndex < TABS.length - 1;
-        const canGoRight = dx > 0 && tabIndex > 0;
-        if (!canGoLeft && !canGoRight) return;
-        // Rubber-band resistance: follow at half speed, capped
-        const clamped = Math.max(-60, Math.min(60, dx * 0.4));
-        setTranslateX(clamped);
-      }}
-      onTouchEnd={(e) => {
-        if (touchStartX.current === null || touchStartY.current === null) return;
-        const dx = e.changedTouches[0].clientX - touchStartX.current;
-        const dy = e.changedTouches[0].clientY - touchStartY.current;
-        touchStartX.current = null;
-        touchStartY.current = null;
+      onTouchStart={
+        swipeEnabled
+          ? (e) => {
+              if (animating) return;
+              touchStartX.current = e.touches[0].clientX;
+              touchStartY.current = e.touches[0].clientY;
+            }
+          : undefined
+      }
+      onTouchMove={
+        swipeEnabled
+          ? (e) => {
+              if (animating || touchStartX.current === null || touchStartY.current === null)
+                return;
+              const dx = e.touches[0].clientX - touchStartX.current;
+              const dy = e.touches[0].clientY - touchStartY.current;
+              // Only track horizontal swipes
+              if (Math.abs(dy) > MAX_SWIPE_Y) return;
+              // Clamp follow — only move if there's a valid tab to go to
+              const canGoLeft = dx < 0 && tabIndex < TABS.length - 1;
+              const canGoRight = dx > 0 && tabIndex > 0;
+              if (!canGoLeft && !canGoRight) return;
+              // Rubber-band resistance: follow at half speed, capped
+              const clamped = Math.max(-60, Math.min(60, dx * 0.4));
+              setTranslateX(clamped);
+            }
+          : undefined
+      }
+      onTouchEnd={
+        swipeEnabled
+          ? (e) => {
+              if (touchStartX.current === null || touchStartY.current === null) return;
+              const dx = e.changedTouches[0].clientX - touchStartX.current;
+              const dy = e.changedTouches[0].clientY - touchStartY.current;
+              touchStartX.current = null;
+              touchStartY.current = null;
 
-        if (Math.abs(dx) < MIN_SWIPE_X || Math.abs(dy) > MAX_SWIPE_Y) {
-          // Snap back if swipe didn't qualify
-          setTranslateX(0);
-          return;
-        }
+              if (Math.abs(dx) < MIN_SWIPE_X || Math.abs(dy) > MAX_SWIPE_Y) {
+                // Snap back if swipe didn't qualify
+                setTranslateX(0);
+                return;
+              }
 
-        if (dx < 0 && tabIndex < TABS.length - 1) {
-          navigateTo(TABS[tabIndex + 1], "left");
-        } else if (dx > 0 && tabIndex > 0) {
-          navigateTo(TABS[tabIndex - 1], "right");
-        } else {
-          setTranslateX(0);
-        }
-      }}
+              if (dx < 0 && tabIndex < TABS.length - 1) {
+                navigateTo(TABS[tabIndex + 1], "left");
+              } else if (dx > 0 && tabIndex > 0) {
+                navigateTo(TABS[tabIndex - 1], "right");
+              } else {
+                setTranslateX(0);
+              }
+            }
+          : undefined
+      }
     >
       {children}
     </div>

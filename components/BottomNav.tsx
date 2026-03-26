@@ -135,7 +135,7 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
       {
         href: "/search",
         label: "Search",
-        match: (p) => p === "/search" || p.startsWith("/search?") || p.startsWith("/pokedex") || p.startsWith("/expansions"),
+        match: (p) => p === "/search" || p.startsWith("/search?") || p.startsWith("/pokedex") || p.startsWith("/expansions") || p.startsWith("/scan"),
       },
       {
         href: "/collect",
