@@ -243,6 +243,16 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
+                formAction="/cards"
+                activeSearch={activeSearch}
+                activeSet={activeSet}
+                activePokemon={activePokemon}
+                activeRarity={activeRarity}
+                activeCategory={activeCategory}
+                excludeCommonUncommon={excludeCommonUncommon}
+                rarityOptions={rarityOptions}
+                categoryOptions={categoryOptions}
+                resetHref={resetFiltersHref}
               />
             </CardsResultsScroll>
           </section>
