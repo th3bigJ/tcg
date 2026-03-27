@@ -978,6 +978,53 @@ export const getCachedFilterFacets = unstable_cache(
   { revalidate: FILTER_FACETS_REVALIDATE_SEC },
 );
 
+/**
+ * Sum the lowest raw GBP price per card in `catalog-card-pricing` for the given set code.
+ * Returns null if no pricing rows exist.
+ */
+export async function fetchSetMarketValue(setCode: string): Promise<number | null> {
+  const payloadConfig = (await import("../payload.config")).default;
+  const { getPayload } = await import("payload");
+  const payload = await getPayload({ config: payloadConfig });
+
+  let total = 0;
+  let counted = 0;
+  let page = 1;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const result = await payload.find({
+      collection: "catalog-card-pricing",
+      where: { setCode: { equals: setCode } },
+      limit: 500,
+      page,
+      depth: 0,
+      overrideAccess: true,
+      select: { externalPrice: true },
+    });
+
+    for (const row of result.docs) {
+      const ep = (row as Record<string, unknown>).externalPrice;
+      if (!ep || typeof ep !== "object" || Array.isArray(ep)) continue;
+      let lowest = Infinity;
+      for (const v of Object.values(ep as Record<string, unknown>)) {
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+          const raw = (v as Record<string, unknown>).raw;
+          if (typeof raw === "number" && Number.isFinite(raw) && raw > 0 && raw < lowest) {
+            lowest = raw;
+          }
+        }
+      }
+      if (lowest !== Infinity) { total += lowest; counted++; }
+    }
+
+    hasNextPage = result.hasNextPage;
+    page += 1;
+  }
+
+  return counted > 0 ? total : null;
+}
+
 export async function fetchMasterCardsPage(params: {
   activeSet: string;
   activeRarity: string;

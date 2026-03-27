@@ -6,7 +6,9 @@ import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
 import {
   CARDS_LOAD_MORE_STEP,
   fetchMasterCardsPage,
+  fetchSetMarketValue,
   getCachedFilterFacets,
+  resolveCardsCategoryFilter,
   resolveCardsTakeFromParams,
 } from "@/lib/cardsPageQueries";
 import { getCurrentCustomer } from "@/lib/auth";
@@ -16,6 +18,10 @@ type ExpansionSetCardsPageProps = {
   searchParams?: Promise<{
     take?: string;
     page?: string;
+    search?: string;
+    rarity?: string;
+    exclude_cu?: string;
+    category?: string;
   }>;
 };
 
@@ -34,6 +40,9 @@ export default async function ExpansionSetCardsPage({
 
   const facets = (await getCachedFilterFacets()) ?? {};
   const availableSetCodes = facets.setCodes ?? [];
+  const rarityOptions = facets.rarityDisplayValues ?? [];
+  const categoryOptions = facets.categoryDisplayValues ?? [];
+  const categoryMatchGroups = facets.categoryMatchGroups ?? {};
   const setFilterOptions = await getCachedSetFilterOptions(availableSetCodes);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
@@ -42,26 +51,35 @@ export default async function ExpansionSetCardsPage({
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
 
+  const activeSearch = resolvedSearchParams.search?.trim() ?? "";
+  const activeRarity = resolvedSearchParams.rarity?.trim() ?? "";
+  const excludeCommonUncommon = resolvedSearchParams.exclude_cu === "1";
+  const selectedCategory = resolvedSearchParams.category?.trim() ?? "";
+  const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
+    resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
+
   const requestedTake = resolveCardsTakeFromParams(
     resolvedSearchParams.take,
     resolvedSearchParams.page,
   );
 
-  const [{ entries: cardsForGrid, totalDocs: filteredCount }, customer] = await Promise.all([
-    fetchMasterCardsPage({
-      activeSet,
-      activePokemonDex: null,
-      activePokemonName: null,
-      activeRarity: "",
-      activeSearch: "",
-      activeArtist: "",
-      excludeCommonUncommon: false,
-      categoryQueryVariants: [],
-      page: 1,
-      perPage: requestedTake,
-    }),
-    getCurrentCustomer(),
-  ]);
+  const [{ entries: cardsForGrid, totalDocs: filteredCount }, customer, setMarketValue] =
+    await Promise.all([
+      fetchMasterCardsPage({
+        activeSet,
+        activePokemonDex: null,
+        activePokemonName: null,
+        activeRarity,
+        activeSearch,
+        activeArtist: "",
+        excludeCommonUncommon,
+        categoryQueryVariants,
+        page: 1,
+        perPage: requestedTake,
+      }),
+      getCurrentCustomer(),
+      fetchSetMarketValue(activeSet),
+    ]);
 
   const cardsForClient = cardsForGrid;
 
@@ -71,10 +89,14 @@ export default async function ExpansionSetCardsPage({
 
   const setPath = `/expansions/${encodeURIComponent(activeSet)}`;
   const buildSetCardsHref = (take?: number) => {
-    if (take !== undefined && take > 0) {
-      return `${setPath}?take=${encodeURIComponent(String(take))}`;
-    }
-    return setPath;
+    const q = new URLSearchParams();
+    if (take !== undefined && take > 0) q.set("take", String(take));
+    if (activeSearch) q.set("search", activeSearch);
+    if (activeRarity) q.set("rarity", activeRarity);
+    if (excludeCommonUncommon) q.set("exclude_cu", "1");
+    if (activeCategory) q.set("category", activeCategory);
+    const qs = q.toString();
+    return qs ? `${setPath}?${qs}` : setPath;
   };
   const loadMoreHref = buildSetCardsHref(nextTake);
   const scrollRestoreKey = [String(requestedTake), activeSet, "expansion-set"].join("|");
@@ -118,6 +140,9 @@ export default async function ExpansionSetCardsPage({
               </h1>
               <p className="text-xs text-[var(--foreground)]/60">
                 {filteredCount} card{filteredCount === 1 ? "" : "s"}
+                {setMarketValue != null && (
+                  <> · <span className="text-[var(--foreground)]/80">£{setMarketValue.toFixed(2)} set market value</span></>
+                )}
               </p>
             </div>
           </header>
@@ -134,16 +159,16 @@ export default async function ExpansionSetCardsPage({
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
-                formAction={`/expansions/${activeSet}`}
-                activeSearch=""
+                formAction={setPath}
+                activeSearch={activeSearch}
                 activeSet={activeSet}
                 activePokemon=""
-                activeRarity=""
-                activeCategory=""
-                excludeCommonUncommon={false}
-                rarityOptions={[]}
-                categoryOptions={[]}
-                resetHref={`/expansions/${activeSet}`}
+                activeRarity={activeRarity}
+                activeCategory={activeCategory}
+                excludeCommonUncommon={excludeCommonUncommon}
+                rarityOptions={rarityOptions}
+                categoryOptions={categoryOptions}
+                resetHref={setPath}
               />
             </CardsResultsScroll>
           </div>

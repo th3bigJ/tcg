@@ -888,12 +888,14 @@ const CardGridItem = memo(function CardGridItem({
   index,
   variant,
   unitPrice: unitPriceProp,
+  owned,
   onOpen,
 }: {
   card: CardEntry;
   index: number;
   variant: "browse" | "collection" | "wishlist";
   unitPrice: number | null;
+  owned: boolean;
   onOpen: (index: number) => void;
 }) {
   const liRef = useRef<HTMLLIElement>(null);
@@ -956,16 +958,25 @@ const CardGridItem = memo(function CardGridItem({
           aria-label={`View ${card.set} ${card.filename}`}
         />
       </div>
-      {card.cardName ? (
-        <span className="mt-1 line-clamp-1 text-center text-[10px] font-medium text-[var(--foreground)]/80">
-          {card.cardName}
-        </span>
-      ) : null}
-      {unitPrice !== null ? (
-        <span className="mt-0.5 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
-          {formatMoneyGbp(unitPrice)}
-        </span>
-      ) : null}
+      <div className="relative mt-1">
+        {card.cardName ? (
+          <span className="block line-clamp-1 text-center text-[10px] font-medium text-[var(--foreground)]/80">
+            {card.cardName}
+          </span>
+        ) : null}
+        {unitPrice !== null ? (
+          <span className="block mt-0.5 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
+            {formatMoneyGbp(unitPrice)}
+          </span>
+        ) : null}
+        {owned && variant === "browse" ? (
+          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        ) : null}
+      </div>
     </li>
   );
 });
@@ -2115,6 +2126,7 @@ export function CardGrid({
           {normalizedCards.map((card, index) => {
             const showPrice = card.masterCardId !== undefined && cardPricesByMasterCardId[card.masterCardId] !== undefined;
             const unitPrice = showPrice && card.masterCardId ? cardPricesByMasterCardId[card.masterCardId] : null;
+            const owned = Boolean(card.masterCardId && localCollectionLinesByMasterCardId[card.masterCardId]?.length);
             return (
               <CardGridItem
                 key={card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
@@ -2122,6 +2134,7 @@ export function CardGrid({
                 index={index}
                 variant={variant}
                 unitPrice={unitPrice ?? null}
+                owned={owned}
                 onOpen={openModal}
               />
             );
@@ -2201,6 +2214,7 @@ export function CardGrid({
                 {groupEntries.map(({ card, globalIndex }) => {
                   const showPrice = card.masterCardId !== undefined && cardPricesByMasterCardId[card.masterCardId] !== undefined;
                   const unitPrice = showPrice && card.masterCardId ? cardPricesByMasterCardId[card.masterCardId] : null;
+                  const owned = Boolean(card.masterCardId && localCollectionLinesByMasterCardId[card.masterCardId]?.length);
                   return (
                     <CardGridItem
                       key={card.masterCardId ?? `${card.set}/${card.filename}/${globalIndex}`}
@@ -2208,6 +2222,7 @@ export function CardGrid({
                       index={globalIndex}
                       variant={variant}
                       unitPrice={unitPrice ?? null}
+                      owned={owned}
                       onOpen={openModal}
                     />
                   );
