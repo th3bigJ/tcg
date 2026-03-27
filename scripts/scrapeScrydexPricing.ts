@@ -304,6 +304,7 @@ function resolveMegaConfig(raw: string): ScrydexExpansionListConfig | null {
   if (k === "mep") return { expansionUrl: `${SCRYDEX_BASE}/mega-evolution-black-star-promos/mep`, listPrefix: "mep" };
   if (k === "me02.5" || k === "me2pt5") return { expansionUrl: `${SCRYDEX_BASE}/ascended-heroes/me2pt5`, listPrefix: "me2pt5" };
   if (k === "me02" || k === "me2") return { expansionUrl: `${SCRYDEX_BASE}/phantasmal-flames/me2`, listPrefix: "me2" };
+  if (k === "me03" || k === "me3") return { expansionUrl: `${SCRYDEX_BASE}/perfect-order/me3`, listPrefix: "me3" };
   if (k === "me01" || k === "me1") return { expansionUrl: `${SCRYDEX_BASE}/mega-evolution/me1`, listPrefix: "me1" };
   return null;
 }

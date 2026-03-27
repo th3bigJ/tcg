@@ -12,6 +12,7 @@ const TCGDEX_SET_PREFIX_NORMALIZATION: Record<string, string> = {
   me1: "me01",
   me2: "me02",
   me2pt5: "me02.5",
+  me3: "me03",
 };
 
 function buildPricingLookupIds(externalId: string): string[] {

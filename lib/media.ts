@@ -55,7 +55,7 @@ const sanitizeAbsoluteMediaURL = (value: string): string => {
 
 export const resolveMediaURL = (value: string | null | undefined): string => {
   if (!value) return "";
-  if (/^https?:\/\//i.test(value)) return value;
+  if (/^https?:\/\//i.test(value)) return sanitizeAbsoluteMediaURL(value);
 
   const base = getMediaBaseURL();
   if (!base) return value;

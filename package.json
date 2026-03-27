@@ -13,6 +13,8 @@
     "start": "next start",
     "lint": "eslint",
     "scrape:pricing": "node --import tsx/esm scripts/scrapeScrydexPricing.ts",
+    "seed:me3": "node --import tsx/esm scripts/seedMe3CardsFromScrydex.ts",
+    "scrape:pricing:me3": "node --import tsx/esm scripts/scrapeScrydexPricing.ts --set=me3",
     "payload": "payload",
     "migrate": "payload migrate",
     "migrate:create": "payload migrate:create"

@@ -49,6 +49,13 @@ export function scrydexMegaExpansionConfig(
     };
   }
 
+  if (lowered.has("me03") || lowered.has("me3")) {
+    return {
+      expansionUrl: "https://scrydex.com/pokemon/expansions/perfect-order/me3",
+      listPrefix: "me3",
+    };
+  }
+
   if (lowered.has("me01") || lowered.has("me1")) {
     return {
       expansionUrl: "https://scrydex.com/pokemon/expansions/mega-evolution/me1",
