@@ -75,7 +75,7 @@ export function resolveCardsTakeFromParams(
   return CARDS_INITIAL_TAKE;
 }
 
-const FILTER_FACETS_CACHE_KEY = "master-card-list-filter-facets-v5";
+const FILTER_FACETS_CACHE_KEY = "master-card-list-filter-facets-v6";
 const FILTER_FACETS_REVALIDATE_SEC = 3600;
 /** Bumped when dex index shape changes; v5 stores tuple rows to stay under Next.js unstable_cache 2MB limit. */
 const POKEMON_DEX_INDEX_CACHE_KEY = "master-card-list-pokemon-dex-index-v5-packed";

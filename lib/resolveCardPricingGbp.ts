@@ -40,6 +40,7 @@ export async function resolveCardPricingGbp(
         limit: 1,
         depth: 0,
         overrideAccess: true,
+        pagination: false,
       });
       const masterDoc = byMaster.docs[0] as Record<string, unknown> | undefined;
       if (masterDoc) {
@@ -69,6 +70,7 @@ export async function resolveCardPricingGbp(
       limit: 1,
       depth: 0,
       overrideAccess: true,
+      pagination: false,
     });
 
     const doc = found.docs[0] as Record<string, unknown> | undefined;
