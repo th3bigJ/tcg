@@ -43,6 +43,7 @@ type CollectionPostBody = {
   language?: string;
   purchaseType?: string;
   pricePaid?: number | null;
+  purchaseDate?: string | null;
 };
 
 export async function POST(request: NextRequest) {
@@ -84,6 +85,10 @@ export async function POST(request: NextRequest) {
     purchaseType === "bought" && typeof body.pricePaid === "number" && Number.isFinite(body.pricePaid) && body.pricePaid >= 0
       ? body.pricePaid
       : undefined;
+  const purchaseDate =
+    purchaseType === "bought" && typeof body.purchaseDate === "string" && body.purchaseDate.trim()
+      ? new Date(body.purchaseDate).toISOString()
+      : undefined;
 
   const payload = await getPayload({ config });
 
@@ -115,6 +120,57 @@ export async function POST(request: NextRequest) {
       data: data as never,
       overrideAccess: true,
     });
+
+    // Auto-create a purchase transaction when a card is bought with a price
+    if (purchaseType === "bought" && pricePaid !== undefined) {
+      try {
+        // Find the single-card product type by slug
+        const ptResult = await payload.find({
+          collection: "product-types",
+          where: { slug: { equals: "single-card" } },
+          limit: 1,
+          depth: 0,
+          overrideAccess: true,
+        });
+        const ptDoc = ptResult.docs[0];
+
+        if (ptDoc) {
+          // Fetch the card name
+          const cardDoc = await payload.findByID({
+            collection: "master-card-list",
+            id: masterRelId as number,
+            depth: 0,
+            overrideAccess: true,
+            select: { cardName: true },
+          });
+          const cardName =
+            typeof (cardDoc as { cardName?: unknown }).cardName === "string"
+              ? (cardDoc as { cardName: string }).cardName
+              : "Unknown card";
+
+          const ptRelId = toPayloadRelationshipId(getRelationshipDocumentId(ptDoc.id) ?? "");
+          if (ptRelId !== undefined) {
+            await payload.create({
+              collection: "account-transactions",
+              data: {
+                customer: customerRelId,
+                direction: "purchase",
+                productType: ptRelId,
+                description: cardName,
+                masterCard: masterRelId,
+                quantity,
+                unitPrice: pricePaid,
+                transactionDate: purchaseDate ?? new Date().toISOString(),
+              } as never,
+              overrideAccess: true,
+            });
+          }
+        }
+      } catch {
+        // Transaction creation is best-effort — don't fail the collection add
+      }
+    }
+
     return jsonResponseWithAuthCookies({ doc: created }, authCookieResponse);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Create failed";

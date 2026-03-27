@@ -23,6 +23,7 @@ import * as migration_1732110000000_catalog_pricing_split_columns from './173211
 import * as migration_1732120000000_drop_master_card_list_variants_columns from './1732120000000_drop_master_card_list_variants_columns';
 import * as migration_1732130000000_drop_master_card_list_cardmarket_listing_version from './1732130000000_drop_master_card_list_cardmarket_listing_version';
 import * as migration_1732140000000_drop_catalog_card_pricing_tcgplayer_cardmarket_columns from './1732140000000_drop_catalog_card_pricing_tcgplayer_cardmarket_columns';
+import * as migration_1732150000000_add_account_transactions from './1732150000000_add_account_transactions';
 
 export const migrations = [
   {
@@ -149,5 +150,10 @@ export const migrations = [
     up: migration_1732140000000_drop_catalog_card_pricing_tcgplayer_cardmarket_columns.up,
     down: migration_1732140000000_drop_catalog_card_pricing_tcgplayer_cardmarket_columns.down,
     name: '1732140000000_drop_catalog_card_pricing_tcgplayer_cardmarket_columns',
+  },
+  {
+    up: migration_1732150000000_add_account_transactions.up,
+    down: migration_1732150000000_add_account_transactions.down,
+    name: '1732150000000_add_account_transactions',
   },
 ];

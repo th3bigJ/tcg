@@ -7,28 +7,22 @@ import {
   getCachedSetFilterOptions,
 } from "@/lib/cardsFilterOptionsServer";
 import {
-  CARDS_LOAD_MORE_STEP,
+  CARDS_TAKE_MAX,
   fetchMasterCardsPage,
   getCachedFilterFacets,
-  resolveCardsTakeFromParams,
 } from "@/lib/cardsPageQueries";
 import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 import { getCurrentCustomer } from "@/lib/auth";
 
 type PokedexPokemonCardsPageProps = {
   params: Promise<{ nationalDex: string }>;
-  searchParams?: Promise<{
-    take?: string;
-    page?: string;
-  }>;
+  searchParams?: Promise<Record<string, string>>;
 };
 
 export default async function PokedexPokemonCardsPage({
   params,
-  searchParams,
 }: PokedexPokemonCardsPageProps) {
   const { nationalDex: rawDex } = await params;
-  const resolvedSearchParams = (await searchParams) ?? {};
   const dexNum = Number.parseInt(decodeURIComponent(rawDex).trim(), 10);
   if (!Number.isFinite(dexNum) || dexNum <= 0) notFound();
 
@@ -46,11 +40,6 @@ export default async function PokedexPokemonCardsPage({
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
 
-  const requestedTake = resolveCardsTakeFromParams(
-    resolvedSearchParams.take,
-    resolvedSearchParams.page,
-  );
-
   const [{ entries: cardsForGrid, totalDocs: filteredCount }, customer] = await Promise.all([
     fetchMasterCardsPage({
       activeSet: "",
@@ -62,26 +51,12 @@ export default async function PokedexPokemonCardsPage({
       excludeCommonUncommon: false,
       categoryQueryVariants: [],
       page: 1,
-      perPage: requestedTake,
+      perPage: CARDS_TAKE_MAX,
     }),
     getCurrentCustomer(),
   ]);
 
-  const cardsForClient = cardsForGrid;
-
-  const showingCount = cardsForClient.length;
-  const nextTake = Math.min(filteredCount, showingCount + CARDS_LOAD_MORE_STEP);
-  const canLoadMore = showingCount > 0 && showingCount < filteredCount;
-
-  const dexPath = `/pokedex/${dexNum}`;
-  const buildPokedexPokemonHref = (take?: number) => {
-    if (take !== undefined && take > 0) {
-      return `${dexPath}?take=${encodeURIComponent(String(take))}`;
-    }
-    return dexPath;
-  };
-  const loadMoreHref = buildPokedexPokemonHref(nextTake);
-  const scrollRestoreKey = [String(requestedTake), String(dexNum), "pokedex-pokemon"].join("|");
+  const scrollRestoreKey = [String(dexNum), "pokedex-pokemon"].join("|");
 
   const imageSrc = normalizePokemonImageSrc(pokemonMeta.imageUrl);
 
@@ -130,13 +105,13 @@ export default async function PokedexPokemonCardsPage({
 
           <div className="mt-4 min-h-0 flex-1">
             <CardsResultsScroll
-              canLoadMore={canLoadMore}
-              loadMoreHref={loadMoreHref}
-              loadMoreStep={CARDS_LOAD_MORE_STEP}
+              canLoadMore={false}
+              loadMoreHref=""
+              loadMoreStep={0}
               scrollRestoreKey={scrollRestoreKey}
             >
               <SearchCardGrid
-                cards={cardsForClient}
+                cards={cardsForGrid}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}

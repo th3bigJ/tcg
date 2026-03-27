@@ -9,6 +9,7 @@ import { createPayloadLogger } from "./lib/payloadLogger";
 
 import { Users } from "./collections/Users";
 import { Customers } from "./collections/Customers";
+import { AccountTransactions } from "./collections/AccountTransactions";
 import { CustomerCollections } from "./collections/CustomerCollections";
 import { CustomerWishlists } from "./collections/CustomerWishlists";
 import { CatalogCardPricing } from "./collections/CatalogCardPricing";
@@ -78,6 +79,7 @@ export default buildConfig({
     ProductCategories,
     ItemConditions,
     MasterCardList,
+    AccountTransactions,
     CustomerCollections,
     CustomerWishlists,
     CatalogCardPricing,

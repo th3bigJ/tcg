@@ -38,6 +38,12 @@ export default async function AccountPage() {
         >
           Wishlist
         </Link>
+        <Link
+          href="/account/transactions"
+          className="w-fit rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 transition hover:bg-[var(--foreground)]/18"
+        >
+          Transactions
+        </Link>
       </div>
       <AccountSignOut />
     </div>

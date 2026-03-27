@@ -4,20 +4,17 @@ import { SearchCardGrid } from "@/components/SearchCardGrid";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
 import {
-  CARDS_LOAD_MORE_STEP,
+  CARDS_TAKE_MAX,
   fetchMasterCardsPage,
   fetchSetMarketValue,
   getCachedFilterFacets,
   resolveCardsCategoryFilter,
-  resolveCardsTakeFromParams,
 } from "@/lib/cardsPageQueries";
 import { getCurrentCustomer } from "@/lib/auth";
 
 type ExpansionSetCardsPageProps = {
   params: Promise<{ setCode: string }>;
   searchParams?: Promise<{
-    take?: string;
-    page?: string;
     search?: string;
     rarity?: string;
     exclude_cu?: string;
@@ -58,11 +55,6 @@ export default async function ExpansionSetCardsPage({
   const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
     resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
 
-  const requestedTake = resolveCardsTakeFromParams(
-    resolvedSearchParams.take,
-    resolvedSearchParams.page,
-  );
-
   const [{ entries: cardsForGrid, totalDocs: filteredCount }, customer, setMarketValue] =
     await Promise.all([
       fetchMasterCardsPage({
@@ -75,31 +67,14 @@ export default async function ExpansionSetCardsPage({
         excludeCommonUncommon,
         categoryQueryVariants,
         page: 1,
-        perPage: requestedTake,
+        perPage: CARDS_TAKE_MAX,
       }),
       getCurrentCustomer(),
       fetchSetMarketValue(activeSet),
     ]);
 
-  const cardsForClient = cardsForGrid;
-
-  const showingCount = cardsForClient.length;
-  const nextTake = Math.min(filteredCount, showingCount + CARDS_LOAD_MORE_STEP);
-  const canLoadMore = showingCount > 0 && showingCount < filteredCount;
-
   const setPath = `/expansions/${encodeURIComponent(activeSet)}`;
-  const buildSetCardsHref = (take?: number) => {
-    const q = new URLSearchParams();
-    if (take !== undefined && take > 0) q.set("take", String(take));
-    if (activeSearch) q.set("search", activeSearch);
-    if (activeRarity) q.set("rarity", activeRarity);
-    if (excludeCommonUncommon) q.set("exclude_cu", "1");
-    if (activeCategory) q.set("category", activeCategory);
-    const qs = q.toString();
-    return qs ? `${setPath}?${qs}` : setPath;
-  };
-  const loadMoreHref = buildSetCardsHref(nextTake);
-  const scrollRestoreKey = [String(requestedTake), activeSet, "expansion-set"].join("|");
+  const scrollRestoreKey = [activeSet, "expansion-set"].join("|");
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
@@ -149,13 +124,13 @@ export default async function ExpansionSetCardsPage({
 
           <div className="mt-4 min-h-0 flex-1">
             <CardsResultsScroll
-              canLoadMore={canLoadMore}
-              loadMoreHref={loadMoreHref}
-              loadMoreStep={CARDS_LOAD_MORE_STEP}
+              canLoadMore={false}
+              loadMoreHref=""
+              loadMoreStep={0}
               scrollRestoreKey={scrollRestoreKey}
             >
               <SearchCardGrid
-                cards={cardsForClient}
+                cards={cardsForGrid}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
