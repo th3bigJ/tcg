@@ -605,6 +605,99 @@ function sampleMaskHorizontalEdges(
   return points;
 }
 
+function collectBrightMaskPoints(brightMask: ReturnType<typeof computeBrightMask>): Point[] {
+  const { width, height, mask } = brightMask;
+  const points: Point[] = [];
+  const xStart = Math.round(width * 0.04);
+  const xEnd = Math.round(width * 0.96);
+  const yStart = Math.round(height * 0.04);
+  const yEnd = Math.round(height * 0.96);
+
+  for (let y = yStart; y <= yEnd; y += 1) {
+    for (let x = xStart; x <= xEnd; x += 1) {
+      if (mask[y * width + x] === 1) {
+        points.push({ x, y });
+      }
+    }
+  }
+
+  return points;
+}
+
+function averagePoint(points: Point[]): Point | null {
+  if (points.length === 0) return null;
+  return {
+    x: average(points.map((point) => point.x)),
+    y: average(points.map((point) => point.y)),
+  };
+}
+
+function detectCornersFromBrightMask(brightMask: ReturnType<typeof computeBrightMask>): Point[] | null {
+  const points = collectBrightMaskPoints(brightMask);
+  if (points.length < 200) return null;
+
+  const topLeftPool = [...points]
+    .sort((left, right) => (left.x + left.y) - (right.x + right.y))
+    .slice(0, 120);
+  const topRightPool = [...points]
+    .sort((left, right) => (right.x - right.y) - (left.x - left.y))
+    .slice(0, 120);
+  const bottomRightPool = [...points]
+    .sort((left, right) => (right.x + right.y) - (left.x + left.y))
+    .slice(0, 120);
+  const bottomLeftPool = [...points]
+    .sort((left, right) => (right.y - right.x) - (left.y - left.x))
+    .slice(0, 120);
+
+  const topLeft = averagePoint(topLeftPool);
+  const topRight = averagePoint(topRightPool);
+  const bottomRight = averagePoint(bottomRightPool);
+  const bottomLeft = averagePoint(bottomLeftPool);
+
+  if (!topLeft || !topRight || !bottomRight || !bottomLeft) return null;
+
+  return [topLeft, topRight, bottomRight, bottomLeft];
+}
+
+function quadArea(points: Point[]): number {
+  let area = 0;
+  for (let index = 0; index < points.length; index += 1) {
+    const current = points[index]!;
+    const next = points[(index + 1) % points.length]!;
+    area += current.x * next.y - next.x * current.y;
+  }
+  return Math.abs(area) / 2;
+}
+
+function validateDetectedQuad(points: Point[], width: number, height: number): boolean {
+  if (points.length !== 4) return false;
+
+  const [topLeft, topRight, bottomRight, bottomLeft] = points;
+  if (
+    !(topLeft.x < topRight.x && bottomLeft.x < bottomRight.x && topLeft.y < bottomLeft.y && topRight.y < bottomRight.y)
+  ) {
+    return false;
+  }
+
+  const topWidth = Math.hypot(topRight.x - topLeft.x, topRight.y - topLeft.y);
+  const bottomWidth = Math.hypot(bottomRight.x - bottomLeft.x, bottomRight.y - bottomLeft.y);
+  const leftHeight = Math.hypot(bottomLeft.x - topLeft.x, bottomLeft.y - topLeft.y);
+  const rightHeight = Math.hypot(bottomRight.x - topRight.x, bottomRight.y - topRight.y);
+  const areaRatio = quadArea(points) / Math.max(width * height, 1);
+  const aspectRatio = ((topWidth + bottomWidth) / 2) / Math.max((leftHeight + rightHeight) / 2, 1);
+
+  return (
+    topWidth > width * 0.25 &&
+    bottomWidth > width * 0.25 &&
+    leftHeight > height * 0.35 &&
+    rightHeight > height * 0.35 &&
+    areaRatio >= 0.12 &&
+    areaRatio <= 0.92 &&
+    aspectRatio >= 0.5 &&
+    aspectRatio <= 0.82
+  );
+}
+
 function solveLinearSystem(matrix: number[][], vector: number[]) {
   const size = vector.length;
   const augmented = matrix.map((row, index) => [...row, vector[index]!]);
@@ -702,6 +795,7 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
   const resized = getResizedImageData(bitmap);
   const gradients = computeGradients(resized.imageData);
   const brightMask = computeBrightMask(resized.imageData);
+  const maskCorners = detectCornersFromBrightMask(brightMask);
   const leftPoints = sampleMaskVerticalEdges(brightMask, true);
   const rightPoints = sampleMaskVerticalEdges(brightMask, false);
   const topPoints = sampleMaskHorizontalEdges(brightMask, true);
@@ -720,6 +814,16 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
 
   const fallbackSourceCanvas = createCanvas(bitmap.width, bitmap.height);
   fallbackSourceCanvas.getContext("2d")!.drawImage(bitmap, 0, 0);
+
+  if (maskCorners && validateDetectedQuad(maskCorners, resized.width, resized.height)) {
+    const scaleUp = 1 / resized.scale;
+    const sourcePoints: Point[] = maskCorners.map((point) => ({
+      x: point.x * scaleUp,
+      y: point.y * scaleUp,
+    }));
+
+    return rectifyFromSourcePoints(bitmap, sourcePoints);
+  }
 
   if (!leftLine || !rightLine || !topLine || !bottomLine) {
     const blob = await canvasToBlob(fallbackSourceCanvas);
@@ -747,6 +851,23 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
     x: point.x * scaleUp,
     y: point.y * scaleUp,
   }));
+
+  return rectifyFromSourcePoints(bitmap, sourcePoints);
+}
+
+async function rectifyFromSourcePoints(
+  bitmap: ImageBitmap,
+  sourcePoints: Point[],
+): Promise<DetectionResult> {
+  const fallbackSourceCanvas = createCanvas(bitmap.width, bitmap.height);
+  fallbackSourceCanvas.getContext("2d")!.drawImage(bitmap, 0, 0);
+  if (!validateDetectedQuad(sourcePoints, bitmap.width, bitmap.height)) {
+    const blob = await canvasToBlob(fallbackSourceCanvas);
+    return {
+      warpedCardBlob: blob,
+      overlayBlob: blob,
+    };
+  }
 
   const destinationPoints: Point[] = [
     { x: 0, y: 0 },
@@ -796,6 +917,18 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
   }
   overlayCtx.closePath();
   overlayCtx.stroke();
+  overlayCtx.fillStyle = "#22d3ee";
+  for (const point of sourcePoints) {
+    overlayCtx.beginPath();
+    overlayCtx.arc(
+      point.x,
+      point.y,
+      Math.max(5, Math.round(bitmap.width * 0.008)),
+      0,
+      Math.PI * 2,
+    );
+    overlayCtx.fill();
+  }
 
   return {
     warpedCardBlob: await canvasToBlob(warpedCanvas),
