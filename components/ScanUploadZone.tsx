@@ -138,16 +138,12 @@ export function ScanUploadZone({ onFile, onBurst, onReset, disabled, state }: Pr
     });
   }
 
-  async function captureFrame(trigger: "manual" | "auto" = "manual") {
+  async function captureFrame() {
     clearAutoScanTimeout();
     const file = await makeFrameFile();
     if (!file) return;
 
     setLastScanAt(Date.now());
-    if (trigger === "manual") {
-      setAutoScanEnabled(false);
-    }
-
     onFile(file, scanSettings);
   }
 
@@ -288,7 +284,7 @@ export function ScanUploadZone({ onFile, onBurst, onReset, disabled, state }: Pr
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => void captureFrame("manual")}
+              onClick={() => void captureFrame()}
               disabled={disabled || !cameraReady}
               className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition active:opacity-80 disabled:opacity-40"
             >
@@ -384,48 +380,6 @@ export function ScanUploadZone({ onFile, onBurst, onReset, disabled, state }: Pr
             </DebugRow>
           </div>
 
-          <div className="mt-4 grid gap-4 rounded-xl border border-[var(--foreground)]/10 bg-black/5 p-3">
-            <SliderControl
-              label="Name Band End"
-              value={Math.round(scanSettings.nameBandEnd * 100)}
-              min={14}
-              max={32}
-              onChange={(value) =>
-                setScanSettings((current) => ({ ...current, nameBandEnd: value / 100 }))
-              }
-              suffix="%"
-            />
-            <SliderControl
-              label="Bottom Band Start"
-              value={Math.round(scanSettings.bottomBandStart * 100)}
-              min={62}
-              max={88}
-              onChange={(value) =>
-                setScanSettings((current) => ({ ...current, bottomBandStart: value / 100 }))
-              }
-              suffix="%"
-            />
-            <SliderControl
-              label="B/W Threshold"
-              value={Math.round(scanSettings.threshold)}
-              min={80}
-              max={220}
-              onChange={(value) =>
-                setScanSettings((current) => ({ ...current, threshold: value }))
-              }
-            />
-            <SliderControl
-              label="Contrast"
-              value={scanSettings.contrast}
-              min={0.8}
-              max={2.2}
-              step={0.05}
-              onChange={(value) =>
-                setScanSettings((current) => ({ ...current, contrast: value }))
-              }
-            />
-          </div>
-
           {showDebug && "ocrResult" in state ? (
             <details className="mt-4 rounded-xl border border-[var(--foreground)]/10 bg-black/5 p-3">
               <summary className="cursor-pointer select-none text-xs font-semibold uppercase tracking-[0.18em] text-[var(--foreground)]/55">
@@ -488,24 +442,76 @@ export function ScanUploadZone({ onFile, onBurst, onReset, disabled, state }: Pr
               />
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <DebugImageCard
+              <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2">
+                <DebugImageCard
                 label="Name + HP Strip"
                 src={state.ocrResult.debugImages.nameStrip}
                 alt="Processed OCR name strip"
                 aspectRatio="3 / 1"
-              />
-              <DebugImageCard
+                />
+                <div className="mt-3 grid gap-3">
+                  <SliderControl
+                    label="Name Band End"
+                    value={Math.round(scanSettings.nameBandEnd * 100)}
+                    min={14}
+                    max={32}
+                    onChange={(value) =>
+                      setScanSettings((current) => ({ ...current, nameBandEnd: value / 100 }))
+                    }
+                    suffix="%"
+                  />
+                  <SliderControl
+                    label="B/W Threshold"
+                    value={Math.round(scanSettings.threshold)}
+                    min={80}
+                    max={220}
+                    onChange={(value) =>
+                      setScanSettings((current) => ({ ...current, threshold: value }))
+                    }
+                  />
+                  <SliderControl
+                    label="Contrast"
+                    value={scanSettings.contrast}
+                    min={0.8}
+                    max={2.2}
+                    step={0.05}
+                    onChange={(value) =>
+                      setScanSettings((current) => ({ ...current, contrast: value }))
+                    }
+                  />
+                </div>
+              </div>
+              <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2">
+                <DebugImageCard
                 label="HP Strip"
                 src={state.ocrResult.debugImages.hpStrip}
                 alt="Processed OCR HP strip"
                 aspectRatio="2 / 1"
-              />
-              <DebugImageCard
+                />
+                <p className="mt-3 text-xs text-[var(--foreground)]/55">
+                  HP uses the dedicated top-right crop. If this preview looks good but OCR is wrong, the parser is the next thing to tighten.
+                </p>
+              </div>
+              <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2 sm:col-span-2">
+                <DebugImageCard
                 label="Artist + Number Strip"
                 src={state.ocrResult.debugImages.numberStrip}
                 alt="Processed OCR number strip"
                 aspectRatio="3 / 1"
-              />
+                />
+                <div className="mt-3 grid gap-3">
+                  <SliderControl
+                    label="Bottom Band Start"
+                    value={Math.round(scanSettings.bottomBandStart * 100)}
+                    min={62}
+                    max={88}
+                    onChange={(value) =>
+                      setScanSettings((current) => ({ ...current, bottomBandStart: value / 100 }))
+                    }
+                    suffix="%"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         ) : null}
@@ -621,13 +627,13 @@ function DebugImageCard({
   aspectRatio: string;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2">
+    <>
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--foreground)]/55">
         {label}
       </p>
       <div className="relative mt-2 overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-black/5" style={{ aspectRatio }}>
         <Image src={src} alt={alt} fill unoptimized className="object-cover" />
       </div>
-    </div>
+    </>
   );
 }

@@ -127,8 +127,14 @@ export async function POST(request: Request) {
     return score;
   }
 
+  function applyHpFilter(cards: ReturnType<typeof getAllCards>) {
+    if (!Number.isFinite(hpNumber)) return cards;
+    const exactHpMatches = cards.filter((card) => card.hp === hpNumber);
+    return exactHpMatches.length > 0 ? exactHpMatches : cards;
+  }
+
   function toRankedEntries(cards: ReturnType<typeof getAllCards>) {
-    return cards
+    return applyHpFilter(cards)
       .filter((c) => c.imageLowSrc)
       .map((card) => ({ card, score: scoreCard(card) }))
       .filter(({ score }) => score > 0)
@@ -142,7 +148,7 @@ export async function POST(request: Request) {
 
   // Stage 1: card number alone — most reliable signal on Pokemon cards
   if (rawNumber) {
-    candidates = allCards
+    candidates = applyHpFilter(allCards)
       .filter((c) => c.imageLowSrc && c.cardNumber === rawNumber)
       .slice(0, 8)
       .map(toEntry)
@@ -161,7 +167,7 @@ export async function POST(request: Request) {
   // Stage 2: exact name string
   if (candidates.length === 0 && rawName) {
     const nameLower = rawName.toLocaleLowerCase();
-    candidates = allCards
+    candidates = applyHpFilter(allCards)
       .filter((c) => c.imageLowSrc && c.cardName.toLocaleLowerCase().includes(nameLower))
       .slice(0, 8)
       .map(toEntry)
@@ -185,7 +191,7 @@ export async function POST(request: Request) {
 
     for (const token of tokens) {
       const tokenLower = token.toLocaleLowerCase();
-      const results = allCards
+      const results = applyHpFilter(allCards)
         .filter((c) => c.imageLowSrc && c.cardName.toLocaleLowerCase().includes(tokenLower))
         .slice(0, 8)
         .map(toEntry)

@@ -606,16 +606,25 @@ export async function isCardFullyInView(file: File): Promise<boolean> {
   const width = maxX - minX;
   const height = maxY - minY;
   const areaRatio = (width * height) / (bitmap.width * bitmap.height);
-  const marginX = bitmap.width * 0.05;
-  const marginY = bitmap.height * 0.05;
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+  const aspectRatio = width / Math.max(height, 1);
+  const marginX = bitmap.width * 0.02;
+  const marginY = bitmap.height * 0.02;
+  const centerToleranceX = bitmap.width * 0.18;
+  const centerToleranceY = bitmap.height * 0.2;
 
   return (
     minX >= marginX &&
     maxX <= bitmap.width - marginX &&
     minY >= marginY &&
     maxY <= bitmap.height - marginY &&
-    areaRatio >= 0.16 &&
-    areaRatio <= 0.82
+    areaRatio >= 0.08 &&
+    areaRatio <= 0.9 &&
+    aspectRatio >= 0.52 &&
+    aspectRatio <= 0.78 &&
+    Math.abs(centerX - bitmap.width / 2) <= centerToleranceX &&
+    Math.abs(centerY - bitmap.height / 2) <= centerToleranceY
   );
 }
 
