@@ -1,11 +1,9 @@
-import { getCurrentCustomer } from "@/lib/auth";
-import { ScanPage } from "@/components/ScanPage";
+import { OnnxScanLab } from "@/components/OnnxScanLab";
 
-export const dynamic = "force-dynamic";
+export const metadata = {
+  title: "Browser Scan Lab",
+};
 
-export const metadata = { title: "Scan Card" };
-
-export default async function ScanRoute() {
-  const customer = await getCurrentCustomer();
-  return <ScanPage customerLoggedIn={!!customer} />;
+export default function ScanPage() {
+  return <OnnxScanLab />;
 }
