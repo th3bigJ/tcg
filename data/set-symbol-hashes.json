@@ -1,0 +1,2630 @@
+{
+  "generatedAt": "2026-03-28T17:48:49.620Z",
+  "count": 164,
+  "hashes": [
+    {
+      "id": "453",
+      "name": "Macdonald's Collection 2011",
+      "code": null,
+      "tcgdexId": "2011bw",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/mcd11-symbol.png",
+      "width": 500,
+      "height": 433,
+      "dHash": "69e4da8282dae469",
+      "aHash": "c389910e9189c3ff",
+      "avgRgb": [
+        181,
+        179,
+        180
+      ]
+    },
+    {
+      "id": "460",
+      "name": "Macdonald's Collection 2012",
+      "code": null,
+      "tcgdexId": "2012bw",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/mcd12-symbol.png",
+      "width": 500,
+      "height": 500,
+      "dHash": "b40e5a4ca4a4a4c8",
+      "aHash": "ffffdbd8e4240081",
+      "avgRgb": [
+        149,
+        148,
+        148
+      ]
+    },
+    {
+      "id": "476",
+      "name": "Macdonald's Collection 2014",
+      "code": null,
+      "tcgdexId": "2014xy",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/mcd14-symbol.png",
+      "width": 500,
+      "height": 493,
+      "dHash": "c89c9c8c6262a434",
+      "aHash": "ff99180042e7e7ff",
+      "avgRgb": [
+        168,
+        166,
+        166
+      ]
+    },
+    {
+      "id": "488",
+      "name": "Macdonald's Collection 2015",
+      "code": null,
+      "tcgdexId": "2015xy",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/mcd15-symbol.png",
+      "width": 495,
+      "height": 500,
+      "dHash": "c8c8b4d8a4d8a436",
+      "aHash": "ff818199819981ff",
+      "avgRgb": [
+        143,
+        141,
+        141
+      ]
+    },
+    {
+      "id": "495",
+      "name": "Macdonald's Collection 2016",
+      "code": null,
+      "tcgdexId": "2016xy",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/mcd16-symbol.png",
+      "width": 500,
+      "height": 465,
+      "dHash": "e4c49c96b2b2b2b2",
+      "aHash": "8f893024242424ff",
+      "avgRgb": [
+        165,
+        163,
+        164
+      ]
+    },
+    {
+      "id": "502",
+      "name": "Macdonald's Collection 2017",
+      "code": null,
+      "tcgdexId": "2017sm",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/mcd17-symbol.png",
+      "width": 30,
+      "height": 24,
+      "dHash": "69d4b2aa92d46900",
+      "aHash": "ffc381000581c3ff",
+      "avgRgb": [
+        194,
+        194,
+        194
+      ]
+    },
+    {
+      "id": "510",
+      "name": "Macdonald's Collection 2018",
+      "code": null,
+      "tcgdexId": "2018sm",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/mcd18-symbol.png",
+      "width": 500,
+      "height": 465,
+      "dHash": "28a869e8d4d471b2",
+      "aHash": "ffc3c38199c3e7ff",
+      "avgRgb": [
+        210,
+        209,
+        209
+      ]
+    },
+    {
+      "id": "518",
+      "name": "Macdonald's Collection 2019",
+      "code": null,
+      "tcgdexId": "2019sm",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/mcd19-symbol.png",
+      "width": 38,
+      "height": 38,
+      "dHash": "c8c8b4b6a6b4c86a",
+      "aHash": "ff99802424bdd9ff",
+      "avgRgb": [
+        167,
+        167,
+        167
+      ]
+    },
+    {
+      "id": "527",
+      "name": "Macdonald's Collection 2021",
+      "code": null,
+      "tcgdexId": "2021swsh",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/2021swsh.webp",
+      "width": 117,
+      "height": 78,
+      "dHash": "00ccb2b2b292aa00",
+      "aHash": "ff812424003cffff",
+      "avgRgb": [
+        171,
+        170,
+        171
+      ]
+    },
+    {
+      "id": "375",
+      "name": "Base Set",
+      "code": null,
+      "tcgdexId": "base1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/base1-symbol.png",
+      "width": 884,
+      "height": 452,
+      "dHash": "00b0729696920000",
+      "aHash": "ffffe3008080ffff",
+      "avgRgb": [
+        188,
+        171,
+        163
+      ]
+    },
+    {
+      "id": "376",
+      "name": "Jungle",
+      "code": null,
+      "tcgdexId": "base2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/base2.webp",
+      "width": 149,
+      "height": 97,
+      "dHash": "0078ea9696e87900",
+      "aHash": "ffe3810080c3ffff",
+      "avgRgb": [
+        177,
+        176,
+        177
+      ]
+    },
+    {
+      "id": "379",
+      "name": "Fossil",
+      "code": null,
+      "tcgdexId": "base3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/base3.webp",
+      "width": 129,
+      "height": 101,
+      "dHash": "ca64b2eaf4ccde00",
+      "aHash": "ffdfef84c000f1ff",
+      "avgRgb": [
+        187,
+        187,
+        187
+      ]
+    },
+    {
+      "id": "381",
+      "name": "Base Set 2",
+      "code": null,
+      "tcgdexId": "base4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/base4.webp",
+      "width": 91,
+      "height": 96,
+      "dHash": "e4b2d0d0d0c08890",
+      "aHash": "cf87d7c783879fbf",
+      "avgRgb": [
+        211,
+        211,
+        211
+      ]
+    },
+    {
+      "id": "382",
+      "name": "Team Rocket",
+      "code": null,
+      "tcgdexId": "base5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/base5.webp",
+      "width": 131,
+      "height": 103,
+      "dHash": "78eececcd9989c00",
+      "aHash": "ffc1c0898393bbff",
+      "avgRgb": [
+        145,
+        145,
+        145
+      ]
+    },
+    {
+      "id": "377",
+      "name": "Wizards Black Star Promos",
+      "code": null,
+      "tcgdexId": "basep",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/basep.webp",
+      "width": 514,
+      "height": 466,
+      "dHash": "32b2b28eb2f84ccc",
+      "aHash": "e7e70085c38099ff",
+      "avgRgb": [
+        173,
+        173,
+        173
+      ]
+    },
+    {
+      "id": "393",
+      "name": "Best of game",
+      "code": null,
+      "tcgdexId": "bog",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bog.webp",
+      "width": 64,
+      "height": 66,
+      "dHash": "d61c98886878e0a8",
+      "aHash": "fcf8b181fb4383ef",
+      "avgRgb": [
+        169,
+        169,
+        169
+      ]
+    },
+    {
+      "id": "451",
+      "name": "Black & White",
+      "code": null,
+      "tcgdexId": "bw1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw1.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "bc3c3c3c86868684",
+      "aHash": "f1f0f0f00f0f0f8f",
+      "avgRgb": [
+        149,
+        146,
+        147
+      ]
+    },
+    {
+      "id": "466",
+      "name": "Plasma Blast",
+      "code": null,
+      "tcgdexId": "bw10",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw10.webp",
+      "width": 493,
+      "height": 500,
+      "dHash": "62e4a488b4a4e0a4",
+      "aHash": "e78124998181e7ff",
+      "avgRgb": [
+        170,
+        168,
+        169
+      ]
+    },
+    {
+      "id": "469",
+      "name": "Legendary Treasures",
+      "code": null,
+      "tcgdexId": "bw11",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw11.webp",
+      "width": 500,
+      "height": 477,
+      "dHash": "b060c0b03030e2cc",
+      "aHash": "ffe7c303312387ff",
+      "avgRgb": [
+        197,
+        195,
+        196
+      ]
+    },
+    {
+      "id": "454",
+      "name": "Emerging Powers",
+      "code": null,
+      "tcgdexId": "bw2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw2.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "b462e0e0c8d872a4",
+      "aHash": "ffe7c38181c3e7ff",
+      "avgRgb": [
+        190,
+        189,
+        190
+      ]
+    },
+    {
+      "id": "457",
+      "name": "Noble Victories",
+      "code": null,
+      "tcgdexId": "bw3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw3.webp",
+      "width": 433,
+      "height": 500,
+      "dHash": "344464b45858581a",
+      "aHash": "ffffc9c1e1e3f7ff",
+      "avgRgb": [
+        214,
+        214,
+        214
+      ]
+    },
+    {
+      "id": "458",
+      "name": "Next Destinies",
+      "code": null,
+      "tcgdexId": "bw4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw4.webp",
+      "width": 500,
+      "height": 390,
+      "dHash": "69f0ccceccf06900",
+      "aHash": "ffc3c38181c3c3ff",
+      "avgRgb": [
+        159,
+        158,
+        158
+      ]
+    },
+    {
+      "id": "459",
+      "name": "Dark Explorers",
+      "code": null,
+      "tcgdexId": "bw5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw5.webp",
+      "width": 433,
+      "height": 500,
+      "dHash": "684ccccccccc70b2",
+      "aHash": "ffff3b110183c7ff",
+      "avgRgb": [
+        172,
+        170,
+        171
+      ]
+    },
+    {
+      "id": "461",
+      "name": "Dragons Exalted",
+      "code": null,
+      "tcgdexId": "bw6",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw6.webp",
+      "width": 487,
+      "height": 500,
+      "dHash": "e4d0d854a8c8e8b0",
+      "aHash": "cf83995dbb99c1f3",
+      "avgRgb": [
+        190,
+        188,
+        189
+      ]
+    },
+    {
+      "id": "463",
+      "name": "Boundaries Crossed",
+      "code": null,
+      "tcgdexId": "bw7",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw7.webp",
+      "width": 500,
+      "height": 433,
+      "dHash": "64c2e49999e4c264",
+      "aHash": "cf8783138387cfff",
+      "avgRgb": [
+        196,
+        195,
+        195
+      ]
+    },
+    {
+      "id": "464",
+      "name": "Plasma Storm",
+      "code": null,
+      "tcgdexId": "bw8",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw8.webp",
+      "width": 443,
+      "height": 500,
+      "dHash": "cce8d4e8ccd4b2b2",
+      "aHash": "93d7018383abefef",
+      "avgRgb": [
+        183,
+        182,
+        182
+      ]
+    },
+    {
+      "id": "465",
+      "name": "Plasma Freeze",
+      "code": null,
+      "tcgdexId": "bw9",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bw9.webp",
+      "width": 433,
+      "height": 500,
+      "dHash": "b278fcfcf4ccf0b2",
+      "aHash": "ffe781810103c7ff",
+      "avgRgb": [
+        153,
+        151,
+        152
+      ]
+    },
+    {
+      "id": "452",
+      "name": "BW Black Star Promos",
+      "code": null,
+      "tcgdexId": "bwp",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/bwp.webp",
+      "width": 514,
+      "height": 466,
+      "dHash": "32b2b28eb2f84ccc",
+      "aHash": "e7e70085c38099ff",
+      "avgRgb": [
+        173,
+        173,
+        173
+      ]
+    },
+    {
+      "id": "532",
+      "name": "Celebrations",
+      "code": null,
+      "tcgdexId": "cel25",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/cel25.webp",
+      "width": 38,
+      "height": 32,
+      "dHash": "6969d468e0ececd0",
+      "aHash": "e3c3c1c3838181ff",
+      "avgRgb": [
+        186,
+        186,
+        186
+      ]
+    },
+    {
+      "id": "450",
+      "name": "Call of Legends",
+      "code": null,
+      "tcgdexId": "col1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/col1.webp",
+      "width": 277,
+      "height": 500,
+      "dHash": "3038707070504840",
+      "aHash": "f3f3e3c3c3c7dfff",
+      "avgRgb": [
+        201,
+        199,
+        200
+      ]
+    },
+    {
+      "id": "482",
+      "name": "Double Crisis",
+      "code": null,
+      "tcgdexId": "dc1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/dc1.webp",
+      "width": 484,
+      "height": 500,
+      "dHash": "a462c89cc8d8d862",
+      "aHash": "ffe7c3999999c3e7",
+      "avgRgb": [
+        206,
+        192,
+        198
+      ]
+    },
+    {
+      "id": "513",
+      "name": "Detective Pikachu",
+      "code": null,
+      "tcgdexId": "det1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/det1.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "a62cc8a8a8e2f29a",
+      "aHash": "fffc89212387f3ff",
+      "avgRgb": [
+        199,
+        199,
+        199
+      ]
+    },
+    {
+      "id": "424",
+      "name": "Diamond & Pearl",
+      "code": null,
+      "tcgdexId": "dp1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/dp1.webp",
+      "width": 500,
+      "height": 476,
+      "dHash": "e0d8a4e4a4d86284",
+      "aHash": "ffc3818181c3e7ff",
+      "avgRgb": [
+        206,
+        205,
+        206
+      ]
+    },
+    {
+      "id": "426",
+      "name": "Mysterious Treasures",
+      "code": null,
+      "tcgdexId": "dp2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/dp2.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "60e0d88c8c8cd8e0",
+      "aHash": "e781813cbdbdc3ff",
+      "avgRgb": [
+        193,
+        191,
+        192
+      ]
+    },
+    {
+      "id": "430",
+      "name": "Secret Wonders",
+      "code": null,
+      "tcgdexId": "dp3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/dp3.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "e0f0a8c8d8d4e0d0",
+      "aHash": "ffc381899181c3ff",
+      "avgRgb": [
+        188,
+        186,
+        187
+      ]
+    },
+    {
+      "id": "431",
+      "name": "Great Encounters",
+      "code": null,
+      "tcgdexId": "dp4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/dp4.webp",
+      "width": 500,
+      "height": 433,
+      "dHash": "7961ccccb6f26465",
+      "aHash": "efc3818185c3efff",
+      "avgRgb": [
+        183,
+        182,
+        183
+      ]
+    },
+    {
+      "id": "433",
+      "name": "Majestic Dawn",
+      "code": null,
+      "tcgdexId": "dp5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/dp5.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "62d8b46262a4e072",
+      "aHash": "e799bd664281c3e7",
+      "avgRgb": [
+        178,
+        176,
+        177
+      ]
+    },
+    {
+      "id": "434",
+      "name": "Legends Awakened",
+      "code": null,
+      "tcgdexId": "dp6",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/dp6.webp",
+      "width": 500,
+      "height": 435,
+      "dHash": "697169cc8ed4cc4c",
+      "aHash": "c3c3c3998181ffff",
+      "avgRgb": [
+        210,
+        209,
+        209
+      ]
+    },
+    {
+      "id": "436",
+      "name": "Stormfront",
+      "code": null,
+      "tcgdexId": "dp7",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/dp7.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "70c8a45a4ab4d860",
+      "aHash": "e799ad524ab599e7",
+      "avgRgb": [
+        154,
+        154,
+        154
+      ]
+    },
+    {
+      "id": "425",
+      "name": "DP Black Star Promos",
+      "code": null,
+      "tcgdexId": "dpp",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/dpp.webp",
+      "width": 514,
+      "height": 466,
+      "dHash": "32b2b28eb2f84ccc",
+      "aHash": "e7e70085c38099ff",
+      "avgRgb": [
+        173,
+        173,
+        173
+      ]
+    },
+    {
+      "id": "462",
+      "name": "Dragon Vault",
+      "code": null,
+      "tcgdexId": "dv1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/dv1.webp",
+      "width": 38,
+      "height": 36,
+      "dHash": "18f0ecf0cc98e4c6",
+      "aHash": "ffe181e18d8187ff",
+      "avgRgb": [
+        159,
+        157,
+        158
+      ]
+    },
+    {
+      "id": "392",
+      "name": "Expedition Base Set",
+      "code": null,
+      "tcgdexId": "ecard1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ecard1.webp",
+      "width": 50,
+      "height": 50,
+      "dHash": "e08ca46062b68ce0",
+      "aHash": "c3992543022499c3",
+      "avgRgb": [
+        102,
+        102,
+        103
+      ]
+    },
+    {
+      "id": "394",
+      "name": "Aquapolis",
+      "code": null,
+      "tcgdexId": "ecard2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ecard2.webp",
+      "width": 50,
+      "height": 63,
+      "dHash": "30b460d88c9ce060",
+      "aHash": "ffe7c38199bd81e7",
+      "avgRgb": [
+        174,
+        174,
+        174
+      ]
+    },
+    {
+      "id": "395",
+      "name": "Skyridge",
+      "code": null,
+      "tcgdexId": "ecard3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ecard3.webp",
+      "width": 75,
+      "height": 58,
+      "dHash": "60e1f2d4d4a28600",
+      "aHash": "ffcfc787818000ff",
+      "avgRgb": [
+        113,
+        113,
+        113
+      ]
+    },
+    {
+      "id": "396",
+      "name": "Ruby & Sapphire",
+      "code": null,
+      "tcgdexId": "ex1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex1.webp",
+      "width": 75,
+      "height": 75,
+      "dHash": "72f2d0a0b4cce062",
+      "aHash": "ffc783818181c3ff",
+      "avgRgb": [
+        170,
+        170,
+        170
+      ]
+    },
+    {
+      "id": "412",
+      "name": "Unseen Forces",
+      "code": null,
+      "tcgdexId": "ex10",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex10.webp",
+      "width": 500,
+      "height": 444,
+      "dHash": "a6aebc98b8f0c0a4",
+      "aHash": "fff1f1f1c1839fff",
+      "avgRgb": [
+        183,
+        184,
+        183
+      ]
+    },
+    {
+      "id": "413",
+      "name": "Delta Species",
+      "code": null,
+      "tcgdexId": "ex11",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex11.webp",
+      "width": 500,
+      "height": 426,
+      "dHash": "cc69b2b2f0f0b2b2",
+      "aHash": "dbc3e7e78181ffff",
+      "avgRgb": [
+        187,
+        188,
+        187
+      ]
+    },
+    {
+      "id": "414",
+      "name": "Legend Maker",
+      "code": null,
+      "tcgdexId": "ex12",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex12.webp",
+      "width": 464,
+      "height": 500,
+      "dHash": "30b2b2704ccccc4c",
+      "aHash": "ffefc7c7939393ff",
+      "avgRgb": [
+        188,
+        189,
+        188
+      ]
+    },
+    {
+      "id": "418",
+      "name": "Holon Phantoms",
+      "code": null,
+      "tcgdexId": "ex13",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex13.webp",
+      "width": 500,
+      "height": 454,
+      "dHash": "10b2b2b2b2b2968e",
+      "aHash": "ffe7ffe7e7a5bdff",
+      "avgRgb": [
+        228,
+        228,
+        228
+      ]
+    },
+    {
+      "id": "420",
+      "name": "Crystal Guardians",
+      "code": null,
+      "tcgdexId": "ex14",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex14.webp",
+      "width": 295,
+      "height": 501,
+      "dHash": "0828585830346050",
+      "aHash": "fff3f7e7e7cfdfff",
+      "avgRgb": [
+        232,
+        231,
+        231
+      ]
+    },
+    {
+      "id": "421",
+      "name": "Dragon Frontiers",
+      "code": null,
+      "tcgdexId": "ex15",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex15.webp",
+      "width": 500,
+      "height": 465,
+      "dHash": "9959d8e4d4d8f070",
+      "aHash": "f3d3818181c3e7ff",
+      "avgRgb": [
+        183,
+        182,
+        182
+      ]
+    },
+    {
+      "id": "422",
+      "name": "Power Keepers",
+      "code": null,
+      "tcgdexId": "ex16",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex16.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "62c89c9c26a4e072",
+      "aHash": "e78181383ca581e7",
+      "avgRgb": [
+        163,
+        161,
+        162
+      ]
+    },
+    {
+      "id": "397",
+      "name": "Sandstorm",
+      "code": null,
+      "tcgdexId": "ex2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex2.webp",
+      "width": 75,
+      "height": 75,
+      "dHash": "d8d8acb498c8c8c8",
+      "aHash": "ff91a181b18b89ff",
+      "avgRgb": [
+        169,
+        169,
+        169
+      ]
+    },
+    {
+      "id": "399",
+      "name": "Dragon",
+      "code": null,
+      "tcgdexId": "ex3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex3.webp",
+      "width": 75,
+      "height": 75,
+      "dHash": "a4b4e08c8ce034b4",
+      "aHash": "e7e7c30000c3e7e7",
+      "avgRgb": [
+        196,
+        196,
+        196
+      ]
+    },
+    {
+      "id": "400",
+      "name": "Team Magma vs Team Aqua",
+      "code": null,
+      "tcgdexId": "ex4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex4.webp",
+      "width": 73,
+      "height": 75,
+      "dHash": "54acd87268cc90a4",
+      "aHash": "fff993c3c1cfbfff",
+      "avgRgb": [
+        229,
+        224,
+        225
+      ]
+    },
+    {
+      "id": "401",
+      "name": "Hidden Legends",
+      "code": null,
+      "tcgdexId": "ex5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex5.webp",
+      "width": 75,
+      "height": 68,
+      "dHash": "4d4d71b2a2694d4d",
+      "aHash": "dbdbe700c3dbdbff",
+      "avgRgb": [
+        200,
+        200,
+        200
+      ]
+    },
+    {
+      "id": "405",
+      "name": "FireRed & LeafGreen",
+      "code": null,
+      "tcgdexId": "ex6",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex6.webp",
+      "width": 75,
+      "height": 75,
+      "dHash": "62c88ca4f08cc862",
+      "aHash": "ffc399818199c3ff",
+      "avgRgb": [
+        185,
+        185,
+        185
+      ]
+    },
+    {
+      "id": "407",
+      "name": "Team Rocket Returns",
+      "code": null,
+      "tcgdexId": "ex7",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex7.webp",
+      "width": 67,
+      "height": 75,
+      "dHash": "ccd4969494d470b2",
+      "aHash": "83296d39698bc7ef",
+      "avgRgb": [
+        180,
+        180,
+        180
+      ]
+    },
+    {
+      "id": "408",
+      "name": "Deoxys",
+      "code": null,
+      "tcgdexId": "ex8",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex8.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "4cbcd8c8cac4d080",
+      "aHash": "fdf1c18383c7dfff",
+      "avgRgb": [
+        207,
+        207,
+        206
+      ]
+    },
+    {
+      "id": "409",
+      "name": "Emerald",
+      "code": null,
+      "tcgdexId": "ex9",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ex9.webp",
+      "width": 500,
+      "height": 378,
+      "dHash": "e8aaccccccaae800",
+      "aHash": "ffc381181881c3ff",
+      "avgRgb": [
+        153,
+        154,
+        153
+      ]
+    },
+    {
+      "id": "524",
+      "name": "Pokémon Futsal 2020",
+      "code": null,
+      "tcgdexId": "fut2020",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/fut2020.webp",
+      "width": 31,
+      "height": 28,
+      "dHash": "69e0eaaacecc6c69",
+      "aHash": "c3c3818081c1c3ff",
+      "avgRgb": [
+        158,
+        158,
+        158
+      ]
+    },
+    {
+      "id": "490",
+      "name": "Generations",
+      "code": null,
+      "tcgdexId": "g1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/g1.webp",
+      "width": 500,
+      "height": 440,
+      "dHash": "69e8c4d0b2d4f0b2",
+      "aHash": "c3c381e78181e7ff",
+      "avgRgb": [
+        192,
+        190,
+        191
+      ]
+    },
+    {
+      "id": "383",
+      "name": "Gym Heroes",
+      "code": null,
+      "tcgdexId": "gym1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/gym1.webp",
+      "width": 184,
+      "height": 112,
+      "dHash": "00dc32b2e6380000",
+      "aHash": "ff816020c1f7ffff",
+      "avgRgb": [
+        196,
+        196,
+        196
+      ]
+    },
+    {
+      "id": "384",
+      "name": "Gym Challenge",
+      "code": null,
+      "tcgdexId": "gym2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/gym2.webp",
+      "width": 182,
+      "height": 110,
+      "dHash": "00f0bc8cc0e30000",
+      "aHash": "ffc1801087efffff",
+      "avgRgb": [
+        144,
+        144,
+        144
+      ]
+    },
+    {
+      "id": "443",
+      "name": "HeartGold SoulSilver",
+      "code": null,
+      "tcgdexId": "hgss1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/hgss1.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "50d4b4bc88ccf0b8",
+      "aHash": "ff81a5a18989e1ff",
+      "avgRgb": [
+        240,
+        226,
+        191
+      ]
+    },
+    {
+      "id": "447",
+      "name": "Unleashed",
+      "code": null,
+      "tcgdexId": "hgss2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/hgss2.webp",
+      "width": 500,
+      "height": 464,
+      "dHash": "10b2b2d4cce86968",
+      "aHash": "ffe7e781c3c3dbff",
+      "avgRgb": [
+        217,
+        216,
+        216
+      ]
+    },
+    {
+      "id": "448",
+      "name": "Undaunted",
+      "code": null,
+      "tcgdexId": "hgss3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/hgss3.webp",
+      "width": 455,
+      "height": 500,
+      "dHash": "44dc94b6a6c464b2",
+      "aHash": "ffb3210909098fef",
+      "avgRgb": [
+        189,
+        188,
+        189
+      ]
+    },
+    {
+      "id": "449",
+      "name": "Triumphant",
+      "code": null,
+      "tcgdexId": "hgss4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/hgss4.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "62e08ca4a49cd862",
+      "aHash": "e781993c0099d3e7",
+      "avgRgb": [
+        173,
+        171,
+        172
+      ]
+    },
+    {
+      "id": "444",
+      "name": "HGSS Black Star Promos",
+      "code": null,
+      "tcgdexId": "hgssp",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/hgssp.webp",
+      "width": 514,
+      "height": 466,
+      "dHash": "32b2b28eb2f84ccc",
+      "aHash": "e7e70085c38099ff",
+      "avgRgb": [
+        173,
+        173,
+        173
+      ]
+    },
+    {
+      "id": "390",
+      "name": "Legendary Collection",
+      "code": null,
+      "tcgdexId": "lc",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/lc.webp",
+      "width": 28,
+      "height": 50,
+      "dHash": "6040607070484870",
+      "aHash": "c3c3c3e7e7cbdbe7",
+      "avgRgb": [
+        93,
+        93,
+        93
+      ]
+    },
+    {
+      "id": "568",
+      "name": "Mega Evolution",
+      "code": null,
+      "tcgdexId": "me01",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/me01.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "00a29e9e8aa60000",
+      "aHash": "ff8000340080ffff",
+      "avgRgb": [
+        128,
+        127,
+        127
+      ]
+    },
+    {
+      "id": "571",
+      "name": "Phantasmal Flames",
+      "code": null,
+      "tcgdexId": "me02",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/me2-symbol.png",
+      "width": 25,
+      "height": 15,
+      "dHash": "00a69e9ea6a20000",
+      "aHash": "ff0010380000ffff",
+      "avgRgb": [
+        103,
+        100,
+        101
+      ]
+    },
+    {
+      "id": "574",
+      "name": "Ascended Heroes",
+      "code": null,
+      "tcgdexId": "me02.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/me02.5.webp",
+      "width": 36,
+      "height": 21,
+      "dHash": "00aa8a96aa8a0000",
+      "aHash": "ff0000280000ffff",
+      "avgRgb": [
+        103,
+        100,
+        101
+      ]
+    },
+    {
+      "id": "575",
+      "name": "Mega Evolution Energy",
+      "code": "mee",
+      "tcgdexId": "mee",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/mee-symbol.png",
+      "width": 640,
+      "height": 892,
+      "dHash": "84949cac848cacbc",
+      "aHash": "818191a9bd898181",
+      "avgRgb": [
+        109,
+        121,
+        134
+      ]
+    },
+    {
+      "id": "569",
+      "name": "MEP Black Star Promos",
+      "code": null,
+      "tcgdexId": "mep",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/hgssp.webp",
+      "width": 514,
+      "height": 466,
+      "dHash": "32b2b28eb2f84ccc",
+      "aHash": "e7e70085c38099ff",
+      "avgRgb": [
+        173,
+        173,
+        173
+      ]
+    },
+    {
+      "id": "385",
+      "name": "Neo Genesis",
+      "code": null,
+      "tcgdexId": "neo1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/neo1.webp",
+      "width": 109,
+      "height": 91,
+      "dHash": "b2b2b1ccc868cccc",
+      "aHash": "ffe78191c3c1ffff",
+      "avgRgb": [
+        214,
+        214,
+        214
+      ]
+    },
+    {
+      "id": "386",
+      "name": "Neo Discovery",
+      "code": null,
+      "tcgdexId": "neo2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/neo2.webp",
+      "width": 121,
+      "height": 86,
+      "dHash": "006171d4dc9c9600",
+      "aHash": "ffe7c383810001ff",
+      "avgRgb": [
+        146,
+        146,
+        146
+      ]
+    },
+    {
+      "id": "388",
+      "name": "Neo Revelation",
+      "code": null,
+      "tcgdexId": "neo3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/neo3.webp",
+      "width": 159,
+      "height": 103,
+      "dHash": "00b2b392d6d47000",
+      "aHash": "ffe7248181c3ffff",
+      "avgRgb": [
+        198,
+        198,
+        198
+      ]
+    },
+    {
+      "id": "389",
+      "name": "Neo Destiny",
+      "code": null,
+      "tcgdexId": "neo4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/neo4.webp",
+      "width": 75,
+      "height": 52,
+      "dHash": "004e7c70c0928800",
+      "aHash": "fffce1c0873fffff",
+      "avgRgb": [
+        214,
+        220,
+        226
+      ]
+    },
+    {
+      "id": "398",
+      "name": "Nintendo Black Star Promos",
+      "code": null,
+      "tcgdexId": "np",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/np.webp",
+      "width": 514,
+      "height": 466,
+      "dHash": "32b2b28eb2f84ccc",
+      "aHash": "e7e70085c38099ff",
+      "avgRgb": [
+        173,
+        173,
+        173
+      ]
+    },
+    {
+      "id": "437",
+      "name": "Platinum",
+      "code": null,
+      "tcgdexId": "pl1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pl1.webp",
+      "width": 500,
+      "height": 486,
+      "dHash": "8c8ca494e0b4f002",
+      "aHash": "ffbdbd810081ffff",
+      "avgRgb": [
+        199,
+        198,
+        198
+      ]
+    },
+    {
+      "id": "439",
+      "name": "Rising Rivals",
+      "code": null,
+      "tcgdexId": "pl2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pl2.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "4ac8e07272e0c84a",
+      "aHash": "ffc381e7e781c3ff",
+      "avgRgb": [
+        169,
+        169,
+        169
+      ]
+    },
+    {
+      "id": "440",
+      "name": "Supreme Victors",
+      "code": null,
+      "tcgdexId": "pl3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pl3.webp",
+      "width": 500,
+      "height": 465,
+      "dHash": "cc69aa69aab23020",
+      "aHash": "81c3c3c3e7ffffff",
+      "avgRgb": [
+        218,
+        218,
+        218
+      ]
+    },
+    {
+      "id": "441",
+      "name": "Arceus",
+      "code": null,
+      "tcgdexId": "pl4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pl4.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "b4c8a4b4b4a4c8a4",
+      "aHash": "ffdb81808181dbff",
+      "avgRgb": [
+        186,
+        186,
+        186
+      ]
+    },
+    {
+      "id": "406",
+      "name": "POP Series 1",
+      "code": null,
+      "tcgdexId": "pop1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pop1.webp",
+      "width": 50,
+      "height": 33,
+      "dHash": "00e6e6d65a36e400",
+      "aHash": "ff8f010160afffff",
+      "avgRgb": [
+        152,
+        152,
+        152
+      ]
+    },
+    {
+      "id": "410",
+      "name": "POP Series 2",
+      "code": null,
+      "tcgdexId": "pop2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pop2.webp",
+      "width": 50,
+      "height": 32,
+      "dHash": "00e4e6d25cb6e400",
+      "aHash": "ff8f800060afffff",
+      "avgRgb": [
+        147,
+        147,
+        147
+      ]
+    },
+    {
+      "id": "417",
+      "name": "POP Series 3",
+      "code": null,
+      "tcgdexId": "pop3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pop3.webp",
+      "width": 50,
+      "height": 32,
+      "dHash": "00c4e6d252b6e400",
+      "aHash": "ff8f000060afffff",
+      "avgRgb": [
+        144,
+        144,
+        144
+      ]
+    },
+    {
+      "id": "419",
+      "name": "POP Series 4",
+      "code": null,
+      "tcgdexId": "pop4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pop4.webp",
+      "width": 500,
+      "height": 305,
+      "dHash": "00c6e4f476a60000",
+      "aHash": "ff8f0100608fffff",
+      "avgRgb": [
+        170,
+        169,
+        169
+      ]
+    },
+    {
+      "id": "423",
+      "name": "POP Series 5",
+      "code": null,
+      "tcgdexId": "pop5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pop5.webp",
+      "width": 500,
+      "height": 323,
+      "dHash": "00e5e4d45ab6e400",
+      "aHash": "ff8f000060afffff",
+      "avgRgb": [
+        162,
+        160,
+        161
+      ]
+    },
+    {
+      "id": "427",
+      "name": "POP Series 6",
+      "code": null,
+      "tcgdexId": "pop6",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pop6.webp",
+      "width": 500,
+      "height": 304,
+      "dHash": "00c6e4f876a60000",
+      "aHash": "ff8f010060cfffff",
+      "avgRgb": [
+        161,
+        159,
+        160
+      ]
+    },
+    {
+      "id": "432",
+      "name": "POP Series 7",
+      "code": null,
+      "tcgdexId": "pop7",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pop7.webp",
+      "width": 500,
+      "height": 315,
+      "dHash": "00c4e6b252b4e400",
+      "aHash": "ff8f000461afffff",
+      "avgRgb": [
+        171,
+        169,
+        170
+      ]
+    },
+    {
+      "id": "435",
+      "name": "POP Series 8",
+      "code": null,
+      "tcgdexId": "pop8",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pop8.webp",
+      "width": 500,
+      "height": 304,
+      "dHash": "00c6e6f676a60000",
+      "aHash": "ff8f000060cfffff",
+      "avgRgb": [
+        158,
+        156,
+        157
+      ]
+    },
+    {
+      "id": "438",
+      "name": "POP Series 9",
+      "code": null,
+      "tcgdexId": "pop9",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/pop9.webp",
+      "width": 500,
+      "height": 306,
+      "dHash": "00c4e6b656b4e500",
+      "aHash": "ff8f000060cfffff",
+      "avgRgb": [
+        159,
+        158,
+        158
+      ]
+    },
+    {
+      "id": "442",
+      "name": "Pokémon Rumble",
+      "code": null,
+      "tcgdexId": "ru1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/ru1.webp",
+      "width": 500,
+      "height": 488,
+      "dHash": "62d0b4c8c8a4d8f0",
+      "aHash": "ffc381811881c3e7",
+      "avgRgb": [
+        152,
+        152,
+        152
+      ]
+    },
+    {
+      "id": "387",
+      "name": "Southern Islands",
+      "code": null,
+      "tcgdexId": "si1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/si1.webp",
+      "width": 132,
+      "height": 102,
+      "dHash": "f2e0983466666900",
+      "aHash": "ffc78120e9cdcfff",
+      "avgRgb": [
+        176,
+        176,
+        176
+      ]
+    },
+    {
+      "id": "497",
+      "name": "Sun & Moon",
+      "code": null,
+      "tcgdexId": "sm1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm1.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "b4a4c8ccccc8a4b4",
+      "aHash": "ffe7c18989c1e7ff",
+      "avgRgb": [
+        197,
+        196,
+        196
+      ]
+    },
+    {
+      "id": "514",
+      "name": "Unbroken Bonds",
+      "code": null,
+      "tcgdexId": "sm10",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm10.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "20b47072a4c84ae0",
+      "aHash": "fff7e7e781c9c3ff",
+      "avgRgb": [
+        219,
+        219,
+        219
+      ]
+    },
+    {
+      "id": "515",
+      "name": "Unified Minds",
+      "code": null,
+      "tcgdexId": "sm11",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm11.webp",
+      "width": 40,
+      "height": 40,
+      "dHash": "b674d8d8c8e890a4",
+      "aHash": "ffe1c383c1c183ef",
+      "avgRgb": [
+        197,
+        197,
+        197
+      ]
+    },
+    {
+      "id": "516",
+      "name": "Hidden Fates",
+      "code": null,
+      "tcgdexId": "sm115",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm115.webp",
+      "width": 38,
+      "height": 37,
+      "dHash": "88d2c0c8a0c8c8e4",
+      "aHash": "ff9fc389a3c1c9ff",
+      "avgRgb": [
+        193,
+        193,
+        193
+      ]
+    },
+    {
+      "id": "519",
+      "name": "Cosmic Eclipse",
+      "code": null,
+      "tcgdexId": "sm12",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm12.webp",
+      "width": 34,
+      "height": 38,
+      "dHash": "b278d4d2cccc64b2",
+      "aHash": "ffc3230701938bff",
+      "avgRgb": [
+        204,
+        204,
+        204
+      ]
+    },
+    {
+      "id": "501",
+      "name": "Guardians Rising",
+      "code": null,
+      "tcgdexId": "sm2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm2.webp",
+      "width": 27,
+      "height": 38,
+      "dHash": "b4f0e0c8f0f070b4",
+      "aHash": "ffe7c3c3c3c3e7ff",
+      "avgRgb": [
+        181,
+        181,
+        181
+      ]
+    },
+    {
+      "id": "503",
+      "name": "Burning Shadows",
+      "code": null,
+      "tcgdexId": "sm3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm3.webp",
+      "width": 38,
+      "height": 36,
+      "dHash": "48b4c8c8c0c4c448",
+      "aHash": "ffffc38181c7dfff",
+      "avgRgb": [
+        195,
+        194,
+        195
+      ]
+    },
+    {
+      "id": "504",
+      "name": "Shining Legends",
+      "code": null,
+      "tcgdexId": "sm3.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm35-symbol.png",
+      "width": 38,
+      "height": 35,
+      "dHash": "868e8ece96f071b2",
+      "aHash": "ff18188181c3e7ff",
+      "avgRgb": [
+        178,
+        178,
+        178
+      ]
+    },
+    {
+      "id": "505",
+      "name": "Crimson Invasion",
+      "code": null,
+      "tcgdexId": "sm4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm4.webp",
+      "width": 38,
+      "height": 34,
+      "dHash": "ca36ecc898b0e9cc",
+      "aHash": "ffe9819181c3dbff",
+      "avgRgb": [
+        159,
+        159,
+        159
+      ]
+    },
+    {
+      "id": "506",
+      "name": "Ultra Prism",
+      "code": null,
+      "tcgdexId": "sm5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm5.webp",
+      "width": 40,
+      "height": 36,
+      "dHash": "30b26969ccccaacc",
+      "aHash": "ffe7c3c3998181ff",
+      "avgRgb": [
+        188,
+        188,
+        188
+      ]
+    },
+    {
+      "id": "507",
+      "name": "Forbidden Light",
+      "code": null,
+      "tcgdexId": "sm6",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm6.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "b4726a48d8b4f0c8",
+      "aHash": "ffe7c3c38185e7ff",
+      "avgRgb": [
+        198,
+        198,
+        198
+      ]
+    },
+    {
+      "id": "508",
+      "name": "Celestial Storm",
+      "code": null,
+      "tcgdexId": "sm7",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm7.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "72c88c8c8cd8e062",
+      "aHash": "ffc399998181c3ff",
+      "avgRgb": [
+        152,
+        152,
+        152
+      ]
+    },
+    {
+      "id": "509",
+      "name": "Dragon Majesty",
+      "code": null,
+      "tcgdexId": "sm7.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm75-symbol.png",
+      "width": 40,
+      "height": 38,
+      "dHash": "34f09c2c6ccce062",
+      "aHash": "ffc381a9c981c3ff",
+      "avgRgb": [
+        166,
+        166,
+        166
+      ]
+    },
+    {
+      "id": "511",
+      "name": "Lost Thunder",
+      "code": null,
+      "tcgdexId": "sm8",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm8.webp",
+      "width": 36,
+      "height": 38,
+      "dHash": "90d2c0d8d8d8f2e4",
+      "aHash": "ffd7818191d3f7ff",
+      "avgRgb": [
+        186,
+        186,
+        186
+      ]
+    },
+    {
+      "id": "512",
+      "name": "Team Up",
+      "code": null,
+      "tcgdexId": "sm9",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sm9.webp",
+      "width": 64,
+      "height": 64,
+      "dHash": "4c6ce0d8c8f09088",
+      "aHash": "fff9c19999839fff",
+      "avgRgb": [
+        217,
+        217,
+        217
+      ]
+    },
+    {
+      "id": "517",
+      "name": "Yellow A Alternate",
+      "code": null,
+      "tcgdexId": "sma",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sma.webp",
+      "width": 40,
+      "height": 40,
+      "dHash": "62c8c88c8ca4e062",
+      "aHash": "ffc39981bda5c3ff",
+      "avgRgb": [
+        157,
+        155,
+        120
+      ]
+    },
+    {
+      "id": "498",
+      "name": "SM Black Star Promos",
+      "code": null,
+      "tcgdexId": "smp",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/smp.webp",
+      "width": 514,
+      "height": 466,
+      "dHash": "32b2b28eb2f84ccc",
+      "aHash": "e7e70085c38099ff",
+      "avgRgb": [
+        173,
+        173,
+        173
+      ]
+    },
+    {
+      "id": "541",
+      "name": "Scarlet & Violet",
+      "code": null,
+      "tcgdexId": "sv01",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv01.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "0092968e9ab20000",
+      "aHash": "ff0000080000ffff",
+      "avgRgb": [
+        109,
+        109,
+        109
+      ]
+    },
+    {
+      "id": "542",
+      "name": "Paldea Evolved",
+      "code": null,
+      "tcgdexId": "sv02",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv02.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "00969696a6920000",
+      "aHash": "ff0000080000ffff",
+      "avgRgb": [
+        112,
+        111,
+        111
+      ]
+    },
+    {
+      "id": "543",
+      "name": "Obsidian Flames",
+      "code": null,
+      "tcgdexId": "sv03",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv03.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "0092968e969a0000",
+      "aHash": "ff0000180000ffff",
+      "avgRgb": [
+        112,
+        111,
+        111
+      ]
+    },
+    {
+      "id": "544",
+      "name": "151",
+      "code": null,
+      "tcgdexId": "sv03.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv03.5.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "008eba929aaa0000",
+      "aHash": "ff0000340000ffff",
+      "avgRgb": [
+        122,
+        122,
+        122
+      ]
+    },
+    {
+      "id": "545",
+      "name": "Paradox Rift",
+      "code": null,
+      "tcgdexId": "sv04",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv04.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "00b6928eae920000",
+      "aHash": "ff00003c0000ffff",
+      "avgRgb": [
+        118,
+        118,
+        118
+      ]
+    },
+    {
+      "id": "546",
+      "name": "Paldean Fates",
+      "code": null,
+      "tcgdexId": "sv04.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv04.5.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "00b29e8ea6960000",
+      "aHash": "ff0000380000ffff",
+      "avgRgb": [
+        109,
+        108,
+        108
+      ]
+    },
+    {
+      "id": "547",
+      "name": "Temporal Forces",
+      "code": null,
+      "tcgdexId": "sv05",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv05.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "009a9686868e0000",
+      "aHash": "ff8100080000ffff",
+      "avgRgb": [
+        103,
+        102,
+        103
+      ]
+    },
+    {
+      "id": "548",
+      "name": "Twilight Masquerade",
+      "code": null,
+      "tcgdexId": "sv06",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv06.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "00b6b38b8be60000",
+      "aHash": "ff00001c0000ffff",
+      "avgRgb": [
+        122,
+        122,
+        122
+      ]
+    },
+    {
+      "id": "549",
+      "name": "Shrouded Fable",
+      "code": null,
+      "tcgdexId": "sv06.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv06.5.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "009e969696a80000",
+      "aHash": "ff00001c0000ffff",
+      "avgRgb": [
+        104,
+        103,
+        104
+      ]
+    },
+    {
+      "id": "550",
+      "name": "Stellar Crown",
+      "code": null,
+      "tcgdexId": "sv07",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv7-symbol.png",
+      "width": 38,
+      "height": 23,
+      "dHash": "0086a69696aa0000",
+      "aHash": "ff0000040000ffff",
+      "avgRgb": [
+        112,
+        111,
+        112
+      ]
+    },
+    {
+      "id": "553",
+      "name": "Surging Sparks",
+      "code": null,
+      "tcgdexId": "sv08",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv8-symbol.png",
+      "width": 40,
+      "height": 24,
+      "dHash": "008696969e9a0000",
+      "aHash": "ff0000080000ffff",
+      "avgRgb": [
+        99,
+        97,
+        98
+      ]
+    },
+    {
+      "id": "555",
+      "name": "Prismatic Evolutions",
+      "code": null,
+      "tcgdexId": "sv08.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv8pt5-symbol.png",
+      "width": 38,
+      "height": 23,
+      "dHash": "00aa9e8ea6b20000",
+      "aHash": "ff0000380000ffff",
+      "avgRgb": [
+        111,
+        108,
+        109
+      ]
+    },
+    {
+      "id": "559",
+      "name": "Journey Together",
+      "code": null,
+      "tcgdexId": "sv09",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv09.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "0086869696b40000",
+      "aHash": "ff0000100081ffff",
+      "avgRgb": [
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "id": "562",
+      "name": "Destined Rivals",
+      "code": null,
+      "tcgdexId": "sv10",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv10.webp",
+      "width": 25,
+      "height": 15,
+      "dHash": "0096968e96b00000",
+      "aHash": "ff0000180081ffff",
+      "avgRgb": [
+        112,
+        111,
+        111
+      ]
+    },
+    {
+      "id": "564",
+      "name": "Black Bolt",
+      "code": null,
+      "tcgdexId": "sv10.5b",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv10.5b.webp",
+      "width": 38,
+      "height": 23,
+      "dHash": "0096969696ae0000",
+      "aHash": "ff0000180000ffff",
+      "avgRgb": [
+        109,
+        105,
+        106
+      ]
+    },
+    {
+      "id": "565",
+      "name": "White Flare",
+      "code": null,
+      "tcgdexId": "sv10.5w",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/sv10.5w.webp",
+      "width": 38,
+      "height": 23,
+      "dHash": "00a2869e96a20000",
+      "aHash": "ff0000380000ffff",
+      "avgRgb": [
+        114,
+        112,
+        112
+      ]
+    },
+    {
+      "id": "540",
+      "name": "SVP Black Star Promos",
+      "code": null,
+      "tcgdexId": "svp",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/svp-symbol.png",
+      "width": 514,
+      "height": 466,
+      "dHash": "32b2b28eb2f84ccc",
+      "aHash": "e7e70085c38099ff",
+      "avgRgb": [
+        173,
+        173,
+        173
+      ]
+    },
+    {
+      "id": "521",
+      "name": "Sword & Shield",
+      "code": null,
+      "tcgdexId": "swsh1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh1.webp",
+      "width": 40,
+      "height": 28,
+      "dHash": "009696cce869b200",
+      "aHash": "ffff188181e7ffff",
+      "avgRgb": [
+        182,
+        182,
+        182
+      ]
+    },
+    {
+      "id": "535",
+      "name": "Astral Radiance",
+      "code": null,
+      "tcgdexId": "swsh10",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh10.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "24d4b4b0f0c862b4",
+      "aHash": "ffff808181c9e3ff",
+      "avgRgb": [
+        197,
+        197,
+        197
+      ]
+    },
+    {
+      "id": "536",
+      "name": "Pokémon GO",
+      "code": null,
+      "tcgdexId": "swsh10.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh10.5.webp",
+      "width": 25,
+      "height": 25,
+      "dHash": "c0e4d490f4bcb418",
+      "aHash": "ff87879381e0f1fb",
+      "avgRgb": [
+        203,
+        203,
+        203
+      ]
+    },
+    {
+      "id": "537",
+      "name": "Lost Origin",
+      "code": null,
+      "tcgdexId": "swsh11",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh11.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "8c8c8cc8e0a49c8c",
+      "aHash": "ffbdbd99818199ff",
+      "avgRgb": [
+        197,
+        196,
+        196
+      ]
+    },
+    {
+      "id": "538",
+      "name": "Silver Tempest",
+      "code": null,
+      "tcgdexId": "swsh12",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh12.webp",
+      "width": 25,
+      "height": 25,
+      "dHash": "70e0f0a4acccc872",
+      "aHash": "ffc381a7bd99c3ff",
+      "avgRgb": [
+        175,
+        173,
+        174
+      ]
+    },
+    {
+      "id": "539",
+      "name": "Crown Zenith",
+      "code": null,
+      "tcgdexId": "swsh12.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh12.5.webp",
+      "width": 25,
+      "height": 24,
+      "dHash": "c8c8486ae8ccc8c8",
+      "aHash": "ffdbcbc3818999ff",
+      "avgRgb": [
+        187,
+        187,
+        187
+      ]
+    },
+    {
+      "id": "522",
+      "name": "Rebel Clash",
+      "code": null,
+      "tcgdexId": "swsh2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh2.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "9074f898c850e0cc",
+      "aHash": "ffe5c19389c1cfff",
+      "avgRgb": [
+        200,
+        200,
+        200
+      ]
+    },
+    {
+      "id": "523",
+      "name": "Darkness Ablaze",
+      "code": null,
+      "tcgdexId": "swsh3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh3.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "a436b4b4d8d0b4a4",
+      "aHash": "ffe7248081c3e7ff",
+      "avgRgb": [
+        196,
+        196,
+        196
+      ]
+    },
+    {
+      "id": "525",
+      "name": "Champion's Path",
+      "code": null,
+      "tcgdexId": "swsh3.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh3.5.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "60c0b0c8c8f4f872",
+      "aHash": "ffc7838181c1e3ff",
+      "avgRgb": [
+        175,
+        175,
+        175
+      ]
+    },
+    {
+      "id": "526",
+      "name": "Vivid Voltage",
+      "code": null,
+      "tcgdexId": "swsh4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh4.webp",
+      "width": 38,
+      "height": 34,
+      "dHash": "928ecc6969b2b220",
+      "aHash": "ff9981c3e7e7ffff",
+      "avgRgb": [
+        202,
+        202,
+        202
+      ]
+    },
+    {
+      "id": "528",
+      "name": "Shining Fates",
+      "code": null,
+      "tcgdexId": "swsh4.5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh4.5.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "b472c88c8cc862a4",
+      "aHash": "ffe3c39999c1c3ff",
+      "avgRgb": [
+        205,
+        205,
+        205
+      ]
+    },
+    {
+      "id": "529",
+      "name": "Battle Styles",
+      "code": null,
+      "tcgdexId": "swsh5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh5.webp",
+      "width": 37,
+      "height": 38,
+      "dHash": "a4a4a4a4a8c8c8c8",
+      "aHash": "ffa5a5a189db81fb",
+      "avgRgb": [
+        187,
+        187,
+        187
+      ]
+    },
+    {
+      "id": "530",
+      "name": "Chilling Reign",
+      "code": null,
+      "tcgdexId": "swsh6",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh6.webp",
+      "width": 38,
+      "height": 32,
+      "dHash": "92b271b2b2d4f0b2",
+      "aHash": "ffe7e70081c3ffff",
+      "avgRgb": [
+        189,
+        189,
+        189
+      ]
+    },
+    {
+      "id": "531",
+      "name": "Evolving Skies",
+      "code": null,
+      "tcgdexId": "swsh7",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh7.webp",
+      "width": 17,
+      "height": 25,
+      "dHash": "5030686868303030",
+      "aHash": "ffc7c393c7c7efef",
+      "avgRgb": [
+        203,
+        203,
+        203
+      ]
+    },
+    {
+      "id": "533",
+      "name": "Fusion Strike",
+      "code": null,
+      "tcgdexId": "swsh8",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh8.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "b8f080b2b8e46cb0",
+      "aHash": "f3c38f238385e9f3",
+      "avgRgb": [
+        191,
+        191,
+        191
+      ]
+    },
+    {
+      "id": "534",
+      "name": "Brilliant Stars",
+      "code": null,
+      "tcgdexId": "swsh9",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swsh9.webp",
+      "width": 38,
+      "height": 38,
+      "dHash": "4ac8b4c8c8b4d84a",
+      "aHash": "ff818199988181ff",
+      "avgRgb": [
+        177,
+        177,
+        177
+      ]
+    },
+    {
+      "id": "520",
+      "name": "SWSH Black Star Promos",
+      "code": null,
+      "tcgdexId": "swshp",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/swshp.webp",
+      "width": 514,
+      "height": 466,
+      "dHash": "32b2b28eb2f84ccc",
+      "aHash": "e7e70085c38099ff",
+      "avgRgb": [
+        173,
+        173,
+        173
+      ]
+    },
+    {
+      "id": "404",
+      "name": "EX trainer Kit (Latias)",
+      "code": null,
+      "tcgdexId": "tk-ex-latia",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/tk-ex-latia.webp",
+      "width": 148,
+      "height": 100,
+      "dHash": "00348eca60f1b400",
+      "aHash": "ff3998c08383ffff",
+      "avgRgb": [
+        240,
+        190,
+        205
+      ]
+    },
+    {
+      "id": "403",
+      "name": "EX trainer Kit (Latios)",
+      "code": null,
+      "tcgdexId": "tk-ex-latio",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/tk-ex-latio.webp",
+      "width": 149,
+      "height": 100,
+      "dHash": "00a4a5a0f8901200",
+      "aHash": "ffefefc10137ffff",
+      "avgRgb": [
+        186,
+        221,
+        240
+      ]
+    },
+    {
+      "id": "416",
+      "name": "EX trainer Kit 2 (Minun)",
+      "code": null,
+      "tcgdexId": "tk-ex-m",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/tk2b-symbol.png",
+      "width": 76,
+      "height": 100,
+      "dHash": "909c98d0e4c4c0c8",
+      "aHash": "9f9f9183878f8f9f",
+      "avgRgb": [
+        192,
+        222,
+        241
+      ]
+    },
+    {
+      "id": "415",
+      "name": "EX trainer Kit 2 (Plusle)",
+      "code": null,
+      "tcgdexId": "tk-ex-p",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/tk-ex-p.webp",
+      "width": 76,
+      "height": 100,
+      "dHash": "909c98d0e4c4c0c8",
+      "aHash": "9f9f9183878f8f9f",
+      "avgRgb": [
+        192,
+        222,
+        241
+      ]
+    },
+    {
+      "id": "470",
+      "name": "Kalos Starter Set",
+      "code": null,
+      "tcgdexId": "xy0",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy0.webp",
+      "width": 500,
+      "height": 469,
+      "dHash": "5cd8c66cf190f4c4",
+      "aHash": "fbb38dc983a3839f",
+      "avgRgb": [
+        187,
+        186,
+        186
+      ]
+    },
+    {
+      "id": "471",
+      "name": "XY",
+      "code": null,
+      "tcgdexId": "xy1",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy1.webp",
+      "width": 500,
+      "height": 465,
+      "dHash": "cce896ccd47171b0",
+      "aHash": "99000099c3c3e7ff",
+      "avgRgb": [
+        170,
+        168,
+        169
+      ]
+    },
+    {
+      "id": "493",
+      "name": "Fates Collide",
+      "code": null,
+      "tcgdexId": "xy10",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy10.webp",
+      "width": 491,
+      "height": 500,
+      "dHash": "b4268cc8c8e0b4b4",
+      "aHash": "ffe78181c381e7ff",
+      "avgRgb": [
+        194,
+        193,
+        193
+      ]
+    },
+    {
+      "id": "494",
+      "name": "Steam Siege",
+      "code": null,
+      "tcgdexId": "xy11",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy11.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "a4d8d8b4b4d8d8a4",
+      "aHash": "ff8199a5a59981ff",
+      "avgRgb": [
+        165,
+        164,
+        164
+      ]
+    },
+    {
+      "id": "496",
+      "name": "Evolutions",
+      "code": null,
+      "tcgdexId": "xy12",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy12.webp",
+      "width": 500,
+      "height": 355,
+      "dHash": "002bccd4d48c2b00",
+      "aHash": "ffe700818100e7ff",
+      "avgRgb": [
+        183,
+        181,
+        182
+      ]
+    },
+    {
+      "id": "475",
+      "name": "Flashfire",
+      "code": null,
+      "tcgdexId": "xy2",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy2.webp",
+      "width": 386,
+      "height": 500,
+      "dHash": "48c4c4c0c4e8e0c4",
+      "aHash": "df9f8fc38181c7ff",
+      "avgRgb": [
+        198,
+        197,
+        198
+      ]
+    },
+    {
+      "id": "477",
+      "name": "Furious Fists",
+      "code": null,
+      "tcgdexId": "xy3",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy3.webp",
+      "width": 459,
+      "height": 500,
+      "dHash": "68e8d0d4cc686868",
+      "aHash": "c7830389bb83c7c7",
+      "avgRgb": [
+        170,
+        168,
+        169
+      ]
+    },
+    {
+      "id": "480",
+      "name": "Phantom Forces",
+      "code": null,
+      "tcgdexId": "xy4",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy4.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "b4a4e062e0c860a4",
+      "aHash": "ffe7c3c3c381c3ff",
+      "avgRgb": [
+        198,
+        197,
+        198
+      ]
+    },
+    {
+      "id": "481",
+      "name": "Primal Clash",
+      "code": null,
+      "tcgdexId": "xy5",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy5.webp",
+      "width": 500,
+      "height": 481,
+      "dHash": "b4b44ac8a4c8c8c8",
+      "aHash": "ffe7c381819981c3",
+      "avgRgb": [
+        202,
+        201,
+        202
+      ]
+    },
+    {
+      "id": "485",
+      "name": "Roaring Skies",
+      "code": null,
+      "tcgdexId": "xy6",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy6.webp",
+      "width": 500,
+      "height": 399,
+      "dHash": "d4cc69b2cc71b200",
+      "aHash": "ffdbdbc381c3e7ff",
+      "avgRgb": [
+        203,
+        202,
+        203
+      ]
+    },
+    {
+      "id": "486",
+      "name": "Ancient Origins",
+      "code": null,
+      "tcgdexId": "xy7",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy7.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "e094e0c8d8f0acf0",
+      "aHash": "e7818118188181e7",
+      "avgRgb": [
+        180,
+        179,
+        180
+      ]
+    },
+    {
+      "id": "487",
+      "name": "BREAKthrough",
+      "code": null,
+      "tcgdexId": "xy8",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy8.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "d8c8a49494a4c8d8",
+      "aHash": "db998181818199db",
+      "avgRgb": [
+        169,
+        167,
+        167
+      ]
+    },
+    {
+      "id": "489",
+      "name": "BREAKpoint",
+      "code": null,
+      "tcgdexId": "xy9",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xy9.webp",
+      "width": 500,
+      "height": 500,
+      "dHash": "62c8d8d8d88cc84a",
+      "aHash": "e783810000bd99ff",
+      "avgRgb": [
+        153,
+        151,
+        152
+      ]
+    },
+    {
+      "id": "467",
+      "name": "XY Black Star Promos",
+      "code": null,
+      "tcgdexId": "xyp",
+      "symbolUrl": "https://pub-041bf18f03164be388647b4363f87908.r2.dev/sets/symbol/xyp.webp",
+      "width": 514,
+      "height": 466,
+      "dHash": "32b2b28eb2f84ccc",
+      "aHash": "e7e70085c38099ff",
+      "avgRgb": [
+        173,
+        173,
+        173
+      ]
+    }
+  ]
+}

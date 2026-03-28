@@ -13,7 +13,8 @@
     "start": "next start",
     "lint": "eslint",
     "scrape:pricing": "node --import tsx/esm scripts/scrapePricing.ts",
-    "hash:card-images": "node --import tsx/esm scripts/hashCardImages.ts"
+    "hash:card-images": "node --import tsx/esm scripts/hashCardImages.ts",
+    "hash:set-symbols": "node --import tsx/esm scripts/hashSetSymbols.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

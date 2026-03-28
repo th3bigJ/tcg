@@ -45,6 +45,7 @@ export function useCardScan(): {
     artist?: string;
     hp?: string;
     visualFingerprint?: OcrResult["visualFingerprint"];
+    symbolFingerprint?: OcrResult["symbolFingerprint"];
     candidateMasterCardIds?: string[];
   }) {
     const response = await fetch("/api/scan/identify", {
@@ -70,9 +71,13 @@ export function useCardScan(): {
     setState({ status: "processing", preview });
 
     try {
-      const visualFingerprint = await prepareCardVisualFingerprint(file, scanSettings);
+      const { visualFingerprint, symbolFingerprint } = await prepareCardVisualFingerprint(
+        file,
+        scanSettings,
+      );
       const visualData = await identifyScan({
         visualFingerprint,
+        symbolFingerprint,
       });
       const candidateHints: ExtractCardTextOptions["candidateCards"] = visualData.candidates
         .filter((candidate) => Boolean(candidate.masterCardId))
@@ -95,6 +100,7 @@ export function useCardScan(): {
         artist: ocrResult.artist,
         hp: ocrResult.hp,
         visualFingerprint: ocrResult.visualFingerprint,
+        symbolFingerprint: ocrResult.symbolFingerprint,
         candidateMasterCardIds: candidateHints?.map((candidate) => candidate.masterCardId),
       });
 

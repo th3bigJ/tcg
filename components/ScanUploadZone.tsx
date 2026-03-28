@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import type { ScanState } from "@/lib/hooks/useCardScan";
 import { DEFAULT_SCAN_OCR_SETTINGS, SCAN_REGIONS, type ScanOcrSettings } from "@/lib/scanOcr";
@@ -24,7 +24,6 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
   const [startingCamera, setStartingCamera] = useState(true);
   const [facingMode, setFacingMode] = useState<FacingMode>("environment");
   const [cameraAttempt, setCameraAttempt] = useState(0);
-  const [autoLiveScan, setAutoLiveScan] = useState(true);
   const [scanSettings, setScanSettings] = useState<ScanOcrSettings>({
     ...DEFAULT_SCAN_OCR_SETTINGS,
   });
@@ -95,23 +94,6 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
     }
   }
 
-  const triggerLiveScan = useEffectEvent(() => {
-    void captureFrame();
-  });
-
-  useEffect(() => {
-    if (!cameraReady || !autoLiveScan) return;
-
-    const intervalId = window.setInterval(() => {
-      if (disabled || liveScanRef.current) return;
-      triggerLiveScan();
-    }, 2800);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [autoLiveScan, cameraReady, disabled, scanSettings]);
-
   function stopCamera() {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -150,12 +132,11 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
     if (cameraError) return cameraError;
     if (state.status === "processing") return "Reading the live frame with visual prefilter + OCR.";
     if (state.status === "searching") return "Searching the narrowed candidate list.";
-    if (state.status === "results") return "Live scan updated. Keep the card steady while results refine.";
+    if (state.status === "results") return "Capture another frame whenever you want to try again.";
     if (state.status === "error") return state.message;
     if (startingCamera) return "Starting rear camera…";
     if (!cameraReady) return "Waiting for camera feed…";
-    if (!autoLiveScan) return "Live scanning paused. Use Scan Now or resume auto scan.";
-    return "Live camera search is running. Keep the card inside the guide.";
+    return "Line the card up inside the guide, then press Capture.";
   }
 
   const activeOcrResult =
@@ -217,14 +198,7 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
               disabled={disabled || !cameraReady}
               className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition active:opacity-80 disabled:opacity-40"
             >
-              Scan Now
-            </button>
-            <button
-              type="button"
-              onClick={() => setAutoLiveScan((current) => !current)}
-              className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition active:opacity-80"
-            >
-              {autoLiveScan ? "Pause Live" : "Resume Live"}
+              Capture
             </button>
             <button
               type="button"
@@ -273,7 +247,7 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
                     : "waiting"}
             </DebugRow>
             <DebugRow label="Lens">{facingMode}</DebugRow>
-            <DebugRow label="Live scan">{autoLiveScan ? "running" : "paused"}</DebugRow>
+            <DebugRow label="Scan mode">manual</DebugRow>
             <DebugRow label="Name band">
               {Math.round(SCAN_REGIONS.name.yStart * 100)}% to{" "}
               {Math.round(scanSettings.nameBandEnd * 100)}%
@@ -292,6 +266,9 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
             <DebugRow label="OCR number">{activeOcrResult?.cardNumber || "waiting"}</DebugRow>
             <DebugRow label="OCR artist">{activeOcrResult?.artist || "waiting"}</DebugRow>
             <DebugRow label="OCR HP">{activeOcrResult?.hp || "waiting"}</DebugRow>
+            <DebugRow label="Set symbol">
+              {activeOcrResult ? "captured" : "waiting"}
+            </DebugRow>
             <DebugRow label="Matches">
               {state.status === "results" ? String(state.candidates.length) : "waiting"}
             </DebugRow>
@@ -395,6 +372,12 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
                     suffix="%"
                   />
                 </div>
+              </div>
+              <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2 sm:col-span-2">
+                <DebugImageCard label="Set Symbol Strip" src={previewImages.symbolStrip} alt="Processed set symbol crop" aspectRatio="2.4 / 1" />
+                <p className="mt-3 text-xs text-[var(--foreground)]/55">
+                  This crop feeds the set-symbol matcher and helps separate duplicate names and numbers across sets.
+                </p>
               </div>
             </div>
           </div>

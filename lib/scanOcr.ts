@@ -6,6 +6,7 @@ export type OcrResult = {
   artist: string;
   hp: string;
   visualFingerprint: CardVisualFingerprint;
+  symbolFingerprint: CardVisualFingerprint;
   rawText: string; // full OCR dump for debugging
   debugImages: {
     source: string;
@@ -14,6 +15,7 @@ export type OcrResult = {
     nameStrip: string;
     hpStrip: string;
     numberStrip: string;
+    symbolStrip: string;
   };
 };
 
@@ -49,6 +51,7 @@ export const SCAN_REGIONS = {
   name: { xStart: 0, xEnd: 1, yStart: 0, yEnd: 0.2, label: "Name + HP" },
   hp: { xStart: 0.72, xEnd: 0.98, yStart: 0, yEnd: 0.16, label: "HP" },
   number: { xStart: 0, xEnd: 1, yStart: 0.72, yEnd: 1, label: "Card Number" },
+  symbol: { xStart: 0.14, xEnd: 0.38, yStart: 0.82, yEnd: 0.95, label: "Set Symbol" },
 } as const;
 
 const CARD_GUIDE = {
@@ -339,6 +342,20 @@ async function canvasToBlob(canvas: HTMLCanvasElement, type = "image/png", quali
   });
 }
 
+async function cropRegionBlob(
+  bitmap: ImageBitmap,
+  region: { xStart: number; xEnd: number; yStart: number; yEnd: number },
+): Promise<Blob> {
+  const srcX = Math.round(bitmap.width * region.xStart);
+  const srcY = Math.round(bitmap.height * region.yStart);
+  const srcW = Math.max(1, Math.round(bitmap.width * (region.xEnd - region.xStart)));
+  const srcH = Math.max(1, Math.round(bitmap.height * (region.yEnd - region.yStart)));
+  const canvas = createCanvas(srcW, srcH);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
+  return canvasToBlob(canvas);
+}
+
 function getResizedImageData(bitmap: ImageBitmap) {
   const scale = Math.min(1, DETECTION_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
   const width = Math.max(1, Math.round(bitmap.width * scale));
@@ -395,10 +412,67 @@ function computeBrightMask(imageData: ImageData) {
     const b = data[offset + 2]!;
     const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
     const spread = Math.max(r, g, b) - Math.min(r, g, b);
-    mask[i] = luminance >= 150 && spread <= 85 ? 1 : 0;
+    const neutralWhite = luminance >= 150 && spread <= 48;
+    const brightBorder = luminance >= 185 && spread <= 78;
+    mask[i] = neutralWhite || brightBorder ? 1 : 0;
   }
 
   return { width, height, mask };
+}
+
+function findBestBrightRun(
+  mask: Uint8Array,
+  fixedIndex: number,
+  rangeStart: number,
+  rangeEnd: number,
+  getIndex: (primary: number, secondary: number) => number,
+  preferHigherCoordinate: boolean,
+  minRunLength: number,
+) {
+  let bestStart = -1;
+  let bestEnd = -1;
+  let bestScore = Number.NEGATIVE_INFINITY;
+  let runStart = -1;
+
+  for (let position = rangeStart; position <= rangeEnd; position += 1) {
+    const isBright = mask[getIndex(fixedIndex, position)] === 1;
+
+    if (isBright) {
+      if (runStart === -1) runStart = position;
+      continue;
+    }
+
+    if (runStart !== -1) {
+      const runEnd = position - 1;
+      const runLength = runEnd - runStart + 1;
+      if (runLength >= minRunLength) {
+        const edgeCoordinate = preferHigherCoordinate ? runEnd : runStart;
+        const score = runLength * 4 + (preferHigherCoordinate ? edgeCoordinate : -edgeCoordinate);
+        if (score > bestScore) {
+          bestScore = score;
+          bestStart = runStart;
+          bestEnd = runEnd;
+        }
+      }
+      runStart = -1;
+    }
+  }
+
+  if (runStart !== -1) {
+    const runEnd = rangeEnd;
+    const runLength = runEnd - runStart + 1;
+    if (runLength >= minRunLength) {
+      const edgeCoordinate = preferHigherCoordinate ? runEnd : runStart;
+      const score = runLength * 4 + (preferHigherCoordinate ? edgeCoordinate : -edgeCoordinate);
+      if (score > bestScore) {
+        bestStart = runStart;
+        bestEnd = runEnd;
+      }
+    }
+  }
+
+  if (bestStart === -1 || bestEnd === -1) return null;
+  return { start: bestStart, end: bestEnd };
 }
 
 function sampleVerticalEdges(
@@ -476,18 +550,22 @@ function sampleMaskVerticalEdges(
   const xSearchStart = Math.round(width * (leftToRight ? 0.05 : 0.55));
   const xSearchEnd = Math.round(width * (leftToRight ? 0.45 : 0.95));
   const rows = 40;
+  const minRunLength = Math.max(8, Math.round(width * 0.06));
 
   for (let i = 0; i < rows; i++) {
     const y = Math.round(yStart + ((yEnd - yStart) * i) / Math.max(rows - 1, 1));
-    const xRange = leftToRight
-      ? { start: xSearchStart, end: xSearchEnd, step: 1 }
-      : { start: xSearchEnd, end: xSearchStart, step: -1 };
+    const run = findBestBrightRun(
+      mask,
+      y,
+      xSearchStart,
+      xSearchEnd,
+      (row, column) => row * width + column,
+      !leftToRight,
+      minRunLength,
+    );
 
-    for (let x = xRange.start; leftToRight ? x <= xRange.end : x >= xRange.end; x += xRange.step) {
-      if (mask[y * width + x]) {
-        points.push({ x, y });
-        break;
-      }
+    if (run) {
+      points.push({ x: leftToRight ? run.start : run.end, y });
     }
   }
 
@@ -505,18 +583,22 @@ function sampleMaskHorizontalEdges(
   const ySearchStart = Math.round(height * (topToBottom ? 0.03 : 0.55));
   const ySearchEnd = Math.round(height * (topToBottom ? 0.45 : 0.97));
   const columns = 32;
+  const minRunLength = Math.max(8, Math.round(height * 0.05));
 
   for (let i = 0; i < columns; i++) {
     const x = Math.round(xStart + ((xEnd - xStart) * i) / Math.max(columns - 1, 1));
-    const yRange = topToBottom
-      ? { start: ySearchStart, end: ySearchEnd, step: 1 }
-      : { start: ySearchEnd, end: ySearchStart, step: -1 };
+    const run = findBestBrightRun(
+      mask,
+      x,
+      ySearchStart,
+      ySearchEnd,
+      (column, row) => row * width + column,
+      !topToBottom,
+      minRunLength,
+    );
 
-    for (let y = yRange.start; topToBottom ? y <= yRange.end : y >= yRange.end; y += yRange.step) {
-      if (mask[y * width + x]) {
-        points.push({ x, y });
-        break;
-      }
+    if (run) {
+      points.push({ x, y: topToBottom ? run.start : run.end });
     }
   }
 
@@ -768,7 +850,9 @@ async function buildScanPreviewImages(
   hpStripBlob: Blob;
   nameStripBlob: Blob;
   numberStripBlob: Blob;
+  symbolStripBlob: Blob;
   visualFingerprint: CardVisualFingerprint;
+  symbolFingerprint: CardVisualFingerprint;
 }> {
   const bitmap = await createImageBitmap(file);
   const detection = await detectAndRectifyCard(bitmap);
@@ -776,7 +860,7 @@ async function buildScanPreviewImages(
   const detectionOverlayBlob = detection.overlayBlob;
   const detectedBitmap = await createImageBitmap(detectedCardBlob);
 
-  const [nameStripBlob, hpStripBlob, numberStripBlob] = await Promise.all([
+  const [nameStripBlob, hpStripBlob, numberStripBlob, rawSymbolBlob, symbolStripBlob] = await Promise.all([
     processStrip(
       detectedBitmap,
       { ...SCAN_REGIONS.name, yEnd: settings.nameBandEnd },
@@ -789,10 +873,13 @@ async function buildScanPreviewImages(
       settings,
       NUMBER_STRIP_UPSCALE,
     ),
+    cropRegionBlob(detectedBitmap, SCAN_REGIONS.symbol),
+    processStrip(detectedBitmap, SCAN_REGIONS.symbol, settings, NUMBER_STRIP_UPSCALE),
   ]);
   const visualFingerprint = computeVisualFingerprint(detectedBitmap);
+  const symbolFingerprint = computeVisualFingerprint(await createImageBitmap(rawSymbolBlob));
 
-  const [source, detectedCard, detectionOverlay, nameStrip, hpStrip, numberStrip] =
+  const [source, detectedCard, detectionOverlay, nameStrip, hpStrip, numberStrip, symbolStrip] =
     await Promise.all([
       blobToDataUrl(file),
       blobToDataUrl(detectedCardBlob),
@@ -800,6 +887,7 @@ async function buildScanPreviewImages(
       blobToDataUrl(nameStripBlob),
       blobToDataUrl(hpStripBlob),
       blobToDataUrl(numberStripBlob),
+      blobToDataUrl(symbolStripBlob),
     ]);
 
   return {
@@ -807,7 +895,9 @@ async function buildScanPreviewImages(
     hpStripBlob,
     nameStripBlob,
     numberStripBlob,
+    symbolStripBlob,
     visualFingerprint,
+    symbolFingerprint,
     debugImages: {
       source,
       detectedCard,
@@ -815,6 +905,7 @@ async function buildScanPreviewImages(
       nameStrip,
       hpStrip,
       numberStrip,
+      symbolStrip,
     },
   };
 }
@@ -831,10 +922,10 @@ export async function prepareCardScanPreview(
 export async function prepareCardVisualFingerprint(
   file: File,
   scanSettings?: Partial<ScanOcrSettings>,
-): Promise<CardVisualFingerprint> {
+): Promise<{ visualFingerprint: CardVisualFingerprint; symbolFingerprint: CardVisualFingerprint }> {
   const settings = withScanSettings(scanSettings);
-  const { visualFingerprint } = await buildScanPreviewImages(file, settings);
-  return visualFingerprint;
+  const { visualFingerprint, symbolFingerprint } = await buildScanPreviewImages(file, settings);
+  return { visualFingerprint, symbolFingerprint };
 }
 
 async function runTesseract(blob: Blob): Promise<string> {
@@ -1068,7 +1159,14 @@ export async function extractCardTextFromImage(
   }
 
   const previewBundle = await buildScanPreviewImages(file, settings);
-  const { debugImages, hpStripBlob, nameStripBlob, numberStripBlob, visualFingerprint } = previewBundle;
+  const {
+    debugImages,
+    hpStripBlob,
+    nameStripBlob,
+    numberStripBlob,
+    visualFingerprint,
+    symbolFingerprint,
+  } = previewBundle;
 
   if (!rawText) {
     const worker = await createOcrWorker();
@@ -1137,6 +1235,7 @@ export async function extractCardTextFromImage(
     artist: artist.trim().replace(/\s+/g, " "),
     hp: hp.trim(),
     visualFingerprint,
+    symbolFingerprint,
     rawText,
     debugImages,
   };
