@@ -26,7 +26,7 @@ const DEFAULT_MODEL_URL = "/models/card-corners.onnx";
 const DEFAULT_UNWARP_WIDTH = 496;
 const DEFAULT_UNWARP_HEIGHT = 720;
 const MISSING_DEFAULT_MODEL_MESSAGE =
-  "No default ONNX model was found at /models/card-corners.onnx. Load a local .onnx model or add one to public/models/card-corners.onnx.";
+  "No default ONNX model was found at /models/card-corners.onnx. Add the bundled single-file model there or load a local .onnx model.";
 
 let defaultSessionPromise: Promise<ort.InferenceSession> | null = null;
 

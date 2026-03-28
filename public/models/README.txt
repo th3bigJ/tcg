@@ -4,11 +4,19 @@ The app now ships with a free default model at:
 
 Current default:
 
-- UVDoc remap-grid ONNX from Hugging Face
+- UVDoc remap-grid ONNX from Hugging Face, merged into a single-file ONNX for browser use
 - Input tensor: NCHW float32
 - Input shape: [1, 3, 720, 496]
 - Output tensor: [1, 2, 45, 31]
 - Output values are normalized source coordinates used to unwarp the document
+
+Source files kept in this folder:
+- `UVDoc_grid.onnx`
+- `UVDoc_grid.onnx.data`
+
+Bundled browser-safe file:
+- `card-corners.onnx`
+- this is the merged single-file model the app loads by default
 
 The scan lab page will:
 - capture the framed card area from the camera
