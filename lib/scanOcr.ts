@@ -143,8 +143,12 @@ function processStrip(
   for (let i = 0; i < data.length; i += 4) {
     const stretched = ((data[i]! - min) / range) * 255;
     const contrasted = (stretched - 128) * settings.contrast + 128;
-    const binary = contrasted >= settings.threshold ? 255 : 0;
-    data[i] = data[i + 1] = data[i + 2] = Math.round(binary);
+    const distanceFromThreshold = contrasted - settings.threshold;
+    const normalized = Math.max(-1, Math.min(1, distanceFromThreshold / 28));
+    const eased = normalized * 0.5 + 0.5;
+    const softened = contrasted * 0.55 + eased * 255 * 0.45;
+    const output = Math.max(0, Math.min(255, softened));
+    data[i] = data[i + 1] = data[i + 2] = Math.round(output);
   }
 
   ctx.putImageData(imageData, 0, 0);
@@ -698,6 +702,22 @@ function validateDetectedQuad(points: Point[], width: number, height: number): b
   );
 }
 
+function expandDetectedQuad(points: Point[], width: number, height: number): Point[] {
+  const center = averagePoint(points) ?? { x: width / 2, y: height / 2 };
+
+  return points.map((point) => {
+    const dx = point.x - center.x;
+    const dy = point.y - center.y;
+    const expandedX = point.x + dx * 0.08;
+    const expandedY = point.y + dy * 0.08;
+
+    return {
+      x: Math.max(0, Math.min(width - 1, expandedX)),
+      y: Math.max(0, Math.min(height - 1, expandedY)),
+    };
+  });
+}
+
 function solveLinearSystem(matrix: number[][], vector: number[]) {
   const size = vector.length;
   const augmented = matrix.map((row, index) => [...row, vector[index]!]);
@@ -817,7 +837,8 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
 
   if (maskCorners && validateDetectedQuad(maskCorners, resized.width, resized.height)) {
     const scaleUp = 1 / resized.scale;
-    const sourcePoints: Point[] = maskCorners.map((point) => ({
+    const expandedMaskCorners = expandDetectedQuad(maskCorners, resized.width, resized.height);
+    const sourcePoints: Point[] = expandedMaskCorners.map((point) => ({
       x: point.x * scaleUp,
       y: point.y * scaleUp,
     }));
@@ -847,7 +868,12 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
   }
 
   const scaleUp = 1 / resized.scale;
-  const sourcePoints: Point[] = [topLeft, topRight, bottomRight, bottomLeft].map((point) => ({
+  const expandedLinePoints = expandDetectedQuad(
+    [topLeft, topRight, bottomRight, bottomLeft],
+    resized.width,
+    resized.height,
+  );
+  const sourcePoints: Point[] = expandedLinePoints.map((point) => ({
     x: point.x * scaleUp,
     y: point.y * scaleUp,
   }));

@@ -355,7 +355,7 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
               <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2">
                 <DebugImageCard label="HP Strip" src={previewImages.hpStrip} alt="Processed OCR HP strip" aspectRatio="2 / 1" />
                 <p className="mt-3 text-xs text-[var(--foreground)]/55">
-                  Adjust the sliders until the HP text looks crisp, then let the live scan keep trying.
+                  Adjust the sliders until the HP text looks crisp, then capture again.
                 </p>
               </div>
               <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2 sm:col-span-2">
