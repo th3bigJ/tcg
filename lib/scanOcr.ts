@@ -360,15 +360,6 @@ async function cropRegionBlob(
   return canvasToBlob(canvas);
 }
 
-function getGuideQuad(width: number, height: number): Point[] {
-  return [
-    { x: width * CARD_GUIDE.left, y: height * CARD_GUIDE.top },
-    { x: width * CARD_GUIDE.right, y: height * CARD_GUIDE.top },
-    { x: width * CARD_GUIDE.right, y: height * CARD_GUIDE.bottom },
-    { x: width * CARD_GUIDE.left, y: height * CARD_GUIDE.bottom },
-  ];
-}
-
 function getResizedImageData(bitmap: ImageBitmap) {
   const scale = Math.min(1, DETECTION_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
   const width = Math.max(1, Math.round(bitmap.width * scale));
@@ -672,6 +663,51 @@ function detectCornersFromBrightMask(brightMask: ReturnType<typeof computeBright
   return [topLeft, topRight, bottomRight, bottomLeft];
 }
 
+function detectBoundingQuadFromBrightMask(
+  brightMask: ReturnType<typeof computeBrightMask>,
+): Point[] | null {
+  const points = collectBrightMaskPoints(brightMask);
+  if (points.length < 120) return null;
+
+  const xs = points.map((point) => point.x).sort((left, right) => left - right);
+  const ys = points.map((point) => point.y).sort((left, right) => left - right);
+  const pick = (values: number[], ratio: number) =>
+    values[Math.max(0, Math.min(values.length - 1, Math.round((values.length - 1) * ratio)))]!;
+
+  const minX = pick(xs, 0.03);
+  const maxX = pick(xs, 0.97);
+  const minY = pick(ys, 0.03);
+  const maxY = pick(ys, 0.97);
+  const width = maxX - minX;
+  const height = maxY - minY;
+
+  if (width < brightMask.width * 0.2 || height < brightMask.height * 0.28) {
+    return null;
+  }
+
+  const padX = width * 0.04;
+  const padY = height * 0.04;
+
+  return [
+    {
+      x: Math.max(0, minX - padX),
+      y: Math.max(0, minY - padY),
+    },
+    {
+      x: Math.min(brightMask.width - 1, maxX + padX),
+      y: Math.max(0, minY - padY),
+    },
+    {
+      x: Math.min(brightMask.width - 1, maxX + padX),
+      y: Math.min(brightMask.height - 1, maxY + padY),
+    },
+    {
+      x: Math.max(0, minX - padX),
+      y: Math.min(brightMask.height - 1, maxY + padY),
+    },
+  ];
+}
+
 function quadArea(points: Point[]): number {
   let area = 0;
   for (let index = 0; index < points.length; index += 1) {
@@ -825,6 +861,7 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
   const gradients = computeGradients(resized.imageData);
   const brightMask = computeBrightMask(resized.imageData);
   const maskCorners = detectCornersFromBrightMask(brightMask);
+  const maskBoundingQuad = detectBoundingQuadFromBrightMask(brightMask);
   const leftPoints = sampleMaskVerticalEdges(brightMask, true);
   const rightPoints = sampleMaskVerticalEdges(brightMask, false);
   const topPoints = sampleMaskHorizontalEdges(brightMask, true);
@@ -841,10 +878,6 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
   const topLine = fitLine(topPoints.length >= 8 ? topPoints : fallbackTopPoints, "horizontal");
   const bottomLine = fitLine(bottomPoints.length >= 8 ? bottomPoints : fallbackBottomPoints, "horizontal");
 
-  const fallbackSourceCanvas = createCanvas(bitmap.width, bitmap.height);
-  fallbackSourceCanvas.getContext("2d")!.drawImage(bitmap, 0, 0);
-  const guideSourcePoints = getGuideQuad(bitmap.width, bitmap.height);
-
   if (maskCorners && validateDetectedQuad(maskCorners, resized.width, resized.height)) {
     const scaleUp = 1 / resized.scale;
     const expandedMaskCorners = expandDetectedQuad(maskCorners, resized.width, resized.height);
@@ -856,8 +889,25 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
     return rectifyFromSourcePoints(bitmap, sourcePoints);
   }
 
+  if (maskBoundingQuad && validateDetectedQuad(maskBoundingQuad, resized.width, resized.height)) {
+    const scaleUp = 1 / resized.scale;
+    const expandedBoundingQuad = expandDetectedQuad(maskBoundingQuad, resized.width, resized.height);
+    const sourcePoints: Point[] = expandedBoundingQuad.map((point) => ({
+      x: point.x * scaleUp,
+      y: point.y * scaleUp,
+    }));
+
+    return rectifyFromSourcePoints(bitmap, sourcePoints);
+  }
+
   if (!leftLine || !rightLine || !topLine || !bottomLine) {
-    return rectifyFromSourcePoints(bitmap, guideSourcePoints);
+    const sourceCanvas = createCanvas(bitmap.width, bitmap.height);
+    sourceCanvas.getContext("2d")!.drawImage(bitmap, 0, 0);
+    const sourceBlob = await canvasToBlob(sourceCanvas);
+    return {
+      warpedCardBlob: sourceBlob,
+      overlayBlob: sourceBlob,
+    };
   }
 
   const topLeft = intersectLines(leftLine, topLine);
@@ -866,7 +916,13 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
   const bottomLeft = intersectLines(leftLine, bottomLine);
 
   if (!topLeft || !topRight || !bottomRight || !bottomLeft) {
-    return rectifyFromSourcePoints(bitmap, guideSourcePoints);
+    const sourceCanvas = createCanvas(bitmap.width, bitmap.height);
+    sourceCanvas.getContext("2d")!.drawImage(bitmap, 0, 0);
+    const sourceBlob = await canvasToBlob(sourceCanvas);
+    return {
+      warpedCardBlob: sourceBlob,
+      overlayBlob: sourceBlob,
+    };
   }
 
   const scaleUp = 1 / resized.scale;
@@ -890,7 +946,11 @@ async function rectifyFromSourcePoints(
   const fallbackSourceCanvas = createCanvas(bitmap.width, bitmap.height);
   fallbackSourceCanvas.getContext("2d")!.drawImage(bitmap, 0, 0);
   if (!validateDetectedQuad(sourcePoints, bitmap.width, bitmap.height)) {
-    sourcePoints = getGuideQuad(bitmap.width, bitmap.height);
+    const blob = await canvasToBlob(fallbackSourceCanvas);
+    return {
+      warpedCardBlob: blob,
+      overlayBlob: blob,
+    };
   }
 
   const destinationPoints: Point[] = [
