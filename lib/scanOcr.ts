@@ -1,4 +1,5 @@
 import type { CardVisualFingerprint } from "@/lib/cardVisualHash";
+import { loadOpenCv } from "@/lib/loadOpenCv";
 
 export type OcrResult = {
   cardName: string;
@@ -175,6 +176,8 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 type Point = { x: number; y: number };
 
+type OpenCvRuntime = Awaited<ReturnType<typeof loadOpenCv>>;
+
 type DetectionResult = {
   warpedCardBlob: Blob;
   overlayBlob: Blob;
@@ -270,6 +273,18 @@ function createCanvas(width: number, height: number) {
   canvas.width = width;
   canvas.height = height;
   return canvas;
+}
+
+function orderQuadPoints(points: Point[]): Point[] {
+  const sortedBySum = [...points].sort((left, right) => left.x + left.y - (right.x + right.y));
+  const sortedByDiff = [...points].sort((left, right) => left.y - left.x - (right.y - right.x));
+
+  const topLeft = sortedBySum[0]!;
+  const bottomRight = sortedBySum[sortedBySum.length - 1]!;
+  const topRight = sortedByDiff[0]!;
+  const bottomLeft = sortedByDiff[sortedByDiff.length - 1]!;
+
+  return [topLeft, topRight, bottomRight, bottomLeft];
 }
 
 function computeDifferenceHashFromBitmap(bitmap: ImageBitmap): string {
@@ -747,6 +762,126 @@ function validateDetectedQuad(points: Point[], width: number, height: number): b
   );
 }
 
+async function detectCornersWithOpenCv(bitmap: ImageBitmap): Promise<Point[] | null> {
+  const cv = (await loadOpenCv()) as OpenCvRuntime & {
+    imread: (element: HTMLCanvasElement) => {
+      rows: number;
+      cols: number;
+      delete: () => void;
+    };
+    Mat: new () => {
+      rows: number;
+      cols: number;
+      data32S: Int32Array;
+      delete: () => void;
+    };
+    MatVector: new () => {
+      size: () => number;
+      get: (index: number) => {
+        rows: number;
+        data32S: Int32Array;
+        delete: () => void;
+      };
+      delete: () => void;
+    };
+    Size: new (width: number, height: number) => unknown;
+    Scalar: new (...values: number[]) => unknown;
+    BORDER_DEFAULT: number;
+    RETR_LIST: number;
+    CHAIN_APPROX_SIMPLE: number;
+    COLOR_RGBA2GRAY: number;
+    MORPH_CLOSE: number;
+    CV_8U: number;
+    arcLength: (curve: unknown, closed: boolean) => number;
+    approxPolyDP: (curve: unknown, approxCurve: unknown, epsilon: number, closed: boolean) => void;
+    contourArea: (contour: unknown, oriented?: boolean) => number;
+    cvtColor: (src: unknown, dst: unknown, code: number) => void;
+    GaussianBlur: (src: unknown, dst: unknown, ksize: unknown, sigmaX: number, sigmaY: number, borderType: number) => void;
+    Canny: (src: unknown, dst: unknown, threshold1: number, threshold2: number) => void;
+    getStructuringElement: (shape: number, ksize: unknown) => unknown;
+    morphologyEx: (src: unknown, dst: unknown, op: number, kernel: unknown) => void;
+    findContours: (image: unknown, contours: unknown, hierarchy: unknown, mode: number, method: number) => void;
+    dilate: (src: unknown, dst: unknown, kernel: unknown) => void;
+    Mat_ones?: (...args: unknown[]) => unknown;
+  };
+
+  const resized = getResizedImageData(bitmap);
+  const canvas = createCanvas(resized.width, resized.height);
+  const ctx = canvas.getContext("2d")!;
+  ctx.putImageData(resized.imageData, 0, 0);
+
+  const src = cv.imread(canvas);
+  const gray = new cv.Mat();
+  const blurred = new cv.Mat();
+  const edges = new cv.Mat();
+  const closed = new cv.Mat();
+  const contours = new cv.MatVector();
+  const hierarchy = new cv.Mat();
+  const kernel = cv.getStructuringElement(0, new cv.Size(5, 5));
+
+  try {
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+    cv.Canny(blurred, edges, 60, 160);
+    cv.dilate(edges, edges, kernel);
+    cv.morphologyEx(edges, closed, cv.MORPH_CLOSE, kernel);
+    cv.findContours(closed, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+
+    let bestQuad: Point[] | null = null;
+    let bestArea = 0;
+
+    for (let index = 0; index < contours.size(); index += 1) {
+      const contour = contours.get(index);
+      const perimeter = cv.arcLength(contour, true);
+      const approx = new cv.Mat();
+
+      try {
+        cv.approxPolyDP(contour, approx, perimeter * 0.02, true);
+        if (approx.rows !== 4) continue;
+
+        const rawPoints: Point[] = [];
+        for (let pointIndex = 0; pointIndex < 4; pointIndex += 1) {
+          rawPoints.push({
+            x: approx.data32S[pointIndex * 2] ?? 0,
+            y: approx.data32S[pointIndex * 2 + 1] ?? 0,
+          });
+        }
+
+        const ordered = orderQuadPoints(rawPoints);
+        if (!validateDetectedQuad(ordered, resized.width, resized.height)) continue;
+
+        const area = Math.abs(cv.contourArea(contour, false));
+        if (area > bestArea) {
+          bestArea = area;
+          bestQuad = ordered;
+        }
+      } finally {
+        approx.delete();
+        contour.delete();
+      }
+    }
+
+    if (!bestQuad) return null;
+
+    const scaleUp = 1 / resized.scale;
+    return bestQuad.map((point) => ({
+      x: point.x * scaleUp,
+      y: point.y * scaleUp,
+    }));
+  } finally {
+    src.delete();
+    gray.delete();
+    blurred.delete();
+    edges.delete();
+    closed.delete();
+    contours.delete();
+    hierarchy.delete();
+    if (typeof (kernel as { delete?: () => void }).delete === "function") {
+      (kernel as { delete: () => void }).delete();
+    }
+  }
+}
+
 function expandDetectedQuad(points: Point[], width: number, height: number): Point[] {
   const center = averagePoint(points) ?? { x: width / 2, y: height / 2 };
 
@@ -857,6 +992,15 @@ function sampleImage(data: Uint8ClampedArray, width: number, height: number, poi
 }
 
 async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResult> {
+  try {
+    const openCvCorners = await detectCornersWithOpenCv(bitmap);
+    if (openCvCorners && validateDetectedQuad(openCvCorners, bitmap.width, bitmap.height)) {
+      return rectifyFromSourcePoints(bitmap, expandDetectedQuad(openCvCorners, bitmap.width, bitmap.height));
+    }
+  } catch {
+    // Fall back to the heuristic detector if OpenCV is unavailable or fails.
+  }
+
   const resized = getResizedImageData(bitmap);
   const gradients = computeGradients(resized.imageData);
   const brightMask = computeBrightMask(resized.imageData);

@@ -15,6 +15,14 @@ type Props = {
 
 type FacingMode = "environment" | "user";
 
+const SCAN_VIEWPORT_ASPECT = 3 / 4;
+const GUIDE_INSET = {
+  left: 0.1,
+  right: 0.9,
+  top: 0.06,
+  bottom: 0.94,
+} as const;
+
 export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -122,17 +130,47 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
     const video = videoRef.current;
     if (!video || disabled || !cameraReady) return null;
 
-    const width = video.videoWidth;
-    const height = video.videoHeight;
-    if (!width || !height) return null;
+    const videoWidth = video.videoWidth;
+    const videoHeight = video.videoHeight;
+    if (!videoWidth || !videoHeight) return null;
+
+    const videoAspect = videoWidth / videoHeight;
+
+    let visibleSrcX = 0;
+    let visibleSrcY = 0;
+    let visibleSrcWidth = videoWidth;
+    let visibleSrcHeight = videoHeight;
+
+    if (videoAspect > SCAN_VIEWPORT_ASPECT) {
+      visibleSrcWidth = videoHeight * SCAN_VIEWPORT_ASPECT;
+      visibleSrcX = (videoWidth - visibleSrcWidth) / 2;
+    } else {
+      visibleSrcHeight = videoWidth / SCAN_VIEWPORT_ASPECT;
+      visibleSrcY = (videoHeight - visibleSrcHeight) / 2;
+    }
+
+    const guideSrcX = visibleSrcX + visibleSrcWidth * GUIDE_INSET.left;
+    const guideSrcY = visibleSrcY + visibleSrcHeight * GUIDE_INSET.top;
+    const guideSrcWidth = visibleSrcWidth * (GUIDE_INSET.right - GUIDE_INSET.left);
+    const guideSrcHeight = visibleSrcHeight * (GUIDE_INSET.bottom - GUIDE_INSET.top);
 
     const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = Math.round(guideSrcWidth);
+    canvas.height = Math.round(guideSrcHeight);
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    ctx.drawImage(video, 0, 0, width, height);
+    ctx.drawImage(
+      video,
+      guideSrcX,
+      guideSrcY,
+      guideSrcWidth,
+      guideSrcHeight,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
 
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, "image/jpeg", 0.95),
