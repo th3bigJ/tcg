@@ -2,6 +2,11 @@ export type OcrResult = {
   cardName: string;
   cardNumber: string; // e.g. "062/091" or "SWSH001/198" — empty string if not found
   rawText: string; // full OCR dump for debugging
+  debugImages: {
+    source: string;
+    nameStrip: string;
+    numberStrip: string;
+  };
 };
 
 export const SCAN_REGIONS = {
@@ -70,6 +75,21 @@ function processStrip(bitmap: ImageBitmap, yStart: number, yEnd: number): Promis
   });
 }
 
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Failed to read image data."));
+      }
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Failed to read image data."));
+    reader.readAsDataURL(blob);
+  });
+}
+
 async function runTesseract(blob: Blob): Promise<string> {
   const { createWorker } = await import("tesseract.js");
   const worker = await createWorker("eng");
@@ -135,6 +155,8 @@ function parseOcrText(raw: string): { cardName: string; cardNumber: string } {
 
 export async function extractCardTextFromImage(file: File): Promise<OcrResult> {
   let rawText = "";
+  let nameStripBlob: Blob | null = null;
+  let numberStripBlob: Blob | null = null;
 
   // Try native TextDetector first (Chrome Android/desktop)
   if (typeof window !== "undefined" && "TextDetector" in window) {
@@ -154,24 +176,35 @@ export async function extractCardTextFromImage(file: File): Promise<OcrResult> {
   //   top 0–18%:  card name (+ stage/HP line)
   //   bottom 88–96%: card number (e.g. 295/217)
   // Cropping + upscaling these thin bands massively improves accuracy on foil cards.
+  const bitmap = await createImageBitmap(file);
+  [nameStripBlob, numberStripBlob] = await Promise.all([
+    processStrip(bitmap, SCAN_REGIONS.name.yStart, SCAN_REGIONS.name.yEnd),
+    processStrip(bitmap, SCAN_REGIONS.number.yStart, SCAN_REGIONS.number.yEnd),
+  ]);
+
   if (!rawText) {
-    const bitmap = await createImageBitmap(file);
-    const [nameStrip, numberStrip] = await Promise.all([
-      processStrip(bitmap, SCAN_REGIONS.name.yStart, SCAN_REGIONS.name.yEnd),
-      processStrip(bitmap, SCAN_REGIONS.number.yStart, SCAN_REGIONS.number.yEnd),
-    ]);
     const [nameText, numberText] = await Promise.all([
-      runTesseract(nameStrip),
-      runTesseract(numberStrip),
+      runTesseract(nameStripBlob),
+      runTesseract(numberStripBlob),
     ]);
     rawText = nameText + "\n" + numberText;
   }
 
   const { cardName, cardNumber } = parseOcrText(rawText);
+  const [source, nameStrip, numberStrip] = await Promise.all([
+    blobToDataUrl(file),
+    blobToDataUrl(nameStripBlob),
+    blobToDataUrl(numberStripBlob),
+  ]);
 
   return {
     cardName: cardName.trim().replace(/\s+/g, " "),
     cardNumber: cardNumber.trim(),
     rawText,
+    debugImages: {
+      source,
+      nameStrip,
+      numberStrip,
+    },
   };
 }

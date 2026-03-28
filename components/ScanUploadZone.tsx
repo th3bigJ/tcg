@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
 
 import type { ScanState } from "@/lib/hooks/useCardScan";
 import { SCAN_REGIONS } from "@/lib/scanOcr";
@@ -14,15 +14,19 @@ type Props = {
 };
 
 type FacingMode = "environment" | "user";
+const AUTO_SCAN_INTERVAL_MS = 1800;
 
 export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const autoScanTimeoutRef = useRef<number | null>(null);
   const [cameraError, setCameraError] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
   const [startingCamera, setStartingCamera] = useState(true);
   const [facingMode, setFacingMode] = useState<FacingMode>("environment");
   const [cameraAttempt, setCameraAttempt] = useState(0);
+  const [autoScanEnabled, setAutoScanEnabled] = useState(true);
+  const [lastScanAt, setLastScanAt] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +78,7 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
 
     return () => {
       cancelled = true;
+      clearAutoScanTimeout();
       stopCamera();
     };
   }, [cameraAttempt, facingMode]);
@@ -85,9 +90,17 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
     }
   }
 
-  async function captureFrame() {
+  function clearAutoScanTimeout() {
+    if (autoScanTimeoutRef.current !== null) {
+      window.clearTimeout(autoScanTimeoutRef.current);
+      autoScanTimeoutRef.current = null;
+    }
+  }
+
+  async function captureFrame(trigger: "manual" | "auto" = "manual") {
     const video = videoRef.current;
     if (!video || disabled || !cameraReady) return;
+    clearAutoScanTimeout();
 
     const width = video.videoWidth;
     const height = video.videoHeight;
@@ -112,18 +125,46 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
       lastModified: Date.now(),
     });
 
+    setLastScanAt(Date.now());
+    if (trigger === "manual") {
+      setAutoScanEnabled(false);
+    }
+
     onFile(file);
   }
+
+  const queueAutoScan = useEffectEvent(() => {
+    clearAutoScanTimeout();
+
+    if (!autoScanEnabled || disabled || !cameraReady || cameraError) {
+      return;
+    }
+
+    autoScanTimeoutRef.current = window.setTimeout(() => {
+      void captureFrame("auto");
+    }, AUTO_SCAN_INTERVAL_MS);
+  });
+
+  useEffect(() => {
+    queueAutoScan();
+    return clearAutoScanTimeout;
+  }, [state.status, autoScanEnabled, disabled, cameraReady, cameraError]);
 
   function statusText() {
     if (cameraError) return cameraError;
     if (state.status === "processing") return "Reading card text from the captured frame.";
     if (state.status === "searching") return "Searching the card database with the extracted text.";
-    if (state.status === "results") return "Latest scan complete. You can scan again immediately.";
+    if (state.status === "results") {
+      return autoScanEnabled
+        ? "Match updated. Live scanning will keep checking the next frame."
+        : "Latest scan complete. Live scanning is paused.";
+    }
     if (state.status === "error") return state.message;
     if (startingCamera) return "Starting rear camera…";
     if (!cameraReady) return "Waiting for camera feed…";
-    return "Live camera ready. Fit the card inside the frame and scan.";
+    return autoScanEnabled
+      ? "Live camera ready. Hold the card inside the frame and scanning will run automatically."
+      : "Live camera ready. Auto-scan is paused.";
   }
 
   const showDebug = state.status !== "idle";
@@ -173,11 +214,18 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={captureFrame}
+              onClick={() => void captureFrame("manual")}
               disabled={disabled || !cameraReady}
               className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition active:opacity-80 disabled:opacity-40"
             >
-              Scan Frame
+              Scan Once
+            </button>
+            <button
+              type="button"
+              onClick={() => setAutoScanEnabled((current) => !current)}
+              className="rounded-full border border-white/25 bg-emerald-400/20 px-4 py-2 text-sm font-medium text-white transition active:opacity-80"
+            >
+              {autoScanEnabled ? "Pause Auto" : "Resume Auto"}
             </button>
             <button
               type="button"
@@ -226,6 +274,10 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
                     : "waiting"}
             </DebugRow>
             <DebugRow label="Lens">{facingMode}</DebugRow>
+            <DebugRow label="Auto scan">{autoScanEnabled ? "on" : "paused"}</DebugRow>
+            <DebugRow label="Last scan">
+              {lastScanAt ? new Date(lastScanAt).toLocaleTimeString() : "waiting"}
+            </DebugRow>
             <DebugRow label="Name band">
               {Math.round(SCAN_REGIONS.name.yStart * 100)}% to {Math.round(SCAN_REGIONS.name.yEnd * 100)}%
             </DebugRow>
@@ -281,6 +333,34 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
             )}
           </div>
         </div>
+
+        {showDebug && "ocrResult" in state ? (
+          <div className="rounded-2xl border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 p-3 sm:col-span-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--foreground)]/55">
+              OCR Strip Previews
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <DebugImageCard
+                label="Source"
+                src={state.ocrResult.debugImages.source}
+                alt="Source frame used for OCR"
+                aspectRatio="2 / 3"
+              />
+              <DebugImageCard
+                label="Name + HP Strip"
+                src={state.ocrResult.debugImages.nameStrip}
+                alt="Processed OCR name strip"
+                aspectRatio="3 / 1"
+              />
+              <DebugImageCard
+                label="Card Number Strip"
+                src={state.ocrResult.debugImages.numberStrip}
+                alt="Processed OCR number strip"
+                aspectRatio="3 / 1"
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -327,6 +407,29 @@ function DebugRow({
       <span className="max-w-[65%] text-right font-mono text-[13px] text-[var(--foreground)]/82">
         {children}
       </span>
+    </div>
+  );
+}
+
+function DebugImageCard({
+  label,
+  src,
+  alt,
+  aspectRatio,
+}: {
+  label: string;
+  src: string;
+  alt: string;
+  aspectRatio: string;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--foreground)]/55">
+        {label}
+      </p>
+      <div className="relative mt-2 overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-black/5" style={{ aspectRatio }}>
+        <Image src={src} alt={alt} fill unoptimized className="object-cover" />
+      </div>
     </div>
   );
 }
