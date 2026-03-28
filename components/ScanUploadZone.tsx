@@ -1,130 +1,332 @@
 "use client";
 
-import { useRef } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+
+import type { ScanState } from "@/lib/hooks/useCardScan";
+import { SCAN_REGIONS } from "@/lib/scanOcr";
 
 type Props = {
   onFile: (file: File) => void;
+  onReset: () => void;
   disabled: boolean;
-  preview?: string;
+  state: ScanState;
 };
 
-export function ScanUploadZone({ onFile, disabled, preview }: Props) {
-  const cameraRef = useRef<HTMLInputElement>(null);
-  const libraryRef = useRef<HTMLInputElement>(null);
+type FacingMode = "environment" | "user";
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
-      onFile(file);
-      // reset so the same file can be re-selected
-      e.target.value = "";
+export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState("");
+  const [cameraReady, setCameraReady] = useState(false);
+  const [startingCamera, setStartingCamera] = useState(true);
+  const [facingMode, setFacingMode] = useState<FacingMode>("environment");
+  const [cameraAttempt, setCameraAttempt] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function startCamera() {
+      setStartingCamera(true);
+      setCameraReady(false);
+      setCameraError("");
+
+      try {
+        stopCamera();
+
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error("This browser does not expose camera access.");
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: facingMode },
+            width: { ideal: 1080 },
+            height: { ideal: 1920 },
+          },
+        });
+
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => {});
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Unable to access the camera.";
+        setCameraError(message);
+      } finally {
+        if (!cancelled) {
+          setStartingCamera(false);
+        }
+      }
+    }
+
+    startCamera();
+
+    return () => {
+      cancelled = true;
+      stopCamera();
+    };
+  }, [cameraAttempt, facingMode]);
+
+  function stopCamera() {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     }
   }
 
+  async function captureFrame() {
+    const video = videoRef.current;
+    if (!video || disabled || !cameraReady) return;
+
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    if (!width || !height) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.95),
+    );
+    if (!blob) return;
+
+    const file = new File([blob], `scan-${Date.now()}.jpg`, {
+      type: "image/jpeg",
+      lastModified: Date.now(),
+    });
+
+    onFile(file);
+  }
+
+  function statusText() {
+    if (cameraError) return cameraError;
+    if (state.status === "processing") return "Reading card text from the captured frame.";
+    if (state.status === "searching") return "Searching the card database with the extracted text.";
+    if (state.status === "results") return "Latest scan complete. You can scan again immediately.";
+    if (state.status === "error") return state.message;
+    if (startingCamera) return "Starting rear camera…";
+    if (!cameraReady) return "Waiting for camera feed…";
+    return "Live camera ready. Fit the card inside the frame and scan.";
+  }
+
+  const showDebug = state.status !== "idle";
+
   return (
-    <div className="flex flex-col items-center gap-4">
-      {/* Card-shaped preview / placeholder */}
+    <div className="flex flex-col gap-4">
       <div
-        className="relative w-full max-w-xs overflow-hidden rounded-xl border border-[var(--foreground)]/15 bg-[var(--foreground)]/5"
-        style={{ aspectRatio: "2 / 3" }}
+        className="relative w-full overflow-hidden rounded-[1.5rem] border border-[var(--foreground)]/15 bg-black"
+        style={{ aspectRatio: "3 / 4" }}
       >
-        {preview ? (
-          <img
-            src={preview}
-            alt="Card preview"
-            className="h-full w-full object-cover"
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          className="h-full w-full object-cover"
+          onCanPlay={() => setCameraReady(true)}
+        />
+
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,transparent_0,transparent_calc(33.333%-0.5px),rgba(255,255,255,0.18)_calc(33.333%-0.5px),rgba(255,255,255,0.18)_calc(33.333%+0.5px),transparent_calc(33.333%+0.5px),transparent_calc(66.666%-0.5px),rgba(255,255,255,0.18)_calc(66.666%-0.5px),rgba(255,255,255,0.18)_calc(66.666%+0.5px),transparent_calc(66.666%+0.5px))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0,transparent_calc(25%-0.5px),rgba(255,255,255,0.14)_calc(25%-0.5px),rgba(255,255,255,0.14)_calc(25%+0.5px),transparent_calc(25%+0.5px),transparent_calc(50%-0.5px),rgba(255,255,255,0.14)_calc(50%-0.5px),rgba(255,255,255,0.14)_calc(50%+0.5px),transparent_calc(50%+0.5px),transparent_calc(75%-0.5px),rgba(255,255,255,0.14)_calc(75%-0.5px),rgba(255,255,255,0.14)_calc(75%+0.5px),transparent_calc(75%+0.5px))]" />
+          <div className="absolute inset-x-[10%] inset-y-[6%] rounded-[1.25rem] border-2 border-white/75 shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
+
+          <ScanBand
+            label={SCAN_REGIONS.name.label}
+            top={SCAN_REGIONS.name.yStart * 100}
+            height={(SCAN_REGIONS.name.yEnd - SCAN_REGIONS.name.yStart) * 100}
+            tone="amber"
           />
-        ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-6 text-center text-[var(--foreground)]/40">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-12 w-12"
-              aria-hidden="true"
+          <ScanBand
+            label={SCAN_REGIONS.number.label}
+            top={SCAN_REGIONS.number.yStart * 100}
+            height={(SCAN_REGIONS.number.yEnd - SCAN_REGIONS.number.yStart) * 100}
+            tone="cyan"
+          />
+        </div>
+
+        <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/75 to-transparent px-4 py-4 text-white">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/70">
+            Scanner Debug
+          </p>
+          <p className="mt-1 max-w-[24rem] text-sm font-medium leading-5">{statusText()}</p>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent px-4 pb-4 pt-10 text-white">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={captureFrame}
+              disabled={disabled || !cameraReady}
+              className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition active:opacity-80 disabled:opacity-40"
             >
-              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-              <circle cx="12" cy="13" r="3" />
-            </svg>
-            <p className="text-sm font-medium">Point camera at a card</p>
-            <p className="text-xs">Works best in good lighting. Hold the card flat to reduce glare.</p>
+              Scan Frame
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setFacingMode((current) =>
+                  current === "environment" ? "user" : "environment",
+                )
+              }
+              className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition active:opacity-80"
+            >
+              Flip Camera
+            </button>
+            <button
+              type="button"
+              onClick={() => setCameraAttempt((current) => current + 1)}
+              className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition active:opacity-80"
+            >
+              Retry Camera
+            </button>
+            {showDebug ? (
+              <button
+                type="button"
+                onClick={onReset}
+                className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition active:opacity-80"
+              >
+                Clear Debug
+              </button>
+            ) : null}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Buttons */}
-      <div className="flex w-full max-w-xs gap-3">
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => cameraRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-[var(--background)] transition active:opacity-80 disabled:opacity-50"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-            aria-hidden="true"
-          >
-            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-            <circle cx="12" cy="13" r="3" />
-          </svg>
-          Take photo
-        </button>
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_11rem]">
+        <div className="rounded-2xl border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--foreground)]/55">
+            OCR Dev Tools
+          </p>
+          <div className="mt-3 grid gap-2 text-sm">
+            <DebugRow label="Camera">
+              {cameraError
+                ? "error"
+                : startingCamera
+                  ? "starting"
+                  : cameraReady
+                    ? "live"
+                    : "waiting"}
+            </DebugRow>
+            <DebugRow label="Lens">{facingMode}</DebugRow>
+            <DebugRow label="Name band">
+              {Math.round(SCAN_REGIONS.name.yStart * 100)}% to {Math.round(SCAN_REGIONS.name.yEnd * 100)}%
+            </DebugRow>
+            <DebugRow label="Number band">
+              {Math.round(SCAN_REGIONS.number.yStart * 100)}% to {Math.round(SCAN_REGIONS.number.yEnd * 100)}%
+            </DebugRow>
+            <DebugRow label="OCR name">
+              {showDebug && "ocrResult" in state ? state.ocrResult.cardName || "empty" : "waiting"}
+            </DebugRow>
+            <DebugRow label="OCR number">
+              {showDebug && "ocrResult" in state ? state.ocrResult.cardNumber || "empty" : "waiting"}
+            </DebugRow>
+            <DebugRow label="Matches">
+              {state.status === "results" ? String(state.candidates.length) : "waiting"}
+            </DebugRow>
+            <DebugRow label="Confidence">
+              {state.status === "results" ? state.confidence : "waiting"}
+            </DebugRow>
+          </div>
 
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => libraryRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--foreground)]/20 bg-[var(--foreground)]/8 px-4 py-3 text-sm font-semibold transition active:opacity-80 disabled:opacity-50"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-            aria-hidden="true"
+          {showDebug && "ocrResult" in state ? (
+            <details className="mt-4 rounded-xl border border-[var(--foreground)]/10 bg-black/5 p-3">
+              <summary className="cursor-pointer select-none text-xs font-semibold uppercase tracking-[0.18em] text-[var(--foreground)]/55">
+                Raw OCR Text
+              </summary>
+              <pre className="mt-3 max-h-40 overflow-auto whitespace-pre-wrap break-all font-mono text-xs text-[var(--foreground)]/78">
+                {state.ocrResult.rawText || "No text extracted."}
+              </pre>
+            </details>
+          ) : null}
+        </div>
+
+        <div className="rounded-2xl border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--foreground)]/55">
+            Last Frame
+          </p>
+          <div
+            className="relative mt-3 overflow-hidden rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/6"
+            style={{ aspectRatio: "2 / 3" }}
           >
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <circle cx="8.5" cy="8.5" r="1.5" />
-            <polyline points="21 15 16 10 5 21" />
-          </svg>
-          Upload
-        </button>
+            {"preview" in state && state.preview ? (
+              <Image
+                src={state.preview}
+                alt="Last captured frame"
+                fill
+                unoptimized
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center p-4 text-center text-xs text-[var(--foreground)]/45">
+                Captured frame preview appears here after each scan.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
 
-      <input
-        ref={cameraRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="sr-only"
-        onChange={handleChange}
-        aria-hidden="true"
-        tabIndex={-1}
-      />
-      <input
-        ref={libraryRef}
-        type="file"
-        accept="image/*"
-        className="sr-only"
-        onChange={handleChange}
-        aria-hidden="true"
-        tabIndex={-1}
-      />
+function ScanBand({
+  label,
+  top,
+  height,
+  tone,
+}: {
+  label: string;
+  top: number;
+  height: number;
+  tone: "amber" | "cyan";
+}) {
+  const toneClasses =
+    tone === "amber"
+      ? "border-amber-300/80 bg-amber-300/10 text-amber-100"
+      : "border-cyan-300/80 bg-cyan-300/10 text-cyan-100";
+
+  return (
+    <div
+      className={`absolute inset-x-[13%] rounded-lg border ${toneClasses}`}
+      style={{ top: `${top}%`, height: `${height}%` }}
+    >
+      <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function DebugRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <span className="text-[var(--foreground)]/48">{label}</span>
+      <span className="max-w-[65%] text-right font-mono text-[13px] text-[var(--foreground)]/82">
+        {children}
+      </span>
     </div>
   );
 }

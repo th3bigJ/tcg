@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCurrentCustomer } from "@/lib/auth";

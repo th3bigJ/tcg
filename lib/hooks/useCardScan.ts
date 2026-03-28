@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { extractCardTextFromImage, type OcrResult } from "@/lib/scanOcr";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
@@ -24,9 +24,19 @@ export function useCardScan(): {
   reset: () => void;
 } {
   const [state, setState] = useState<ScanState>({ status: "idle" });
+  const previewUrlRef = useRef<string | null>(null);
+
+  function revokePreview() {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+  }
 
   async function handleFile(file: File) {
+    revokePreview();
     const preview = URL.createObjectURL(file);
+    previewUrlRef.current = preview;
     setState({ status: "processing", preview });
 
     try {
@@ -71,13 +81,11 @@ export function useCardScan(): {
   }
 
   function reset() {
-    setState((prev) => {
-      if (prev.status !== "idle") {
-        URL.revokeObjectURL(prev.preview);
-      }
-      return { status: "idle" };
-    });
+    revokePreview();
+    setState({ status: "idle" });
   }
+
+  useEffect(() => revokePreview, []);
 
   return { state, handleFile, reset };
 }

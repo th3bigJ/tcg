@@ -4,6 +4,11 @@ export type OcrResult = {
   rawText: string; // full OCR dump for debugging
 };
 
+export const SCAN_REGIONS = {
+  name: { yStart: 0, yEnd: 0.2, label: "Name + HP" },
+  number: { yStart: 0.84, yEnd: 1, label: "Card Number" },
+} as const;
+
 const CARD_NUMBER_RE = /\b([A-Z0-9]{1,6})\/(\d{2,3})\b/;
 const HP_RE = /HP\s*\d+/i;
 const ENERGY_CHAR_RE = /^[WFGLPSDRMC]$/;
@@ -152,8 +157,8 @@ export async function extractCardTextFromImage(file: File): Promise<OcrResult> {
   if (!rawText) {
     const bitmap = await createImageBitmap(file);
     const [nameStrip, numberStrip] = await Promise.all([
-      processStrip(bitmap, 0, 0.20),   // name + HP line (top 20%)
-      processStrip(bitmap, 0.84, 1.0), // card number area (bottom 16%)
+      processStrip(bitmap, SCAN_REGIONS.name.yStart, SCAN_REGIONS.name.yEnd),
+      processStrip(bitmap, SCAN_REGIONS.number.yStart, SCAN_REGIONS.number.yEnd),
     ]);
     const [nameText, numberText] = await Promise.all([
       runTesseract(nameStrip),
