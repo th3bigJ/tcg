@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import type { ScanState } from "@/lib/hooks/useCardScan";
+import { loadOpenCv } from "@/lib/loadOpenCv";
 import { DEFAULT_SCAN_OCR_SETTINGS, SCAN_REGIONS, type ScanOcrSettings } from "@/lib/scanOcr";
 
 type Props = {
@@ -99,6 +100,14 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!cameraReady) return;
+
+    void loadOpenCv().catch(() => {
+      // Ignore preload failure here; scan code will fall back gracefully.
+    });
+  }, [cameraReady]);
 
   async function captureFrame() {
     const file = await makeFrameFile();

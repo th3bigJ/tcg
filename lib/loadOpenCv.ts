@@ -48,7 +48,7 @@ export async function loadOpenCv(): Promise<typeof window.cv> {
       const existingScript = document.getElementById(OPENCV_SCRIPT_ID) as HTMLScriptElement | null;
 
       const finish = () => {
-        void waitForOpenCv(15000).then(resolve).catch(reject);
+        void waitForOpenCv(2500).then(resolve).catch(reject);
       };
 
       if (existingScript) {

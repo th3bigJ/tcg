@@ -81,11 +81,9 @@ const HP_TEXT_WHITELIST = "HP0123456789 ";
 const NUMBER_TEXT_WHITELIST = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/ ";
 const NUMBER_STRIP_UPSCALE = 5;
 const OCR_PASS_PRESETS: Array<Pick<ScanOcrSettings, "threshold" | "contrast">> = [
-  { threshold: 128, contrast: 1.15 },
   { threshold: 142, contrast: 1.25 },
   { threshold: 152, contrast: 1.35 },
   { threshold: 164, contrast: 1.5 },
-  { threshold: 176, contrast: 1.65 },
 ];
 
 /** Upscale factor applied to cropped strips before Tesseract — bigger = more detail. */
@@ -177,6 +175,22 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 type Point = { x: number; y: number };
 
 type OpenCvRuntime = Awaited<ReturnType<typeof loadOpenCv>>;
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+    void promise.then(
+      (value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      },
+    );
+  });
+}
 
 type DetectionResult = {
   warpedCardBlob: Blob;
@@ -763,7 +777,11 @@ function validateDetectedQuad(points: Point[], width: number, height: number): b
 }
 
 async function detectCornersWithOpenCv(bitmap: ImageBitmap): Promise<Point[] | null> {
-  const cv = (await loadOpenCv()) as OpenCvRuntime & {
+  const cv = (await withTimeout(
+    loadOpenCv(),
+    1800,
+    "OpenCV.js timed out while loading.",
+  )) as OpenCvRuntime & {
     imread: (element: HTMLCanvasElement) => {
       rows: number;
       cols: number;
