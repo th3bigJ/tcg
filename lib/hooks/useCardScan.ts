@@ -39,6 +39,22 @@ export function useCardScan(): {
     }
   }
 
+  async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+      void promise.then(
+        (value) => {
+          window.clearTimeout(timeoutId);
+          resolve(value);
+        },
+        (error) => {
+          window.clearTimeout(timeoutId);
+          reject(error);
+        },
+      );
+    });
+  }
+
   async function identifyScan(payload: {
     cardName?: string;
     cardNumber?: string;
@@ -71,14 +87,19 @@ export function useCardScan(): {
     setState({ status: "processing", preview });
 
     try {
-      const { visualFingerprint, symbolFingerprint } = await prepareCardVisualFingerprint(
-        file,
-        scanSettings,
+      const { visualFingerprint, symbolFingerprint } = await withTimeout(
+        prepareCardVisualFingerprint(file, scanSettings),
+        5000,
+        "Image prep took too long. Please try again.",
       );
-      const visualData = await identifyScan({
-        visualFingerprint,
-        symbolFingerprint,
-      });
+      const visualData = await withTimeout(
+        identifyScan({
+          visualFingerprint,
+          symbolFingerprint,
+        }),
+        4000,
+        "Visual matching took too long. Please try again.",
+      );
       const candidateHints: ExtractCardTextOptions["candidateCards"] = visualData.candidates
         .filter((candidate) => Boolean(candidate.masterCardId))
         .map((candidate) => ({
@@ -88,21 +109,29 @@ export function useCardScan(): {
           hp: candidate.hp,
         }));
 
-      const ocrResult = await extractCardTextFromImage(file, {
-        scanSettings,
-        candidateCards: candidateHints,
-      });
+      const ocrResult = await withTimeout(
+        extractCardTextFromImage(file, {
+          scanSettings,
+          candidateCards: candidateHints,
+        }),
+        12000,
+        "OCR took too long. Please try again.",
+      );
       console.log("[scan] OCR result:", ocrResult);
       setState({ status: "searching", preview, ocrResult });
-      const data = await identifyScan({
-        cardName: ocrResult.cardName,
-        cardNumber: ocrResult.cardNumber,
-        artist: ocrResult.artist,
-        hp: ocrResult.hp,
-        visualFingerprint: ocrResult.visualFingerprint,
-        symbolFingerprint: ocrResult.symbolFingerprint,
-        candidateMasterCardIds: candidateHints?.map((candidate) => candidate.masterCardId),
-      });
+      const data = await withTimeout(
+        identifyScan({
+          cardName: ocrResult.cardName,
+          cardNumber: ocrResult.cardNumber,
+          artist: ocrResult.artist,
+          hp: ocrResult.hp,
+          visualFingerprint: ocrResult.visualFingerprint,
+          symbolFingerprint: ocrResult.symbolFingerprint,
+          candidateMasterCardIds: candidateHints?.map((candidate) => candidate.masterCardId),
+        }),
+        4000,
+        "Card lookup took too long. Please try again.",
+      );
 
       setState({
         status: "results",
