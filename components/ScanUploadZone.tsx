@@ -290,6 +290,12 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
             <DebugRow label="OCR number">
               {showDebug && "ocrResult" in state ? state.ocrResult.cardNumber || "empty" : "waiting"}
             </DebugRow>
+            <DebugRow label="OCR artist">
+              {showDebug && "ocrResult" in state ? state.ocrResult.artist || "empty" : "waiting"}
+            </DebugRow>
+            <DebugRow label="OCR HP">
+              {showDebug && "ocrResult" in state ? state.ocrResult.hp || "empty" : "waiting"}
+            </DebugRow>
             <DebugRow label="Matches">
               {state.status === "results" ? String(state.candidates.length) : "waiting"}
             </DebugRow>
@@ -346,6 +352,20 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
                 alt="Source frame used for OCR"
                 aspectRatio="2 / 3"
               />
+              <DebugImageCard
+                label="Detection Overlay"
+                src={state.ocrResult.debugImages.detectionOverlay}
+                alt="Detected card bounds overlay"
+                aspectRatio="2 / 3"
+              />
+              <DebugImageCard
+                label="Detected Card"
+                src={state.ocrResult.debugImages.detectedCard}
+                alt="Perspective-corrected card crop"
+                aspectRatio="2 / 3"
+              />
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <DebugImageCard
                 label="Name + HP Strip"
                 src={state.ocrResult.debugImages.nameStrip}

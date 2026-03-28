@@ -84,15 +84,60 @@ export async function POST(request: Request) {
     typeof (body as Record<string, unknown>).cardNumber === "string"
       ? ((body as Record<string, unknown>).cardNumber as string).trim().slice(0, 100)
       : "";
+  const rawArtist =
+    typeof (body as Record<string, unknown>).artist === "string"
+      ? ((body as Record<string, unknown>).artist as string).trim().slice(0, 100)
+      : "";
+  const rawHp =
+    typeof (body as Record<string, unknown>).hp === "string"
+      ? ((body as Record<string, unknown>).hp as string).trim().slice(0, 10)
+      : "";
 
-  if (!rawName && !rawNumber) {
+  if (!rawName && !rawNumber && !rawArtist && !rawHp) {
     return NextResponse.json(
-      { error: "cardName and cardNumber cannot both be empty" },
+      { error: "At least one scan field is required" },
       { status: 400 },
     );
   }
 
   const allCards = getAllCards();
+  const hpNumber = Number.parseInt(rawHp, 10);
+
+  function includesNormalized(haystack: string | null | undefined, needle: string) {
+    return (haystack ?? "").toLocaleLowerCase().includes(needle.toLocaleLowerCase());
+  }
+
+  function scoreCard(card: ReturnType<typeof getAllCards>[number]) {
+    let score = 0;
+
+    if (rawNumber && card.cardNumber === rawNumber) score += 120;
+    if (rawName && includesNormalized(card.cardName, rawName)) score += 70;
+    if (rawArtist && includesNormalized(card.artist, rawArtist)) score += 45;
+    if (rawArtist) {
+      const artistTokens = rawArtist
+        .split(/\s+/)
+        .map((t) => t.replace(/[^A-Za-zÀ-ÿ0-9.'-]/g, ""))
+        .filter((t) => t.length >= 3);
+      for (const token of artistTokens) {
+        if (includesNormalized(card.artist, token)) score += 10;
+      }
+    }
+    if (Number.isFinite(hpNumber) && card.hp === hpNumber) score += 20;
+
+    return score;
+  }
+
+  function toRankedEntries(cards: ReturnType<typeof getAllCards>) {
+    return cards
+      .filter((c) => c.imageLowSrc)
+      .map((card) => ({ card, score: scoreCard(card) }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map(({ card }) => toEntry(card))
+      .filter((e): e is CardsPageCardEntry => e !== null);
+  }
+
   let candidates: CardsPageCardEntry[] = [];
 
   // Stage 1: card number alone — most reliable signal on Pokemon cards
@@ -102,6 +147,15 @@ export async function POST(request: Request) {
       .slice(0, 8)
       .map(toEntry)
       .filter((e): e is CardsPageCardEntry => e !== null);
+  }
+
+  // If number gave us multiple results, use the extra OCR signals to narrow them.
+  if (candidates.length > 1 && (rawName || rawArtist || rawHp)) {
+    const numberedCards = allCards.filter((c) => c.imageLowSrc && c.cardNumber === rawNumber);
+    const narrowed = toRankedEntries(numberedCards);
+    if (narrowed.length > 0) {
+      candidates = narrowed;
+    }
   }
 
   // Stage 2: exact name string
@@ -114,7 +168,12 @@ export async function POST(request: Request) {
       .filter((e): e is CardsPageCardEntry => e !== null);
   }
 
-  // Stage 3: tokenized — try each word >= 4 chars, merge results.
+  // Stage 3: rank across all cards using any extra OCR signals we have.
+  if (candidates.length === 0 && (rawName || rawArtist || rawHp)) {
+    candidates = toRankedEntries(allCards);
+  }
+
+  // Stage 4: tokenized — try each word >= 4 chars, merge results.
   if (candidates.length === 0 && rawName) {
     const tokens = rawName
       .split(/\s+/)
@@ -147,11 +206,15 @@ export async function POST(request: Request) {
 
   const topMatch = candidates[0];
   const confidence: "high" | "low" =
-    rawNumber !== "" && topMatch?.cardNumber === rawNumber ? "high" : "low";
+    rawNumber !== "" &&
+    topMatch?.cardNumber === rawNumber &&
+    (rawHp === "" || String(topMatch?.hp ?? "") === rawHp)
+      ? "high"
+      : "low";
 
   return NextResponse.json({
     candidates,
     confidence,
-    _debug: { cardName: rawName, cardNumber: rawNumber },
+    _debug: { cardName: rawName, cardNumber: rawNumber, artist: rawArtist, hp: rawHp },
   });
 }

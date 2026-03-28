@@ -50,6 +50,8 @@ export function useCardScan(): {
         body: JSON.stringify({
           cardName: ocrResult.cardName,
           cardNumber: ocrResult.cardNumber,
+          artist: ocrResult.artist,
+          hp: ocrResult.hp,
         }),
       });
 
