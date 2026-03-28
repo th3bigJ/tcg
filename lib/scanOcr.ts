@@ -9,13 +9,29 @@ export type OcrResult = {
     detectedCard: string;
     detectionOverlay: string;
     nameStrip: string;
+    hpStrip: string;
     numberStrip: string;
   };
 };
 
+export const DEFAULT_SCAN_OCR_SETTINGS = {
+  nameBandEnd: 0.2,
+  bottomBandStart: 0.76,
+  threshold: 152,
+  contrast: 1.35,
+} as const;
+
+export type ScanOcrSettings = {
+  nameBandEnd: number;
+  bottomBandStart: number;
+  threshold: number;
+  contrast: number;
+};
+
 export const SCAN_REGIONS = {
-  name: { yStart: 0, yEnd: 0.2, label: "Name + HP" },
-  number: { yStart: 0.84, yEnd: 1, label: "Card Number" },
+  name: { xStart: 0, xEnd: 1, yStart: 0, yEnd: 0.2, label: "Name + HP" },
+  hp: { xStart: 0.72, xEnd: 0.98, yStart: 0, yEnd: 0.16, label: "HP" },
+  number: { xStart: 0, xEnd: 1, yStart: 0.76, yEnd: 1, label: "Artist + Number" },
 } as const;
 
 const CARD_GUIDE = {
@@ -47,10 +63,20 @@ const STRIP_UPSCALE = 3;
  * @param yStart  Fraction of image height where the strip starts (0–1)
  * @param yEnd    Fraction of image height where the strip ends (0–1)
  */
-function processStrip(bitmap: ImageBitmap, yStart: number, yEnd: number): Promise<Blob> {
+function processStrip(
+  bitmap: ImageBitmap,
+  {
+    xStart,
+    xEnd,
+    yStart,
+    yEnd,
+  }: { xStart: number; xEnd: number; yStart: number; yEnd: number },
+  settings: ScanOcrSettings,
+): Promise<Blob> {
+  const srcX = Math.round(bitmap.width * xStart);
   const srcY = Math.round(bitmap.height * yStart);
+  const srcW = Math.round(bitmap.width * (xEnd - xStart));
   const srcH = Math.round(bitmap.height * (yEnd - yStart));
-  const srcW = bitmap.width;
 
   const outW = srcW * STRIP_UPSCALE;
   const outH = srcH * STRIP_UPSCALE;
@@ -61,7 +87,7 @@ function processStrip(bitmap: ImageBitmap, yStart: number, yEnd: number): Promis
   const ctx = canvas.getContext("2d")!;
 
   // Draw just the strip, upscaled
-  ctx.drawImage(bitmap, 0, srcY, srcW, srcH, 0, 0, outW, outH);
+  ctx.drawImage(bitmap, srcX, srcY, srcW, srcH, 0, 0, outW, outH);
 
   const imageData = ctx.getImageData(0, 0, outW, outH);
   const data = imageData.data;
@@ -80,10 +106,10 @@ function processStrip(bitmap: ImageBitmap, yStart: number, yEnd: number): Promis
   }
   const range = max - min || 1;
   for (let i = 0; i < data.length; i += 4) {
-    // Stretch then S-curve
     const stretched = ((data[i]! - min) / range) * 255;
-    const curved = 255 / (1 + Math.exp(-0.06 * (stretched - 128)));
-    data[i] = data[i + 1] = data[i + 2] = Math.round(curved);
+    const contrasted = (stretched - 128) * settings.contrast + 128;
+    const binary = contrasted >= settings.threshold ? 255 : 0;
+    data[i] = data[i + 1] = data[i + 2] = Math.round(binary);
   }
 
   ctx.putImageData(imageData, 0, 0);
@@ -113,6 +139,7 @@ type Point = { x: number; y: number };
 type DetectionResult = {
   warpedCardBlob: Blob;
   overlayBlob: Blob;
+  sourcePoints?: Point[];
 };
 
 function average(values: number[]): number {
@@ -560,7 +587,36 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
   return {
     warpedCardBlob: await canvasToBlob(warpedCanvas),
     overlayBlob: await canvasToBlob(overlayCanvas),
+    sourcePoints,
   };
+}
+
+export async function isCardFullyInView(file: File): Promise<boolean> {
+  const bitmap = await createImageBitmap(file);
+  const detection = await detectAndRectifyCard(bitmap);
+  const points = detection.sourcePoints;
+  if (!points || points.length !== 4) return false;
+
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const areaRatio = (width * height) / (bitmap.width * bitmap.height);
+  const marginX = bitmap.width * 0.05;
+  const marginY = bitmap.height * 0.05;
+
+  return (
+    minX >= marginX &&
+    maxX <= bitmap.width - marginX &&
+    minY >= marginY &&
+    maxY <= bitmap.height - marginY &&
+    areaRatio >= 0.16 &&
+    areaRatio <= 0.82
+  );
 }
 
 async function runTesseract(blob: Blob): Promise<string> {
@@ -622,12 +678,12 @@ function parseArtist(raw: string): string {
   return "";
 }
 
-function parseHp(raw: string): string {
-  const hpMatch = raw.match(HP_RE);
+function parseHp(raw: string, hpRaw: string): string {
+  const hpMatch = hpRaw.match(HP_RE) ?? raw.match(HP_RE);
   if (hpMatch?.[1]) return hpMatch[1];
 
-  const lines = raw.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
-  for (const line of lines.slice(0, 4)) {
+  const lines = hpRaw.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
+  for (const line of lines.slice(0, 3)) {
     const numberMatch = line.match(HP_NUMBER_RE);
     if (numberMatch?.[1]) return numberMatch[1];
   }
@@ -635,11 +691,14 @@ function parseHp(raw: string): string {
   return "";
 }
 
-function parseOcrText(raw: string): { cardName: string; cardNumber: string; artist: string; hp: string } {
+function parseOcrText(
+  raw: string,
+  hpRaw: string,
+): { cardName: string; cardNumber: string; artist: string; hp: string } {
   const numberMatch = raw.match(CARD_NUMBER_RE);
   const cardNumber = numberMatch ? numberMatch[0] : "";
   const artist = parseArtist(raw);
-  const hp = parseHp(raw);
+  const hp = parseHp(raw, hpRaw);
 
   const lines = raw.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
 
@@ -665,12 +724,27 @@ function parseOcrText(raw: string): { cardName: string; cardNumber: string; arti
   return { cardName: "", cardNumber, artist, hp };
 }
 
-export async function extractCardTextFromImage(file: File): Promise<OcrResult> {
+function withScanSettings(settings?: Partial<ScanOcrSettings>): ScanOcrSettings {
+  return {
+    nameBandEnd: settings?.nameBandEnd ?? DEFAULT_SCAN_OCR_SETTINGS.nameBandEnd,
+    bottomBandStart: settings?.bottomBandStart ?? DEFAULT_SCAN_OCR_SETTINGS.bottomBandStart,
+    threshold: settings?.threshold ?? DEFAULT_SCAN_OCR_SETTINGS.threshold,
+    contrast: settings?.contrast ?? DEFAULT_SCAN_OCR_SETTINGS.contrast,
+  };
+}
+
+export async function extractCardTextFromImage(
+  file: File,
+  scanSettings?: Partial<ScanOcrSettings>,
+): Promise<OcrResult> {
+  const settings = withScanSettings(scanSettings);
   let rawText = "";
   let nameStripBlob: Blob | null = null;
+  let hpStripBlob: Blob | null = null;
   let numberStripBlob: Blob | null = null;
   let detectedCardBlob: Blob | null = null;
   let detectionOverlayBlob: Blob | null = null;
+  let hpRawText = "";
 
   // Try native TextDetector first (Chrome Android/desktop)
   if (typeof window !== "undefined" && "TextDetector" in window) {
@@ -700,24 +774,38 @@ export async function extractCardTextFromImage(file: File): Promise<OcrResult> {
   detectionOverlayBlob = detection.overlayBlob;
   const detectedBitmap = await createImageBitmap(detectedCardBlob);
   [nameStripBlob, numberStripBlob] = await Promise.all([
-    processStrip(detectedBitmap, SCAN_REGIONS.name.yStart, SCAN_REGIONS.name.yEnd),
-    processStrip(detectedBitmap, SCAN_REGIONS.number.yStart, SCAN_REGIONS.number.yEnd),
+    processStrip(
+      detectedBitmap,
+      { ...SCAN_REGIONS.name, yEnd: settings.nameBandEnd },
+      settings,
+    ),
+    processStrip(
+      detectedBitmap,
+      { ...SCAN_REGIONS.number, yStart: settings.bottomBandStart },
+      settings,
+    ),
   ]);
+  hpStripBlob = await processStrip(detectedBitmap, SCAN_REGIONS.hp, settings);
 
   if (!rawText) {
-    const [nameText, numberText] = await Promise.all([
+    const [nameText, hpText, numberText] = await Promise.all([
       runTesseract(nameStripBlob),
+      runTesseract(hpStripBlob),
       runTesseract(numberStripBlob),
     ]);
-    rawText = nameText + "\n" + numberText;
+    hpRawText = hpText;
+    rawText = nameText + "\n" + hpText + "\n" + numberText;
+  } else {
+    hpRawText = await runTesseract(hpStripBlob);
   }
 
-  const { cardName, cardNumber, artist, hp } = parseOcrText(rawText);
-  const [source, detectedCard, detectionOverlay, nameStrip, numberStrip] = await Promise.all([
+  const { cardName, cardNumber, artist, hp } = parseOcrText(rawText, hpRawText);
+  const [source, detectedCard, detectionOverlay, nameStrip, hpStrip, numberStrip] = await Promise.all([
     blobToDataUrl(file),
     blobToDataUrl(detectedCardBlob),
     blobToDataUrl(detectionOverlayBlob),
     blobToDataUrl(nameStripBlob),
+    blobToDataUrl(hpStripBlob),
     blobToDataUrl(numberStripBlob),
   ]);
 
@@ -732,6 +820,7 @@ export async function extractCardTextFromImage(file: File): Promise<OcrResult> {
       detectedCard,
       detectionOverlay,
       nameStrip,
+      hpStrip,
       numberStrip,
     },
   };

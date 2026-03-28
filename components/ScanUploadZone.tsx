@@ -4,10 +4,16 @@ import Image from "next/image";
 import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
 
 import type { ScanState } from "@/lib/hooks/useCardScan";
-import { SCAN_REGIONS } from "@/lib/scanOcr";
+import {
+  DEFAULT_SCAN_OCR_SETTINGS,
+  SCAN_REGIONS,
+  isCardFullyInView,
+  type ScanOcrSettings,
+} from "@/lib/scanOcr";
 
 type Props = {
-  onFile: (file: File) => void;
+  onFile: (file: File, scanSettings?: Partial<ScanOcrSettings>) => void;
+  onBurst: (files: File[], scanSettings?: Partial<ScanOcrSettings>) => void;
   onReset: () => void;
   disabled: boolean;
   state: ScanState;
@@ -15,8 +21,10 @@ type Props = {
 
 type FacingMode = "environment" | "user";
 const AUTO_SCAN_INTERVAL_MS = 1800;
+const BURST_COUNT = 3;
+const BURST_FRAME_DELAY_MS = 1000;
 
-export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
+export function ScanUploadZone({ onFile, onBurst, onReset, disabled, state }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const autoScanTimeoutRef = useRef<number | null>(null);
@@ -27,6 +35,11 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
   const [cameraAttempt, setCameraAttempt] = useState(0);
   const [autoScanEnabled, setAutoScanEnabled] = useState(true);
   const [lastScanAt, setLastScanAt] = useState<number | null>(null);
+  const [cardInView, setCardInView] = useState(false);
+  const [burstModeActive, setBurstModeActive] = useState(false);
+  const [scanSettings, setScanSettings] = useState<ScanOcrSettings>({
+    ...DEFAULT_SCAN_OCR_SETTINGS,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -97,51 +110,101 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
     }
   }
 
-  async function captureFrame(trigger: "manual" | "auto" = "manual") {
+  async function makeFrameFile() {
     const video = videoRef.current;
-    if (!video || disabled || !cameraReady) return;
-    clearAutoScanTimeout();
+    if (!video || disabled || !cameraReady) return null;
 
     const width = video.videoWidth;
     const height = video.videoHeight;
-    if (!width || !height) return;
+    if (!width || !height) return null;
 
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) return null;
 
     ctx.drawImage(video, 0, 0, width, height);
 
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, "image/jpeg", 0.95),
     );
-    if (!blob) return;
+    if (!blob) return null;
 
-    const file = new File([blob], `scan-${Date.now()}.jpg`, {
+    return new File([blob], `scan-${Date.now()}.jpg`, {
       type: "image/jpeg",
       lastModified: Date.now(),
     });
+  }
+
+  async function captureFrame(trigger: "manual" | "auto" = "manual") {
+    clearAutoScanTimeout();
+    const file = await makeFrameFile();
+    if (!file) return;
 
     setLastScanAt(Date.now());
     if (trigger === "manual") {
       setAutoScanEnabled(false);
     }
 
-    onFile(file);
+    onFile(file, scanSettings);
   }
+
+  async function captureBurst() {
+    if (burstModeActive || disabled) return;
+    clearAutoScanTimeout();
+    setBurstModeActive(true);
+
+    try {
+      const frames: File[] = [];
+      for (let i = 0; i < BURST_COUNT; i++) {
+        const file = await makeFrameFile();
+        if (file) {
+          frames.push(file);
+        }
+        if (i < BURST_COUNT - 1) {
+          await new Promise((resolve) => window.setTimeout(resolve, BURST_FRAME_DELAY_MS));
+        }
+      }
+
+      if (frames.length > 0) {
+        setLastScanAt(Date.now());
+        onBurst(frames, scanSettings);
+      }
+    } finally {
+      setBurstModeActive(false);
+    }
+  }
+
+  const checkCardInView = useEffectEvent(async () => {
+    if (!autoScanEnabled || disabled || !cameraReady || burstModeActive) {
+      setCardInView(false);
+      return;
+    }
+
+    const probe = await makeFrameFile();
+    if (!probe) {
+      setCardInView(false);
+      return;
+    }
+
+    const inView = await isCardFullyInView(probe).catch(() => false);
+    setCardInView(inView);
+    if (inView) {
+      await captureBurst();
+    }
+  });
 
   const queueAutoScan = useEffectEvent(() => {
     clearAutoScanTimeout();
 
-    if (!autoScanEnabled || disabled || !cameraReady || cameraError) {
+    if (!autoScanEnabled || disabled || !cameraReady || cameraError || burstModeActive) {
       return;
     }
 
     autoScanTimeoutRef.current = window.setTimeout(() => {
-      void captureFrame("auto");
+      void checkCardInView();
     }, AUTO_SCAN_INTERVAL_MS);
   });
 
@@ -152,7 +215,8 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
 
   function statusText() {
     if (cameraError) return cameraError;
-    if (state.status === "processing") return "Reading card text from the captured frame.";
+    if (burstModeActive) return "Card framed. Capturing a 3-shot burst now.";
+    if (state.status === "processing") return "Processing the burst to find the strongest frame.";
     if (state.status === "searching") return "Searching the card database with the extracted text.";
     if (state.status === "results") {
       return autoScanEnabled
@@ -163,7 +227,9 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
     if (startingCamera) return "Starting rear camera…";
     if (!cameraReady) return "Waiting for camera feed…";
     return autoScanEnabled
-      ? "Live camera ready. Hold the card inside the frame and scanning will run automatically."
+      ? cardInView
+        ? "Card fully in view. Burst capture is armed."
+        : "Live camera ready. Hold the full card inside the frame to trigger a 3-shot burst."
       : "Live camera ready. Auto-scan is paused.";
   }
 
@@ -192,13 +258,21 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
           <ScanBand
             label={SCAN_REGIONS.name.label}
             top={SCAN_REGIONS.name.yStart * 100}
-            height={(SCAN_REGIONS.name.yEnd - SCAN_REGIONS.name.yStart) * 100}
+            height={(scanSettings.nameBandEnd - SCAN_REGIONS.name.yStart) * 100}
             tone="amber"
           />
           <ScanBand
+            label={SCAN_REGIONS.hp.label}
+            top={SCAN_REGIONS.hp.yStart * 100}
+            height={(SCAN_REGIONS.hp.yEnd - SCAN_REGIONS.hp.yStart) * 100}
+            tone="emerald"
+            left={SCAN_REGIONS.hp.xStart * 100}
+            width={(SCAN_REGIONS.hp.xEnd - SCAN_REGIONS.hp.xStart) * 100}
+          />
+          <ScanBand
             label={SCAN_REGIONS.number.label}
-            top={SCAN_REGIONS.number.yStart * 100}
-            height={(SCAN_REGIONS.number.yEnd - SCAN_REGIONS.number.yStart) * 100}
+            top={scanSettings.bottomBandStart * 100}
+            height={(SCAN_REGIONS.number.yEnd - scanSettings.bottomBandStart) * 100}
             tone="cyan"
           />
         </div>
@@ -275,14 +349,20 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
             </DebugRow>
             <DebugRow label="Lens">{facingMode}</DebugRow>
             <DebugRow label="Auto scan">{autoScanEnabled ? "on" : "paused"}</DebugRow>
+            <DebugRow label="Card in view">{cardInView ? "yes" : "no"}</DebugRow>
+            <DebugRow label="Burst">{burstModeActive ? "capturing" : "idle"}</DebugRow>
             <DebugRow label="Last scan">
               {lastScanAt ? new Date(lastScanAt).toLocaleTimeString() : "waiting"}
             </DebugRow>
             <DebugRow label="Name band">
-              {Math.round(SCAN_REGIONS.name.yStart * 100)}% to {Math.round(SCAN_REGIONS.name.yEnd * 100)}%
+              {Math.round(SCAN_REGIONS.name.yStart * 100)}% to {Math.round(scanSettings.nameBandEnd * 100)}%
+            </DebugRow>
+            <DebugRow label="HP band">
+              {Math.round(SCAN_REGIONS.hp.xStart * 100)}% to {Math.round(SCAN_REGIONS.hp.xEnd * 100)}% x{" "}
+              {Math.round(SCAN_REGIONS.hp.yStart * 100)}% to {Math.round(SCAN_REGIONS.hp.yEnd * 100)}%
             </DebugRow>
             <DebugRow label="Number band">
-              {Math.round(SCAN_REGIONS.number.yStart * 100)}% to {Math.round(SCAN_REGIONS.number.yEnd * 100)}%
+              {Math.round(scanSettings.bottomBandStart * 100)}% to {Math.round(SCAN_REGIONS.number.yEnd * 100)}%
             </DebugRow>
             <DebugRow label="OCR name">
               {showDebug && "ocrResult" in state ? state.ocrResult.cardName || "empty" : "waiting"}
@@ -302,6 +382,48 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
             <DebugRow label="Confidence">
               {state.status === "results" ? state.confidence : "waiting"}
             </DebugRow>
+          </div>
+
+          <div className="mt-4 grid gap-4 rounded-xl border border-[var(--foreground)]/10 bg-black/5 p-3">
+            <SliderControl
+              label="Name Band End"
+              value={Math.round(scanSettings.nameBandEnd * 100)}
+              min={14}
+              max={32}
+              onChange={(value) =>
+                setScanSettings((current) => ({ ...current, nameBandEnd: value / 100 }))
+              }
+              suffix="%"
+            />
+            <SliderControl
+              label="Bottom Band Start"
+              value={Math.round(scanSettings.bottomBandStart * 100)}
+              min={62}
+              max={88}
+              onChange={(value) =>
+                setScanSettings((current) => ({ ...current, bottomBandStart: value / 100 }))
+              }
+              suffix="%"
+            />
+            <SliderControl
+              label="B/W Threshold"
+              value={Math.round(scanSettings.threshold)}
+              min={80}
+              max={220}
+              onChange={(value) =>
+                setScanSettings((current) => ({ ...current, threshold: value }))
+              }
+            />
+            <SliderControl
+              label="Contrast"
+              value={scanSettings.contrast}
+              min={0.8}
+              max={2.2}
+              step={0.05}
+              onChange={(value) =>
+                setScanSettings((current) => ({ ...current, contrast: value }))
+              }
+            />
           </div>
 
           {showDebug && "ocrResult" in state ? (
@@ -373,7 +495,13 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
                 aspectRatio="3 / 1"
               />
               <DebugImageCard
-                label="Card Number Strip"
+                label="HP Strip"
+                src={state.ocrResult.debugImages.hpStrip}
+                alt="Processed OCR HP strip"
+                aspectRatio="2 / 1"
+              />
+              <DebugImageCard
+                label="Artist + Number Strip"
                 src={state.ocrResult.debugImages.numberStrip}
                 alt="Processed OCR number strip"
                 aspectRatio="3 / 1"
@@ -391,26 +519,76 @@ function ScanBand({
   top,
   height,
   tone,
+  left,
+  width,
 }: {
   label: string;
   top: number;
   height: number;
-  tone: "amber" | "cyan";
+  tone: "amber" | "cyan" | "emerald";
+  left?: number;
+  width?: number;
 }) {
   const toneClasses =
     tone === "amber"
       ? "border-amber-300/80 bg-amber-300/10 text-amber-100"
-      : "border-cyan-300/80 bg-cyan-300/10 text-cyan-100";
+      : tone === "cyan"
+        ? "border-cyan-300/80 bg-cyan-300/10 text-cyan-100"
+        : "border-emerald-300/80 bg-emerald-300/10 text-emerald-100";
 
   return (
     <div
-      className={`absolute inset-x-[13%] rounded-lg border ${toneClasses}`}
-      style={{ top: `${top}%`, height: `${height}%` }}
+      className={`absolute rounded-lg border ${toneClasses}`}
+      style={{
+        top: `${top}%`,
+        height: `${height}%`,
+        left: `${left ?? 13}%`,
+        width: `${width ?? 74}%`,
+      }}
     >
       <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]">
         {label}
       </span>
     </div>
+  );
+}
+
+function SliderControl({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+  step = 1,
+  suffix = "",
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+  step?: number;
+  suffix?: string;
+}) {
+  return (
+    <label className="grid gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm text-[var(--foreground)]/62">{label}</span>
+        <span className="font-mono text-sm text-[var(--foreground)]/85">
+          {step < 1 ? value.toFixed(2) : Math.round(value)}
+          {suffix}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="w-full accent-white"
+      />
+    </label>
   );
 }
 
