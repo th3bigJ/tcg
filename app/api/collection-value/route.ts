@@ -1,66 +1,63 @@
-import config from "@payload-config";
 import { type NextRequest } from "next/server";
-import { getPayload } from "payload";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
-import { getRelationshipDocumentId, toPayloadRelationshipId } from "@/lib/relationshipId";
-import { jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
-import { resolveCardPricingGbp } from "@/lib/resolveCardPricingGbp";
+import { createSupabaseRouteHandlerClient, jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
+import { getCardMapById } from "@/lib/staticCardIndex";
+import { getPricingForSet, getPricingForCard } from "@/lib/r2Pricing";
+import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 
-function readMarketGbp(tcgplayer: unknown, cardmarket: unknown): number | null {
+function readMarketGbp(
+  tcgplayer: unknown,
+  cardmarket: unknown,
+  scrydex: unknown,
+  multipliers: { usdToGbp: number; eurToGbp: number },
+): number | null {
   const tp = tcgplayer && typeof tcgplayer === "object" ? (tcgplayer as Record<string, unknown>) : null;
   if (tp) {
     for (const block of Object.values(tp)) {
       if (!block || typeof block !== "object") continue;
       const b = block as Record<string, unknown>;
       const m = b.market ?? b.marketPrice;
-      if (typeof m === "number" && Number.isFinite(m)) return m;
+      if (typeof m === "number" && Number.isFinite(m)) return m * multipliers.usdToGbp;
     }
   }
   const cm = cardmarket && typeof cardmarket === "object" ? (cardmarket as Record<string, unknown>) : null;
   if (cm) {
     for (const key of ["trendPrice", "trend", "avg30", "averageSellPrice"]) {
       const v = cm[key];
-      if (typeof v === "number" && Number.isFinite(v)) return v;
+      if (typeof v === "number" && Number.isFinite(v)) return v * multipliers.eurToGbp;
+    }
+  }
+  // Fall back to Scrydex: { [variant]: { raw: number } } — raw is already GBP
+  const sc = scrydex && typeof scrydex === "object" ? (scrydex as Record<string, unknown>) : null;
+  if (sc) {
+    for (const block of Object.values(sc)) {
+      if (!block || typeof block !== "object") continue;
+      const r = (block as Record<string, unknown>).raw;
+      if (typeof r === "number" && Number.isFinite(r)) return r;
     }
   }
   return null;
 }
 
-/**
- * GET /api/collection-value
- * Returns the total market value of the authenticated customer's collection.
- * { totalValue: number, cardCount: number }
- */
 export async function GET(request: NextRequest) {
   const { customer, authCookieResponse } = await getCurrentCustomerForApiRoute(request);
   if (!customer) {
     return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, { status: 401 });
   }
 
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customer.id) ?? customer.id;
+  const { supabase } = createSupabaseRouteHandlerClient(request);
+  const { data } = await supabase
+    .from("customer_collections")
+    .select("master_card_id, quantity")
+    .eq("customer_id", customer.id)
+    .limit(2000);
 
-  // Fetch all collection entries with masterCard ids and quantities
-  const result = await payload.find({
-    collection: "customer-collections",
-    where: { customer: { equals: customerRelId } },
-    depth: 0,
-    limit: 2000,
-    overrideAccess: true,
-    select: { masterCard: true, quantity: true },
-  });
-
-  // Aggregate quantities per masterCardId
   const qtyByMasterCardId: Record<string, number> = {};
-  for (const doc of result.docs) {
-    const mid = getRelationshipDocumentId((doc as { masterCard?: unknown }).masterCard);
-    const qty = typeof (doc as { quantity?: unknown }).quantity === "number"
-      ? (doc as { quantity: number }).quantity
-      : 1;
-    if (mid) {
-      qtyByMasterCardId[mid] = (qtyByMasterCardId[mid] ?? 0) + qty;
-    }
+  for (const row of data ?? []) {
+    const mid = typeof row.master_card_id === "string" ? row.master_card_id.trim() : "";
+    const qty = typeof row.quantity === "number" ? row.quantity : 1;
+    if (mid) qtyByMasterCardId[mid] = (qtyByMasterCardId[mid] ?? 0) + qty;
   }
 
   const masterCardIds = Object.keys(qtyByMasterCardId);
@@ -68,30 +65,39 @@ export async function GET(request: NextRequest) {
     return jsonResponseWithAuthCookies({ totalValue: 0, cardCount: 0 }, authCookieResponse);
   }
 
-  // Price each card concurrently
-  const CONCURRENCY = 8;
-  const prices: Record<string, number> = {};
-  let i = 0;
+  const cardMap = getCardMapById();
+  const multipliers = await fetchGbpConversionMultipliers();
 
-  async function worker() {
-    while (i < masterCardIds.length) {
-      const idx = i++;
-      const masterCardId = masterCardIds[idx];
-      try {
-        const resolved = await resolveCardPricingGbp(payload, { masterCardId });
-        if (resolved) {
-          const price = readMarketGbp(resolved.tcgplayer, resolved.cardmarket);
-          if (price !== null) prices[masterCardId] = price;
-        }
-      } catch {
-        // unpriceable — skip
-      }
-    }
+  const bySet = new Map<string, string[]>();
+  for (const mid of masterCardIds) {
+    const card = cardMap.get(mid);
+    if (!card) continue;
+    if (!bySet.has(card.setCode)) bySet.set(card.setCode, []);
+    bySet.get(card.setCode)!.push(mid);
   }
 
-  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+  const prices: Record<string, number> = {};
+  await Promise.all(
+    [...bySet.entries()].map(async ([setCode, mids]) => {
+      const pricingMap = await getPricingForSet(setCode);
+      if (!pricingMap) return;
+      for (const mid of mids) {
+        const card = cardMap.get(mid);
+        if (!card) continue;
+        // Mirror the same ID resolution as mapMasterCardId: tcgdex_id ?? externalId ?? derived
+        const tcgdexId = card.tcgdex_id?.trim() || undefined;
+        const extId = card.externalId?.trim() || undefined;
+        const primaryId = tcgdexId ?? extId;
+        if (!primaryId) continue;
+        const fallbackIds = tcgdexId && extId ? [extId] : undefined;
+        const entry = getPricingForCard(pricingMap, primaryId, fallbackIds);
+        if (!entry) continue;
+        const price = readMarketGbp(entry.tcgplayer, entry.cardmarket, entry.scrydex, multipliers);
+        if (price !== null) prices[mid] = price;
+      }
+    }),
+  );
 
-  // Sum: price × quantity for each priced card
   let totalValue = 0;
   let cardCount = 0;
   for (const [mid, qty] of Object.entries(qtyByMasterCardId)) {
@@ -100,9 +106,5 @@ export async function GET(request: NextRequest) {
     if (price !== undefined) totalValue += price * qty;
   }
 
-  return jsonResponseWithAuthCookies(
-    { totalValue, cardCount },
-    authCookieResponse,
-    // Cache briefly — pricing calls are expensive
-  );
+  return jsonResponseWithAuthCookies({ totalValue, cardCount }, authCookieResponse);
 }

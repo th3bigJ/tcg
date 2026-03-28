@@ -1,10 +1,7 @@
-import config from "@payload-config";
 import { type NextRequest } from "next/server";
-import { getPayload } from "payload";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
-import { getRelationshipDocumentId, toPayloadRelationshipId } from "@/lib/relationshipId";
-import { jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
+import { createSupabaseRouteHandlerClient, jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
 import {
   fetchCollectionCardEntries,
   fetchItemConditionOptions,
@@ -14,41 +11,34 @@ import {
 export async function GET(request: NextRequest) {
   const { customer, authCookieResponse } = await getCurrentCustomerForApiRoute(request);
   if (!customer) {
-    return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, {
-      status: 401,
-    });
+    return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, { status: 401 });
   }
 
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customer.id) ?? customer.id;
+  const { supabase } = createSupabaseRouteHandlerClient(request);
 
   const [itemConditions, collectionEntries, wishlistResult] = await Promise.all([
     fetchItemConditionOptions(),
     fetchCollectionCardEntries(customer.id),
-    payload.find({
-      collection: "customer-wishlists",
-      where: { customer: { equals: customerRelId } },
-      depth: 0,
-      limit: 2000,
-      overrideAccess: true,
-      select: { masterCard: true, targetPrinting: true },
-    }),
+    supabase
+      .from("customer_wishlists")
+      .select("id, master_card_id, target_printing")
+      .eq("customer_id", customer.id)
+      .limit(2000),
   ]);
 
   const wishlistMap: Record<string, { id: string; printing?: string }> = {};
-  for (const doc of wishlistResult.docs) {
-    const wid = getRelationshipDocumentId((doc as { id?: unknown }).id);
-    const mid = getRelationshipDocumentId((doc as { masterCard?: unknown }).masterCard);
-    const printing = (doc as { targetPrinting?: unknown }).targetPrinting;
-    if (wid && mid && wishlistMap[mid] === undefined) {
-      wishlistMap[mid] = { id: wid, printing: typeof printing === "string" ? printing : undefined };
+  for (const row of wishlistResult.data ?? []) {
+    const mid = row.master_card_id as string;
+    const wid = row.id as string;
+    if (mid && wid && wishlistMap[mid] === undefined) {
+      wishlistMap[mid] = {
+        id: wid,
+        printing: typeof row.target_printing === "string" ? row.target_printing : undefined,
+      };
     }
   }
 
   const collectionLines = groupCollectionLinesByMasterCardId(collectionEntries);
 
-  return jsonResponseWithAuthCookies(
-    { itemConditions, wishlistMap, collectionLines },
-    authCookieResponse,
-  );
+  return jsonResponseWithAuthCookies({ itemConditions, wishlistMap, collectionLines }, authCookieResponse);
 }

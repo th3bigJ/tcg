@@ -1,10 +1,8 @@
-import config from "@payload-config";
 import { type NextRequest } from "next/server";
-import { getPayload } from "payload";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
-import { getRelationshipDocumentId, toPayloadRelationshipId, toPayloadDocumentId } from "@/lib/relationshipId";
-import { jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
+import { createSupabaseRouteHandlerClient, jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
+import { getProductTypeById, getProductTypeBySlug } from "@/lib/referenceData";
 
 type TransactionPostBody = {
   direction?: string;
@@ -24,19 +22,31 @@ export async function GET(request: NextRequest) {
     return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, { status: 401 });
   }
 
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customer.id) ?? customer.id;
+  const { supabase } = createSupabaseRouteHandlerClient(request);
+  const { data, error } = await supabase
+    .from("account_transactions")
+    .select("id, direction, description, master_card_id, quantity, unit_price, transaction_date, notes, created_at, product_type_id")
+    .eq("customer_id", customer.id)
+    .order("transaction_date", { ascending: false })
+    .limit(2000);
 
-  const result = await payload.find({
-    collection: "account-transactions",
-    where: { customer: { equals: customerRelId } },
-    sort: "-transactionDate",
-    depth: 1,
-    limit: 2000,
-    overrideAccess: true,
-  });
+  if (error) {
+    return jsonResponseWithAuthCookies({ error: error.message }, authCookieResponse, { status: 500 });
+  }
 
-  return jsonResponseWithAuthCookies({ docs: result.docs }, authCookieResponse);
+  const docs = (data ?? []).map((row) => ({
+    id: row.id,
+    direction: row.direction,
+    description: row.description,
+    quantity: row.quantity,
+    unitPrice: row.unit_price,
+    transactionDate: row.transaction_date,
+    notes: row.notes,
+    masterCardId: row.master_card_id,
+    productType: row.product_type_id ? (getProductTypeById(row.product_type_id as string) ?? null) : null,
+  }));
+
+  return jsonResponseWithAuthCookies({ docs }, authCookieResponse);
 }
 
 export async function POST(request: NextRequest) {
@@ -66,45 +76,31 @@ export async function POST(request: NextRequest) {
     typeof body.quantity === "number" && Number.isFinite(body.quantity) && body.quantity >= 1
       ? Math.floor(body.quantity)
       : 1;
-
   const unitPrice =
     typeof body.unitPrice === "number" && Number.isFinite(body.unitPrice) && body.unitPrice >= 0
       ? body.unitPrice
       : 0;
-
   const transactionDate =
     typeof body.transactionDate === "string" && body.transactionDate.trim()
-      ? new Date(body.transactionDate).toISOString()
-      : new Date().toISOString();
+      ? new Date(body.transactionDate).toISOString().slice(0, 10)
+      : new Date().toISOString().slice(0, 10);
+  const notes = typeof body.notes === "string" && body.notes.trim() ? body.notes.trim() : null;
+  const masterCardId =
+    typeof body.masterCardId === "string" && body.masterCardId.trim() ? body.masterCardId.trim() : null;
 
-  const notes = typeof body.notes === "string" && body.notes.trim() ? body.notes.trim() : undefined;
-
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customer.id);
-  if (customerRelId === undefined) {
-    return jsonResponseWithAuthCookies({ error: "Invalid customer id" }, authCookieResponse, { status: 400 });
-  }
+  const { supabase } = createSupabaseRouteHandlerClient(request);
 
   // Resolve product type — accept either an id or a slug
-  let productTypeRelId: string | number | undefined;
-  if (body.productTypeId) {
-    productTypeRelId = toPayloadRelationshipId(body.productTypeId);
-  } else if (body.productTypeSlug) {
-    const ptResult = await payload.find({
-      collection: "product-types",
-      where: { slug: { equals: body.productTypeSlug } },
-      limit: 1,
-      depth: 0,
-      overrideAccess: true,
-    });
-    const ptDoc = ptResult.docs[0];
-    if (ptDoc) {
-      const rawId = getRelationshipDocumentId(ptDoc.id);
-      if (rawId) productTypeRelId = toPayloadRelationshipId(rawId);
-    }
+  let productTypeId: string | null = null;
+  if (typeof body.productTypeId === "string" && body.productTypeId.trim()) {
+    const pt = getProductTypeById(body.productTypeId.trim());
+    productTypeId = pt?.id ?? null;
+  } else if (typeof body.productTypeSlug === "string" && body.productTypeSlug.trim()) {
+    const pt = getProductTypeBySlug(body.productTypeSlug.trim());
+    productTypeId = pt?.id ?? null;
   }
 
-  if (!productTypeRelId) {
+  if (!productTypeId) {
     return jsonResponseWithAuthCookies(
       { error: "productTypeId or productTypeSlug is required and must resolve to a valid product type" },
       authCookieResponse,
@@ -112,30 +108,37 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const masterCardRelId =
-    body.masterCardId ? toPayloadRelationshipId(body.masterCardId) : undefined;
+  const { data: created, error } = await supabase
+    .from("account_transactions")
+    .insert({
+      customer_id: customer.id,
+      direction,
+      product_type_id: productTypeId,
+      description,
+      master_card_id: masterCardId,
+      quantity,
+      unit_price: unitPrice,
+      transaction_date: transactionDate,
+      notes,
+    })
+    .select()
+    .single();
 
-  const data: Record<string, unknown> = {
-    customer: customerRelId,
-    direction,
-    productType: productTypeRelId,
-    description,
-    quantity,
-    unitPrice,
-    transactionDate,
-  };
-  if (notes !== undefined) data.notes = notes;
-  if (masterCardRelId !== undefined) data.masterCard = masterCardRelId;
-
-  try {
-    const created = await payload.create({
-      collection: "account-transactions",
-      data: data as never,
-      overrideAccess: true,
-    });
-    return jsonResponseWithAuthCookies({ doc: created }, authCookieResponse);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Create failed";
-    return jsonResponseWithAuthCookies({ error: message }, authCookieResponse, { status: 422 });
+  if (error || !created) {
+    return jsonResponseWithAuthCookies({ error: error?.message ?? "Insert failed" }, authCookieResponse, { status: 422 });
   }
+
+  const doc = {
+    id: created.id,
+    direction: created.direction,
+    description: created.description,
+    quantity: created.quantity,
+    unitPrice: created.unit_price,
+    transactionDate: created.transaction_date,
+    notes: created.notes,
+    masterCardId: created.master_card_id,
+    productType: created.product_type_id ? (getProductTypeById(created.product_type_id as string) ?? null) : null,
+  };
+
+  return jsonResponseWithAuthCookies({ doc }, authCookieResponse);
 }

@@ -1,6 +1,4 @@
 import Link from "next/link";
-import config from "@payload-config";
-import { getPayload } from "payload";
 
 import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
@@ -76,13 +74,11 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     itemConditions,
     wishlistEntryIdsByMasterCardId,
     facets,
-    payload,
   ] = await Promise.all([
     fetchCollectionCardEntries(customer.id),
     fetchItemConditionOptions(),
     fetchWishlistIdsByMasterCard(customer.id),
     getCachedFilterFacets().then((r) => r ?? {}),
-    getPayload({ config }),
   ]);
 
   const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(collectionEntries);
@@ -95,8 +91,8 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   );
 
   const [wishlistValue, cardPricesByMasterCardId] = await Promise.all([
-    entries.length > 0 ? estimateCollectionMarketValueGbp(payload, entries) : Promise.resolve(null),
-    entries.length > 0 ? estimateCardUnitPricesGbp(payload, entries) : Promise.resolve({}),
+    entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
+    entries.length > 0 ? estimateCardUnitPricesGbp(entries) : Promise.resolve({}),
   ]);
   const valueFormatted =
     wishlistValue && wishlistValue.totalGbp > 0

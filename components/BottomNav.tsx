@@ -10,47 +10,6 @@ type NavItem = {
   match: (pathname: string) => boolean;
 };
 
-function IconHome({ active }: { active: boolean }) {
-  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`h-6 w-6 ${c}`}
-      aria-hidden="true"
-    >
-      <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
-  );
-}
-
-function IconShop({ active }: { active: boolean }) {
-  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`h-6 w-6 ${c}`}
-      aria-hidden="true"
-    >
-      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-      <line x1="3" x2="21" y1="6" y2="6" />
-      <path d="M16 10a4 4 0 0 1-8 0" />
-    </svg>
-  );
-}
-
 function IconCollect({ active }: { active: boolean }) {
   const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
   return (
@@ -69,6 +28,25 @@ function IconCollect({ active }: { active: boolean }) {
       <rect x="14" y="3" width="7" height="5" rx="1" />
       <rect x="14" y="12" width="7" height="9" rx="1" />
       <rect x="3" y="16" width="7" height="5" rx="1" />
+    </svg>
+  );
+}
+
+function IconWishlist({ active }: { active: boolean }) {
+  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-6 w-6 ${c}`}
+      aria-hidden="true"
+    >
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
     </svg>
   );
 }
@@ -93,6 +71,49 @@ function IconSearch({ active }: { active: boolean }) {
   );
 }
 
+function IconSets({ active }: { active: boolean }) {
+  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-6 w-6 ${c}`}
+      aria-hidden="true"
+    >
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="M8 4v16" />
+      <path d="M16 4v16" />
+      <path d="M2 12h20" />
+    </svg>
+  );
+}
+
+function IconPokedex({ active }: { active: boolean }) {
+  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-6 w-6 ${c}`}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 function IconAccount({ active }: { active: boolean }) {
   const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
   return (
@@ -113,7 +134,7 @@ function IconAccount({ active }: { active: boolean }) {
   );
 }
 
-const icons = [IconHome, IconShop, IconSearch, IconCollect, IconAccount] as const;
+const icons = [IconSearch, IconCollect, IconWishlist, IconSets, IconPokedex, IconAccount] as const;
 
 export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname() ?? "";
@@ -123,29 +144,34 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
     const accountLabel = isLoggedIn ? "Account" : "Sign in";
     return [
       {
-        href: "/home",
-        label: "Home",
-        match: (p) => p === "/home",
-      },
-      {
-        href: "/shop",
-        label: "Shop",
-        match: (p) => p === "/shop",
-      },
-      {
         href: "/search",
         label: "Search",
-        match: (p) => p === "/search" || p.startsWith("/search?") || p.startsWith("/pokedex") || p.startsWith("/expansions") || p.startsWith("/scan"),
+        match: (p) => p === "/search" || p.startsWith("/search?") || p.startsWith("/scan"),
       },
       {
         href: "/collect",
         label: "Collect",
-        match: (p) => p === "/collect" || p === "/wishlist",
+        match: (p) => p === "/collect",
+      },
+      {
+        href: "/wishlist",
+        label: "Wishlist",
+        match: (p) => p === "/wishlist",
+      },
+      {
+        href: "/expansions",
+        label: "Sets",
+        match: (p) => p === "/expansions" || p.startsWith("/expansions/"),
+      },
+      {
+        href: "/pokedex",
+        label: "Pokédex",
+        match: (p) => p === "/pokedex" || p.startsWith("/pokedex/"),
       },
       {
         href: accountHref,
         label: accountLabel,
-        match: (p) => p === "/account" || p === "/login",
+        match: (p) => p === "/account" || p.startsWith("/account/") || p === "/login",
       },
     ];
   }, [isLoggedIn]);

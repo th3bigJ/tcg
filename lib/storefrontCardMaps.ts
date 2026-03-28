@@ -1,25 +1,22 @@
-import config from "@payload-config";
-import { getPayload } from "payload";
-
-import { masterCardDocToCardsPageEntry, type CardsPageCardEntry } from "@/lib/cardsPageQueries";
-import { getRelationshipDocumentId, toPayloadRelationshipId } from "@/lib/relationshipId";
+import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
+import { getCardMapById } from "@/lib/staticCardIndex";
+import { getAllSets } from "@/lib/staticCards";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ITEM_CONDITIONS, getItemConditionName } from "@/lib/referenceData";
 
 export type StorefrontCardExtras = {
   collectionEntryId?: string;
   wishlistEntryId?: string;
   conditionLabel?: string;
   quantity?: number;
-  /** From `customer-collections` row (catalog variant / finish). */
   printing?: string;
   language?: string;
   priority?: "low" | "medium" | "high";
   targetConditionId?: string;
   targetPrinting?: string;
-  /** ISO timestamp of when the entry was added to collection/wishlist. */
   addedAt?: string;
 };
 
-/** One saved row in the customer’s collection (for modal / summaries). */
 export type CollectionLineSummary = {
   entryId: string;
   quantity: number;
@@ -30,48 +27,93 @@ export type CollectionLineSummary = {
 
 export type StorefrontCardEntry = CardsPageCardEntry & StorefrontCardExtras;
 
-export async function fetchItemConditionOptions(): Promise<{ id: string; name: string }[]> {
-  const payload = await getPayload({ config });
-  const result = await payload.find({
-    collection: "item-conditions",
-    depth: 0,
-    limit: 200,
-    overrideAccess: true,
-    sort: "sortOrder",
-  });
+export function fetchItemConditionOptions(): { id: string; name: string }[] {
+  return ITEM_CONDITIONS.map((c) => ({ id: c.id, name: c.name }));
+}
 
-  const out: { id: string; name: string }[] = [];
-  for (const doc of result.docs) {
-    const id = getRelationshipDocumentId((doc as { id?: unknown }).id);
-    const rawName = (doc as { name?: unknown }).name;
-    const name = typeof rawName === "string" ? rawName : "";
-    if (id && name) out.push({ id, name });
+let _setMetaMap: Map<string, ReturnType<typeof getAllSets>[number]> | null = null;
+function getSetMetaMap() {
+  if (!_setMetaMap) {
+    _setMetaMap = new Map();
+    for (const s of getAllSets()) {
+      if (s.code) _setMetaMap.set(s.code, s);
+      if (s.tcgdexId) _setMetaMap.set(s.tcgdexId, s);
+    }
   }
-  return out;
+  return _setMetaMap;
 }
 
-function mapMasterPopulated(master: unknown): CardsPageCardEntry | null {
-  if (!master || typeof master !== "object") return null;
-  return masterCardDocToCardsPageEntry(master as Record<string, unknown>);
+function mapMasterCardId(masterCardId: string): CardsPageCardEntry | null {
+  const cardMap = getCardMapById();
+  const card = cardMap.get(masterCardId);
+  if (!card || !card.imageLowSrc) return null;
+
+  const setMeta = getSetMetaMap().get(card.setCode);
+  const lowUrl = card.imageLowSrc;
+  const highUrl = card.imageHighSrc ?? lowUrl;
+  const filename = lowUrl.split("?")[0].split("/").pop();
+  if (!filename) return null;
+
+  const localIdNormalized = card.localId
+    ? /^\d+$/u.test(card.localId.trim())
+      ? card.localId.trim().padStart(3, "0")
+      : card.localId.trim()
+    : null;
+  const tcgdexStored = card.tcgdex_id?.trim() || undefined;
+  const extStored = card.externalId?.trim() || undefined;
+  const derivedFromSetAndLocal =
+    card.setTcgdexId && localIdNormalized
+      ? `${card.setTcgdexId}-${localIdNormalized}`
+      : undefined;
+  const ext = tcgdexStored ?? extStored ?? derivedFromSetAndLocal;
+  const legacyExternalId =
+    tcgdexStored !== undefined ? extStored ?? derivedFromSetAndLocal : derivedFromSetAndLocal;
+
+  return {
+    masterCardId: card.masterCardId,
+    ...(ext ? { externalId: ext } : {}),
+    ...(legacyExternalId ? { legacyExternalId } : {}),
+    set: card.setCode,
+    setSlug: setMeta?.slug ?? undefined,
+    setName: setMeta?.name ?? undefined,
+    setTcgdexId: card.setTcgdexId ?? undefined,
+    setCardCountOfficial:
+      setMeta?.cardCountOfficial != null && setMeta.cardCountOfficial >= 0
+        ? Math.floor(setMeta.cardCountOfficial)
+        : undefined,
+    setLogoSrc: setMeta?.logoSrc ?? undefined,
+    setSymbolSrc: setMeta?.symbolSrc ?? undefined,
+    setReleaseDate: setMeta?.releaseDate ?? undefined,
+    cardNumber: card.cardNumber || undefined,
+    filename,
+    src: lowUrl,
+    lowSrc: lowUrl,
+    highSrc: highUrl,
+    rarity: card.rarity ?? "",
+    cardName: card.cardName ?? "",
+    category: card.category ?? undefined,
+    stage: card.stage ?? undefined,
+    hp: card.hp ?? undefined,
+    elementTypes: card.elementTypes ?? undefined,
+    dexIds: card.dexIds ?? undefined,
+    artist: card.artist ?? undefined,
+    regulationMark: card.regulationMark ?? undefined,
+  };
 }
 
-export function mapCustomerCollectionDoc(doc: unknown): StorefrontCardEntry | null {
-  if (!doc || typeof doc !== "object") return null;
-  const row = doc as Record<string, unknown>;
-  const base = mapMasterPopulated(row.masterCard);
+export function mapCustomerCollectionRow(row: Record<string, unknown>, conditionName?: string): StorefrontCardEntry | null {
+  const masterCardId = typeof row.master_card_id === "string" ? row.master_card_id.trim() : "";
+  if (!masterCardId) return null;
+
+  const base = mapMasterCardId(masterCardId);
   if (!base) return null;
 
-  const entryId = getRelationshipDocumentId(row.id);
-  const cond = row.condition;
-  let conditionLabel = "";
-  if (cond && typeof cond === "object" && "name" in cond && typeof cond.name === "string") {
-    conditionLabel = cond.name;
-  }
+  const entryId = row.id != null ? String(row.id) : "";
+  const conditionLabel = conditionName ?? "";
   const qty = typeof row.quantity === "number" && Number.isFinite(row.quantity) ? row.quantity : 1;
   const printing = typeof row.printing === "string" && row.printing.trim() ? row.printing.trim() : undefined;
   const language = typeof row.language === "string" && row.language.trim() ? row.language.trim() : undefined;
-
-  const addedAt = typeof row.addedAt === "string" && row.addedAt ? row.addedAt : undefined;
+  const addedAt = typeof row.added_at === "string" && row.added_at ? row.added_at : undefined;
 
   return {
     ...base,
@@ -84,7 +126,6 @@ export function mapCustomerCollectionDoc(doc: unknown): StorefrontCardEntry | nu
   };
 }
 
-/** Group Payload collection rows by catalog card id for quick modal lookups. */
 export function groupCollectionLinesByMasterCardId(
   entries: StorefrontCardEntry[],
 ): Record<string, CollectionLineSummary[]> {
@@ -116,9 +157,8 @@ export function groupCollectionLinesByMasterCardId(
 }
 
 /**
- * One tile per catalog card on the collection grid: sums quantities across all
- * `customer-collections` rows for the same `masterCardId`, clears per-row labels.
- * Preserves first-seen order from `fetchCollectionCardEntries` (newest first).
+ * One tile per catalog card: sums quantities across all rows for the same masterCardId.
+ * Preserves first-seen order (newest first).
  */
 export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): StorefrontCardEntry[] {
   const processedMasters = new Set<string>();
@@ -152,110 +192,92 @@ export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): S
   return out;
 }
 
-export function mapCustomerWishlistDoc(doc: unknown): StorefrontCardEntry | null {
-  if (!doc || typeof doc !== "object") return null;
-  const row = doc as Record<string, unknown>;
-  const base = mapMasterPopulated(row.masterCard);
+export function mapCustomerWishlistRow(row: Record<string, unknown>, conditionName?: string): StorefrontCardEntry | null {
+  const masterCardId = typeof row.master_card_id === "string" ? row.master_card_id.trim() : "";
+  if (!masterCardId) return null;
+
+  const base = mapMasterCardId(masterCardId);
   if (!base) return null;
 
-  const entryId = getRelationshipDocumentId(row.id);
+  const entryId = row.id != null ? String(row.id) : "";
   const pri = row.priority;
-  const priority =
-    pri === "low" || pri === "medium" || pri === "high" ? pri : undefined;
-
-  const tcond = row.targetCondition;
-  const targetConditionId = getRelationshipDocumentId(tcond);
-  const targetPrinting = typeof row.targetPrinting === "string" ? row.targetPrinting : undefined;
-
-  const addedAt = typeof row.addedAt === "string" && row.addedAt ? row.addedAt : undefined;
+  const priority = pri === "low" || pri === "medium" || pri === "high" ? pri : undefined;
+  const targetConditionId = typeof row.target_condition_id === "string" ? row.target_condition_id : undefined;
+  const targetConditionName = conditionName ?? undefined;
+  const targetPrinting = typeof row.target_printing === "string" ? row.target_printing : undefined;
+  const addedAt = typeof row.added_at === "string" && row.added_at ? row.added_at : undefined;
 
   return {
     ...base,
     ...(entryId ? { wishlistEntryId: entryId } : {}),
     ...(priority ? { priority } : {}),
     ...(targetConditionId ? { targetConditionId } : {}),
+    ...(targetConditionName ? { conditionLabel: targetConditionName } : {}),
     ...(targetPrinting ? { targetPrinting } : {}),
     ...(addedAt ? { addedAt } : {}),
   };
 }
 
-export async function fetchCollectionCardEntries(
-  customerPayloadId: string,
-): Promise<StorefrontCardEntry[]> {
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customerPayloadId) ?? customerPayloadId;
-  const result = await payload.find({
-    collection: "customer-collections",
-    where: { customer: { equals: customerRelId } },
-    depth: 2,
-    limit: 2000,
-    sort: "-addedAt",
-    overrideAccess: true,
-    select: {
-      masterCard: true,
-      condition: true,
-      quantity: true,
-      printing: true,
-      language: true,
-      addedAt: true,
-    },
-  });
+export async function fetchCollectionCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {
+  const supabase = await createSupabaseServerClient();
 
-  return result.docs
-    .map((d) => mapCustomerCollectionDoc(d))
+  const { data, error } = await supabase
+    .from("customer_collections")
+    .select("id, master_card_id, quantity, printing, language, added_at, condition_id")
+    .eq("customer_id", customerId)
+    .order("added_at", { ascending: false })
+    .limit(2000);
+
+  if (error || !data) return [];
+
+  return data
+    .map((row) => {
+      const conditionName = getItemConditionName(row.condition_id as string | null);
+      return mapCustomerCollectionRow(row as unknown as Record<string, unknown>, conditionName);
+    })
     .filter((e): e is StorefrontCardEntry => Boolean(e));
 }
 
-export async function fetchWishlistCardEntries(
-  customerPayloadId: string,
-): Promise<StorefrontCardEntry[]> {
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customerPayloadId) ?? customerPayloadId;
-  const result = await payload.find({
-    collection: "customer-wishlists",
-    where: { customer: { equals: customerRelId } },
-    depth: 2,
-    limit: 2000,
-    sort: "-addedAt",
-    overrideAccess: true,
-    select: {
-      masterCard: true,
-      priority: true,
-      targetCondition: true,
-      targetPrinting: true,
-      addedAt: true,
-    },
-  });
+export async function fetchWishlistCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {
+  const supabase = await createSupabaseServerClient();
 
-  return result.docs
-    .map((d) => mapCustomerWishlistDoc(d))
+  const { data } = await supabase
+    .from("customer_wishlists")
+    .select("id, master_card_id, priority, target_condition_id, target_printing, added_at")
+    .eq("customer_id", customerId)
+    .order("added_at", { ascending: false })
+    .limit(2000);
+
+  if (!data) return [];
+
+  return data
+    .map((row) => {
+      const conditionName = getItemConditionName(row.target_condition_id as string | null);
+      return mapCustomerWishlistRow(row as unknown as Record<string, unknown>, conditionName);
+    })
     .filter((e): e is StorefrontCardEntry => Boolean(e));
 }
 
 export async function fetchWishlistIdsByMasterCard(
-  customerPayloadId: string,
+  customerId: string,
 ): Promise<Record<string, { id: string; printing?: string }>> {
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customerPayloadId) ?? customerPayloadId;
-  const result = await payload.find({
-    collection: "customer-wishlists",
-    where: { customer: { equals: customerRelId } },
-    depth: 0,
-    limit: 2000,
-    overrideAccess: true,
-    select: {
-      masterCard: true,
-      targetPrinting: true,
-    },
-  });
+  const supabase = await createSupabaseServerClient();
+
+  const { data } = await supabase
+    .from("customer_wishlists")
+    .select("id, master_card_id, target_printing")
+    .eq("customer_id", customerId)
+    .limit(2000);
 
   const map: Record<string, { id: string; printing?: string }> = {};
-  for (const doc of result.docs) {
-    const wid = getRelationshipDocumentId((doc as { id?: unknown }).id);
-    const mid = getRelationshipDocumentId((doc as { masterCard?: unknown }).masterCard);
-    const printing = (doc as { targetPrinting?: unknown }).targetPrinting;
-    if (wid && mid && map[mid] === undefined) {
-      map[mid] = { id: wid, printing: typeof printing === "string" ? printing : undefined };
+  for (const row of data ?? []) {
+    const mid = row.master_card_id as string;
+    const wid = row.id as string;
+    if (mid && wid && map[mid] === undefined) {
+      map[mid] = {
+        id: wid,
+        printing: typeof row.target_printing === "string" ? row.target_printing : undefined,
+      };
     }
   }
   return map;

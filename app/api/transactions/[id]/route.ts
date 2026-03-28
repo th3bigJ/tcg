@@ -1,10 +1,8 @@
-import config from "@payload-config";
 import { type NextRequest } from "next/server";
-import { getPayload } from "payload";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
-import { getRelationshipDocumentId, toPayloadRelationshipId, toPayloadDocumentId } from "@/lib/relationshipId";
-import { jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
+import { createSupabaseRouteHandlerClient, jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
+import { getProductTypeById, getProductTypeBySlug } from "@/lib/referenceData";
 
 type TransactionPatchBody = {
   direction?: string;
@@ -17,26 +15,6 @@ type TransactionPatchBody = {
   transactionDate?: string;
   notes?: string | null;
 };
-
-async function resolveAndCheckOwnership(
-  payload: Awaited<ReturnType<typeof getPayload>>,
-  id: string,
-  customerRelId: string | number,
-) {
-  const found = await payload.find({
-    collection: "account-transactions",
-    where: {
-      and: [
-        { id: { equals: toPayloadRelationshipId(id) } },
-        { customer: { equals: customerRelId } },
-      ],
-    },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  });
-  return found.docs[0] ?? null;
-}
 
 export async function PATCH(
   request: NextRequest,
@@ -59,13 +37,7 @@ export async function PATCH(
     return jsonResponseWithAuthCookies({ error: "Invalid JSON" }, authCookieResponse, { status: 400 });
   }
 
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customer.id) ?? customer.id;
-
-  const doc = await resolveAndCheckOwnership(payload, rawId, customerRelId);
-  if (!doc) {
-    return jsonResponseWithAuthCookies({ error: "Not found" }, authCookieResponse, { status: 404 });
-  }
+  const { supabase } = createSupabaseRouteHandlerClient(request);
 
   const updates: Record<string, unknown> = {};
 
@@ -79,54 +51,59 @@ export async function PATCH(
     updates.quantity = Math.floor(body.quantity);
   }
   if (typeof body.unitPrice === "number" && Number.isFinite(body.unitPrice) && body.unitPrice >= 0) {
-    updates.unitPrice = body.unitPrice;
+    updates.unit_price = body.unitPrice;
   }
   if (typeof body.transactionDate === "string" && body.transactionDate.trim()) {
-    updates.transactionDate = new Date(body.transactionDate).toISOString();
+    updates.transaction_date = new Date(body.transactionDate).toISOString().slice(0, 10);
   }
   if (body.notes !== undefined) {
     updates.notes = typeof body.notes === "string" && body.notes.trim() ? body.notes.trim() : null;
   }
   if (body.masterCardId !== undefined) {
-    updates.masterCard = body.masterCardId ? toPayloadRelationshipId(body.masterCardId) : null;
+    updates.master_card_id =
+      typeof body.masterCardId === "string" && body.masterCardId.trim()
+        ? body.masterCardId.trim()
+        : null;
   }
 
   // Resolve product type update
-  if (body.productTypeId) {
-    const ptRelId = toPayloadRelationshipId(body.productTypeId);
-    if (ptRelId !== undefined) updates.productType = ptRelId;
-  } else if (body.productTypeSlug) {
-    const ptResult = await payload.find({
-      collection: "product-types",
-      where: { slug: { equals: body.productTypeSlug } },
-      limit: 1,
-      depth: 0,
-      overrideAccess: true,
-    });
-    const ptDoc = ptResult.docs[0];
-    if (ptDoc) {
-      const rawPtId = getRelationshipDocumentId(ptDoc.id);
-      if (rawPtId) updates.productType = toPayloadRelationshipId(rawPtId);
-    }
+  if (typeof body.productTypeId === "string" && body.productTypeId.trim()) {
+    const pt = getProductTypeById(body.productTypeId.trim());
+    if (pt) updates.product_type_id = pt.id;
+  } else if (typeof body.productTypeSlug === "string" && body.productTypeSlug.trim()) {
+    const pt = getProductTypeBySlug(body.productTypeSlug.trim());
+    if (pt) updates.product_type_id = pt.id;
   }
 
   if (Object.keys(updates).length === 0) {
     return jsonResponseWithAuthCookies({ error: "No valid fields to update" }, authCookieResponse, { status: 400 });
   }
 
-  try {
-    const docId = toPayloadDocumentId(doc.id);
-    const updated = await payload.update({
-      collection: "account-transactions",
-      id: docId,
-      data: updates as never,
-      overrideAccess: true,
-    });
-    return jsonResponseWithAuthCookies({ doc: updated }, authCookieResponse);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Update failed";
-    return jsonResponseWithAuthCookies({ error: message }, authCookieResponse, { status: 422 });
+  const { data: updated, error } = await supabase
+    .from("account_transactions")
+    .update(updates)
+    .eq("id", rawId)
+    .eq("customer_id", customer.id)
+    .select()
+    .single();
+
+  if (error || !updated) {
+    return jsonResponseWithAuthCookies({ error: error?.message ?? "Not found" }, authCookieResponse, { status: error ? 422 : 404 });
   }
+
+  const doc = {
+    id: updated.id,
+    direction: updated.direction,
+    description: updated.description,
+    quantity: updated.quantity,
+    unitPrice: updated.unit_price,
+    transactionDate: updated.transaction_date,
+    notes: updated.notes,
+    masterCardId: updated.master_card_id,
+    productType: updated.product_type_id ? (getProductTypeById(updated.product_type_id as string) ?? null) : null,
+  };
+
+  return jsonResponseWithAuthCookies({ doc }, authCookieResponse);
 }
 
 export async function DELETE(
@@ -143,24 +120,16 @@ export async function DELETE(
     return jsonResponseWithAuthCookies({ error: "id is required" }, authCookieResponse, { status: 400 });
   }
 
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customer.id) ?? customer.id;
+  const { supabase } = createSupabaseRouteHandlerClient(request);
+  const { error } = await supabase
+    .from("account_transactions")
+    .delete()
+    .eq("id", rawId)
+    .eq("customer_id", customer.id);
 
-  const doc = await resolveAndCheckOwnership(payload, rawId, customerRelId);
-  if (!doc) {
-    return jsonResponseWithAuthCookies({ error: "Not found" }, authCookieResponse, { status: 404 });
+  if (error) {
+    return jsonResponseWithAuthCookies({ error: error.message }, authCookieResponse, { status: 422 });
   }
 
-  try {
-    const docId = toPayloadDocumentId(doc.id);
-    await payload.delete({
-      collection: "account-transactions",
-      id: docId,
-      overrideAccess: true,
-    });
-    return jsonResponseWithAuthCookies({ ok: true }, authCookieResponse);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Delete failed";
-    return jsonResponseWithAuthCookies({ error: message }, authCookieResponse, { status: 422 });
-  }
+  return jsonResponseWithAuthCookies({ ok: true }, authCookieResponse);
 }

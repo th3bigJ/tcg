@@ -1,10 +1,20 @@
-import config from "@payload-config";
 import { type NextRequest } from "next/server";
-import { getPayload } from "payload";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
-import { getRelationshipDocumentId } from "@/lib/relationshipId";
 import { jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
+import { getAllCards, getAllSets } from "@/lib/staticCards";
+
+let _setNameMap: Map<string, string> | null = null;
+function getSetNameMap(): Map<string, string> {
+  if (!_setNameMap) {
+    _setNameMap = new Map();
+    for (const s of getAllSets()) {
+      const code = s.code ?? s.tcgdexId;
+      if (code && s.name) _setNameMap.set(code, s.name);
+    }
+  }
+  return _setNameMap;
+}
 
 export async function GET(request: NextRequest) {
   const { customer, authCookieResponse } = await getCurrentCustomerForApiRoute(request);
@@ -18,39 +28,17 @@ export async function GET(request: NextRequest) {
     return jsonResponseWithAuthCookies({ docs: [] }, authCookieResponse);
   }
 
-  const payload = await getPayload({ config });
+  const qLower = q.toLocaleLowerCase();
+  const setNameMap = getSetNameMap();
 
-  const result = await payload.find({
-    collection: "master-card-list",
-    where: {
-      and: [
-        { imageLow: { exists: true } },
-        { cardName: { like: q } },
-      ],
-    },
-    select: {
-      cardName: true,
-      set: true,
-      filename: true,
-    },
-    depth: 1,
-    limit: 20,
-    overrideAccess: true,
-  });
-
-  const docs = result.docs.map((doc) => {
-    const id = getRelationshipDocumentId(doc.id);
-    const setDoc = (doc as Record<string, unknown>).set;
-    const setName =
-      setDoc && typeof setDoc === "object" && "name" in setDoc
-        ? String((setDoc as { name?: unknown }).name ?? "")
-        : "";
-    return {
-      id,
-      cardName: (doc as Record<string, unknown>).cardName ?? "",
-      setName,
-    };
-  });
+  const docs = getAllCards()
+    .filter((c) => c.imageLowSrc && c.cardName.toLocaleLowerCase().includes(qLower))
+    .slice(0, 20)
+    .map((c) => ({
+      id: c.masterCardId,
+      cardName: c.cardName,
+      setName: setNameMap.get(c.setCode) ?? "",
+    }));
 
   return jsonResponseWithAuthCookies({ docs }, authCookieResponse);
 }

@@ -1,6 +1,4 @@
 import Link from "next/link";
-import config from "@payload-config";
-import { getPayload } from "payload";
 
 import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
@@ -66,10 +64,9 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
 
-  const payload = await getPayload({ config });
   const [collectionValue, cardPricesByMasterCardId] = await Promise.all([
-    entries.length > 0 ? estimateCollectionMarketValueGbp(payload, entries) : Promise.resolve(null),
-    entries.length > 0 ? estimateCardUnitPricesGbp(payload, entries) : Promise.resolve({}),
+    entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
+    entries.length > 0 ? estimateCardUnitPricesGbp(entries) : Promise.resolve({}),
   ]);
   const valueFormatted =
     collectionValue && collectionValue.totalGbp > 0

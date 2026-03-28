@@ -1,54 +1,67 @@
 import { NextResponse } from "next/server";
-import type { Where } from "payload";
 
-import {
-  masterCardDocToCardsPageEntry,
-  type CardsPageCardEntry,
-} from "@/lib/cardsPageQueries";
+import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
+import { getAllCards, getAllSets } from "@/lib/staticCards";
 
-const MASTER_CARD_SELECT = {
-  id: true,
-  externalId: true,
-  tcgdex_id: true,
-  localId: true,
-  set: true,
-  imageLow: true,
-  imageHigh: true,
-  rarity: true,
-  cardNumber: true,
-  cardName: true,
-  category: true,
-  stage: true,
-  hp: true,
-  elementTypes: true,
-  dexId: true,
-  artist: true,
-  regulationMark: true,
-} as const;
-
-async function getPayloadInstance() {
-  const payloadConfig = (await import("@/payload.config")).default;
-  const { getPayload } = await import("payload");
-  return getPayload({ config: payloadConfig });
+let _setMetaMap: Map<string, ReturnType<typeof getAllSets>[number]> | null = null;
+function getSetMetaMap() {
+  if (!_setMetaMap) {
+    _setMetaMap = new Map();
+    for (const s of getAllSets()) {
+      if (s.code) _setMetaMap.set(s.code, s);
+      if (s.tcgdexId) _setMetaMap.set(s.tcgdexId, s);
+    }
+  }
+  return _setMetaMap;
 }
 
-function docToEntry(doc: unknown): CardsPageCardEntry | null {
-  return masterCardDocToCardsPageEntry(doc as Record<string, unknown>);
-}
+function toEntry(card: ReturnType<typeof getAllCards>[number]): CardsPageCardEntry | null {
+  if (!card.imageLowSrc) return null;
+  const filename = card.imageLowSrc.split("?")[0].split("/").pop();
+  if (!filename) return null;
 
-async function queryCards(payload: Awaited<ReturnType<typeof getPayloadInstance>>, where: Where, limit: number): Promise<CardsPageCardEntry[]> {
-  const result = await payload.find({
-    collection: "master-card-list",
-    depth: 1,
-    limit,
-    page: 1,
-    overrideAccess: true,
-    select: MASTER_CARD_SELECT,
-    where,
-  });
-  return result.docs
-    .map(docToEntry)
-    .filter((e): e is CardsPageCardEntry => e !== null);
+  const setMeta = getSetMetaMap().get(card.setCode);
+  const localIdNormalized = card.localId
+    ? /^\d+$/u.test(card.localId.trim())
+      ? card.localId.trim().padStart(3, "0")
+      : card.localId.trim()
+    : null;
+  const tcgdexStored = card.tcgdex_id?.trim() || undefined;
+  const extStored = card.externalId?.trim() || undefined;
+  const derivedFromSetAndLocal =
+    card.setTcgdexId && localIdNormalized
+      ? `${card.setTcgdexId}-${localIdNormalized}`
+      : undefined;
+  const ext = tcgdexStored ?? extStored ?? derivedFromSetAndLocal;
+  const legacyExternalId =
+    tcgdexStored !== undefined ? extStored ?? derivedFromSetAndLocal : derivedFromSetAndLocal;
+
+  return {
+    masterCardId: card.masterCardId,
+    ...(ext ? { externalId: ext } : {}),
+    ...(legacyExternalId ? { legacyExternalId } : {}),
+    set: card.setCode,
+    setSlug: setMeta?.slug ?? undefined,
+    setName: setMeta?.name ?? undefined,
+    setTcgdexId: card.setTcgdexId ?? undefined,
+    setLogoSrc: setMeta?.logoSrc ?? undefined,
+    setSymbolSrc: setMeta?.symbolSrc ?? undefined,
+    setReleaseDate: setMeta?.releaseDate ?? undefined,
+    cardNumber: card.cardNumber || undefined,
+    filename,
+    src: card.imageLowSrc,
+    lowSrc: card.imageLowSrc,
+    highSrc: card.imageHighSrc ?? card.imageLowSrc,
+    rarity: card.rarity ?? "",
+    cardName: card.cardName ?? "",
+    category: card.category ?? undefined,
+    stage: card.stage ?? undefined,
+    hp: card.hp ?? undefined,
+    elementTypes: card.elementTypes ?? undefined,
+    dexIds: card.dexIds ?? undefined,
+    artist: card.artist ?? undefined,
+    regulationMark: card.regulationMark ?? undefined,
+  };
 }
 
 export async function POST(request: Request) {
@@ -63,57 +76,62 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const rawName = typeof (body as Record<string, unknown>).cardName === "string"
-    ? ((body as Record<string, unknown>).cardName as string).trim().slice(0, 100)
-    : "";
-  const rawNumber = typeof (body as Record<string, unknown>).cardNumber === "string"
-    ? ((body as Record<string, unknown>).cardNumber as string).trim().slice(0, 100)
-    : "";
+  const rawName =
+    typeof (body as Record<string, unknown>).cardName === "string"
+      ? ((body as Record<string, unknown>).cardName as string).trim().slice(0, 100)
+      : "";
+  const rawNumber =
+    typeof (body as Record<string, unknown>).cardNumber === "string"
+      ? ((body as Record<string, unknown>).cardNumber as string).trim().slice(0, 100)
+      : "";
 
   if (!rawName && !rawNumber) {
-    return NextResponse.json({ error: "cardName and cardNumber cannot both be empty" }, { status: 400 });
+    return NextResponse.json(
+      { error: "cardName and cardNumber cannot both be empty" },
+      { status: 400 },
+    );
   }
 
-  const payload = await getPayloadInstance();
+  const allCards = getAllCards();
+  let candidates: CardsPageCardEntry[] = [];
 
   // Stage 1: card number alone — most reliable signal on Pokemon cards
-  let candidates: CardsPageCardEntry[] = [];
   if (rawNumber) {
-    candidates = await queryCards(payload, {
-      and: [
-        { cardNumber: { equals: rawNumber } },
-        { imageLow: { exists: true } },
-      ],
-    }, 8);
+    candidates = allCards
+      .filter((c) => c.imageLowSrc && c.cardNumber === rawNumber)
+      .slice(0, 8)
+      .map(toEntry)
+      .filter((e): e is CardsPageCardEntry => e !== null);
   }
 
   // Stage 2: exact name string
   if (candidates.length === 0 && rawName) {
-    candidates = await queryCards(payload, {
-      and: [
-        { cardName: { contains: rawName } },
-        { imageLow: { exists: true } },
-      ],
-    }, 8);
+    const nameLower = rawName.toLocaleLowerCase();
+    candidates = allCards
+      .filter((c) => c.imageLowSrc && c.cardName.toLocaleLowerCase().includes(nameLower))
+      .slice(0, 8)
+      .map(toEntry)
+      .filter((e): e is CardsPageCardEntry => e !== null);
   }
 
-  // Stage 3: tokenized — try each word >= 4 chars individually, merge results.
-  // This handles noisy OCR where the name string itself won't match but individual
-  // words like "Pikachu" or "Dragonite" will.
+  // Stage 3: tokenized — try each word >= 4 chars, merge results.
   if (candidates.length === 0 && rawName) {
     const tokens = rawName
       .split(/\s+/)
       .map((t) => t.replace(/[^A-Za-zÀ-ÿ]/g, ""))
       .filter((t) => t.length >= 4);
+
     const seen = new Set<string>();
     const merged: CardsPageCardEntry[] = [];
+
     for (const token of tokens) {
-      const results = await queryCards(payload, {
-        and: [
-          { cardName: { contains: token } },
-          { imageLow: { exists: true } },
-        ],
-      }, 8);
+      const tokenLower = token.toLocaleLowerCase();
+      const results = allCards
+        .filter((c) => c.imageLowSrc && c.cardName.toLocaleLowerCase().includes(tokenLower))
+        .slice(0, 8)
+        .map(toEntry)
+        .filter((e): e is CardsPageCardEntry => e !== null);
+
       for (const entry of results) {
         const key = entry.masterCardId ?? entry.filename;
         if (!seen.has(key)) {
@@ -131,5 +149,9 @@ export async function POST(request: Request) {
   const confidence: "high" | "low" =
     rawNumber !== "" && topMatch?.cardNumber === rawNumber ? "high" : "low";
 
-  return NextResponse.json({ candidates, confidence, _debug: { cardName: rawName, cardNumber: rawNumber } });
+  return NextResponse.json({
+    candidates,
+    confidence,
+    _debug: { cardName: rawName, cardNumber: rawNumber },
+  });
 }

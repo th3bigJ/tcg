@@ -1,38 +1,35 @@
-import config from "@payload-config";
 import { type NextRequest } from "next/server";
-import { getPayload } from "payload";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
-import { getRelationshipDocumentId, toPayloadRelationshipId } from "@/lib/relationshipId";
+import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
+import { getCardMapById } from "@/lib/staticCardIndex";
+import { getItemConditionName, getProductTypeBySlug } from "@/lib/referenceData";
 
 export async function GET(request: NextRequest) {
   const { customer, authCookieResponse } = await getCurrentCustomerForApiRoute(request);
   if (!customer) {
-    return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, {
-      status: 401,
-    });
+    return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, { status: 401 });
   }
 
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customer.id) ?? customer.id;
-  const result = await payload.find({
-    collection: "customer-collections",
-    where: { customer: { equals: customerRelId } },
-    depth: 2,
-    limit: 2000,
-    sort: "-addedAt",
-    overrideAccess: true,
-    select: {
-      masterCard: true,
-      condition: true,
-      quantity: true,
-      printing: true,
-      language: true,
-    },
-  });
+  const { supabase } = createSupabaseRouteHandlerClient(request);
+  const { data, error } = await supabase
+    .from("customer_collections")
+    .select("id, master_card_id, condition_id, quantity, printing, language, added_at")
+    .eq("customer_id", customer.id)
+    .order("added_at", { ascending: false })
+    .limit(2000);
 
-  return jsonResponseWithAuthCookies({ docs: result.docs }, authCookieResponse);
+  if (error) {
+    return jsonResponseWithAuthCookies({ error: error.message }, authCookieResponse, { status: 500 });
+  }
+
+  const docs = (data ?? []).map((row) => ({
+    ...row,
+    condition_name: getItemConditionName(row.condition_id as string | null),
+  }));
+
+  return jsonResponseWithAuthCookies({ docs }, authCookieResponse);
 }
 
 type CollectionPostBody = {
@@ -49,177 +46,111 @@ type CollectionPostBody = {
 export async function POST(request: NextRequest) {
   const { customer, authCookieResponse } = await getCurrentCustomerForApiRoute(request);
   if (!customer) {
-    return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, {
-      status: 401,
-    });
+    return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, { status: 401 });
   }
 
   let body: CollectionPostBody;
   try {
     body = (await request.json()) as CollectionPostBody;
   } catch {
-    return jsonResponseWithAuthCookies({ error: "Invalid JSON" }, authCookieResponse, {
-      status: 400,
-    });
+    return jsonResponseWithAuthCookies({ error: "Invalid JSON" }, authCookieResponse, { status: 400 });
   }
 
   const masterCardId = typeof body.masterCardId === "string" ? body.masterCardId.trim() : "";
   if (!masterCardId) {
-    return jsonResponseWithAuthCookies({ error: "masterCardId is required" }, authCookieResponse, {
-      status: 400,
-    });
+    return jsonResponseWithAuthCookies({ error: "masterCardId is required" }, authCookieResponse, { status: 400 });
   }
 
   const quantity =
     typeof body.quantity === "number" && Number.isFinite(body.quantity) && body.quantity >= 1
       ? Math.floor(body.quantity)
       : 1;
-
   const printing = typeof body.printing === "string" ? body.printing : "Standard";
   const language = typeof body.language === "string" ? body.language : "English";
   const conditionId =
-    typeof body.conditionId === "string" && body.conditionId.trim() ? body.conditionId.trim() : undefined;
+    typeof body.conditionId === "string" && body.conditionId.trim() ? body.conditionId.trim() : null;
   const purchaseType =
-    body.purchaseType === "packed" || body.purchaseType === "bought" ? body.purchaseType : undefined;
+    body.purchaseType === "packed" || body.purchaseType === "bought" ? body.purchaseType : null;
   const pricePaid =
     purchaseType === "bought" && typeof body.pricePaid === "number" && Number.isFinite(body.pricePaid) && body.pricePaid >= 0
       ? body.pricePaid
-      : undefined;
+      : null;
   const purchaseDate =
     purchaseType === "bought" && typeof body.purchaseDate === "string" && body.purchaseDate.trim()
       ? new Date(body.purchaseDate).toISOString()
-      : undefined;
+      : null;
 
-  const payload = await getPayload({ config });
+  const { supabase } = createSupabaseRouteHandlerClient(request);
 
-  const customerRelId = toPayloadRelationshipId(customer.id);
-  const masterRelId = toPayloadRelationshipId(masterCardId);
-  if (customerRelId === undefined || masterRelId === undefined) {
-    return jsonResponseWithAuthCookies(
-      { error: "Invalid customer or card id" },
-      authCookieResponse,
-      { status: 400 },
-    );
+  const { data: created, error } = await supabase
+    .from("customer_collections")
+    .insert({
+      customer_id: customer.id,
+      master_card_id: masterCardId,
+      condition_id: conditionId,
+      quantity,
+      printing,
+      language,
+      purchase_type: purchaseType,
+      price_paid: pricePaid,
+      added_at: purchaseDate ?? new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return jsonResponseWithAuthCookies({ error: error.message }, authCookieResponse, { status: 422 });
   }
 
-  const data: Record<string, unknown> = {
-    customer: customerRelId,
-    masterCard: masterRelId,
-    quantity,
-    printing,
-    language,
-  };
-  const conditionRelId = conditionId ? toPayloadRelationshipId(conditionId) : undefined;
-  if (conditionRelId !== undefined) data.condition = conditionRelId;
-  if (purchaseType !== undefined) data.purchaseType = purchaseType;
-  if (pricePaid !== undefined) data.pricePaid = pricePaid;
-
-  try {
-    const created = await payload.create({
-      collection: "customer-collections",
-      data: data as never,
-      overrideAccess: true,
-    });
-
-    // Auto-create a purchase transaction when a card is bought with a price
-    if (purchaseType === "bought" && pricePaid !== undefined) {
-      try {
-        // Find the single-card product type by slug
-        const ptResult = await payload.find({
-          collection: "product-types",
-          where: { slug: { equals: "single-card" } },
-          limit: 1,
-          depth: 0,
-          overrideAccess: true,
+  // Auto-create a purchase transaction when a card is bought with a price
+  if (purchaseType === "bought" && pricePaid !== null) {
+    try {
+      const pt = getProductTypeBySlug("single-card");
+      if (pt) {
+        const cardName = getCardMapById().get(masterCardId)?.cardName ?? "Unknown card";
+        await supabase.from("account_transactions").insert({
+          customer_id: customer.id,
+          direction: "purchase",
+          product_type_id: pt.id,
+          description: cardName,
+          master_card_id: masterCardId,
+          quantity,
+          unit_price: pricePaid,
+          transaction_date: purchaseDate ? purchaseDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
         });
-        const ptDoc = ptResult.docs[0];
-
-        if (ptDoc) {
-          // Fetch the card name
-          const cardDoc = await payload.findByID({
-            collection: "master-card-list",
-            id: masterRelId as number,
-            depth: 0,
-            overrideAccess: true,
-            select: { cardName: true },
-          });
-          const cardName =
-            typeof (cardDoc as { cardName?: unknown }).cardName === "string"
-              ? (cardDoc as { cardName: string }).cardName
-              : "Unknown card";
-
-          const ptRelId = toPayloadRelationshipId(getRelationshipDocumentId(ptDoc.id) ?? "");
-          if (ptRelId !== undefined) {
-            await payload.create({
-              collection: "account-transactions",
-              data: {
-                customer: customerRelId,
-                direction: "purchase",
-                productType: ptRelId,
-                description: cardName,
-                masterCard: masterRelId,
-                quantity,
-                unitPrice: pricePaid,
-                transactionDate: purchaseDate ?? new Date().toISOString(),
-              } as never,
-              overrideAccess: true,
-            });
-          }
-        }
-      } catch {
-        // Transaction creation is best-effort — don't fail the collection add
       }
+    } catch {
+      // Transaction creation is best-effort — don't fail the collection add
     }
-
-    return jsonResponseWithAuthCookies({ doc: created }, authCookieResponse);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Create failed";
-    return jsonResponseWithAuthCookies({ error: message }, authCookieResponse, { status: 422 });
   }
+
+  return jsonResponseWithAuthCookies({ doc: created }, authCookieResponse);
 }
 
 export async function DELETE(request: NextRequest) {
   const { customer, authCookieResponse } = await getCurrentCustomerForApiRoute(request);
   if (!customer) {
-    return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, {
-      status: 401,
-    });
+    return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, { status: 401 });
   }
 
   const url = new URL(request.url);
   const id = url.searchParams.get("id")?.trim() ?? "";
   if (!id) {
-    return jsonResponseWithAuthCookies(
-      { error: "id query parameter is required" },
-      authCookieResponse,
-      { status: 400 },
-    );
+    return jsonResponseWithAuthCookies({ error: "id query parameter is required" }, authCookieResponse, { status: 400 });
   }
 
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customer.id) ?? customer.id;
-  const entryRelId = toPayloadRelationshipId(id) ?? id;
+  const { supabase } = createSupabaseRouteHandlerClient(request);
 
-  const found = await payload.find({
-    collection: "customer-collections",
-    where: {
-      and: [{ id: { equals: entryRelId } }, { customer: { equals: customerRelId } }],
-    },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  });
+  // Verify ownership then delete
+  const { error } = await supabase
+    .from("customer_collections")
+    .delete()
+    .eq("id", id)
+    .eq("customer_id", customer.id);
 
-  const doc = found.docs[0];
-  if (!doc) {
-    return jsonResponseWithAuthCookies({ error: "Not found" }, authCookieResponse, { status: 404 });
+  if (error) {
+    return jsonResponseWithAuthCookies({ error: error.message }, authCookieResponse, { status: 422 });
   }
-
-  await payload.delete({
-    collection: "customer-collections",
-    id: getRelationshipDocumentId(doc.id) ?? id,
-    overrideAccess: true,
-  });
 
   return jsonResponseWithAuthCookies({ ok: true }, authCookieResponse);
 }
@@ -232,25 +163,19 @@ type CollectionPatchBody = {
 export async function PATCH(request: NextRequest) {
   const { customer, authCookieResponse } = await getCurrentCustomerForApiRoute(request);
   if (!customer) {
-    return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, {
-      status: 401,
-    });
+    return jsonResponseWithAuthCookies({ error: "Unauthorized" }, authCookieResponse, { status: 401 });
   }
 
   let body: CollectionPatchBody;
   try {
     body = (await request.json()) as CollectionPatchBody;
   } catch {
-    return jsonResponseWithAuthCookies({ error: "Invalid JSON" }, authCookieResponse, {
-      status: 400,
-    });
+    return jsonResponseWithAuthCookies({ error: "Invalid JSON" }, authCookieResponse, { status: 400 });
   }
 
   const idRaw = typeof body.id === "string" ? body.id.trim() : "";
   if (!idRaw) {
-    return jsonResponseWithAuthCookies({ error: "id is required" }, authCookieResponse, {
-      status: 400,
-    });
+    return jsonResponseWithAuthCookies({ error: "id is required" }, authCookieResponse, { status: 400 });
   }
 
   const quantity =
@@ -263,32 +188,19 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  const payload = await getPayload({ config });
-  const customerRelId = toPayloadRelationshipId(customer.id) ?? customer.id;
-  const entryRelId = toPayloadRelationshipId(idRaw) ?? idRaw;
+  const { supabase } = createSupabaseRouteHandlerClient(request);
 
-  const found = await payload.find({
-    collection: "customer-collections",
-    where: {
-      and: [{ id: { equals: entryRelId } }, { customer: { equals: customerRelId } }],
-    },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  });
+  const { data: updated, error } = await supabase
+    .from("customer_collections")
+    .update({ quantity })
+    .eq("id", idRaw)
+    .eq("customer_id", customer.id)
+    .select()
+    .single();
 
-  const doc = found.docs[0];
-  if (!doc) {
-    return jsonResponseWithAuthCookies({ error: "Not found" }, authCookieResponse, { status: 404 });
+  if (error) {
+    return jsonResponseWithAuthCookies({ error: error.message }, authCookieResponse, { status: 422 });
   }
-
-  const docId = getRelationshipDocumentId(doc.id) ?? idRaw;
-  const updated = await payload.update({
-    collection: "customer-collections",
-    id: docId,
-    data: { quantity },
-    overrideAccess: true,
-  });
 
   return jsonResponseWithAuthCookies({ doc: updated }, authCookieResponse);
 }

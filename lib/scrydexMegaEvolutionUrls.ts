@@ -9,11 +9,8 @@ export type ScrydexExpansionListConfig = {
   listPrefix: string;
 };
 
-/** @deprecated Use `ScrydexExpansionListConfig`. */
-export type ScrydexMegaExpansionConfig = ScrydexExpansionListConfig;
-
 /**
- * Resolve Scrydex listing URL from Payload set identifiers (`tcgdexId`, `code`, canonical).
+ * Resolve Scrydex listing URL from set identifiers (`tcgdexId`, `code`, canonical).
  */
 export function scrydexMegaExpansionConfig(
   canonicalSetCode: string,
