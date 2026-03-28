@@ -14,6 +14,8 @@ export type OcrResult = {
   };
 };
 
+export type ScanPreviewImages = OcrResult["debugImages"];
+
 export const DEFAULT_SCAN_OCR_SETTINGS = {
   nameBandEnd: 0.2,
   bottomBandStart: 0.76,
@@ -628,6 +630,71 @@ export async function isCardFullyInView(file: File): Promise<boolean> {
   );
 }
 
+async function buildScanPreviewImages(
+  file: File,
+  settings: ScanOcrSettings,
+): Promise<{
+  detectedCardBlob: Blob;
+  debugImages: ScanPreviewImages;
+  hpStripBlob: Blob;
+  nameStripBlob: Blob;
+  numberStripBlob: Blob;
+}> {
+  const bitmap = await createImageBitmap(file);
+  const detection = await detectAndRectifyCard(bitmap);
+  const detectedCardBlob = detection.warpedCardBlob;
+  const detectionOverlayBlob = detection.overlayBlob;
+  const detectedBitmap = await createImageBitmap(detectedCardBlob);
+
+  const [nameStripBlob, hpStripBlob, numberStripBlob] = await Promise.all([
+    processStrip(
+      detectedBitmap,
+      { ...SCAN_REGIONS.name, yEnd: settings.nameBandEnd },
+      settings,
+    ),
+    processStrip(detectedBitmap, SCAN_REGIONS.hp, settings),
+    processStrip(
+      detectedBitmap,
+      { ...SCAN_REGIONS.number, yStart: settings.bottomBandStart },
+      settings,
+    ),
+  ]);
+
+  const [source, detectedCard, detectionOverlay, nameStrip, hpStrip, numberStrip] =
+    await Promise.all([
+      blobToDataUrl(file),
+      blobToDataUrl(detectedCardBlob),
+      blobToDataUrl(detectionOverlayBlob),
+      blobToDataUrl(nameStripBlob),
+      blobToDataUrl(hpStripBlob),
+      blobToDataUrl(numberStripBlob),
+    ]);
+
+  return {
+    detectedCardBlob,
+    hpStripBlob,
+    nameStripBlob,
+    numberStripBlob,
+    debugImages: {
+      source,
+      detectedCard,
+      detectionOverlay,
+      nameStrip,
+      hpStrip,
+      numberStrip,
+    },
+  };
+}
+
+export async function prepareCardScanPreview(
+  file: File,
+  scanSettings?: Partial<ScanOcrSettings>,
+): Promise<ScanPreviewImages> {
+  const settings = withScanSettings(scanSettings);
+  const { debugImages } = await buildScanPreviewImages(file, settings);
+  return debugImages;
+}
+
 async function runTesseract(blob: Blob): Promise<string> {
   const { createWorker } = await import("tesseract.js");
   const worker = await createWorker("eng");
@@ -748,11 +815,6 @@ export async function extractCardTextFromImage(
 ): Promise<OcrResult> {
   const settings = withScanSettings(scanSettings);
   let rawText = "";
-  let nameStripBlob: Blob | null = null;
-  let hpStripBlob: Blob | null = null;
-  let numberStripBlob: Blob | null = null;
-  let detectedCardBlob: Blob | null = null;
-  let detectionOverlayBlob: Blob | null = null;
   let hpRawText = "";
 
   // Try native TextDetector first (Chrome Android/desktop)
@@ -762,8 +824,6 @@ export async function extractCardTextFromImage(
       const detector = new window.TextDetector();
       const bitmap = await createImageBitmap(file);
       const detection = await detectAndRectifyCard(bitmap);
-      detectedCardBlob = detection.warpedCardBlob;
-      detectionOverlayBlob = detection.overlayBlob;
       const detectedBitmap = await createImageBitmap(detection.warpedCardBlob);
       const blocks: Array<{ rawValue: string }> = await detector.detect(detectedBitmap);
       rawText = blocks.map((b) => b.rawValue).join("\n");
@@ -772,29 +832,8 @@ export async function extractCardTextFromImage(
     }
   }
 
-  // Tesseract fallback — run on targeted strips rather than the full card image.
-  // Pokemon cards have a predictable layout:
-  //   top 0–18%:  card name (+ stage/HP line)
-  //   bottom 88–96%: card number (e.g. 295/217)
-  // Cropping + upscaling these thin bands massively improves accuracy on foil cards.
-  const bitmap = await createImageBitmap(file);
-  const detection = await detectAndRectifyCard(bitmap);
-  detectedCardBlob = detection.warpedCardBlob;
-  detectionOverlayBlob = detection.overlayBlob;
-  const detectedBitmap = await createImageBitmap(detectedCardBlob);
-  [nameStripBlob, numberStripBlob] = await Promise.all([
-    processStrip(
-      detectedBitmap,
-      { ...SCAN_REGIONS.name, yEnd: settings.nameBandEnd },
-      settings,
-    ),
-    processStrip(
-      detectedBitmap,
-      { ...SCAN_REGIONS.number, yStart: settings.bottomBandStart },
-      settings,
-    ),
-  ]);
-  hpStripBlob = await processStrip(detectedBitmap, SCAN_REGIONS.hp, settings);
+  const previewBundle = await buildScanPreviewImages(file, settings);
+  const { debugImages, hpStripBlob, nameStripBlob, numberStripBlob } = previewBundle;
 
   if (!rawText) {
     const [nameText, hpText, numberText] = await Promise.all([
@@ -809,14 +848,6 @@ export async function extractCardTextFromImage(
   }
 
   const { cardName, cardNumber, artist, hp } = parseOcrText(rawText, hpRawText);
-  const [source, detectedCard, detectionOverlay, nameStrip, hpStrip, numberStrip] = await Promise.all([
-    blobToDataUrl(file),
-    blobToDataUrl(detectedCardBlob),
-    blobToDataUrl(detectionOverlayBlob),
-    blobToDataUrl(nameStripBlob),
-    blobToDataUrl(hpStripBlob),
-    blobToDataUrl(numberStripBlob),
-  ]);
 
   return {
     cardName: cardName.trim().replace(/\s+/g, " "),
@@ -824,13 +855,6 @@ export async function extractCardTextFromImage(
     artist: artist.trim().replace(/\s+/g, " "),
     hp: hp.trim(),
     rawText,
-    debugImages: {
-      source,
-      detectedCard,
-      detectionOverlay,
-      nameStrip,
-      hpStrip,
-      numberStrip,
-    },
+    debugImages,
   };
 }

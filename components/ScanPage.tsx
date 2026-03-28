@@ -9,7 +9,7 @@ type Props = {
 };
 
 export function ScanPage({ customerLoggedIn }: Props) {
-  const { state, handleFile, handleBurst, reset } = useCardScan();
+  const { state, handleFile, reset } = useCardScan();
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pb-[max(2rem,var(--bottom-nav-offset))] pt-6">
@@ -17,7 +17,6 @@ export function ScanPage({ customerLoggedIn }: Props) {
 
       <ScanUploadZone
         onFile={handleFile}
-        onBurst={handleBurst}
         onReset={reset}
         disabled={state.status === "processing" || state.status === "searching"}
         state={state}
