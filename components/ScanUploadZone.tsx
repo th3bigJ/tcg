@@ -19,11 +19,13 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const liveScanRef = useRef(false);
+  const capturedPreviewRef = useRef<string | null>(null);
   const [cameraError, setCameraError] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
   const [startingCamera, setStartingCamera] = useState(true);
   const [facingMode, setFacingMode] = useState<FacingMode>("environment");
   const [cameraAttempt, setCameraAttempt] = useState(0);
+  const [capturedPreview, setCapturedPreview] = useState("");
   const [scanSettings, setScanSettings] = useState<ScanOcrSettings>({
     ...DEFAULT_SCAN_OCR_SETTINGS,
   });
@@ -82,9 +84,24 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
     };
   }, [cameraAttempt, facingMode]);
 
+  useEffect(() => {
+    return () => {
+      if (capturedPreviewRef.current) {
+        URL.revokeObjectURL(capturedPreviewRef.current);
+      }
+    };
+  }, []);
+
   async function captureFrame() {
     const file = await makeFrameFile();
     if (!file || liveScanRef.current) return;
+
+    if (capturedPreviewRef.current) {
+      URL.revokeObjectURL(capturedPreviewRef.current);
+    }
+    const preview = URL.createObjectURL(file);
+    capturedPreviewRef.current = preview;
+    setCapturedPreview(preview);
 
     liveScanRef.current = true;
     try {
@@ -130,7 +147,7 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
 
   function statusText() {
     if (cameraError) return cameraError;
-    if (state.status === "processing") return "Reading the live frame with visual prefilter + OCR.";
+    if (state.status === "processing") return "Processing the captured image.";
     if (state.status === "searching") return "Searching the narrowed candidate list.";
     if (state.status === "results") return "Capture another frame whenever you want to try again.";
     if (state.status === "error") return state.message;
@@ -150,14 +167,24 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
         className="relative w-full overflow-hidden rounded-[1.5rem] border border-[var(--foreground)]/15 bg-black"
         style={{ aspectRatio: "3 / 4" }}
       >
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          playsInline
-          className="h-full w-full object-cover"
-          onCanPlay={() => setCameraReady(true)}
-        />
+        {capturedPreview && state.status !== "idle" ? (
+          <Image
+            src={capturedPreview}
+            alt="Captured scan frame"
+            fill
+            unoptimized
+            className="object-cover"
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className="h-full w-full object-cover"
+            onCanPlay={() => setCameraReady(true)}
+          />
+        )}
 
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute inset-x-[10%] inset-y-[6%] rounded-[1.25rem] border-2 border-white/75 shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
@@ -221,7 +248,14 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
             {showDebug ? (
               <button
                 type="button"
-                onClick={onReset}
+                onClick={() => {
+                  if (capturedPreviewRef.current) {
+                    URL.revokeObjectURL(capturedPreviewRef.current);
+                    capturedPreviewRef.current = null;
+                  }
+                  setCapturedPreview("");
+                  onReset();
+                }}
                 className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition active:opacity-80"
               >
                 Clear Debug

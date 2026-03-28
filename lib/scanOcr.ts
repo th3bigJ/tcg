@@ -360,6 +360,15 @@ async function cropRegionBlob(
   return canvasToBlob(canvas);
 }
 
+function getGuideQuad(width: number, height: number): Point[] {
+  return [
+    { x: width * CARD_GUIDE.left, y: height * CARD_GUIDE.top },
+    { x: width * CARD_GUIDE.right, y: height * CARD_GUIDE.top },
+    { x: width * CARD_GUIDE.right, y: height * CARD_GUIDE.bottom },
+    { x: width * CARD_GUIDE.left, y: height * CARD_GUIDE.bottom },
+  ];
+}
+
 function getResizedImageData(bitmap: ImageBitmap) {
   const scale = Math.min(1, DETECTION_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
   const width = Math.max(1, Math.round(bitmap.width * scale));
@@ -834,6 +843,7 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
 
   const fallbackSourceCanvas = createCanvas(bitmap.width, bitmap.height);
   fallbackSourceCanvas.getContext("2d")!.drawImage(bitmap, 0, 0);
+  const guideSourcePoints = getGuideQuad(bitmap.width, bitmap.height);
 
   if (maskCorners && validateDetectedQuad(maskCorners, resized.width, resized.height)) {
     const scaleUp = 1 / resized.scale;
@@ -847,11 +857,7 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
   }
 
   if (!leftLine || !rightLine || !topLine || !bottomLine) {
-    const blob = await canvasToBlob(fallbackSourceCanvas);
-    return {
-      warpedCardBlob: blob,
-      overlayBlob: blob,
-    };
+    return rectifyFromSourcePoints(bitmap, guideSourcePoints);
   }
 
   const topLeft = intersectLines(leftLine, topLine);
@@ -860,11 +866,7 @@ async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResul
   const bottomLeft = intersectLines(leftLine, bottomLine);
 
   if (!topLeft || !topRight || !bottomRight || !bottomLeft) {
-    const blob = await canvasToBlob(fallbackSourceCanvas);
-    return {
-      warpedCardBlob: blob,
-      overlayBlob: blob,
-    };
+    return rectifyFromSourcePoints(bitmap, guideSourcePoints);
   }
 
   const scaleUp = 1 / resized.scale;
@@ -888,11 +890,7 @@ async function rectifyFromSourcePoints(
   const fallbackSourceCanvas = createCanvas(bitmap.width, bitmap.height);
   fallbackSourceCanvas.getContext("2d")!.drawImage(bitmap, 0, 0);
   if (!validateDetectedQuad(sourcePoints, bitmap.width, bitmap.height)) {
-    const blob = await canvasToBlob(fallbackSourceCanvas);
-    return {
-      warpedCardBlob: blob,
-      overlayBlob: blob,
-    };
+    sourcePoints = getGuideQuad(bitmap.width, bitmap.height);
   }
 
   const destinationPoints: Point[] = [
