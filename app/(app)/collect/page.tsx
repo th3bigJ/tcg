@@ -98,27 +98,8 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
 
   return (
     <div className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
-      <div className="flex shrink-0 items-center justify-between px-4 pt-[var(--mobile-page-top-offset)]">
+      <div className="flex shrink-0 items-center px-4 pt-[var(--mobile-page-top-offset)]">
         <h1 className="text-xl font-semibold">My collection</h1>
-        <Link
-          href="/wishlist"
-          className="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-red-700"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-            aria-hidden="true"
-          >
-            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
-          </svg>
-          Wishlist
-        </Link>
       </div>
       {collectionCountLabel ? (
         <p className="mt-2 shrink-0 px-4 text-sm text-[var(--foreground)]/65">{collectionCountLabel}</p>

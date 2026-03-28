@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCurrentCustomer } from "@/lib/auth";
@@ -27,28 +25,7 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   if (!customer) {
     return (
       <div className="flex min-h-full flex-col bg-[var(--background)] px-4 py-6 text-[var(--foreground)]">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/collect"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--foreground)]/10 transition hover:bg-[var(--foreground)]/18"
-            aria-label="Back to collection"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4"
-              aria-hidden="true"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </Link>
-          <h1 className="text-xl font-semibold">Wishlist</h1>
-        </div>
+        <h1 className="text-xl font-semibold">Wishlist</h1>
         <p className="mt-2 max-w-md text-sm text-[var(--foreground)]/70">
           Sign in to save cards you want to pick up.
         </p>
@@ -112,25 +89,6 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   return (
     <div className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
       <div className="flex shrink-0 items-center gap-3 px-4 pt-[var(--mobile-page-top-offset)]">
-        <Link
-          href="/collect"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--foreground)]/10 transition hover:bg-[var(--foreground)]/18"
-          aria-label="Back to collection"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-            aria-hidden="true"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </Link>
         <h1 className="text-xl font-semibold">Wishlist</h1>
       </div>
       <p className="mt-2 shrink-0 px-4 text-sm text-[var(--foreground)]/65">

@@ -16,7 +16,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      718
+    ],
     "subtypes": [
       "Basic",
       "MEGA",
@@ -111,7 +113,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      52
+    ],
     "subtypes": [
       "Basic",
       "ex"
@@ -143,7 +147,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      718
+    ],
     "subtypes": [
       "Basic",
       "MEGA",
@@ -176,7 +182,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      36
+    ],
     "subtypes": [
       "Stage 1",
       "MEGA",
@@ -209,7 +217,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      121
+    ],
     "subtypes": [
       "Stage 1",
       "MEGA",
@@ -552,7 +562,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      52
+    ],
     "subtypes": [
       "Basic",
       "ex"
@@ -584,7 +596,9 @@
     "elementTypes": [
       "Metal"
     ],
-    "dexIds": null,
+    "dexIds": [
+      227
+    ],
     "subtypes": [
       "Basic",
       "MEGA",
@@ -617,7 +631,9 @@
     "elementTypes": [
       "Darkness"
     ],
-    "dexIds": null,
+    "dexIds": [
+      717
+    ],
     "subtypes": [
       "Basic",
       "ex"
@@ -649,7 +665,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      718
+    ],
     "subtypes": [
       "Basic",
       "MEGA",
@@ -682,7 +700,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      36
+    ],
     "subtypes": [
       "Stage 1",
       "MEGA",
@@ -715,7 +735,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      121
+    ],
     "subtypes": [
       "Stage 1",
       "MEGA",
@@ -748,7 +770,9 @@
     "elementTypes": [
       "Fire"
     ],
-    "dexIds": null,
+    "dexIds": [
+      758
+    ],
     "subtypes": [
       "Stage 1",
       "ex"
@@ -780,7 +804,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      724
+    ],
     "subtypes": [
       "Stage 2",
       "ex"
@@ -812,7 +838,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      20
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -843,7 +871,9 @@
     "elementTypes": [
       "Metal"
     ],
-    "dexIds": null,
+    "dexIds": [
+      680
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -874,7 +904,9 @@
     "elementTypes": [
       "Darkness"
     ],
-    "dexIds": null,
+    "dexIds": [
+      452
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -905,7 +937,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      476
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -936,7 +970,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      677
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -967,7 +1003,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      35
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -998,7 +1036,9 @@
     "elementTypes": [
       "Lightning"
     ],
-    "dexIds": null,
+    "dexIds": [
+      702
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -1029,7 +1069,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      699
+    ],
     "subtypes": [
       "Stage 2"
     ],
@@ -1060,7 +1102,9 @@
     "elementTypes": [
       "Fire"
     ],
-    "dexIds": null,
+    "dexIds": [
+      663
+    ],
     "subtypes": [
       "Stage 2"
     ],
@@ -1091,7 +1135,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      722
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -1122,7 +1168,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      665
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -1804,7 +1852,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      676
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -1835,7 +1885,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      661
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -1866,7 +1918,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      660
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -1897,7 +1951,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      659
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -1928,7 +1984,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      143
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -1959,7 +2017,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      52
+    ],
     "subtypes": [
       "Basic",
       "ex"
@@ -1991,7 +2051,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      20
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -2022,7 +2084,9 @@
     "elementTypes": [
       "Colorless"
     ],
-    "dexIds": null,
+    "dexIds": [
+      19
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2053,7 +2117,9 @@
     "elementTypes": [
       "Metal"
     ],
-    "dexIds": null,
+    "dexIds": [
+      707
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2084,7 +2150,9 @@
     "elementTypes": [
       "Metal"
     ],
-    "dexIds": null,
+    "dexIds": [
+      681
+    ],
     "subtypes": [
       "Stage 2"
     ],
@@ -2115,7 +2183,9 @@
     "elementTypes": [
       "Metal"
     ],
-    "dexIds": null,
+    "dexIds": [
+      680
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -2146,7 +2216,9 @@
     "elementTypes": [
       "Metal"
     ],
-    "dexIds": null,
+    "dexIds": [
+      679
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2177,7 +2249,9 @@
     "elementTypes": [
       "Metal"
     ],
-    "dexIds": null,
+    "dexIds": [
+      227
+    ],
     "subtypes": [
       "Basic",
       "MEGA",
@@ -2210,7 +2284,9 @@
     "elementTypes": [
       "Darkness"
     ],
-    "dexIds": null,
+    "dexIds": [
+      1002
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2241,7 +2317,9 @@
     "elementTypes": [
       "Darkness"
     ],
-    "dexIds": null,
+    "dexIds": [
+      717
+    ],
     "subtypes": [
       "Basic",
       "ex"
@@ -2273,7 +2351,9 @@
     "elementTypes": [
       "Darkness"
     ],
-    "dexIds": null,
+    "dexIds": [
+      452
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -2304,7 +2384,9 @@
     "elementTypes": [
       "Darkness"
     ],
-    "dexIds": null,
+    "dexIds": [
+      451
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2335,7 +2417,9 @@
     "elementTypes": [
       "Darkness"
     ],
-    "dexIds": null,
+    "dexIds": [
+      94
+    ],
     "subtypes": [
       "Stage 2"
     ],
@@ -2366,7 +2450,9 @@
     "elementTypes": [
       "Darkness"
     ],
-    "dexIds": null,
+    "dexIds": [
+      93
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -2397,7 +2483,9 @@
     "elementTypes": [
       "Darkness"
     ],
-    "dexIds": null,
+    "dexIds": [
+      92
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2428,7 +2516,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      718
+    ],
     "subtypes": [
       "Basic",
       "MEGA",
@@ -2461,7 +2551,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      701
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2492,7 +2584,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      697
+    ],
     "subtypes": [
       "Stage 2"
     ],
@@ -2523,7 +2617,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      696
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -2554,7 +2650,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      689
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -2585,7 +2683,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      688
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2616,7 +2716,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      645
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2647,7 +2749,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      450
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -2678,7 +2782,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      449
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2709,7 +2815,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      476
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -2740,7 +2848,9 @@
     "elementTypes": [
       "Fighting"
     ],
-    "dexIds": null,
+    "dexIds": [
+      299
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2771,7 +2881,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      683
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -2802,7 +2914,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      682
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2833,7 +2947,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      678
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -2864,7 +2980,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      677
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2895,7 +3013,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      303
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2926,7 +3046,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      36
+    ],
     "subtypes": [
       "Stage 1",
       "MEGA",
@@ -2959,7 +3081,9 @@
     "elementTypes": [
       "Psychic"
     ],
-    "dexIds": null,
+    "dexIds": [
+      35
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -2990,7 +3114,9 @@
     "elementTypes": [
       "Lightning"
     ],
-    "dexIds": null,
+    "dexIds": [
+      702
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3021,7 +3147,9 @@
     "elementTypes": [
       "Lightning"
     ],
-    "dexIds": null,
+    "dexIds": [
+      405
+    ],
     "subtypes": [
       "Stage 2"
     ],
@@ -3052,7 +3180,9 @@
     "elementTypes": [
       "Lightning"
     ],
-    "dexIds": null,
+    "dexIds": [
+      404
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -3083,7 +3213,9 @@
     "elementTypes": [
       "Lightning"
     ],
-    "dexIds": null,
+    "dexIds": [
+      403
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3114,7 +3246,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      721
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3145,7 +3279,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      699
+    ],
     "subtypes": [
       "Stage 2"
     ],
@@ -3176,7 +3312,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      698
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -3207,7 +3345,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      131
+    ],
     "subtypes": [
       "Basic",
       "ex"
@@ -3239,7 +3379,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      121
+    ],
     "subtypes": [
       "Stage 1",
       "MEGA",
@@ -3272,7 +3414,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      120
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3303,7 +3447,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      87
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -3334,7 +3480,9 @@
     "elementTypes": [
       "Water"
     ],
-    "dexIds": null,
+    "dexIds": [
+      86
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3365,7 +3513,9 @@
     "elementTypes": [
       "Fire"
     ],
-    "dexIds": null,
+    "dexIds": [
+      776
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3396,7 +3546,9 @@
     "elementTypes": [
       "Fire"
     ],
-    "dexIds": null,
+    "dexIds": [
+      758
+    ],
     "subtypes": [
       "Stage 1",
       "ex"
@@ -3428,7 +3580,9 @@
     "elementTypes": [
       "Fire"
     ],
-    "dexIds": null,
+    "dexIds": [
+      757
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3459,7 +3613,9 @@
     "elementTypes": [
       "Fire"
     ],
-    "dexIds": null,
+    "dexIds": [
+      663
+    ],
     "subtypes": [
       "Stage 2"
     ],
@@ -3490,7 +3646,9 @@
     "elementTypes": [
       "Fire"
     ],
-    "dexIds": null,
+    "dexIds": [
+      662
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -3521,7 +3679,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      724
+    ],
     "subtypes": [
       "Stage 2",
       "ex"
@@ -3553,7 +3713,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      723
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -3584,7 +3746,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      722
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3615,7 +3779,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      666
+    ],
     "subtypes": [
       "Stage 2"
     ],
@@ -3646,7 +3812,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      665
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -3677,7 +3845,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      664
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3708,7 +3878,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      497
+    ],
     "subtypes": [
       "Stage 2"
     ],
@@ -3739,7 +3911,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      496
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -3770,7 +3944,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      495
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3801,7 +3977,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      492
+    ],
     "subtypes": [
       "Basic"
     ],
@@ -3832,7 +4010,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      168
+    ],
     "subtypes": [
       "Stage 1"
     ],
@@ -3863,7 +4043,9 @@
     "elementTypes": [
       "Grass"
     ],
-    "dexIds": null,
+    "dexIds": [
+      167
+    ],
     "subtypes": [
       "Basic"
     ],
