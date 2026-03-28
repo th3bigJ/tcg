@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { findVisualCardMatches } from "@/lib/cardImageHashSearch";
 import type { CardVisualFingerprint } from "@/lib/cardVisualHash";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
-import { findSetSymbolMatches } from "@/lib/setSymbolHashSearch";
 import { getAllCards, getAllSets } from "@/lib/staticCards";
 
 let _setMetaMap: Map<string, ReturnType<typeof getAllSets>[number]> | null = null;
@@ -101,22 +100,13 @@ export async function POST(request: Request) {
         .slice(0, 300)
     : [];
   const visualFingerprintRaw = (body as Record<string, unknown>).visualFingerprint;
-  const symbolFingerprintRaw = (body as Record<string, unknown>).symbolFingerprint;
   const visualFingerprintRecord =
     visualFingerprintRaw && typeof visualFingerprintRaw === "object"
       ? (visualFingerprintRaw as Record<string, unknown>)
       : null;
-  const symbolFingerprintRecord =
-    symbolFingerprintRaw && typeof symbolFingerprintRaw === "object"
-      ? (symbolFingerprintRaw as Record<string, unknown>)
-      : null;
   const avgRgbRaw =
     visualFingerprintRecord && Array.isArray(visualFingerprintRecord.avgRgb)
       ? visualFingerprintRecord.avgRgb
-      : null;
-  const symbolAvgRgbRaw =
-    symbolFingerprintRecord && Array.isArray(symbolFingerprintRecord.avgRgb)
-      ? symbolFingerprintRecord.avgRgb
       : null;
   const visualFingerprint =
     visualFingerprintRecord &&
@@ -132,22 +122,8 @@ export async function POST(request: Request) {
           ) as CardVisualFingerprint["avgRgb"],
         }
       : null;
-  const symbolFingerprint =
-    symbolFingerprintRecord &&
-    typeof symbolFingerprintRecord.dHash === "string" &&
-    typeof symbolFingerprintRecord.aHash === "string" &&
-    symbolAvgRgbRaw &&
-    symbolAvgRgbRaw.length === 3
-      ? {
-          dHash: symbolFingerprintRecord.dHash.slice(0, 64),
-          aHash: symbolFingerprintRecord.aHash.slice(0, 64),
-          avgRgb: symbolAvgRgbRaw.map((value: unknown) =>
-            Math.max(0, Math.min(255, Number(value) || 0)),
-          ) as CardVisualFingerprint["avgRgb"],
-        }
-      : null;
 
-  if (!rawName && !rawNumber && !rawArtist && !rawHp && !visualFingerprint && !symbolFingerprint) {
+  if (!rawName && !rawNumber && !rawArtist && !rawHp && !visualFingerprint) {
     return NextResponse.json(
       { error: "At least one scan field or visual fingerprint is required" },
       { status: 400 },
@@ -168,21 +144,7 @@ export async function POST(request: Request) {
         limit: rawName || rawNumber || rawArtist || rawHp ? 120 : 40,
       })
     : [];
-  const setSymbolMatches = symbolFingerprint ? findSetSymbolMatches(symbolFingerprint, 18) : [];
   const visualScoreMap = new Map(visualMatches.map((match) => [match.masterCardId, match]));
-  const setSymbolScoreMap = new Map<string, number>();
-  for (const match of setSymbolMatches) {
-    const scoreBoost = Math.max(0, 70 - match.visualScore);
-    if (match.setCode) {
-      setSymbolScoreMap.set(match.setCode, Math.max(setSymbolScoreMap.get(match.setCode) ?? 0, scoreBoost));
-    }
-    if (match.setTcgdexId) {
-      setSymbolScoreMap.set(
-        match.setTcgdexId,
-        Math.max(setSymbolScoreMap.get(match.setTcgdexId) ?? 0, scoreBoost),
-      );
-    }
-  }
   let workingCards = restrictedCardIds
     ? allCards.filter((card) => restrictedCardIds.has(card.masterCardId))
     : allCards;
@@ -210,7 +172,6 @@ export async function POST(request: Request) {
     }
     if (Number.isFinite(hpNumber) && card.hp === hpNumber) score += 20;
     if (visualMatch) score += Math.max(0, 95 - visualMatch.visualScore);
-    score += setSymbolScoreMap.get(card.setCode) ?? 0;
 
     return score;
   }
@@ -325,7 +286,6 @@ export async function POST(request: Request) {
       artist: rawArtist,
       hp: rawHp,
       visualCandidateCount: visualMatches.length,
-      setSymbolCandidateCount: setSymbolMatches.length,
       narrowedCardCount: workingCards.length,
     },
   });

@@ -338,9 +338,6 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
             <DebugRow label="OCR number">{activeOcrResult?.cardNumber || "waiting"}</DebugRow>
             <DebugRow label="OCR artist">{activeOcrResult?.artist || "waiting"}</DebugRow>
             <DebugRow label="OCR HP">{activeOcrResult?.hp || "waiting"}</DebugRow>
-            <DebugRow label="Set symbol">
-              {activeOcrResult ? "captured" : "waiting"}
-            </DebugRow>
             <DebugRow label="Matches">
               {state.status === "results" ? String(state.candidates.length) : "waiting"}
             </DebugRow>
@@ -373,7 +370,7 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
               <Image src={state.preview} alt="Last processed frame" fill unoptimized className="object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center p-4 text-center text-xs text-[var(--foreground)]/45">
-                The last processed live frame appears here after each scan.
+                The last captured frame appears here after each scan.
               </div>
             )}
           </div>
@@ -444,12 +441,6 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
                     suffix="%"
                   />
                 </div>
-              </div>
-              <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2 sm:col-span-2">
-                <DebugImageCard label="Set Symbol Strip" src={previewImages.symbolStrip} alt="Processed set symbol crop" aspectRatio="2.4 / 1" />
-                <p className="mt-3 text-xs text-[var(--foreground)]/55">
-                  This crop feeds the set-symbol matcher and helps separate duplicate names and numbers across sets.
-                </p>
               </div>
             </div>
           </div>

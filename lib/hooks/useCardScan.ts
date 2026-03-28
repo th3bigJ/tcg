@@ -61,7 +61,6 @@ export function useCardScan(): {
     artist?: string;
     hp?: string;
     visualFingerprint?: OcrResult["visualFingerprint"];
-    symbolFingerprint?: OcrResult["symbolFingerprint"];
     candidateMasterCardIds?: string[];
   }) {
     const response = await fetch("/api/scan/identify", {
@@ -87,7 +86,7 @@ export function useCardScan(): {
     setState({ status: "processing", preview });
 
     try {
-      const { visualFingerprint, symbolFingerprint } = await withTimeout(
+      const { visualFingerprint } = await withTimeout(
         prepareCardVisualFingerprint(file, scanSettings),
         5000,
         "Image prep took too long. Please try again.",
@@ -95,7 +94,6 @@ export function useCardScan(): {
       const visualData = await withTimeout(
         identifyScan({
           visualFingerprint,
-          symbolFingerprint,
         }),
         4000,
         "Visual matching took too long. Please try again.",
@@ -126,7 +124,6 @@ export function useCardScan(): {
           artist: ocrResult.artist,
           hp: ocrResult.hp,
           visualFingerprint: ocrResult.visualFingerprint,
-          symbolFingerprint: ocrResult.symbolFingerprint,
           candidateMasterCardIds: candidateHints?.map((candidate) => candidate.masterCardId),
         }),
         4000,

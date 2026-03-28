@@ -7,7 +7,6 @@ export type OcrResult = {
   artist: string;
   hp: string;
   visualFingerprint: CardVisualFingerprint;
-  symbolFingerprint: CardVisualFingerprint;
   rawText: string; // full OCR dump for debugging
   debugImages: {
     source: string;
@@ -16,7 +15,6 @@ export type OcrResult = {
     nameStrip: string;
     hpStrip: string;
     numberStrip: string;
-    symbolStrip: string;
   };
 };
 
@@ -52,8 +50,9 @@ export const SCAN_REGIONS = {
   name: { xStart: 0, xEnd: 1, yStart: 0, yEnd: 0.2, label: "Name + HP" },
   hp: { xStart: 0.72, xEnd: 0.98, yStart: 0, yEnd: 0.16, label: "HP" },
   number: { xStart: 0, xEnd: 1, yStart: 0.72, yEnd: 1, label: "Card Number" },
-  symbol: { xStart: 0.14, xEnd: 0.38, yStart: 0.82, yEnd: 0.95, label: "Set Symbol" },
 } as const;
+
+const USE_CAPTURED_GUIDE_IMAGE_DIRECTLY = true;
 
 const CARD_GUIDE = {
   left: 0.1,
@@ -373,20 +372,6 @@ async function canvasToBlob(canvas: HTMLCanvasElement, type = "image/png", quali
       quality,
     );
   });
-}
-
-async function cropRegionBlob(
-  bitmap: ImageBitmap,
-  region: { xStart: number; xEnd: number; yStart: number; yEnd: number },
-): Promise<Blob> {
-  const srcX = Math.round(bitmap.width * region.xStart);
-  const srcY = Math.round(bitmap.height * region.yStart);
-  const srcW = Math.max(1, Math.round(bitmap.width * (region.xEnd - region.xStart)));
-  const srcH = Math.max(1, Math.round(bitmap.height * (region.yEnd - region.yStart)));
-  const canvas = createCanvas(srcW, srcH);
-  const ctx = canvas.getContext("2d")!;
-  ctx.drawImage(bitmap, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
-  return canvasToBlob(canvas);
 }
 
 function getResizedImageData(bitmap: ImageBitmap) {
@@ -1010,6 +995,37 @@ function sampleImage(data: Uint8ClampedArray, width: number, height: number, poi
 }
 
 async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResult> {
+  if (USE_CAPTURED_GUIDE_IMAGE_DIRECTLY) {
+    const sourceCanvas = createCanvas(bitmap.width, bitmap.height);
+    const sourceCtx = sourceCanvas.getContext("2d")!;
+    sourceCtx.drawImage(bitmap, 0, 0);
+    const sourceBlob = await canvasToBlob(sourceCanvas);
+
+    const overlayCanvas = createCanvas(bitmap.width, bitmap.height);
+    const overlayCtx = overlayCanvas.getContext("2d")!;
+    overlayCtx.drawImage(bitmap, 0, 0);
+    overlayCtx.strokeStyle = "#22d3ee";
+    overlayCtx.lineWidth = Math.max(4, Math.round(Math.min(bitmap.width, bitmap.height) * 0.012));
+    const inset = overlayCtx.lineWidth / 2;
+    overlayCtx.strokeRect(
+      inset,
+      inset,
+      Math.max(0, bitmap.width - overlayCtx.lineWidth),
+      Math.max(0, bitmap.height - overlayCtx.lineWidth),
+    );
+
+    return {
+      warpedCardBlob: sourceBlob,
+      overlayBlob: await canvasToBlob(overlayCanvas),
+      sourcePoints: [
+        { x: 0, y: 0 },
+        { x: bitmap.width, y: 0 },
+        { x: bitmap.width, y: bitmap.height },
+        { x: 0, y: bitmap.height },
+      ],
+    };
+  }
+
   try {
     const openCvCorners = await detectCornersWithOpenCv(bitmap);
     if (openCvCorners && validateDetectedQuad(openCvCorners, bitmap.width, bitmap.height)) {
@@ -1229,9 +1245,7 @@ async function buildScanPreviewImages(
   hpStripBlob: Blob;
   nameStripBlob: Blob;
   numberStripBlob: Blob;
-  symbolStripBlob: Blob;
   visualFingerprint: CardVisualFingerprint;
-  symbolFingerprint: CardVisualFingerprint;
 }> {
   const bitmap = await createImageBitmap(file);
   const detection = await detectAndRectifyCard(bitmap);
@@ -1239,7 +1253,7 @@ async function buildScanPreviewImages(
   const detectionOverlayBlob = detection.overlayBlob;
   const detectedBitmap = await createImageBitmap(detectedCardBlob);
 
-  const [nameStripBlob, hpStripBlob, numberStripBlob, rawSymbolBlob, symbolStripBlob] = await Promise.all([
+  const [nameStripBlob, hpStripBlob, numberStripBlob] = await Promise.all([
     processStrip(
       detectedBitmap,
       { ...SCAN_REGIONS.name, yEnd: settings.nameBandEnd },
@@ -1252,13 +1266,10 @@ async function buildScanPreviewImages(
       settings,
       NUMBER_STRIP_UPSCALE,
     ),
-    cropRegionBlob(detectedBitmap, SCAN_REGIONS.symbol),
-    processStrip(detectedBitmap, SCAN_REGIONS.symbol, settings, NUMBER_STRIP_UPSCALE),
   ]);
   const visualFingerprint = computeVisualFingerprint(detectedBitmap);
-  const symbolFingerprint = computeVisualFingerprint(await createImageBitmap(rawSymbolBlob));
 
-  const [source, detectedCard, detectionOverlay, nameStrip, hpStrip, numberStrip, symbolStrip] =
+  const [source, detectedCard, detectionOverlay, nameStrip, hpStrip, numberStrip] =
     await Promise.all([
       blobToDataUrl(file),
       blobToDataUrl(detectedCardBlob),
@@ -1266,7 +1277,6 @@ async function buildScanPreviewImages(
       blobToDataUrl(nameStripBlob),
       blobToDataUrl(hpStripBlob),
       blobToDataUrl(numberStripBlob),
-      blobToDataUrl(symbolStripBlob),
     ]);
 
   return {
@@ -1274,9 +1284,7 @@ async function buildScanPreviewImages(
     hpStripBlob,
     nameStripBlob,
     numberStripBlob,
-    symbolStripBlob,
     visualFingerprint,
-    symbolFingerprint,
     debugImages: {
       source,
       detectedCard,
@@ -1284,7 +1292,6 @@ async function buildScanPreviewImages(
       nameStrip,
       hpStrip,
       numberStrip,
-      symbolStrip,
     },
   };
 }
@@ -1301,10 +1308,10 @@ export async function prepareCardScanPreview(
 export async function prepareCardVisualFingerprint(
   file: File,
   scanSettings?: Partial<ScanOcrSettings>,
-): Promise<{ visualFingerprint: CardVisualFingerprint; symbolFingerprint: CardVisualFingerprint }> {
+) : Promise<{ visualFingerprint: CardVisualFingerprint }> {
   const settings = withScanSettings(scanSettings);
-  const { visualFingerprint, symbolFingerprint } = await buildScanPreviewImages(file, settings);
-  return { visualFingerprint, symbolFingerprint };
+  const { visualFingerprint } = await buildScanPreviewImages(file, settings);
+  return { visualFingerprint };
 }
 
 async function runTesseract(blob: Blob): Promise<string> {
@@ -1544,7 +1551,6 @@ export async function extractCardTextFromImage(
     nameStripBlob,
     numberStripBlob,
     visualFingerprint,
-    symbolFingerprint,
   } = previewBundle;
 
   if (!rawText) {
@@ -1614,7 +1620,6 @@ export async function extractCardTextFromImage(
     artist: artist.trim().replace(/\s+/g, " "),
     hp: hp.trim(),
     visualFingerprint,
-    symbolFingerprint,
     rawText,
     debugImages,
   };
