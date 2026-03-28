@@ -226,6 +226,23 @@ function computeGradients(imageData: ImageData) {
   return { width, height, gx, gy, mag };
 }
 
+function computeBrightMask(imageData: ImageData) {
+  const { width, height, data } = imageData;
+  const mask = new Uint8Array(width * height);
+
+  for (let i = 0; i < width * height; i++) {
+    const offset = i * 4;
+    const r = data[offset]!;
+    const g = data[offset + 1]!;
+    const b = data[offset + 2]!;
+    const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    const spread = Math.max(r, g, b) - Math.min(r, g, b);
+    mask[i] = luminance >= 150 && spread <= 85 ? 1 : 0;
+  }
+
+  return { width, height, mask };
+}
+
 function sampleVerticalEdges(
   gradients: ReturnType<typeof computeGradients>,
   leftToRight: boolean,
@@ -284,6 +301,64 @@ function sampleHorizontalEdges(
     }
     if (bestY !== -1) {
       points.push({ x, y: bestY });
+    }
+  }
+
+  return points;
+}
+
+function sampleMaskVerticalEdges(
+  brightMask: ReturnType<typeof computeBrightMask>,
+  leftToRight: boolean,
+): Point[] {
+  const { width, height, mask } = brightMask;
+  const points: Point[] = [];
+  const yStart = Math.round(height * CARD_GUIDE.top);
+  const yEnd = Math.round(height * CARD_GUIDE.bottom);
+  const xSearchStart = Math.round(width * (leftToRight ? 0.05 : 0.55));
+  const xSearchEnd = Math.round(width * (leftToRight ? 0.45 : 0.95));
+  const rows = 40;
+
+  for (let i = 0; i < rows; i++) {
+    const y = Math.round(yStart + ((yEnd - yStart) * i) / Math.max(rows - 1, 1));
+    const xRange = leftToRight
+      ? { start: xSearchStart, end: xSearchEnd, step: 1 }
+      : { start: xSearchEnd, end: xSearchStart, step: -1 };
+
+    for (let x = xRange.start; leftToRight ? x <= xRange.end : x >= xRange.end; x += xRange.step) {
+      if (mask[y * width + x]) {
+        points.push({ x, y });
+        break;
+      }
+    }
+  }
+
+  return points;
+}
+
+function sampleMaskHorizontalEdges(
+  brightMask: ReturnType<typeof computeBrightMask>,
+  topToBottom: boolean,
+): Point[] {
+  const { width, height, mask } = brightMask;
+  const points: Point[] = [];
+  const xStart = Math.round(width * CARD_GUIDE.left);
+  const xEnd = Math.round(width * CARD_GUIDE.right);
+  const ySearchStart = Math.round(height * (topToBottom ? 0.03 : 0.55));
+  const ySearchEnd = Math.round(height * (topToBottom ? 0.45 : 0.97));
+  const columns = 32;
+
+  for (let i = 0; i < columns; i++) {
+    const x = Math.round(xStart + ((xEnd - xStart) * i) / Math.max(columns - 1, 1));
+    const yRange = topToBottom
+      ? { start: ySearchStart, end: ySearchEnd, step: 1 }
+      : { start: ySearchEnd, end: ySearchStart, step: -1 };
+
+    for (let y = yRange.start; topToBottom ? y <= yRange.end : y >= yRange.end; y += yRange.step) {
+      if (mask[y * width + x]) {
+        points.push({ x, y });
+        break;
+      }
     }
   }
 
@@ -386,15 +461,22 @@ function sampleImage(data: Uint8ClampedArray, width: number, height: number, poi
 async function detectAndRectifyCard(bitmap: ImageBitmap): Promise<DetectionResult> {
   const resized = getResizedImageData(bitmap);
   const gradients = computeGradients(resized.imageData);
-  const leftPoints = sampleVerticalEdges(gradients, true);
-  const rightPoints = sampleVerticalEdges(gradients, false);
-  const topPoints = sampleHorizontalEdges(gradients, true);
-  const bottomPoints = sampleHorizontalEdges(gradients, false);
+  const brightMask = computeBrightMask(resized.imageData);
+  const leftPoints = sampleMaskVerticalEdges(brightMask, true);
+  const rightPoints = sampleMaskVerticalEdges(brightMask, false);
+  const topPoints = sampleMaskHorizontalEdges(brightMask, true);
+  const bottomPoints = sampleMaskHorizontalEdges(brightMask, false);
 
-  const leftLine = fitLine(leftPoints, "vertical");
-  const rightLine = fitLine(rightPoints, "vertical");
-  const topLine = fitLine(topPoints, "horizontal");
-  const bottomLine = fitLine(bottomPoints, "horizontal");
+  // If the bright-border heuristic fails, fall back to the gradient-based detector.
+  const fallbackLeftPoints = sampleVerticalEdges(gradients, true);
+  const fallbackRightPoints = sampleVerticalEdges(gradients, false);
+  const fallbackTopPoints = sampleHorizontalEdges(gradients, true);
+  const fallbackBottomPoints = sampleHorizontalEdges(gradients, false);
+
+  const leftLine = fitLine(leftPoints.length >= 8 ? leftPoints : fallbackLeftPoints, "vertical");
+  const rightLine = fitLine(rightPoints.length >= 8 ? rightPoints : fallbackRightPoints, "vertical");
+  const topLine = fitLine(topPoints.length >= 8 ? topPoints : fallbackTopPoints, "horizontal");
+  const bottomLine = fitLine(bottomPoints.length >= 8 ? bottomPoints : fallbackBottomPoints, "horizontal");
 
   const fallbackSourceCanvas = createCanvas(bitmap.width, bitmap.height);
   fallbackSourceCanvas.getContext("2d")!.drawImage(bitmap, 0, 0);
