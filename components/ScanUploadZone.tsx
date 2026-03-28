@@ -1,19 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
 
 import type { ScanState } from "@/lib/hooks/useCardScan";
-import {
-  DEFAULT_SCAN_OCR_SETTINGS,
-  SCAN_REGIONS,
-  prepareCardScanPreview,
-  type ScanOcrSettings,
-  type ScanPreviewImages,
-} from "@/lib/scanOcr";
+import { DEFAULT_SCAN_OCR_SETTINGS, SCAN_REGIONS, type ScanOcrSettings } from "@/lib/scanOcr";
 
 type Props = {
-  onFile: (file: File, scanSettings?: Partial<ScanOcrSettings>) => void;
+  onFile: (file: File, scanSettings?: Partial<ScanOcrSettings>) => Promise<void>;
   onReset: () => void;
   disabled: boolean;
   state: ScanState;
@@ -24,16 +18,13 @@ type FacingMode = "environment" | "user";
 export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const capturedPreviewRef = useRef<string | null>(null);
+  const liveScanRef = useRef(false);
   const [cameraError, setCameraError] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
   const [startingCamera, setStartingCamera] = useState(true);
   const [facingMode, setFacingMode] = useState<FacingMode>("environment");
   const [cameraAttempt, setCameraAttempt] = useState(0);
-  const [capturedFile, setCapturedFile] = useState<File | null>(null);
-  const [capturedPreview, setCapturedPreview] = useState("");
-  const [previewImages, setPreviewImages] = useState<ScanPreviewImages | null>(null);
-  const [preparingPreview, setPreparingPreview] = useState(false);
+  const [autoLiveScan, setAutoLiveScan] = useState(true);
   const [scanSettings, setScanSettings] = useState<ScanOcrSettings>({
     ...DEFAULT_SCAN_OCR_SETTINGS,
   });
@@ -84,7 +75,7 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
       }
     }
 
-    startCamera();
+    void startCamera();
 
     return () => {
       cancelled = true;
@@ -92,44 +83,34 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
     };
   }, [cameraAttempt, facingMode]);
 
-  useEffect(() => {
-    return () => {
-      if (capturedPreviewRef.current) {
-        URL.revokeObjectURL(capturedPreviewRef.current);
-      }
-    };
-  }, []);
+  async function captureFrame() {
+    const file = await makeFrameFile();
+    if (!file || liveScanRef.current) return;
 
-  useEffect(() => {
-    if (!capturedFile) {
-      setPreviewImages(null);
-      return;
+    liveScanRef.current = true;
+    try {
+      await onFile(file, scanSettings);
+    } finally {
+      liveScanRef.current = false;
     }
+  }
 
-    let cancelled = false;
-    setPreparingPreview(true);
+  const triggerLiveScan = useEffectEvent(() => {
+    void captureFrame();
+  });
 
-    prepareCardScanPreview(capturedFile, scanSettings)
-      .then((images) => {
-        if (!cancelled) {
-          setPreviewImages(images);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setCameraError(err instanceof Error ? err.message : "Failed to build scan preview.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setPreparingPreview(false);
-        }
-      });
+  useEffect(() => {
+    if (!cameraReady || !autoLiveScan) return;
+
+    const intervalId = window.setInterval(() => {
+      if (disabled || liveScanRef.current) return;
+      triggerLiveScan();
+    }, 2800);
 
     return () => {
-      cancelled = true;
+      window.clearInterval(intervalId);
     };
-  }, [capturedFile, scanSettings]);
+  }, [autoLiveScan, cameraReady, disabled, scanSettings]);
 
   function stopCamera() {
     if (streamRef.current) {
@@ -165,48 +146,21 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
     });
   }
 
-  async function captureFrame() {
-    const file = await makeFrameFile();
-    if (!file) return;
-
-    if (capturedPreviewRef.current) {
-      URL.revokeObjectURL(capturedPreviewRef.current);
-    }
-    const preview = URL.createObjectURL(file);
-    capturedPreviewRef.current = preview;
-    setCapturedFile(file);
-    setCapturedPreview(preview);
-    setPreviewImages(null);
-  }
-
-  function clearCaptured() {
-    if (capturedPreviewRef.current) {
-      URL.revokeObjectURL(capturedPreviewRef.current);
-      capturedPreviewRef.current = null;
-    }
-    setCapturedFile(null);
-    setCapturedPreview("");
-    setPreviewImages(null);
-  }
-
-  function proceedToScan() {
-    if (!capturedFile) return;
-    onFile(capturedFile, scanSettings);
-  }
-
   function statusText() {
     if (cameraError) return cameraError;
-    if (preparingPreview) return "Preparing cleaned previews so you can tune the image.";
-    if (capturedFile) return "Adjust the sliders under each preview, then press Next.";
-    if (state.status === "processing") return "Reading card text from the tuned image.";
-    if (state.status === "searching") return "Searching the card database with the extracted text.";
-    if (state.status === "results") return "Scan complete. Capture another image whenever you’re ready.";
+    if (state.status === "processing") return "Reading the live frame with visual prefilter + OCR.";
+    if (state.status === "searching") return "Searching the narrowed candidate list.";
+    if (state.status === "results") return "Live scan updated. Keep the card steady while results refine.";
     if (state.status === "error") return state.message;
     if (startingCamera) return "Starting rear camera…";
     if (!cameraReady) return "Waiting for camera feed…";
-    return "Take a photo, tune the cleaned strips, then continue to OCR.";
+    if (!autoLiveScan) return "Live scanning paused. Use Scan Now or resume auto scan.";
+    return "Live camera search is running. Keep the card inside the guide.";
   }
 
+  const activeOcrResult =
+    state.status === "results" || state.status === "searching" ? state.ocrResult : null;
+  const previewImages = activeOcrResult?.debugImages ?? null;
   const showDebug = Boolean(previewImages) || state.status !== "idle";
 
   return (
@@ -215,44 +169,38 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
         className="relative w-full overflow-hidden rounded-[1.5rem] border border-[var(--foreground)]/15 bg-black"
         style={{ aspectRatio: "3 / 4" }}
       >
-        {capturedPreview ? (
-          <Image src={capturedPreview} alt="Captured scan frame" fill unoptimized className="object-cover" />
-        ) : (
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            className="h-full w-full object-cover"
-            onCanPlay={() => setCameraReady(true)}
-          />
-        )}
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          className="h-full w-full object-cover"
+          onCanPlay={() => setCameraReady(true)}
+        />
 
-        {!capturedPreview ? (
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute inset-x-[10%] inset-y-[6%] rounded-[1.25rem] border-2 border-white/75 shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
-            <ScanBand
-              label={SCAN_REGIONS.name.label}
-              top={SCAN_REGIONS.name.yStart * 100}
-              height={(scanSettings.nameBandEnd - SCAN_REGIONS.name.yStart) * 100}
-              tone="amber"
-            />
-            <ScanBand
-              label={SCAN_REGIONS.hp.label}
-              top={SCAN_REGIONS.hp.yStart * 100}
-              height={(SCAN_REGIONS.hp.yEnd - SCAN_REGIONS.hp.yStart) * 100}
-              tone="emerald"
-              left={SCAN_REGIONS.hp.xStart * 100}
-              width={(SCAN_REGIONS.hp.xEnd - SCAN_REGIONS.hp.xStart) * 100}
-            />
-            <ScanBand
-              label={SCAN_REGIONS.number.label}
-              top={scanSettings.bottomBandStart * 100}
-              height={(SCAN_REGIONS.number.yEnd - scanSettings.bottomBandStart) * 100}
-              tone="cyan"
-            />
-          </div>
-        ) : null}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-x-[10%] inset-y-[6%] rounded-[1.25rem] border-2 border-white/75 shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
+          <ScanBand
+            label={SCAN_REGIONS.name.label}
+            top={SCAN_REGIONS.name.yStart * 100}
+            height={(scanSettings.nameBandEnd - SCAN_REGIONS.name.yStart) * 100}
+            tone="amber"
+          />
+          <ScanBand
+            label={SCAN_REGIONS.hp.label}
+            top={SCAN_REGIONS.hp.yStart * 100}
+            height={(SCAN_REGIONS.hp.yEnd - SCAN_REGIONS.hp.yStart) * 100}
+            tone="emerald"
+            left={SCAN_REGIONS.hp.xStart * 100}
+            width={(SCAN_REGIONS.hp.xEnd - SCAN_REGIONS.hp.xStart) * 100}
+          />
+          <ScanBand
+            label={SCAN_REGIONS.number.label}
+            top={scanSettings.bottomBandStart * 100}
+            height={(SCAN_REGIONS.number.yEnd - scanSettings.bottomBandStart) * 100}
+            tone="cyan"
+          />
+        </div>
 
         <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/75 to-transparent px-4 py-4 text-white">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/70">
@@ -263,34 +211,21 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
 
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent px-4 pb-4 pt-10 text-white">
           <div className="flex flex-wrap gap-2">
-            {!capturedFile ? (
-              <button
-                type="button"
-                onClick={() => void captureFrame()}
-                disabled={disabled || !cameraReady}
-                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition active:opacity-80 disabled:opacity-40"
-              >
-                Take Image
-              </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={clearCaptured}
-                  className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition active:opacity-80"
-                >
-                  Retake
-                </button>
-                <button
-                  type="button"
-                  onClick={proceedToScan}
-                  disabled={disabled || preparingPreview}
-                  className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition active:opacity-80 disabled:opacity-40"
-                >
-                  Next
-                </button>
-              </>
-            )}
+            <button
+              type="button"
+              onClick={() => void captureFrame()}
+              disabled={disabled || !cameraReady}
+              className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition active:opacity-80 disabled:opacity-40"
+            >
+              Scan Now
+            </button>
+            <button
+              type="button"
+              onClick={() => setAutoLiveScan((current) => !current)}
+              className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition active:opacity-80"
+            >
+              {autoLiveScan ? "Pause Live" : "Resume Live"}
+            </button>
             <button
               type="button"
               onClick={() =>
@@ -312,10 +247,7 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
             {showDebug ? (
               <button
                 type="button"
-                onClick={() => {
-                  clearCaptured();
-                  onReset();
-                }}
+                onClick={onReset}
                 className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition active:opacity-80"
               >
                 Clear Debug
@@ -341,29 +273,25 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
                     : "waiting"}
             </DebugRow>
             <DebugRow label="Lens">{facingMode}</DebugRow>
-            <DebugRow label="Review">{capturedFile ? "tuning" : "camera"}</DebugRow>
+            <DebugRow label="Live scan">{autoLiveScan ? "running" : "paused"}</DebugRow>
             <DebugRow label="Name band">
-              {Math.round(SCAN_REGIONS.name.yStart * 100)}% to {Math.round(scanSettings.nameBandEnd * 100)}%
+              {Math.round(SCAN_REGIONS.name.yStart * 100)}% to{" "}
+              {Math.round(scanSettings.nameBandEnd * 100)}%
             </DebugRow>
             <DebugRow label="HP band">
-              {Math.round(SCAN_REGIONS.hp.xStart * 100)}% to {Math.round(SCAN_REGIONS.hp.xEnd * 100)}% x{" "}
-              {Math.round(SCAN_REGIONS.hp.yStart * 100)}% to {Math.round(SCAN_REGIONS.hp.yEnd * 100)}%
+              {Math.round(SCAN_REGIONS.hp.xStart * 100)}% to{" "}
+              {Math.round(SCAN_REGIONS.hp.xEnd * 100)}% x{" "}
+              {Math.round(SCAN_REGIONS.hp.yStart * 100)}% to{" "}
+              {Math.round(SCAN_REGIONS.hp.yEnd * 100)}%
             </DebugRow>
             <DebugRow label="Number band">
-              {Math.round(scanSettings.bottomBandStart * 100)}% to {Math.round(SCAN_REGIONS.number.yEnd * 100)}%
+              {Math.round(scanSettings.bottomBandStart * 100)}% to{" "}
+              {Math.round(SCAN_REGIONS.number.yEnd * 100)}%
             </DebugRow>
-            <DebugRow label="OCR name">
-              {state.status === "results" ? state.ocrResult.cardName || "empty" : "waiting"}
-            </DebugRow>
-            <DebugRow label="OCR number">
-              {state.status === "results" ? state.ocrResult.cardNumber || "empty" : "waiting"}
-            </DebugRow>
-            <DebugRow label="OCR artist">
-              {state.status === "results" ? state.ocrResult.artist || "empty" : "waiting"}
-            </DebugRow>
-            <DebugRow label="OCR HP">
-              {state.status === "results" ? state.ocrResult.hp || "empty" : "waiting"}
-            </DebugRow>
+            <DebugRow label="OCR name">{activeOcrResult?.cardName || "waiting"}</DebugRow>
+            <DebugRow label="OCR number">{activeOcrResult?.cardNumber || "waiting"}</DebugRow>
+            <DebugRow label="OCR artist">{activeOcrResult?.artist || "waiting"}</DebugRow>
+            <DebugRow label="OCR HP">{activeOcrResult?.hp || "waiting"}</DebugRow>
             <DebugRow label="Matches">
               {state.status === "results" ? String(state.candidates.length) : "waiting"}
             </DebugRow>
@@ -372,13 +300,13 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
             </DebugRow>
           </div>
 
-          {state.status === "results" ? (
+          {activeOcrResult ? (
             <details className="mt-4 rounded-xl border border-[var(--foreground)]/10 bg-black/5 p-3">
               <summary className="cursor-pointer select-none text-xs font-semibold uppercase tracking-[0.18em] text-[var(--foreground)]/55">
                 Raw OCR Text
               </summary>
               <pre className="mt-3 max-h-40 overflow-auto whitespace-pre-wrap break-all font-mono text-xs text-[var(--foreground)]/78">
-                {state.ocrResult.rawText || "No text extracted."}
+                {activeOcrResult.rawText || "No text extracted."}
               </pre>
             </details>
           ) : null}
@@ -392,13 +320,11 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
             className="relative mt-3 overflow-hidden rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/6"
             style={{ aspectRatio: "2 / 3" }}
           >
-            {capturedPreview ? (
-              <Image src={capturedPreview} alt="Captured frame" fill unoptimized className="object-cover" />
-            ) : "preview" in state && state.preview ? (
-              <Image src={state.preview} alt="Last captured frame" fill unoptimized className="object-cover" />
+            {"preview" in state && state.preview ? (
+              <Image src={state.preview} alt="Last processed frame" fill unoptimized className="object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center p-4 text-center text-xs text-[var(--foreground)]/45">
-                Captured frame preview appears here after each scan.
+                The last processed live frame appears here after each scan.
               </div>
             )}
           </div>
@@ -452,16 +378,16 @@ export function ScanUploadZone({ onFile, onReset, disabled, state }: Props) {
               <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2">
                 <DebugImageCard label="HP Strip" src={previewImages.hpStrip} alt="Processed OCR HP strip" aspectRatio="2 / 1" />
                 <p className="mt-3 text-xs text-[var(--foreground)]/55">
-                  Tune the cleaned image until the HP looks crisp, then press Next.
+                  Adjust the sliders until the HP text looks crisp, then let the live scan keep trying.
                 </p>
               </div>
               <div className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/4 p-2 sm:col-span-2">
-                <DebugImageCard label="Artist + Number Strip" src={previewImages.numberStrip} alt="Processed OCR number strip" aspectRatio="3 / 1" />
+                <DebugImageCard label="Card Number Strip" src={previewImages.numberStrip} alt="Processed OCR number strip" aspectRatio="3 / 1" />
                 <div className="mt-3 grid gap-3">
                   <SliderControl
                     label="Bottom Band Start"
                     value={Math.round(scanSettings.bottomBandStart * 100)}
-                    min={62}
+                    min={60}
                     max={88}
                     onChange={(value) =>
                       setScanSettings((current) => ({ ...current, bottomBandStart: value / 100 }))

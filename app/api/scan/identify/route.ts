@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { findVisualCardMatches } from "@/lib/cardImageHashSearch";
+import type { CardVisualFingerprint } from "@/lib/cardVisualHash";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import { getAllCards, getAllSets } from "@/lib/staticCards";
 
@@ -92,23 +94,69 @@ export async function POST(request: Request) {
     typeof (body as Record<string, unknown>).hp === "string"
       ? ((body as Record<string, unknown>).hp as string).trim().slice(0, 10)
       : "";
+  const candidateMasterCardIds = Array.isArray((body as Record<string, unknown>).candidateMasterCardIds)
+    ? ((body as Record<string, unknown>).candidateMasterCardIds as unknown[])
+        .filter((value): value is string => typeof value === "string" && value.length > 0)
+        .slice(0, 300)
+    : [];
+  const visualFingerprintRaw = (body as Record<string, unknown>).visualFingerprint;
+  const visualFingerprintRecord =
+    visualFingerprintRaw && typeof visualFingerprintRaw === "object"
+      ? (visualFingerprintRaw as Record<string, unknown>)
+      : null;
+  const avgRgbRaw =
+    visualFingerprintRecord && Array.isArray(visualFingerprintRecord.avgRgb)
+      ? visualFingerprintRecord.avgRgb
+      : null;
+  const visualFingerprint =
+    visualFingerprintRecord &&
+    typeof visualFingerprintRecord.dHash === "string" &&
+    typeof visualFingerprintRecord.aHash === "string" &&
+    avgRgbRaw &&
+    avgRgbRaw.length === 3
+      ? {
+          dHash: visualFingerprintRecord.dHash.slice(0, 64),
+          aHash: visualFingerprintRecord.aHash.slice(0, 64),
+          avgRgb: avgRgbRaw.map((value: unknown) =>
+            Math.max(0, Math.min(255, Number(value) || 0)),
+          ) as CardVisualFingerprint["avgRgb"],
+        }
+      : null;
 
-  if (!rawName && !rawNumber && !rawArtist && !rawHp) {
+  if (!rawName && !rawNumber && !rawArtist && !rawHp && !visualFingerprint) {
     return NextResponse.json(
-      { error: "At least one scan field is required" },
+      { error: "At least one scan field or visual fingerprint is required" },
       { status: 400 },
     );
   }
 
   const allCards = getAllCards();
   const hpNumber = Number.parseInt(rawHp, 10);
+  const restrictedCardIds = candidateMasterCardIds.length > 0 ? new Set(candidateMasterCardIds) : null;
 
   function includesNormalized(haystack: string | null | undefined, needle: string) {
     return (haystack ?? "").toLocaleLowerCase().includes(needle.toLocaleLowerCase());
   }
 
+  const visualMatches = visualFingerprint
+    ? findVisualCardMatches(visualFingerprint, {
+        allowedMasterCardIds: restrictedCardIds,
+        limit: rawName || rawNumber || rawArtist || rawHp ? 120 : 40,
+      })
+    : [];
+  const visualScoreMap = new Map(visualMatches.map((match) => [match.masterCardId, match]));
+  let workingCards = restrictedCardIds
+    ? allCards.filter((card) => restrictedCardIds.has(card.masterCardId))
+    : allCards;
+
+  if (visualMatches.length > 0) {
+    const visualIds = new Set(visualMatches.map((match) => match.masterCardId));
+    workingCards = workingCards.filter((card) => visualIds.has(card.masterCardId));
+  }
+
   function scoreCard(card: ReturnType<typeof getAllCards>[number]) {
     let score = 0;
+    const visualMatch = visualScoreMap.get(card.masterCardId);
 
     if (rawNumber && card.cardNumber === rawNumber) score += 120;
     if (rawName && includesNormalized(card.cardName, rawName)) score += 70;
@@ -123,6 +171,7 @@ export async function POST(request: Request) {
       }
     }
     if (Number.isFinite(hpNumber) && card.hp === hpNumber) score += 20;
+    if (visualMatch) score += Math.max(0, 95 - visualMatch.visualScore);
 
     return score;
   }
@@ -146,9 +195,19 @@ export async function POST(request: Request) {
 
   let candidates: CardsPageCardEntry[] = [];
 
+  if (!rawName && !rawNumber && !rawArtist && !rawHp && visualMatches.length > 0) {
+    candidates = workingCards
+      .filter((c) => c.imageLowSrc)
+      .map((card) => ({ card, score: visualScoreMap.get(card.masterCardId)?.visualScore ?? Number.POSITIVE_INFINITY }))
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 8)
+      .map(({ card }) => toEntry(card))
+      .filter((entry): entry is CardsPageCardEntry => entry !== null);
+  }
+
   // Stage 1: card number alone — most reliable signal on Pokemon cards
-  if (rawNumber) {
-    candidates = applyHpFilter(allCards)
+  if (candidates.length === 0 && rawNumber) {
+    candidates = applyHpFilter(workingCards)
       .filter((c) => c.imageLowSrc && c.cardNumber === rawNumber)
       .slice(0, 8)
       .map(toEntry)
@@ -157,7 +216,7 @@ export async function POST(request: Request) {
 
   // If number gave us multiple results, use the extra OCR signals to narrow them.
   if (candidates.length > 1 && (rawName || rawArtist || rawHp)) {
-    const numberedCards = allCards.filter((c) => c.imageLowSrc && c.cardNumber === rawNumber);
+    const numberedCards = workingCards.filter((c) => c.imageLowSrc && c.cardNumber === rawNumber);
     const narrowed = toRankedEntries(numberedCards);
     if (narrowed.length > 0) {
       candidates = narrowed;
@@ -167,7 +226,7 @@ export async function POST(request: Request) {
   // Stage 2: exact name string
   if (candidates.length === 0 && rawName) {
     const nameLower = rawName.toLocaleLowerCase();
-    candidates = applyHpFilter(allCards)
+    candidates = applyHpFilter(workingCards)
       .filter((c) => c.imageLowSrc && c.cardName.toLocaleLowerCase().includes(nameLower))
       .slice(0, 8)
       .map(toEntry)
@@ -176,7 +235,7 @@ export async function POST(request: Request) {
 
   // Stage 3: rank across all cards using any extra OCR signals we have.
   if (candidates.length === 0 && (rawName || rawArtist || rawHp)) {
-    candidates = toRankedEntries(allCards);
+    candidates = toRankedEntries(workingCards);
   }
 
   // Stage 4: tokenized — try each word >= 4 chars, merge results.
@@ -191,7 +250,7 @@ export async function POST(request: Request) {
 
     for (const token of tokens) {
       const tokenLower = token.toLocaleLowerCase();
-      const results = applyHpFilter(allCards)
+      const results = applyHpFilter(workingCards)
         .filter((c) => c.imageLowSrc && c.cardName.toLocaleLowerCase().includes(tokenLower))
         .slice(0, 8)
         .map(toEntry)
@@ -221,6 +280,13 @@ export async function POST(request: Request) {
   return NextResponse.json({
     candidates,
     confidence,
-    _debug: { cardName: rawName, cardNumber: rawNumber, artist: rawArtist, hp: rawHp },
+    _debug: {
+      cardName: rawName,
+      cardNumber: rawNumber,
+      artist: rawArtist,
+      hp: rawHp,
+      visualCandidateCount: visualMatches.length,
+      narrowedCardCount: workingCards.length,
+    },
   });
 }

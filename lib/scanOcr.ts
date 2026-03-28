@@ -1,8 +1,11 @@
+import type { CardVisualFingerprint } from "@/lib/cardVisualHash";
+
 export type OcrResult = {
   cardName: string;
   cardNumber: string; // e.g. "062/091" or "SWSH001/198" — empty string if not found
   artist: string;
   hp: string;
+  visualFingerprint: CardVisualFingerprint;
   rawText: string; // full OCR dump for debugging
   debugImages: {
     source: string;
@@ -15,6 +18,18 @@ export type OcrResult = {
 };
 
 export type ScanPreviewImages = OcrResult["debugImages"];
+
+export type ScanCandidateHint = {
+  masterCardId: string;
+  cardName: string;
+  cardNumber?: string;
+  hp?: number | string;
+};
+
+export type ExtractCardTextOptions = {
+  scanSettings?: Partial<ScanOcrSettings>;
+  candidateCards?: ScanCandidateHint[];
+};
 
 export const DEFAULT_SCAN_OCR_SETTINGS = {
   nameBandEnd: 0.2,
@@ -33,7 +48,7 @@ export type ScanOcrSettings = {
 export const SCAN_REGIONS = {
   name: { xStart: 0, xEnd: 1, yStart: 0, yEnd: 0.2, label: "Name + HP" },
   hp: { xStart: 0.72, xEnd: 0.98, yStart: 0, yEnd: 0.16, label: "HP" },
-  number: { xStart: 0, xEnd: 1, yStart: 0.76, yEnd: 1, label: "Artist + Number" },
+  number: { xStart: 0, xEnd: 1, yStart: 0.72, yEnd: 1, label: "Card Number" },
 } as const;
 
 const CARD_GUIDE = {
@@ -54,6 +69,20 @@ const ILLUS_RE = /\b(?:illus\.?|illustrated by)\s*[:.]?\s*([A-Za-zÀ-ÿ0-9.'\- ]
 const ENERGY_CHAR_RE = /^[WFGLPSDRMC]$/;
 const BODY_TEXT_WORDS = /\b(ability|attack|evolves|trainer|item|supporter|stadium|rule|prize|damage|discard|energy|pokemon|knock|bench|active|shuffle|draw|search|reveal|hand|deck)\b/i;
 const ARTIST_NOISE_RE = /\b(pokemon|nintendo|game freak|creatures|attack|ability|trainer|supporter|stadium|basic|stage|evolves)\b/i;
+const GENERIC_TEXT_WHITELIST =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,'-/éàèùâêîôûëïüçæœ";
+const NAME_TEXT_WHITELIST =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,'-:/éàèùâêîôûëïüçæœ";
+const HP_TEXT_WHITELIST = "HP0123456789 ";
+const NUMBER_TEXT_WHITELIST = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/ ";
+const NUMBER_STRIP_UPSCALE = 5;
+const OCR_PASS_PRESETS: Array<Pick<ScanOcrSettings, "threshold" | "contrast">> = [
+  { threshold: 128, contrast: 1.15 },
+  { threshold: 142, contrast: 1.25 },
+  { threshold: 152, contrast: 1.35 },
+  { threshold: 164, contrast: 1.5 },
+  { threshold: 176, contrast: 1.65 },
+];
 
 /** Upscale factor applied to cropped strips before Tesseract — bigger = more detail. */
 const STRIP_UPSCALE = 3;
@@ -74,14 +103,15 @@ function processStrip(
     yEnd,
   }: { xStart: number; xEnd: number; yStart: number; yEnd: number },
   settings: ScanOcrSettings,
+  upscale = STRIP_UPSCALE,
 ): Promise<Blob> {
   const srcX = Math.round(bitmap.width * xStart);
   const srcY = Math.round(bitmap.height * yStart);
   const srcW = Math.round(bitmap.width * (xEnd - xStart));
   const srcH = Math.round(bitmap.height * (yEnd - yStart));
 
-  const outW = srcW * STRIP_UPSCALE;
-  const outH = srcH * STRIP_UPSCALE;
+  const outW = srcW * upscale;
+  const outH = srcH * upscale;
 
   const canvas = document.createElement("canvas");
   canvas.width = outW;
@@ -144,6 +174,41 @@ type DetectionResult = {
   sourcePoints?: Point[];
 };
 
+function normalizeComparableText(value: string): string {
+  return value
+    .toLocaleLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function levenshteinDistance(left: string, right: string): number {
+  if (left === right) return 0;
+  if (!left) return right.length;
+  if (!right) return left.length;
+
+  const prev = Array.from({ length: right.length + 1 }, (_, index) => index);
+  const next = new Array<number>(right.length + 1);
+
+  for (let i = 1; i <= left.length; i += 1) {
+    next[0] = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+      next[j] = Math.min(
+        next[j - 1]! + 1,
+        prev[j]! + 1,
+        prev[j - 1]! + cost,
+      );
+    }
+
+    for (let j = 0; j <= right.length; j += 1) {
+      prev[j] = next[j]!;
+    }
+  }
+
+  return prev[right.length]!;
+}
+
 function average(values: number[]): number {
   return values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1);
 }
@@ -198,6 +263,70 @@ function createCanvas(width: number, height: number) {
   canvas.width = width;
   canvas.height = height;
   return canvas;
+}
+
+function computeDifferenceHashFromBitmap(bitmap: ImageBitmap): string {
+  const canvas = createCanvas(9, 8);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, 0, 0, 9, 8);
+  const { data } = ctx.getImageData(0, 0, 9, 8);
+  const greyPixels = new Array<number>(9 * 8).fill(0).map((_, index) => {
+    const offset = index * 4;
+    return Math.round(0.299 * data[offset]! + 0.587 * data[offset + 1]! + 0.114 * data[offset + 2]!);
+  });
+
+  let bits = "";
+  for (let row = 0; row < 8; row += 1) {
+    for (let column = 0; column < 8; column += 1) {
+      bits += greyPixels[row * 9 + column]! > greyPixels[row * 9 + column + 1]! ? "1" : "0";
+    }
+  }
+
+  let output = "";
+  for (let index = 0; index < bits.length; index += 4) {
+    output += Number.parseInt(bits.slice(index, index + 4), 2).toString(16);
+  }
+  return output;
+}
+
+function computeAverageHashFromBitmap(bitmap: ImageBitmap): string {
+  const canvas = createCanvas(8, 8);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, 0, 0, 8, 8);
+  const { data } = ctx.getImageData(0, 0, 8, 8);
+  const greyPixels = new Array<number>(8 * 8).fill(0).map((_, index) => {
+    const offset = index * 4;
+    return Math.round(0.299 * data[offset]! + 0.587 * data[offset + 1]! + 0.114 * data[offset + 2]!);
+  });
+  const average =
+    greyPixels.reduce((sum, value) => sum + value, 0) / Math.max(greyPixels.length, 1);
+
+  let bits = "";
+  for (const value of greyPixels) {
+    bits += value >= average ? "1" : "0";
+  }
+
+  let output = "";
+  for (let index = 0; index < bits.length; index += 4) {
+    output += Number.parseInt(bits.slice(index, index + 4), 2).toString(16);
+  }
+  return output;
+}
+
+function computeAverageRgbFromBitmap(bitmap: ImageBitmap): [number, number, number] {
+  const canvas = createCanvas(1, 1);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, 0, 0, 1, 1);
+  const { data } = ctx.getImageData(0, 0, 1, 1);
+  return [data[0] ?? 0, data[1] ?? 0, data[2] ?? 0];
+}
+
+function computeVisualFingerprint(bitmap: ImageBitmap): CardVisualFingerprint {
+  return {
+    dHash: computeDifferenceHashFromBitmap(bitmap),
+    aHash: computeAverageHashFromBitmap(bitmap),
+    avgRgb: computeAverageRgbFromBitmap(bitmap),
+  };
 }
 
 async function canvasToBlob(canvas: HTMLCanvasElement, type = "image/png", quality?: number) {
@@ -639,6 +768,7 @@ async function buildScanPreviewImages(
   hpStripBlob: Blob;
   nameStripBlob: Blob;
   numberStripBlob: Blob;
+  visualFingerprint: CardVisualFingerprint;
 }> {
   const bitmap = await createImageBitmap(file);
   const detection = await detectAndRectifyCard(bitmap);
@@ -657,8 +787,10 @@ async function buildScanPreviewImages(
       detectedBitmap,
       { ...SCAN_REGIONS.number, yStart: settings.bottomBandStart },
       settings,
+      NUMBER_STRIP_UPSCALE,
     ),
   ]);
+  const visualFingerprint = computeVisualFingerprint(detectedBitmap);
 
   const [source, detectedCard, detectionOverlay, nameStrip, hpStrip, numberStrip] =
     await Promise.all([
@@ -675,6 +807,7 @@ async function buildScanPreviewImages(
     hpStripBlob,
     nameStripBlob,
     numberStripBlob,
+    visualFingerprint,
     debugImages: {
       source,
       detectedCard,
@@ -695,6 +828,15 @@ export async function prepareCardScanPreview(
   return debugImages;
 }
 
+export async function prepareCardVisualFingerprint(
+  file: File,
+  scanSettings?: Partial<ScanOcrSettings>,
+): Promise<CardVisualFingerprint> {
+  const settings = withScanSettings(scanSettings);
+  const { visualFingerprint } = await buildScanPreviewImages(file, settings);
+  return visualFingerprint;
+}
+
 async function runTesseract(blob: Blob): Promise<string> {
   const { createWorker } = await import("tesseract.js");
   const worker = await createWorker("eng");
@@ -710,6 +852,29 @@ async function runTesseract(blob: Blob): Promise<string> {
   } finally {
     await worker.terminate();
   }
+}
+
+async function createOcrWorker() {
+  const { createWorker } = await import("tesseract.js");
+  const worker = await createWorker("eng");
+  await worker.setParameters({
+    tessedit_char_whitelist: GENERIC_TEXT_WHITELIST,
+    preserve_interword_spaces: "1",
+  });
+  return worker;
+}
+
+async function runTesseractWithWorker(
+  worker: Awaited<ReturnType<typeof createOcrWorker>>,
+  blob: Blob,
+  whitelist: string,
+): Promise<string> {
+  await worker.setParameters({
+    tessedit_char_whitelist: whitelist,
+    preserve_interword_spaces: "1",
+  });
+  const result = await worker.recognize(blob);
+  return result.data.text;
 }
 
 /**
@@ -767,14 +932,82 @@ function parseHp(raw: string, hpRaw: string): string {
   return "";
 }
 
+function parseCardNumber(rawTexts: string[]): string {
+  for (const raw of rawTexts) {
+    const normalized = raw
+      .replace(/[Oo]/g, "0")
+      .replace(/\s*\/\s*/g, "/")
+      .replace(/\s+/g, " ");
+    const numberMatch = normalized.match(CARD_NUMBER_RE);
+    if (numberMatch) {
+      return numberMatch[0].replace(/\s+/g, "");
+    }
+  }
+
+  return "";
+}
+
+function resolveCandidateName(
+  rawTexts: string[],
+  candidateCards: ScanCandidateHint[],
+): string {
+  const uniqueCandidateNames = Array.from(
+    new Map(candidateCards.map((card) => [card.cardName, card.cardName])).values(),
+  );
+  if (uniqueCandidateNames.length === 0) return "";
+
+  const candidateStrings = uniqueCandidateNames.map((name) => ({
+    name,
+    normalized: normalizeComparableText(name),
+  }));
+
+  let bestMatch = { name: "", score: 0 };
+
+  for (const rawText of rawTexts) {
+    const lines = rawText.split(/[\n\r]+/).map((line) => line.trim()).filter(Boolean);
+    for (const line of lines) {
+      const extracted = extractBestNameFromLine(line);
+      const normalizedExtracted = normalizeComparableText(extracted);
+      if (normalizedExtracted.length < 3) continue;
+
+      for (const candidate of candidateStrings) {
+        let score = 0;
+        if (candidate.normalized === normalizedExtracted) {
+          score = 1;
+        } else if (
+          candidate.normalized.includes(normalizedExtracted) ||
+          normalizedExtracted.includes(candidate.normalized)
+        ) {
+          score = 0.94;
+        } else {
+          const distance = levenshteinDistance(normalizedExtracted, candidate.normalized);
+          score = 1 - distance / Math.max(candidate.normalized.length, normalizedExtracted.length, 1);
+        }
+
+        if (score > bestMatch.score) {
+          bestMatch = { name: candidate.name, score };
+        }
+      }
+    }
+  }
+
+  return bestMatch.score >= 0.56 ? bestMatch.name : "";
+}
+
 function parseOcrText(
-  raw: string,
-  hpRaw: string,
+  rawTexts: string[],
+  hpRawTexts: string[],
+  candidateCards: ScanCandidateHint[],
 ): { cardName: string; cardNumber: string; artist: string; hp: string } {
-  const numberMatch = raw.match(CARD_NUMBER_RE);
-  const cardNumber = numberMatch ? numberMatch[0] : "";
+  const raw = rawTexts.join("\n");
+  const hpRaw = hpRawTexts.join("\n");
+  const cardNumber = parseCardNumber(rawTexts);
   const artist = parseArtist(raw);
   const hp = parseHp(raw, hpRaw);
+  const candidateName = resolveCandidateName(rawTexts, candidateCards);
+  if (candidateName) {
+    return { cardName: candidateName, cardNumber, artist, hp };
+  }
 
   const lines = raw.split(/[\n\r]+/).map((l) => l.trim()).filter(Boolean);
 
@@ -811,11 +1044,12 @@ function withScanSettings(settings?: Partial<ScanOcrSettings>): ScanOcrSettings 
 
 export async function extractCardTextFromImage(
   file: File,
-  scanSettings?: Partial<ScanOcrSettings>,
+  options?: ExtractCardTextOptions,
 ): Promise<OcrResult> {
-  const settings = withScanSettings(scanSettings);
+  const settings = withScanSettings(options?.scanSettings);
   let rawText = "";
   let hpRawText = "";
+  let rawTexts: string[] = [];
 
   // Try native TextDetector first (Chrome Android/desktop)
   if (typeof window !== "undefined" && "TextDetector" in window) {
@@ -827,33 +1061,82 @@ export async function extractCardTextFromImage(
       const detectedBitmap = await createImageBitmap(detection.warpedCardBlob);
       const blocks: Array<{ rawValue: string }> = await detector.detect(detectedBitmap);
       rawText = blocks.map((b) => b.rawValue).join("\n");
+      rawTexts = rawText.split(/\n+/).map((value) => value.trim()).filter(Boolean);
     } catch {
       // fall through
     }
   }
 
   const previewBundle = await buildScanPreviewImages(file, settings);
-  const { debugImages, hpStripBlob, nameStripBlob, numberStripBlob } = previewBundle;
+  const { debugImages, hpStripBlob, nameStripBlob, numberStripBlob, visualFingerprint } = previewBundle;
 
   if (!rawText) {
-    const [nameText, hpText, numberText] = await Promise.all([
-      runTesseract(nameStripBlob),
-      runTesseract(hpStripBlob),
-      runTesseract(numberStripBlob),
-    ]);
-    hpRawText = hpText;
-    rawText = nameText + "\n" + hpText + "\n" + numberText;
+    const worker = await createOcrWorker();
+    try {
+      const detectedBitmap = await createImageBitmap(previewBundle.detectedCardBlob);
+      const namePassSettings = OCR_PASS_PRESETS.map((preset) => ({
+        ...settings,
+        threshold: preset.threshold,
+        contrast: preset.contrast,
+      }));
+      const namePassBlobs = await Promise.all(
+        namePassSettings.map((passSettings) =>
+          processStrip(
+            detectedBitmap,
+            { ...SCAN_REGIONS.name, yEnd: passSettings.nameBandEnd },
+            passSettings,
+          ),
+        ),
+      );
+      const numberPassBlobs = await Promise.all(
+        namePassSettings.map((passSettings) =>
+          processStrip(
+            detectedBitmap,
+            { ...SCAN_REGIONS.number, yStart: passSettings.bottomBandStart },
+            passSettings,
+            NUMBER_STRIP_UPSCALE,
+          ),
+        ),
+      );
+      const [nameTexts, numberTexts, hpText] = await Promise.all([
+        Promise.all(
+          [nameStripBlob, ...namePassBlobs].map((blob) =>
+            runTesseractWithWorker(worker, blob, NAME_TEXT_WHITELIST),
+          ),
+        ),
+        Promise.all(
+          [numberStripBlob, ...numberPassBlobs].map((blob) =>
+            runTesseractWithWorker(worker, blob, NUMBER_TEXT_WHITELIST),
+          ),
+        ),
+        runTesseractWithWorker(worker, hpStripBlob, HP_TEXT_WHITELIST),
+      ]);
+
+      hpRawText = hpText;
+      rawTexts = [...nameTexts, hpText, ...numberTexts]
+        .flatMap((value) => value.split(/\n+/))
+        .map((value) => value.trim())
+        .filter(Boolean);
+      rawText = rawTexts.join("\n");
+    } finally {
+      await worker.terminate();
+    }
   } else {
     hpRawText = await runTesseract(hpStripBlob);
   }
 
-  const { cardName, cardNumber, artist, hp } = parseOcrText(rawText, hpRawText);
+  const { cardName, cardNumber, artist, hp } = parseOcrText(
+    rawTexts.length > 0 ? rawTexts : [rawText],
+    [hpRawText],
+    options?.candidateCards ?? [],
+  );
 
   return {
     cardName: cardName.trim().replace(/\s+/g, " "),
     cardNumber: cardNumber.trim(),
     artist: artist.trim().replace(/\s+/g, " "),
     hp: hp.trim(),
+    visualFingerprint,
     rawText,
     debugImages,
   };
