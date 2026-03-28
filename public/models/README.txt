@@ -1,19 +1,24 @@
-Place your small ONNX corner detector here as:
+The app now ships with a free default model at:
 
   public/models/card-corners.onnx
 
-Expected model contract for the current browser lab:
+Current default:
 
-- One image input tensor in NCHW float32 format
-- Shape like [1, 3, 640, 640] or another fixed [1, 3, H, W]
-- One float output tensor with at least 8 values
-- First 8 output values represent:
-  [topLeftX, topLeftY, topRightX, topRightY, bottomRightX, bottomRightY, bottomLeftX, bottomLeftY]
-- Output coordinates can be normalized 0..1 or expressed in model input pixels
+- UVDoc remap-grid ONNX from Hugging Face
+- Input tensor: NCHW float32
+- Input shape: [1, 3, 720, 496]
+- Output tensor: [1, 2, 45, 31]
+- Output values are normalized source coordinates used to unwarp the document
 
 The scan lab page will:
 - capture the framed card area from the camera
 - resize it to the model input size
 - run inference with onnxruntime-web
+- derive four source corners from the grid edges
 - draw the returned corners on top of the image
-- show a quick bounding crop preview
+- show an unwarped preview
+
+You can still replace the default model with a local `.onnx` file. The lab also supports a simpler
+corner-point output model if it returns the first 8 values as:
+
+  [topLeftX, topLeftY, topRightX, topRightY, bottomRightX, bottomRightY, bottomLeftX, bottomLeftY]

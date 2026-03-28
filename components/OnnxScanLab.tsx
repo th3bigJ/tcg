@@ -4,7 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 
-import { detectCardCorners, type CardCornerDetection, type ScanPoint } from "@/lib/onnxCardDetector";
+import {
+  detectCardCorners,
+  renderDetectionCrop,
+  type CardCornerDetection,
+  type ScanPoint,
+} from "@/lib/onnxCardDetector";
 
 const VIEWPORT_ASPECT = 3 / 4;
 const GUIDE = {
@@ -25,10 +30,6 @@ type DetectionState =
       detection: CardCornerDetection;
     }
   | { status: "error"; sourceUrl?: string; message: string };
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
 
 function readGuideCrop(video: HTMLVideoElement) {
   const videoWidth = video.videoWidth;
@@ -109,28 +110,6 @@ function drawDetectionOverlay(sourceCanvas: HTMLCanvasElement, corners: ScanPoin
   return overlayCanvas;
 }
 
-function drawBoundingCrop(sourceCanvas: HTMLCanvasElement, corners: ScanPoint[]) {
-  const xs = corners.map((point) => point.x);
-  const ys = corners.map((point) => point.y);
-  const minX = clamp(Math.floor(Math.min(...xs)), 0, sourceCanvas.width);
-  const minY = clamp(Math.floor(Math.min(...ys)), 0, sourceCanvas.height);
-  const maxX = clamp(Math.ceil(Math.max(...xs)), 0, sourceCanvas.width);
-  const maxY = clamp(Math.ceil(Math.max(...ys)), 0, sourceCanvas.height);
-  const width = Math.max(1, maxX - minX);
-  const height = Math.max(1, maxY - minY);
-
-  const cropCanvas = document.createElement("canvas");
-  cropCanvas.width = width;
-  cropCanvas.height = height;
-  const ctx = cropCanvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Could not create crop canvas.");
-  }
-
-  ctx.drawImage(sourceCanvas, minX, minY, width, height, 0, 0, width, height);
-  return cropCanvas;
-}
-
 function canvasToFile(canvas: HTMLCanvasElement) {
   return new Promise<File>((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -159,7 +138,7 @@ export function OnnxScanLab() {
   const [cameraError, setCameraError] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
   const [modelFile, setModelFile] = useState<File | null>(null);
-  const [modelHint, setModelHint] = useState("Default model: /models/card-corners.onnx");
+  const [modelHint, setModelHint] = useState("Default model: UVDoc remap grid at /models/card-corners.onnx");
   const [detectionState, setDetectionState] = useState<DetectionState>({ status: "idle" });
 
   useEffect(() => {
@@ -213,7 +192,7 @@ export function OnnxScanLab() {
       const bitmap = await createImageBitmap(file);
       const detection = await detectCardCorners(bitmap, modelFile);
       const overlayCanvas = drawDetectionOverlay(sourceCanvas, detection.corners);
-      const cropCanvas = drawBoundingCrop(sourceCanvas, detection.corners);
+      const cropCanvas = renderDetectionCrop(sourceCanvas, detection);
 
       setDetectionState({
         status: "done",
@@ -279,9 +258,10 @@ export function OnnxScanLab() {
         <p className="text-sm text-[var(--foreground)]/72">
           This is a clean browser-only scan lab. It captures one frame, sends it through
           <code className="mx-1 rounded bg-black/8 px-1 py-0.5 text-xs">onnxruntime-web</code>,
-          and shows the detected card corners plus a quick crop preview. Drop a small corner model
-          into <code className="mx-1 rounded bg-black/8 px-1 py-0.5 text-xs">public/models/card-corners.onnx</code>
-          or load one from your device.
+          and shows the detected card corners plus an unwarp preview. The default model is the free
+          UVDoc ONNX remap-grid model in
+          <code className="mx-1 rounded bg-black/8 px-1 py-0.5 text-xs">public/models/card-corners.onnx</code>,
+          and you can still swap in a local `.onnx` file from your device.
         </p>
       </div>
 
@@ -308,7 +288,7 @@ export function OnnxScanLab() {
             {cameraError
               ? cameraError
               : detectionState.status === "running"
-                ? "Running ONNX corner detection on the captured frame."
+                ? "Running the ONNX document unwarp model on the captured frame."
                 : cameraReady
                   ? modelHint
                   : "Waiting for camera feed…"}
@@ -336,7 +316,11 @@ export function OnnxScanLab() {
               onChange={(event) => {
                 const file = event.currentTarget.files?.[0] ?? null;
                 setModelFile(file);
-                setModelHint(file ? `Loaded model: ${file.name}` : "Default model: /models/card-corners.onnx");
+                setModelHint(
+                  file
+                    ? `Loaded model: ${file.name}`
+                    : "Default model: UVDoc remap grid at /models/card-corners.onnx",
+                );
               }}
             />
           </label>
@@ -353,7 +337,11 @@ export function OnnxScanLab() {
             <div className="mt-4 grid gap-4">
               <PreviewCard title="Captured Frame" src={detectionState.sourceUrl} aspectRatio="3 / 4" />
               <PreviewCard title="Corner Overlay" src={detectionState.overlayUrl} aspectRatio="3 / 4" />
-              <PreviewCard title="Bounding Crop" src={detectionState.cropUrl} aspectRatio="3 / 4" />
+              <PreviewCard
+                title={detectionState.detection.outputMode === "remap-grid" ? "Unwarped Preview" : "Bounding Crop"}
+                src={detectionState.cropUrl}
+                aspectRatio="3 / 4"
+              />
             </div>
           ) : detectionState.status === "error" ? (
             <div className="mt-4 grid gap-4">
@@ -380,6 +368,9 @@ export function OnnxScanLab() {
             <DataRow label="Execution">wasm</DataRow>
             <DataRow label="Model">
               {modelFile?.name ?? "/models/card-corners.onnx"}
+            </DataRow>
+            <DataRow label="Output">
+              {detectionState.status === "done" ? detectionState.detection.outputMode : "n/a"}
             </DataRow>
             <DataRow label="Camera">{cameraReady ? "ready" : "waiting"}</DataRow>
             <DataRow label="Status">{detectionState.status}</DataRow>
