@@ -1,5 +1,8 @@
 Place exported MobileCLIP image encoder artifacts here.
 
+Large external weight shards (*.onnx.data) are stored with Git LFS. After cloning,
+run: git lfs install && git lfs pull
+
 Expected default outputs from scripts/mobileclip_export.py:
 - mobileclip_s2_image_encoder.onnx
 - mobileclip_s2_image_encoder.json
