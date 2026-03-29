@@ -92,6 +92,37 @@ function resolveExpansionConfig(set: SetJsonEntry): ScrydexExpansionListConfig |
   return null;
 }
 
+function resolveExpansionConfigs(set: SetJsonEntry): ScrydexExpansionListConfig[] {
+  const code = (set.code ?? set.tcgdexId ?? "").trim().toLowerCase();
+  if (code === "swsh12.5") {
+    return [
+      {
+        expansionUrl: "https://scrydex.com/pokemon/expansions/crown-zenith/swsh12pt5",
+        listPrefix: "swsh12pt5",
+      },
+      {
+        expansionUrl: "https://scrydex.com/pokemon/expansions/crown-zenith-galarian-gallery/swsh12pt5gg",
+        listPrefix: "swsh12pt5gg",
+      },
+    ];
+  }
+  if (code === "swsh4.5") {
+    return [
+      {
+        expansionUrl: "https://scrydex.com/pokemon/expansions/shining-fates/swsh45",
+        listPrefix: "swsh45",
+      },
+      {
+        expansionUrl: "https://scrydex.com/pokemon/expansions/shining-fates-shiny-vault/swsh45sv",
+        listPrefix: "swsh45sv",
+      },
+    ];
+  }
+
+  const cfg = resolveExpansionConfig(set);
+  return cfg ? [cfg] : [];
+}
+
 // ─── Pricing helpers ──────────────────────────────────────────────────────────
 
 type ByVariant = Record<string, { raw?: number; psa10?: number }>;
@@ -208,35 +239,40 @@ async function scrapeSet(
   const setCode = set.code ?? set.tcgdexId;
   if (!setCode) return;
 
-  const cfg = resolveExpansionConfig(set);
-  if (!cfg) {
+  const configs = resolveExpansionConfigs(set);
+  if (!configs.length) {
     console.log(`  [${setCode}] skip — no Scrydex URL mapped`);
     return;
   }
 
   const tcgPrefixes = [set.code, set.tcgdexId].filter((x): x is string => Boolean(x?.trim()));
-
-  console.log(`  [${setCode}] fetching expansion listing…`);
-  let expansionHtml: string;
-  try {
-    expansionHtml = await fetchScrydexExpansionMultiPageHtml(cfg.expansionUrl);
-  } catch (e) {
-    console.log(`  [${setCode}] expansion fetch failed: ${e instanceof Error ? e.message : "error"}`);
-    return;
-  }
-
-  const priceMap = parseScrydexExpansionListPrices(expansionHtml, cfg.listPrefix);
-  const pathMap = parseScrydexExpansionListPaths(expansionHtml, cfg.listPrefix);
-  console.log(`  [${setCode}] ${priceMap.size} tiles from expansion listing`);
-
-  // Collect unique card page paths needed
+  const perConfig = new Map<string, { priceMap: Map<string, Record<string, number>>; pathMap: Map<string, string> }>();
   const pathsNeeded = new Set<string>();
-  for (const card of cards) {
-    const ext = (card.tcgdex_id ?? card.externalId ?? "").trim().toLowerCase();
-    if (!ext) continue;
-    const p = resolveScrydexCardPath(pathMap, ext, cfg.listPrefix, tcgPrefixes);
-    if (p) pathsNeeded.add(p);
+
+  for (const cfg of configs) {
+    console.log(`  [${setCode}] fetching expansion listing (${cfg.listPrefix})…`);
+    let expansionHtml: string;
+    try {
+      expansionHtml = await fetchScrydexExpansionMultiPageHtml(cfg.expansionUrl);
+    } catch (e) {
+      console.log(`  [${setCode}] expansion fetch failed for ${cfg.listPrefix}: ${e instanceof Error ? e.message : "error"}`);
+      continue;
+    }
+
+    const priceMap = parseScrydexExpansionListPrices(expansionHtml, cfg.listPrefix);
+    const pathMap = parseScrydexExpansionListPaths(expansionHtml, cfg.listPrefix);
+    perConfig.set(cfg.listPrefix, { priceMap, pathMap });
+    console.log(`  [${setCode}] ${priceMap.size} tiles from expansion listing (${cfg.listPrefix})`);
+
+    for (const card of cards) {
+      const ext = (card.tcgdex_id ?? card.externalId ?? "").trim().toLowerCase();
+      if (!ext) continue;
+      const p = resolveScrydexCardPath(pathMap, ext, cfg.listPrefix, tcgPrefixes);
+      if (p) pathsNeeded.add(p);
+    }
   }
+
+  if (!perConfig.size) return;
 
   const conc = Number.parseInt(process.env.SCRYDEX_CARD_PAGE_CONCURRENCY ?? "20", 10);
   console.log(`  [${setCode}] fetching ${pathsNeeded.size} card detail pages (concurrency=${conc})…`);
@@ -262,12 +298,21 @@ async function scrapeSet(
     const ext = (card.tcgdex_id ?? card.externalId ?? "").trim().toLowerCase();
     if (!ext) continue;
 
-    const listUsd = resolveScrydexListUsd(priceMap, ext, cfg.listPrefix, tcgPrefixes);
-    const cardPath = resolveScrydexCardPath(pathMap, ext, cfg.listPrefix, tcgPrefixes);
-    const html = cardPath ? (pathHtml.get(cardPath) ?? "") : "";
-    const detailUsd = html ? parseScrydexCardPageRawNearMintUsd(html) : {};
-    const psa10Usd = html ? parseScrydexCardPagePsa10Usd(html) : {};
-    const flatUsd = { ...mergeScrydexExpansionAndDetailUsd(listUsd, detailUsd), ...psa10Usd };
+    let flatUsd: Record<string, number> = {};
+    for (const cfg of configs) {
+      const entry = perConfig.get(cfg.listPrefix);
+      if (!entry) continue;
+      const listUsd = resolveScrydexListUsd(entry.priceMap, ext, cfg.listPrefix, tcgPrefixes);
+      const cardPath = resolveScrydexCardPath(entry.pathMap, ext, cfg.listPrefix, tcgPrefixes);
+      const html = cardPath ? (pathHtml.get(cardPath) ?? "") : "";
+      const detailUsd = html ? parseScrydexCardPageRawNearMintUsd(html) : {};
+      const psa10Usd = html ? parseScrydexCardPagePsa10Usd(html) : {};
+      flatUsd = {
+        ...flatUsd,
+        ...mergeScrydexExpansionAndDetailUsd(listUsd, detailUsd),
+        ...psa10Usd,
+      };
+    }
     const byVariant = collateFlatToByVariant(flatUsd);
     const hasPrice = Object.values(byVariant).some((r) => Number.isFinite(r.raw) || Number.isFinite(r.psa10));
     if (!hasPrice) continue;

@@ -27,6 +27,12 @@ type CollectCardGridWithTagsProps = {
   cardPricesByMasterCardId: Record<string, number>;
   manualPriceMasterCardIds?: Set<string>;
   gradingByMasterCardId?: Record<string, { company: string; grade: string; imageUrl?: string }>;
+  readOnly?: boolean;
+  collectionSectionTitle?: string;
+  /** Master card IDs the viewer owns (shared wishlist: show badge + optional filter) */
+  viewerOwnedMasterCardIds?: Set<string>;
+  /** When true with viewerOwnedMasterCardIds, show “Cards I own” filter on wishlist */
+  sharedWishlistOwnedFilter?: boolean;
 };
 
 export function CollectCardGridWithTags({
@@ -40,6 +46,10 @@ export function CollectCardGridWithTags({
   cardPricesByMasterCardId,
   manualPriceMasterCardIds,
   gradingByMasterCardId,
+  readOnly = false,
+  collectionSectionTitle,
+  viewerOwnedMasterCardIds,
+  sharedWishlistOwnedFilter = false,
 }: CollectCardGridWithTagsProps) {
   const [groupBySet, setGroupBySet] = useState(false);
   const [search, setSearch] = useState("");
@@ -48,6 +58,7 @@ export function CollectCardGridWithTags({
   const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(false);
   const [duplicatesOnly, setDuplicatesOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>("price-desc");
+  const [ownedFilterOnly, setOwnedFilterOnly] = useState(false);
 
   // Count unique cards per set from the full unfiltered list
   const collectedCountBySetCode = useMemo(() => {
@@ -74,6 +85,15 @@ export function CollectCardGridWithTags({
   const filteredCards = useMemo(() => {
     const q = search.trim().toLowerCase();
     let result = cards.filter((card) => {
+      if (
+        sharedWishlistOwnedFilter &&
+        variant === "wishlist" &&
+        ownedFilterOnly &&
+        viewerOwnedMasterCardIds &&
+        card.masterCardId
+      ) {
+        if (!viewerOwnedMasterCardIds.has(card.masterCardId)) return false;
+      }
       if (q) {
         const name = (card.cardName ?? "").toLowerCase();
         const number = (card.cardNumber ?? "").toLowerCase();
@@ -106,10 +126,43 @@ export function CollectCardGridWithTags({
     }
 
     return result;
-  }, [cards, search, rarity, category, excludeCommonUncommon, duplicatesOnly, sortOrder, cardPricesByMasterCardId]);
+  }, [
+    cards,
+    search,
+    rarity,
+    category,
+    excludeCommonUncommon,
+    duplicatesOnly,
+    sortOrder,
+    cardPricesByMasterCardId,
+    sharedWishlistOwnedFilter,
+    variant,
+    ownedFilterOnly,
+    viewerOwnedMasterCardIds,
+  ]);
 
   return (
     <div className="px-4">
+      {sharedWishlistOwnedFilter && variant === "wishlist" && viewerOwnedMasterCardIds ? (
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 px-3 py-2.5">
+          <span className="text-sm font-medium text-[var(--foreground)]">Cards I own</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={ownedFilterOnly}
+            onClick={() => setOwnedFilterOnly((v) => !v)}
+            className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+              ownedFilterOnly ? "bg-emerald-600" : "bg-[var(--foreground)]/20"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-[var(--background)] shadow transition ${
+                ownedFilterOnly ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+      ) : null}
       <div className="mb-4">
         <CardTagFilterRow
           groupBySet={groupBySet}
@@ -139,7 +192,10 @@ export function CollectCardGridWithTags({
         setLogosByCode={setLogosByCode}
         setSymbolsByCode={setSymbolsByCode}
         variant={variant}
-        customerLoggedIn
+        customerLoggedIn={!readOnly}
+        readOnly={readOnly}
+        viewerOwnedMasterCardIds={viewerOwnedMasterCardIds}
+        collectionSectionTitle={collectionSectionTitle}
         itemConditions={itemConditions}
         wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
         collectionLinesByMasterCardId={collectionLinesByMasterCardId}

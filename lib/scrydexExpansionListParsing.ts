@@ -12,11 +12,12 @@ function escapeRegExp(s: string): string {
 /** Normalise `me1-001` / `ME1-1` → `me1-1` for map keys (matches Scrydex href ids). */
 export function normalizeScrydexListCardKey(listPrefix: string, cardHrefId: string): string {
   const p = listPrefix.trim().toLowerCase();
-  const re = new RegExp(`^${escapeRegExp(p)}-(\\d+)$`, "i");
+  const re = new RegExp(`^${escapeRegExp(p)}-([a-z0-9]+)$`, "i");
   const m = cardHrefId.trim().match(re);
   if (!m) return cardHrefId.trim().toLowerCase();
-  const n = Number.parseInt(m[1], 10);
-  if (!Number.isFinite(n)) return cardHrefId.trim().toLowerCase();
+  const suffix = m[1].trim().toLowerCase();
+  const n = Number.parseInt(suffix, 10);
+  if (!Number.isFinite(n) || /[a-z]/i.test(suffix)) return `${p}-${suffix}`;
   return `${p}-${n}`;
 }
 
@@ -30,7 +31,7 @@ export function parseScrydexExpansionListPrices(
   const out = new Map<string, Record<string, number>>();
   const escaped = escapeRegExp(listPrefix.trim());
   const anchorRe = new RegExp(
-    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escaped}-\\d+))(\\?[^"]*)?"`,
+    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escaped}-[a-z0-9]+))(\\?[^"]*)?"`,
     "gi",
   );
   let m: RegExpExecArray | null;
@@ -79,7 +80,7 @@ export function parseScrydexExpansionListPaths(
   const out = new Map<string, string>();
   const escaped = escapeRegExp(listPrefix.trim());
   const anchorRe = new RegExp(
-    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escaped}-\\d+))(\\?[^"]*)?"`,
+    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escaped}-[a-z0-9]+))(\\?[^"]*)?"`,
     "gi",
   );
   let m: RegExpExecArray | null;
@@ -160,19 +161,23 @@ export function buildScrydexPriceMapLookupKeys(
 ): string[] {
   const e = ext.trim().toLowerCase();
   const keys = new Set<string>([e]);
-  const di = e.indexOf("-");
+  const di = e.lastIndexOf("-");
   if (di <= 0) return [...keys];
   const suff = e.slice(di + 1);
+  const normalizedSuffix = suff.toLowerCase();
   const n = Number.parseInt(suff, 10);
-  if (!Number.isFinite(n)) return [...keys];
   const lp = listPrefix.trim().toLowerCase();
-  keys.add(`${lp}-${n}`);
-  keys.add(`${lp}-${suff.toLowerCase()}`);
+  keys.add(`${lp}-${normalizedSuffix}`);
+  if (Number.isFinite(n) && !/[a-z]/i.test(normalizedSuffix)) {
+    keys.add(`${lp}-${n}`);
+  }
   for (const tp of tcgPrefixes) {
     const t = tp.trim().toLowerCase();
     if (!t) continue;
-    keys.add(`${t}-${n}`);
-    keys.add(`${t}-${suff.toLowerCase()}`);
+    keys.add(`${t}-${normalizedSuffix}`);
+    if (Number.isFinite(n) && !/[a-z]/i.test(normalizedSuffix)) {
+      keys.add(`${t}-${n}`);
+    }
   }
   return [...keys];
 }

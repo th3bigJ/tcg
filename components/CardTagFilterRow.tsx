@@ -368,7 +368,10 @@ export function CardTagFilterRow({ groupBySet, onGroupBySetChange, localSearch, 
               <TagButton
                 label="Duplicates only"
                 active={localFilters.duplicatesOnly}
-                onClick={() => localFilters.onDuplicatesOnlyChange(!localFilters.duplicatesOnly)}
+                onClick={() => {
+                  const fn = localFilters.onDuplicatesOnlyChange;
+                  if (fn) fn(!localFilters.duplicatesOnly);
+                }}
               />
             ) : null}
           </>

@@ -437,6 +437,8 @@ function ModalYourCollectionSection({
   onAdjustQuantity,
   adjustingEntryId,
   onEditLine,
+  sectionTitle = "Your collection",
+  readOnly: readOnlyLines = false,
 }: {
   lines: CollectionLineSummary[];
   variant: "browse" | "collection" | "wishlist";
@@ -445,20 +447,24 @@ function ModalYourCollectionSection({
   onAdjustQuantity?: (entryId: string, delta: -1 | 1) => void;
   adjustingEntryId?: string | null;
   onEditLine?: (line: CollectionLineSummary) => void;
+  sectionTitle?: string;
+  readOnly?: boolean;
 }) {
   if (!masterCardId) return null;
   if (variant === "browse" && !customerLoggedIn) return null;
-  if (variant !== "browse" && !customerLoggedIn && lines.length === 0) return null;
+  if (variant !== "browse" && !customerLoggedIn && lines.length === 0 && !readOnlyLines) return null;
 
   const showQuantityControls = Boolean(customerLoggedIn && onAdjustQuantity);
 
   return (
-    <section className="flex flex-col gap-2" aria-label="Your collection">
-      <h4 className="text-sm font-bold tracking-tight text-white">Your collection</h4>
+    <section className="flex flex-col gap-2" aria-label={sectionTitle}>
+      <h4 className="text-sm font-bold tracking-tight text-white">{sectionTitle}</h4>
       {lines.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3">
           <p className="text-xs leading-relaxed text-white/60">
-            No copies saved for this card yet. Tap + to add quantity, condition, and printing.
+            {readOnlyLines
+              ? "They have no copies of this card saved."
+              : "No copies saved for this card yet. Tap + to add quantity, condition, and printing."}
           </p>
         </div>
       ) : (
@@ -999,6 +1005,7 @@ const CardGridItem = memo(function CardGridItem({
   gradingLabel,
   gradedImageSrc,
   onOpen,
+  viewerOwnsOnWishlist,
 }: {
   card: CardEntry;
   index: number;
@@ -1009,6 +1016,8 @@ const CardGridItem = memo(function CardGridItem({
   gradingLabel?: string;
   gradedImageSrc?: string;
   onOpen: (index: number) => void;
+  /** Shared wishlist: viewer owns this master card */
+  viewerOwnsOnWishlist?: boolean;
 }) {
   const liRef = useRef<HTMLLIElement>(null);
   const [lazyPrice, setLazyPrice] = useState<number | null>(null);
@@ -1095,6 +1104,17 @@ const CardGridItem = memo(function CardGridItem({
             </svg>
           </span>
         ) : null}
+        {viewerOwnsOnWishlist && variant === "wishlist" ? (
+          <span
+            className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 ring-2 ring-[var(--background)]"
+            title="You own this card"
+            aria-label="You own this card"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        ) : null}
       </div>
     </li>
   );
@@ -1111,6 +1131,9 @@ export function CardGrid({
   setSymbolsByCode,
   variant = "browse",
   customerLoggedIn = false,
+  readOnly = false,
+  viewerOwnedMasterCardIds,
+  collectionSectionTitle,
   itemConditions = EMPTY_ARRAY,
   wishlistEntryIdsByMasterCardId = EMPTY_WISHLIST,
   collectionLinesByMasterCardId = EMPTY_COLLECTION,
@@ -1125,6 +1148,11 @@ export function CardGrid({
   setSymbolsByCode?: Record<string, string>;
   variant?: "browse" | "collection" | "wishlist";
   customerLoggedIn?: boolean;
+  /** Hide add / edit / wishlist controls (shared views) */
+  readOnly?: boolean;
+  /** When set on wishlist variant, tiles show whether the viewer owns this master card */
+  viewerOwnedMasterCardIds?: Set<string>;
+  collectionSectionTitle?: string;
   itemConditions?: { id: string; name: string }[];
   wishlistEntryIdsByMasterCardId?: Record<string, { id: string; printing?: string }>;
   collectionLinesByMasterCardId?: Record<string, CollectionLineSummary[]>;
@@ -1136,6 +1164,7 @@ export function CardGrid({
   collectedCountBySetCode?: Record<string, number>;
 }) {
   const router = useRouter();
+  const allowMutations = Boolean(customerLoggedIn && !readOnly);
   const [localWishlistMap, setLocalWishlistMap] = useState(wishlistEntryIdsByMasterCardId);
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [addConditionId, setAddConditionId] = useState("");
@@ -1322,8 +1351,8 @@ export function CardGrid({
   }, [router]);
 
   const onOpenAddSheet = useCallback((variant?: string) => {
-    if (!customerLoggedIn) {
-      goLogin();
+    if (!allowMutations) {
+      if (!readOnly && !customerLoggedIn) goLogin();
       return;
     }
     if (!selectedCard?.masterCardId) return;
@@ -1336,10 +1365,13 @@ export function CardGrid({
     setAddPurchaseDate(new Date().toISOString().slice(0, 10));
     setAddUnlistedPrice("");
     setAddSheetOpen(true);
-  }, [customerLoggedIn, goLogin, itemConditions, pricingVariants, selectedCard?.masterCardId]);
+  }, [allowMutations, customerLoggedIn, goLogin, itemConditions, pricingVariants, readOnly, selectedCard?.masterCardId]);
 
   const onOpenGradedSheet = useCallback(() => {
-    if (!customerLoggedIn) { goLogin(); return; }
+    if (!allowMutations) {
+      if (!readOnly && !customerLoggedIn) goLogin();
+      return;
+    }
     if (!selectedCard?.masterCardId) return;
     setGradedCompany("PSA");
     setGradedValue("");
@@ -1348,7 +1380,7 @@ export function CardGrid({
     setGradedPricePaid("");
     setGradedPurchaseDate(new Date().toISOString().slice(0, 10));
     setGradedSheetOpen(true);
-  }, [customerLoggedIn, goLogin, pricingVariants, selectedCard?.masterCardId]);
+  }, [allowMutations, customerLoggedIn, goLogin, pricingVariants, readOnly, selectedCard?.masterCardId]);
 
   const submitGradedCollection = useCallback(async () => {
     if (!selectedCard?.masterCardId) return;
@@ -1480,7 +1512,7 @@ export function CardGrid({
   const adjustCollectionQuantity = useCallback(
     async (entryId: string, delta: -1 | 1) => {
       const mid = selectedCard?.masterCardId;
-      if (!mid || !customerLoggedIn) return;
+      if (!mid || !allowMutations) return;
       const mapKey = cardCollectionMapKey(selectedCard);
       const lines = localCollectionLinesByMasterCardId[mapKey];
       const line = lines?.find((l) => l.entryId === entryId);
@@ -1520,7 +1552,7 @@ export function CardGrid({
         setAdjustingCollectionEntryId(null);
       }
     },
-    [customerLoggedIn, localCollectionLinesByMasterCardId, router, selectedCard, selectedCard?.cardName, selectedCard?.masterCardId],
+    [allowMutations, localCollectionLinesByMasterCardId, router, selectedCard, selectedCard?.cardName, selectedCard?.masterCardId],
   );
 
   const openEditSheet = useCallback((line: CollectionLineSummary) => {
@@ -1669,8 +1701,8 @@ export function CardGrid({
 
   const toggleWishlist = useCallback(async (variant?: string) => {
     if (!selectedCard?.masterCardId) return;
-    if (!customerLoggedIn) {
-      goLogin();
+    if (!allowMutations) {
+      if (!readOnly && !customerLoggedIn) goLogin();
       return;
     }
     const mid = selectedCard.masterCardId;
@@ -1722,7 +1754,7 @@ export function CardGrid({
       setWishVariant(pricingVariants[0] ?? "");
       setWishSheetOpen(true);
     }
-  }, [customerLoggedIn, goLogin, localWishlistMap, pricingVariants, router, selectedCard?.masterCardId]);
+  }, [allowMutations, customerLoggedIn, goLogin, localWishlistMap, pricingVariants, readOnly, router, selectedCard?.masterCardId]);
 
   const submitAddWishlist = useCallback(async () => {
     if (!selectedCard?.masterCardId) return;
@@ -2177,16 +2209,18 @@ export function CardGrid({
                 lines={collectionLinesForSelected}
                 variant={variant}
                 customerLoggedIn={
-                  customerLoggedIn || variant === "collection" || variant === "wishlist"
+                  readOnly
+                    ? false
+                    : customerLoggedIn || variant === "collection" || variant === "wishlist"
                 }
+                readOnly={readOnly}
                 masterCardId={selectedCard.masterCardId}
+                sectionTitle={collectionSectionTitle}
                 onAdjustQuantity={
-                  customerLoggedIn && selectedCard.masterCardId
-                    ? adjustCollectionQuantity
-                    : undefined
+                  allowMutations && selectedCard.masterCardId ? adjustCollectionQuantity : undefined
                 }
                 adjustingEntryId={adjustingCollectionEntryId}
-                onEditLine={customerLoggedIn ? openEditSheet : undefined}
+                onEditLine={allowMutations ? openEditSheet : undefined}
               />
               <ModalCardPricing
                 key={selectedCard.masterCardId ?? `${selectedCard.set}/${selectedCard.filename}`}
@@ -2194,8 +2228,8 @@ export function CardGrid({
                 externalId={selectedCard.externalId}
                 legacyExternalId={selectedCard.legacyExternalId}
                 onVariantsLoaded={setPricingVariants}
-                onAdd={selectedCard.masterCardId && customerLoggedIn !== false ? (v) => onOpenAddSheet(v) : undefined}
-                onWishlist={selectedCard.masterCardId ? (v) => void toggleWishlist(v) : undefined}
+                onAdd={allowMutations && selectedCard.masterCardId ? (v) => onOpenAddSheet(v) : undefined}
+                onWishlist={allowMutations && selectedCard.masterCardId ? (v) => void toggleWishlist(v) : undefined}
                 wishlistedVariant={selectedCard.masterCardId ? (localWishlistMap[selectedCard.masterCardId]?.printing ?? null) : null}
                 ebayCardContext={{
                   setName: selectedCard.setName,
@@ -2207,7 +2241,7 @@ export function CardGrid({
                   cardNumber: selectedCard.cardNumber,
                 }}
               />
-              {selectedCard.masterCardId && customerLoggedIn !== false ? (
+              {allowMutations && selectedCard.masterCardId ? (
                 <button
                   type="button"
                   onClick={onOpenGradedSheet}
@@ -3171,6 +3205,11 @@ export function CardGrid({
             const grading = mapKey ? gradingByMasterCardId?.[mapKey] : undefined;
             const gradingLabel = grading ? `${grading.company} ${grading.grade}` : undefined;
             const gradedImageSrc = grading?.imageUrl;
+            const mid = card.masterCardId ?? "";
+            const viewerOwnsOnWishlist =
+              variant === "wishlist" && viewerOwnedMasterCardIds && mid
+                ? viewerOwnedMasterCardIds.has(mid)
+                : false;
             return (
               <CardGridItem
                 key={card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
@@ -3183,6 +3222,7 @@ export function CardGrid({
                 gradingLabel={gradingLabel}
                 gradedImageSrc={gradedImageSrc}
                 onOpen={openModal}
+                viewerOwnsOnWishlist={viewerOwnsOnWishlist}
               />
             );
           })}
@@ -3264,6 +3304,15 @@ export function CardGrid({
                   const showPrice = mapKey !== "" && cardPricesByMasterCardId[mapKey] !== undefined;
                   const unitPrice = showPrice ? cardPricesByMasterCardId[mapKey]! : null;
                   const owned = Boolean(mapKey && localCollectionLinesByMasterCardId[mapKey]?.length);
+                  const isManualPrice = Boolean(mapKey && manualPriceMasterCardIds?.has(mapKey));
+                  const grading = mapKey ? gradingByMasterCardId?.[mapKey] : undefined;
+                  const gradingLabel = grading ? `${grading.company} ${grading.grade}` : undefined;
+                  const gradedImageSrc = grading?.imageUrl;
+                  const mid = card.masterCardId ?? "";
+                  const viewerOwnsOnWishlist =
+                    variant === "wishlist" && viewerOwnedMasterCardIds && mid
+                      ? viewerOwnedMasterCardIds.has(mid)
+                      : false;
                   return (
                     <CardGridItem
                       key={card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${globalIndex}`}
@@ -3272,7 +3321,11 @@ export function CardGrid({
                       variant={variant}
                       unitPrice={unitPrice ?? null}
                       owned={owned}
+                      isManualPrice={isManualPrice}
+                      gradingLabel={gradingLabel}
+                      gradedImageSrc={gradedImageSrc}
                       onOpen={openModal}
+                      viewerOwnsOnWishlist={viewerOwnsOnWishlist}
                     />
                   );
                 })}

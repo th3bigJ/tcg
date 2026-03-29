@@ -421,10 +421,10 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
         <Link
-          href="/account"
+          href="/more"
           prefetch={false}
           className="inline-flex h-9 min-w-[36px] items-center justify-center text-[var(--foreground)] transition hover:opacity-75 active:opacity-60"
-          aria-label="Back to account"
+          aria-label="Back to more"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

@@ -1,6 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { linkPendingProfileSharesForCustomer } from "@/lib/customerProfileSharesServer";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -34,6 +35,11 @@ export async function loadOrCreateStorefrontCustomer(user: User): Promise<Storef
     .single();
 
   if (existing) {
+    await linkPendingProfileSharesForCustomer(
+      supabase,
+      String(existing.id),
+      (existing.email as string) ?? email,
+    );
     return {
       id: existing.id as string,
       supabaseUserId: user.id,
@@ -57,6 +63,8 @@ export async function loadOrCreateStorefrontCustomer(user: User): Promise<Storef
     .single();
 
   if (error || !created) return null;
+
+  await linkPendingProfileSharesForCustomer(supabase, String(created.id), (created.email as string) ?? email);
 
   return {
     id: created.id as string,
