@@ -9,51 +9,65 @@ import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 export function PokedexList({
   pokemon,
   collectedDexIds,
+  customerLoggedIn = false,
 }: {
   pokemon: PokemonFilterOption[];
   collectedDexIds: Set<number>;
+  /** When true, show the “Missing only” filter (requires collection data). */
+  customerLoggedIn?: boolean;
 }) {
   const [search, setSearch] = useState("");
+  const [missingOnly, setMissingOnly] = useState(false);
 
   const filtered = useMemo(() => {
+    let list = pokemon;
+    if (missingOnly && customerLoggedIn) {
+      list = list.filter((p) => !collectedDexIds.has(p.nationalDexNumber));
+    }
     const q = search.trim().toLowerCase();
-    if (!q) return pokemon;
-    return pokemon.filter(
+    if (!q) return list;
+    return list.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         String(p.nationalDexNumber).includes(q),
     );
-  }, [pokemon, search]);
+  }, [pokemon, search, missingOnly, customerLoggedIn, collectedDexIds]);
 
   return (
     <>
-      <div className="relative mb-4 flex min-h-11 items-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="pointer-events-none absolute left-3 top-1/2 z-[1] h-4 w-4 shrink-0 -translate-y-1/2 text-[var(--foreground)]/45"
-          aria-hidden
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
+      <div className="mb-3 flex flex-col gap-2">
         <input
           type="search"
           placeholder="Search Pokémon…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           aria-label="Search Pokémon"
-          className="min-h-11 w-full rounded-xl border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 py-2 pl-10 pr-3 text-base leading-normal text-[var(--foreground)] placeholder:text-[var(--foreground)]/40 focus:border-[var(--foreground)]/30 focus:outline-none md:text-sm"
+          className="min-h-11 w-full rounded-xl border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 px-3 py-2 text-base leading-normal text-[var(--foreground)] placeholder:text-[var(--foreground)]/40 focus:border-[var(--foreground)]/30 focus:outline-none md:text-sm"
         />
+        {customerLoggedIn ? (
+          <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-0.5">
+            <button
+              type="button"
+              onClick={() => setMissingOnly((v) => !v)}
+              aria-pressed={missingOnly}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 ${
+                missingOnly
+                  ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
+                  : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12 hover:text-[var(--foreground)]"
+              }`}
+            >
+              Missing only
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {filtered.length === 0 ? (
-        <p className="mt-6 text-center text-sm text-[var(--foreground)]/50">No Pokémon match "{search}"</p>
+        <p className="mt-6 text-center text-sm text-[var(--foreground)]/50">
+          {missingOnly && customerLoggedIn && !search.trim()
+            ? "You’ve collected at least one card for every Pokémon in the list."
+            : `No Pokémon match "${search.trim() || "your filters"}"`}
+        </p>
       ) : (
         <ul className="grid grid-cols-3 gap-3 sm:gap-4">
           {filtered.map((item) => {

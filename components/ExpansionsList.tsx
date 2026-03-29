@@ -39,28 +39,14 @@ export function ExpansionsList({
 
   return (
     <div className="flex flex-col gap-4 pb-2">
-      <div className="relative flex min-h-11 items-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="pointer-events-none absolute left-3 top-1/2 z-[1] h-4 w-4 shrink-0 -translate-y-1/2 text-[var(--foreground)]/45"
-          aria-hidden
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
+      <div>
         <input
           type="search"
           placeholder="Search sets…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           aria-label="Search sets"
-          className="min-h-11 w-full rounded-xl border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 py-2 pl-10 pr-3 text-base leading-normal text-[var(--foreground)] placeholder:text-[var(--foreground)]/40 focus:border-[var(--foreground)]/30 focus:outline-none md:text-sm"
+          className="min-h-11 w-full rounded-xl border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 px-3 py-2 text-base leading-normal text-[var(--foreground)] placeholder:text-[var(--foreground)]/40 focus:border-[var(--foreground)]/30 focus:outline-none md:text-sm"
         />
       </div>
 

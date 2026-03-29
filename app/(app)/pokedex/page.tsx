@@ -32,7 +32,11 @@ export default async function PokedexPage() {
       ) : (
         <div className="mb-4" aria-hidden />
       )}
-      <PokedexList pokemon={pokemon} collectedDexIds={collectedDexIds} />
+      <PokedexList
+        pokemon={pokemon}
+        collectedDexIds={collectedDexIds}
+        customerLoggedIn={Boolean(customer)}
+      />
     </main>
   );
 }
