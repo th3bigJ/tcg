@@ -22,6 +22,7 @@ const extraAllowedDevOrigins =
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1", ...extraAllowedDevOrigins],
+  transpilePackages: ["@supabase/ssr", "@supabase/supabase-js"],
   images: r2Hostname
     ? {
         remotePatterns: [

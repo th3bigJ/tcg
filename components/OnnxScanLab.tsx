@@ -10,14 +10,15 @@ import {
   type CardCornerDetection,
   type ScanPoint,
 } from "@/lib/onnxCardDetector";
+import { CardGrid } from "@/components/CardGrid";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 
 const VIEWPORT_ASPECT = 3 / 4;
 const GUIDE = {
   left: 0.1,
   right: 0.9,
-  top: 0.06,
-  bottom: 0.94,
+  top: 0.08,
+  bottom: 0.92,
 } as const;
 
 type DetectionState =
@@ -272,7 +273,11 @@ function parseCardNumber(raw: string) {
   return match?.[1]?.toUpperCase() ?? "";
 }
 
-export function OnnxScanLab() {
+export function OnnxScanLab({
+  customerLoggedIn = false,
+}: {
+  customerLoggedIn?: boolean;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const cropCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -504,7 +509,7 @@ export function OnnxScanLab() {
           className="h-full w-full object-cover"
         />
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-x-[10%] inset-y-[6%] rounded-[1.25rem] border-2 border-white/75 shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
+          <div className="absolute inset-x-[10%] inset-y-[8%] rounded-[1.25rem] border-2 border-white/75 shadow-[0_0_0_999px_rgba(0,0,0,0.45)]" />
         </div>
         <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/80 to-transparent px-4 py-4 text-white">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/65">
@@ -669,32 +674,10 @@ export function OnnxScanLab() {
                 No likely match yet. Try another capture with a flatter card and clearer number strip.
               </p>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {identifyState.candidates.map((candidate) => (
-                  <Link
-                    key={candidate.masterCardId ?? candidate.filename}
-                    href={`/cards?search=${encodeURIComponent(candidate.cardName)}`}
-                    className="overflow-hidden rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/3 transition hover:bg-[var(--foreground)]/6"
-                  >
-                    <div className="relative aspect-[3/4]">
-                      <Image
-                        src={candidate.lowSrc}
-                        alt={candidate.cardName}
-                        fill
-                        unoptimized
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="grid gap-1 px-3 py-3 text-sm">
-                      <p className="font-medium">{candidate.cardName}</p>
-                      <p className="text-[var(--foreground)]/58">
-                        {candidate.cardNumber || "No number"} · {candidate.setName || candidate.set}
-                      </p>
-                      <p className="text-[var(--foreground)]/48">HP {candidate.hp ?? "?"}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+            <CardGrid
+              cards={identifyState.candidates}
+              customerLoggedIn={customerLoggedIn}
+            />
             )}
           </div>
         )}
@@ -721,7 +704,7 @@ function PreviewCard({
         className="relative mt-2 overflow-hidden rounded-2xl border border-[var(--foreground)]/10 bg-black/8"
         style={{ aspectRatio }}
       >
-        <Image src={src} alt={title} fill unoptimized className="object-cover" />
+        <Image src={src} alt={title} fill unoptimized className="object-contain" />
       </div>
     </div>
   );

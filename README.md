@@ -2,6 +2,22 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Prerequisites
+
+This repository uses **Git LFS** for large files. Before cloning, ensure Git LFS is installed:
+
+```bash
+git lfs install
+```
+
+Then clone the repository. Modern Git setups often pull LFS files automatically, but if needed, run:
+
+```bash
+git lfs pull
+```
+
+### Development Server
+
 First, run the development server:
 
 ```bash
