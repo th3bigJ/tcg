@@ -82,6 +82,14 @@ export type CardTagFilterRowProps = {
     value: string;
     onChange: (value: string) => void;
     options: { value: string; label: string }[];
+    /** When set, inverted “active” styling only applies if `value` differs (default order is not highlighted). */
+    defaultValue?: string;
+  };
+
+  /** Shared wishlist: “Cards I own” as first tag in the filter row */
+  ownedFilterTag?: {
+    active: boolean;
+    onToggle: () => void;
   };
 
   /** URL-driven filter props. Omit entirely on pages that don't use URL filters (collect/wishlist). */
@@ -101,7 +109,15 @@ export type CardTagFilterRowProps = {
   };
 };
 
-export function CardTagFilterRow({ groupBySet, onGroupBySetChange, localSearch, localFilters, sortControl, searchFilter }: CardTagFilterRowProps) {
+export function CardTagFilterRow({
+  groupBySet,
+  onGroupBySetChange,
+  localSearch,
+  localFilters,
+  sortControl,
+  ownedFilterTag,
+  searchFilter,
+}: CardTagFilterRowProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -120,7 +136,7 @@ export function CardTagFilterRow({ groupBySet, onGroupBySetChange, localSearch, 
       : false;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-6">
       {/* Local search bar (collect/wishlist) */}
       {localSearch ? (
         <div className="relative flex items-center">
@@ -240,6 +256,14 @@ export function CardTagFilterRow({ groupBySet, onGroupBySetChange, localSearch, 
 
       {/* Tag row */}
       <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-0.5">
+        {ownedFilterTag ? (
+          <TagButton
+            label="Cards I own"
+            active={ownedFilterTag.active}
+            onClick={ownedFilterTag.onToggle}
+          />
+        ) : null}
+
         {/* Clear filters — leftmost when active */}
         {hasActiveFilters && localFilters ? (
           <button
@@ -304,7 +328,9 @@ export function CardTagFilterRow({ groupBySet, onGroupBySetChange, localSearch, 
               onChange={(e) => sortControl.onChange(e.currentTarget.value)}
               aria-label="Sort order"
               className={`h-8 w-28 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
-                sortControl.value
+                (sortControl.defaultValue !== undefined
+                  ? sortControl.value !== sortControl.defaultValue
+                  : Boolean(sortControl.value))
                   ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
                   : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
               }`}

@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+
+import { TRADE_NOTIFICATIONS_UPDATED_EVENT } from "@/lib/tradeNotificationsConstants";
 
 type NavItem = {
   href: string;
@@ -126,6 +128,46 @@ const icons = [IconSearch, IconCollect, IconWishlist, IconFriends, IconMore] as 
 export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname() ?? "";
   const [moreOpen, setMoreOpen] = useState(false);
+  const [friendsUnreadCount, setFriendsUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setFriendsUnreadCount(0);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/trade-notifications?countOnly=1", { credentials: "include" });
+        if (!res.ok) return;
+        const j = (await res.json()) as { count?: number };
+        if (!cancelled) setFriendsUnreadCount(typeof j.count === "number" ? j.count : 0);
+      } catch {
+        if (!cancelled) setFriendsUnreadCount(0);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn, pathname]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const onUpdate = () => {
+      void (async () => {
+        try {
+          const res = await fetch("/api/trade-notifications?countOnly=1", { credentials: "include" });
+          if (!res.ok) return;
+          const j = (await res.json()) as { count?: number };
+          setFriendsUnreadCount(typeof j.count === "number" ? j.count : 0);
+        } catch {
+          setFriendsUnreadCount(0);
+        }
+      })();
+    };
+    window.addEventListener(TRADE_NOTIFICATIONS_UPDATED_EVENT, onUpdate);
+    return () => window.removeEventListener(TRADE_NOTIFICATIONS_UPDATED_EVENT, onUpdate);
+  }, [isLoggedIn]);
 
   const items: NavItem[] = [
     {
@@ -213,6 +255,11 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
               );
             }
 
+            const friendsPendingLabel =
+              item.href === "/collect/shared" && friendsUnreadCount > 0
+                ? `Friends, ${friendsUnreadCount} unread ${friendsUnreadCount === 1 ? "notification" : "notifications"}`
+                : undefined;
+
             return (
               <Link
                 key={`${item.href}-${item.label}`}
@@ -226,8 +273,19 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
                     : "text-[var(--foreground)]/50 hover:text-[var(--foreground)]/75"
                 }`}
                 aria-current={active ? "page" : undefined}
+                aria-label={friendsPendingLabel}
               >
-                <Icon active={active} />
+                <span className="relative inline-flex">
+                  <Icon active={active} />
+                  {item.href === "/collect/shared" && friendsUnreadCount > 0 ? (
+                    <span
+                      className="absolute -right-1 -top-0.5 flex min-h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold leading-none text-white dark:bg-red-500"
+                      aria-hidden
+                    >
+                      {friendsUnreadCount > 9 ? "9+" : friendsUnreadCount}
+                    </span>
+                  ) : null}
+                </span>
                 <span className="max-w-full truncate">{item.label}</span>
               </Link>
             );

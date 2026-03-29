@@ -1006,6 +1006,9 @@ const CardGridItem = memo(function CardGridItem({
   gradedImageSrc,
   onOpen,
   viewerOwnsOnWishlist,
+  tradePickMode,
+  tradeSelectedQty,
+  onTradePick,
 }: {
   card: CardEntry;
   index: number;
@@ -1018,6 +1021,10 @@ const CardGridItem = memo(function CardGridItem({
   onOpen: (index: number) => void;
   /** Shared wishlist: viewer owns this master card */
   viewerOwnsOnWishlist?: boolean;
+  /** Tap cycles selected quantity (trade wizard); skips opening the card modal */
+  tradePickMode?: boolean;
+  tradeSelectedQty?: number;
+  onTradePick?: (entryId: string, card: CardEntry, maxQty: number) => void;
 }) {
   const liRef = useRef<HTMLLIElement>(null);
   const [lazyPrice, setLazyPrice] = useState<number | null>(null);
@@ -1053,10 +1060,20 @@ const CardGridItem = memo(function CardGridItem({
   }, [variant, card.externalId, card.legacyExternalId]);
 
   const unitPrice = variant === "browse" ? lazyPrice : unitPriceProp;
+  const qtySelected = tradeSelectedQty ?? 0;
+  const pickActive = Boolean(tradePickMode && qtySelected > 0);
 
   return (
     <li ref={liRef} className="card-grid-item flex flex-col">
-      <div className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md">
+      <div
+        className={`group relative aspect-[3/4] overflow-hidden rounded-lg border bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md ${
+          pickActive
+            ? "border-emerald-400 ring-2 ring-emerald-400/90 ring-offset-[3px] ring-offset-[var(--background)] shadow-[0_0_0_1px_rgba(52,211,153,0.35),0_8px_24px_-4px_rgba(16,185,129,0.45)]"
+            : tradePickMode
+              ? "border-[var(--foreground)]/15"
+              : "border-[var(--foreground)]/10"
+        }`}
+      >
         <div className="pointer-events-none absolute inset-0">
           <img
             src={gradedImageSrc ?? card.lowSrc}
@@ -1067,11 +1084,52 @@ const CardGridItem = memo(function CardGridItem({
             fetchPriority={index < 6 ? "high" : "auto"}
           />
         </div>
+        {pickActive ? (
+          <div
+            className="pointer-events-none absolute inset-0 z-[8] rounded-lg bg-gradient-to-t from-emerald-950/65 via-emerald-600/35 to-emerald-400/25"
+            aria-hidden
+          />
+        ) : null}
+        {pickActive ? (
+          <div
+            className="pointer-events-none absolute inset-0 z-[12] flex flex-col items-center justify-center gap-1 px-2"
+            aria-hidden
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="w-[42%] max-w-[5rem] min-w-[2.75rem] text-emerald-400 drop-shadow-[0_0_1px_rgba(0,0,0,0.95),0_2px_16px_rgba(0,0,0,0.65),0_0_20px_rgba(52,211,153,0.55)]"
+              stroke="currentColor"
+              strokeWidth="2.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <span className="rounded-md bg-black/55 px-2 py-0.5 text-[11px] font-bold tabular-nums text-emerald-300 shadow-md ring-1 ring-emerald-400/50">
+              ×{qtySelected}
+            </span>
+          </div>
+        ) : null}
         <button
           type="button"
           className="absolute inset-0 z-10 cursor-pointer border-0 bg-transparent p-0"
-          onClick={() => onOpen(index)}
-          aria-label={`View ${card.set} ${card.filename}`}
+          onClick={() => {
+            if (tradePickMode && onTradePick && card.collectionEntryId) {
+              onTradePick(card.collectionEntryId, card, Math.max(1, card.quantity ?? 1));
+            } else {
+              onOpen(index);
+            }
+          }}
+          aria-label={
+            tradePickMode && card.collectionEntryId
+              ? pickActive
+                ? `${qtySelected} in trade — tap to change quantity for ${card.cardName ?? card.filename}`
+                : `Select copies of ${card.cardName ?? card.filename}`
+              : `View ${card.set} ${card.filename}`
+          }
         />
       </div>
       <div className="relative mt-1">
@@ -1082,7 +1140,11 @@ const CardGridItem = memo(function CardGridItem({
         ) : null}
         <div className="min-w-0">
           {card.cardName ? (
-            <span className="block line-clamp-1 text-center text-[10px] font-medium text-[var(--foreground)]/80">
+            <span
+              className={`block line-clamp-1 text-center text-[10px] font-medium ${
+                tradePickMode && pickActive ? "font-semibold text-emerald-500 dark:text-emerald-400" : "text-[var(--foreground)]/80"
+              }`}
+            >
               {card.cardName}
             </span>
           ) : null}
@@ -1124,6 +1186,7 @@ const EMPTY_ARRAY: { id: string; name: string }[] = [];
 const EMPTY_WISHLIST: Record<string, { id: string; printing?: string }> = {};
 const EMPTY_COLLECTION: Record<string, CollectionLineSummary[]> = {};
 const EMPTY_PRICES: Record<string, number> = {};
+const EMPTY_TRADE_QTY: Record<string, number> = {};
 
 export function CardGrid({
   cards,
@@ -1142,6 +1205,13 @@ export function CardGrid({
   gradingByMasterCardId,
   groupBySet = false,
   collectedCountBySetCode,
+  tradePickMode = false,
+  tradeSelectedQtyByEntryId = EMPTY_TRADE_QTY,
+  onTradePickEntry,
+  /** When true, the tile grid is not rendered (modal-only: use with a single-card `cards` array opened via `hideGrid`). */
+  hideGrid = false,
+  /** Called after the card viewer modal is dismissed (backdrop, close, swipe). */
+  onModalClose,
 }: {
   cards: CardEntry[];
   setLogosByCode?: Record<string, string>;
@@ -1162,6 +1232,12 @@ export function CardGrid({
   groupBySet?: boolean;
   /** When provided, shows "X collected" in grouped set headers */
   collectedCountBySetCode?: Record<string, number>;
+  /** Shared collection trade wizard: tap tiles to cycle quantity instead of opening the modal */
+  tradePickMode?: boolean;
+  tradeSelectedQtyByEntryId?: Record<string, number>;
+  onTradePickEntry?: (entryId: string, card: CardEntry, maxQty: number) => void;
+  hideGrid?: boolean;
+  onModalClose?: () => void;
 }) {
   const router = useRouter();
   const allowMutations = Boolean(customerLoggedIn && !readOnly);
@@ -1337,6 +1413,18 @@ export function CardGrid({
     setSelectedIndex(index);
   }, []);
 
+  const hideGridAutoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (!hideGrid) {
+      hideGridAutoOpenedRef.current = false;
+      return;
+    }
+    if (hideGridAutoOpenedRef.current) return;
+    if (normalizedCards.length === 0) return;
+    hideGridAutoOpenedRef.current = true;
+    openModal(0);
+  }, [hideGrid, normalizedCards, openModal]);
+
   const closeModal = useCallback(() => {
     setAddSheetOpen(false);
     setSelectedIndex(null);
@@ -1344,7 +1432,8 @@ export function CardGrid({
     setNationalDexStrip([]);
     setNationalDexStripLoading(false);
     setNationalDexStripError(false);
-  }, []);
+    onModalClose?.();
+  }, [onModalClose]);
 
   const goLogin = useCallback(() => {
     router.push("/login");
@@ -3193,6 +3282,7 @@ export function CardGrid({
     );
 
   const gridContent = (() => {
+    if (hideGrid) return null;
     if (!groupBySet) {
       return (
         <ul className="grid grid-cols-3 gap-2 md:grid-cols-5 md:gap-3 lg:grid-cols-7">
@@ -3212,7 +3302,7 @@ export function CardGrid({
                 : false;
             return (
               <CardGridItem
-                key={card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
+                key={card.collectionEntryId ?? card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
                 card={card}
                 index={index}
                 variant={variant}
@@ -3223,6 +3313,11 @@ export function CardGrid({
                 gradedImageSrc={gradedImageSrc}
                 onOpen={openModal}
                 viewerOwnsOnWishlist={viewerOwnsOnWishlist}
+                tradePickMode={tradePickMode}
+                tradeSelectedQty={
+                  card.collectionEntryId ? tradeSelectedQtyByEntryId[card.collectionEntryId] ?? 0 : 0
+                }
+                onTradePick={onTradePickEntry}
               />
             );
           })}
@@ -3315,7 +3410,7 @@ export function CardGrid({
                       : false;
                   return (
                     <CardGridItem
-                      key={card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${globalIndex}`}
+                      key={card.collectionEntryId ?? card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${globalIndex}`}
                       card={card}
                       index={globalIndex}
                       variant={variant}
@@ -3326,6 +3421,11 @@ export function CardGrid({
                       gradedImageSrc={gradedImageSrc}
                       onOpen={openModal}
                       viewerOwnsOnWishlist={viewerOwnsOnWishlist}
+                      tradePickMode={tradePickMode}
+                      tradeSelectedQty={
+                        card.collectionEntryId ? tradeSelectedQtyByEntryId[card.collectionEntryId] ?? 0 : 0
+                      }
+                      onTradePick={onTradePickEntry}
                     />
                   );
                 })}

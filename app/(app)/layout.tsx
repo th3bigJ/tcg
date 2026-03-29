@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { DevRuntimeGuards } from "@/app/(app)/DevRuntimeGuards";
 import { BottomNav } from "@/components/BottomNav";
 import { getCurrentCustomer } from "@/lib/auth";
 
@@ -53,6 +54,7 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <DevRuntimeGuards />
         <div className="relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)]">
           {children}
         </div>

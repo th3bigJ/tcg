@@ -209,27 +209,77 @@ export async function getActiveShareForRecipient(
   | { ok: true; share: CustomerProfileShareRow; owner: CustomerPublic }
   | { ok: false; reason: "not_found" }
 > {
+  const resolved = await getActiveShareForParticipant(shareId, recipientCustomerId);
+  if (!resolved.ok) return { ok: false, reason: "not_found" };
+  return {
+    ok: true,
+    share: resolved.share,
+    owner: resolved.owner,
+  };
+}
+
+/** Either the share owner or the accepted recipient can open an active share link (e.g. trades). */
+export async function getActiveShareForParticipant(
+  shareId: string,
+  customerId: string,
+): Promise<
+  | {
+      ok: true;
+      share: CustomerProfileShareRow;
+      owner: CustomerPublic;
+      recipient: CustomerPublic | null;
+      otherParty: CustomerPublic;
+      viewerIsOwner: boolean;
+    }
+  | { ok: false; reason: "not_found" }
+> {
   const supabase = await createSupabaseServerClient();
-  const rid = Number.parseInt(recipientCustomerId, 10);
+  const cid = Number.parseInt(customerId, 10);
+  if (!Number.isFinite(cid)) return { ok: false, reason: "not_found" };
+
   const { data, error } = await supabase
     .from("customer_profile_shares")
     .select("*")
     .eq("id", shareId)
-    .eq("recipient_customer_id", rid)
     .eq("status", "active")
     .maybeSingle();
 
   if (error || !data) return { ok: false, reason: "not_found" };
 
   const share = mapShareRow(data as Record<string, unknown>);
-  const { data: owner } = await supabase
+  const isOwner = share.ownerCustomerId === cid;
+  const isRecipient = share.recipientCustomerId === cid;
+  if (!isOwner && !isRecipient) return { ok: false, reason: "not_found" };
+
+  const { data: ownerRow } = await supabase
     .from("customers")
     .select("id, email, first_name, last_name")
     .eq("id", share.ownerCustomerId)
-    .single();
+    .maybeSingle();
+  if (!ownerRow) return { ok: false, reason: "not_found" };
+  const owner = mapCustomer(ownerRow as Record<string, unknown>);
 
-  if (!owner) return { ok: false, reason: "not_found" };
-  return { ok: true, share, owner: mapCustomer(owner as Record<string, unknown>) };
+  let recipient: CustomerPublic | null = null;
+  if (share.recipientCustomerId !== null) {
+    const { data: recRow } = await supabase
+      .from("customers")
+      .select("id, email, first_name, last_name")
+      .eq("id", share.recipientCustomerId)
+      .maybeSingle();
+    if (recRow) recipient = mapCustomer(recRow as Record<string, unknown>);
+  }
+
+  const otherParty: CustomerPublic | null = isOwner ? recipient : owner;
+  if (!otherParty) return { ok: false, reason: "not_found" };
+
+  return {
+    ok: true,
+    share,
+    owner,
+    recipient,
+    otherParty,
+    viewerIsOwner: isOwner,
+  };
 }
 
 export async function acceptProfileShare(

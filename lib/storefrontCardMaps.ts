@@ -331,6 +331,23 @@ export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): S
   return out;
 }
 
+/**
+ * One grid row per collection line (not merged), so each tile has a stable {@link StorefrontCardEntry.collectionEntryId}
+ * for trade selection.
+ */
+export function storefrontEntriesToTradeGridCards(entries: StorefrontCardEntry[]): StorefrontCardEntry[] {
+  const out: StorefrontCardEntry[] = [];
+  for (const e of entries) {
+    if (!e.masterCardId || !e.collectionEntryId) continue;
+    out.push({
+      ...e,
+      collectionGroupKey: collectionGroupKeyFromEntry(e),
+      quantity: collectionLineQuantity(e),
+    });
+  }
+  return out;
+}
+
 export function mapCustomerWishlistRow(row: Record<string, unknown>, conditionName?: string): StorefrontCardEntry | null {
   const masterCardId = typeof row.master_card_id === "string" ? row.master_card_id.trim() : "";
   if (!masterCardId) return null;

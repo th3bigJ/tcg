@@ -33,6 +33,10 @@ type CollectCardGridWithTagsProps = {
   viewerOwnedMasterCardIds?: Set<string>;
   /** When true with viewerOwnedMasterCardIds, show “Cards I own” filter on wishlist */
   sharedWishlistOwnedFilter?: boolean;
+  /** Trade wizard: tap tiles to select line quantities */
+  tradePickMode?: boolean;
+  tradeSelectedQtyByEntryId?: Record<string, number>;
+  onTradePickEntry?: (entryId: string, card: CardEntry, maxQty: number) => void;
 };
 
 export function CollectCardGridWithTags({
@@ -50,6 +54,9 @@ export function CollectCardGridWithTags({
   collectionSectionTitle,
   viewerOwnedMasterCardIds,
   sharedWishlistOwnedFilter = false,
+  tradePickMode = false,
+  tradeSelectedQtyByEntryId,
+  onTradePickEntry,
 }: CollectCardGridWithTagsProps) {
   const [groupBySet, setGroupBySet] = useState(false);
   const [search, setSearch] = useState("");
@@ -141,29 +148,17 @@ export function CollectCardGridWithTags({
     viewerOwnedMasterCardIds,
   ]);
 
+  const ownedFilterTag =
+    sharedWishlistOwnedFilter && variant === "wishlist" && viewerOwnedMasterCardIds
+      ? {
+          active: ownedFilterOnly,
+          onToggle: () => setOwnedFilterOnly((v) => !v),
+        }
+      : undefined;
+
   return (
     <div className="px-4">
-      {sharedWishlistOwnedFilter && variant === "wishlist" && viewerOwnedMasterCardIds ? (
-        <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 px-3 py-2.5">
-          <span className="text-sm font-medium text-[var(--foreground)]">Cards I own</span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={ownedFilterOnly}
-            onClick={() => setOwnedFilterOnly((v) => !v)}
-            className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-              ownedFilterOnly ? "bg-emerald-600" : "bg-[var(--foreground)]/20"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-[var(--background)] shadow transition ${
-                ownedFilterOnly ? "translate-x-5" : "translate-x-0"
-              }`}
-            />
-          </button>
-        </div>
-      ) : null}
-      <div className="mb-4">
+      <div className="mb-6">
         <CardTagFilterRow
           groupBySet={groupBySet}
           onGroupBySetChange={setGroupBySet}
@@ -184,7 +179,9 @@ export function CollectCardGridWithTags({
             value: sortOrder,
             onChange: (v) => setSortOrder(v as SortOrder),
             options: SORT_OPTIONS,
+            defaultValue: "price-desc",
           }}
+          ownedFilterTag={ownedFilterTag}
         />
       </div>
       <CardGrid
@@ -204,6 +201,9 @@ export function CollectCardGridWithTags({
         gradingByMasterCardId={gradingByMasterCardId}
         groupBySet={groupBySet}
         collectedCountBySetCode={groupBySet ? collectedCountBySetCode : undefined}
+        tradePickMode={tradePickMode}
+        tradeSelectedQtyByEntryId={tradeSelectedQtyByEntryId}
+        onTradePickEntry={onTradePickEntry}
       />
     </div>
   );
