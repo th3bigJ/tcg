@@ -44,6 +44,28 @@ export type CollectionLineSummary = {
 
 export type StorefrontCardEntry = CardsPageCardEntry & StorefrontCardExtras;
 
+/** Whole-copy count for a collection row or merged tile (matches grid ×N and merge totals). */
+export function collectionLineQuantity(e: Pick<StorefrontCardEntry, "quantity">): number {
+  const q = e.quantity;
+  if (typeof q === "number" && Number.isFinite(q) && q >= 1) return Math.max(1, Math.floor(q));
+  return 1;
+}
+
+/** Sum of whole-copy counts from raw DB rows (before merge). */
+export function collectionCopyTotalFromEntries(entries: StorefrontCardEntry[]): number {
+  return entries.reduce((sum, e) => sum + collectionLineQuantity(e), 0);
+}
+
+/** Sum of {@link collectionLineQuantity} on merged grid rows — matches sum of copy counts shown on tiles (×N). */
+export function totalCopiesFromMergedGrid(merged: StorefrontCardEntry[]): number {
+  return merged.reduce((sum, row) => sum + collectionLineQuantity(row), 0);
+}
+
+/** Invariant: merging by variant+condition does not change total copy count. */
+export function collectionCopyTotalsMatch(entries: StorefrontCardEntry[], merged: StorefrontCardEntry[]): boolean {
+  return collectionCopyTotalFromEntries(entries) === totalCopiesFromMergedGrid(merged);
+}
+
 export function fetchItemConditionOptions(): { id: string; name: string }[] {
   return ITEM_CONDITIONS.map((c) => ({ id: c.id, name: c.name }));
 }
@@ -296,8 +318,7 @@ export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): S
     const first = group[0]!;
     let total = 0;
     for (const x of group) {
-      const q = typeof x.quantity === "number" && Number.isFinite(x.quantity) && x.quantity >= 1 ? x.quantity : 1;
-      total += q;
+      total += collectionLineQuantity(x);
     }
     out.push({
       ...first,

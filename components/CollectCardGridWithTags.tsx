@@ -46,6 +46,7 @@ export function CollectCardGridWithTags({
   const [rarity, setRarity] = useState("");
   const [category, setCategory] = useState("");
   const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(false);
+  const [duplicatesOnly, setDuplicatesOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>("price-desc");
 
   // Count unique cards per set from the full unfiltered list
@@ -82,6 +83,7 @@ export function CollectCardGridWithTags({
       if (rarity && card.rarity !== rarity) return false;
       if (category && card.category !== category) return false;
       if (excludeCommonUncommon && COMMON_UNCOMMON.has(card.rarity)) return false;
+      if (duplicatesOnly && (card.quantity ?? 1) <= 1) return false;
       return true;
     });
 
@@ -104,7 +106,7 @@ export function CollectCardGridWithTags({
     }
 
     return result;
-  }, [cards, search, rarity, category, excludeCommonUncommon, sortOrder, cardPricesByMasterCardId]);
+  }, [cards, search, rarity, category, excludeCommonUncommon, duplicatesOnly, sortOrder, cardPricesByMasterCardId]);
 
   return (
     <div className="px-4">
@@ -122,6 +124,8 @@ export function CollectCardGridWithTags({
             categoryOptions,
             excludeCommonUncommon,
             onExcludeCommonUncommonChange: setExcludeCommonUncommon,
+            duplicatesOnly: variant === "collection" ? duplicatesOnly : undefined,
+            onDuplicatesOnlyChange: variant === "collection" ? setDuplicatesOnly : undefined,
           }}
           sortControl={{
             value: sortOrder,

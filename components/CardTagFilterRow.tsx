@@ -73,6 +73,8 @@ export type CardTagFilterRowProps = {
     categoryOptions: string[];
     excludeCommonUncommon: boolean;
     onExcludeCommonUncommonChange: (value: boolean) => void;
+    duplicatesOnly?: boolean;
+    onDuplicatesOnlyChange?: (value: boolean) => void;
   };
 
   /** Sort control — works for both local and URL-driven pages */
@@ -109,7 +111,12 @@ export function CardTagFilterRow({ groupBySet, onGroupBySetChange, localSearch, 
   const hasActiveFilters = sf
     ? Boolean(sf.activeRarity || sf.activeCategory || sf.excludeCommonUncommon)
     : localFilters
-      ? Boolean(localFilters.rarity || localFilters.category || localFilters.excludeCommonUncommon)
+      ? Boolean(
+          localFilters.rarity ||
+          localFilters.category ||
+          localFilters.excludeCommonUncommon ||
+          localFilters.duplicatesOnly,
+        )
       : false;
 
   return (
@@ -241,6 +248,7 @@ export function CardTagFilterRow({ groupBySet, onGroupBySetChange, localSearch, 
               localFilters.onRarityChange("");
               localFilters.onCategoryChange("");
               localFilters.onExcludeCommonUncommonChange(false);
+              localFilters.onDuplicatesOnlyChange?.(false);
             }}
             className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-400/40 bg-red-500/12 px-3 py-1.5 text-xs font-medium text-red-400 transition hover:bg-red-500/20 active:scale-95"
           >
@@ -355,6 +363,14 @@ export function CardTagFilterRow({ groupBySet, onGroupBySetChange, localSearch, 
               active={localFilters.excludeCommonUncommon}
               onClick={() => localFilters.onExcludeCommonUncommonChange(!localFilters.excludeCommonUncommon)}
             />
+
+            {typeof localFilters.duplicatesOnly === "boolean" && localFilters.onDuplicatesOnlyChange ? (
+              <TagButton
+                label="Duplicates only"
+                active={localFilters.duplicatesOnly}
+                onClick={() => localFilters.onDuplicatesOnlyChange(!localFilters.duplicatesOnly)}
+              />
+            ) : null}
           </>
         ) : null}
 

@@ -12,6 +12,7 @@ import {
   fetchItemConditionOptions,
   groupCollectionLinesByGroupKey,
   mergeCollectionEntriesForGrid,
+  totalCopiesFromMergedGrid,
 } from "@/lib/storefrontCardMaps";
 import { fetchCollectionCardEntries, fetchWishlistIdsByMasterCard } from "@/lib/storefrontCardMapsServer";
 
@@ -96,14 +97,8 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
         )
       : null;
 
-  const totalCopies = entries.reduce((sum, e) => {
-    const q =
-      typeof e.quantity === "number" && Number.isFinite(e.quantity) && e.quantity >= 1
-        ? Math.floor(e.quantity)
-        : 1;
-    return sum + q;
-  }, 0);
   const uniqueCatalogCards = allCardsForGrid.length;
+  const totalCopies = totalCopiesFromMergedGrid(allCardsForGrid);
   const collectionCountLabel =
     totalCopies === 0
       ? null

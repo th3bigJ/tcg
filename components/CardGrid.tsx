@@ -1048,11 +1048,6 @@ const CardGridItem = memo(function CardGridItem({
   return (
     <li ref={liRef} className="card-grid-item flex flex-col">
       <div className="group relative aspect-[3/4] overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 shadow-sm transition hover:border-[var(--foreground)]/20 hover:shadow-md">
-        {variant === "collection" && (card.quantity ?? 1) > 1 ? (
-          <span className="pointer-events-none absolute left-1 top-1 z-[5] rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">
-            ×{card.quantity}
-          </span>
-        ) : null}
         <div className="pointer-events-none absolute inset-0">
           <img
             src={gradedImageSrc ?? card.lowSrc}
@@ -1071,21 +1066,28 @@ const CardGridItem = memo(function CardGridItem({
         />
       </div>
       <div className="relative mt-1">
-        {card.cardName ? (
-          <span className="block line-clamp-1 text-center text-[10px] font-medium text-[var(--foreground)]/80">
-            {card.cardName}
+        {variant === "collection" && (card.quantity ?? 1) > 1 ? (
+          <span className="absolute left-0 top-0 inline-flex rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">
+            ×{card.quantity}
           </span>
         ) : null}
-        {unitPrice !== null ? (
-          <span className="block mt-0.5 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
-            {gradingLabel
-              ? <span title={gradingLabel}>🏆 {gradingLabel} · </span>
-              : isManualPrice
-                ? <span title="Manually set price">✎ </span>
-                : null
-            }{formatMoneyGbp(unitPrice)}
-          </span>
-        ) : null}
+        <div className="min-w-0">
+          {card.cardName ? (
+            <span className="block line-clamp-1 text-center text-[10px] font-medium text-[var(--foreground)]/80">
+              {card.cardName}
+            </span>
+          ) : null}
+          {unitPrice !== null ? (
+            <span className="block mt-0.5 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
+              {gradingLabel
+                ? <span title={gradingLabel}>🏆 {gradingLabel} · </span>
+                : isManualPrice
+                  ? <span title="Manually set price">✎ </span>
+                  : null
+              }{formatMoneyGbp(unitPrice)}
+            </span>
+          ) : null}
+        </div>
         {owned && variant === "browse" ? (
           <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500">
             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
