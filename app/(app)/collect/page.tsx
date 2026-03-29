@@ -5,6 +5,7 @@ import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCurrentCustomer } from "@/lib/auth";
 import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
+import { sortCollectGridRowsByPriceDesc } from "@/lib/collectGridSort";
 import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
 import {
   collectionGroupKeyFromEntry,
@@ -65,8 +66,6 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
     }
   }
   const allCardsForGrid = mergeCollectionEntriesForGrid(entries);
-  const cardsForClient = allCardsForGrid.slice(0, take);
-  const totalCards = allCardsForGrid.length;
 
   const setFilterOptions = await getCachedSetFilterOptions((facets ?? {}).setCodes ?? []);
   const setLogosByCode = Object.fromEntries(
@@ -82,6 +81,14 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
   ]);
   const cardPricesByMasterCardId = pricesResult.prices;
   const manualPriceMasterCardIds = pricesResult.manualPriceIds;
+
+  const allCardsSortedByPrice =
+    allCardsForGrid.length > 0
+      ? sortCollectGridRowsByPriceDesc(allCardsForGrid, cardPricesByMasterCardId)
+      : allCardsForGrid;
+  const cardsForClient = allCardsSortedByPrice.slice(0, take);
+  const totalCards = allCardsForGrid.length;
+
   const valueFormatted =
     collectionValue && collectionValue.totalGbp > 0
       ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(

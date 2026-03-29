@@ -5,6 +5,7 @@ import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCurrentCustomer } from "@/lib/auth";
 import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
+import { sortCollectGridRowsByPriceDesc } from "@/lib/collectGridSort";
 import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
 import {
   collectionGroupKeyFromEntry,
@@ -82,6 +83,14 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
       : Promise.resolve({ prices: {}, manualPriceIds: new Set<string>() }),
   ]);
   const cardPricesByMasterCardId = pricesResult.prices;
+
+  const allCardsSortedByPrice =
+    allCardsForGrid.length > 0
+      ? sortCollectGridRowsByPriceDesc(allCardsForGrid, cardPricesByMasterCardId)
+      : allCardsForGrid;
+  const cardsForClient = allCardsSortedByPrice.slice(0, take);
+  const totalCards = allCardsForGrid.length;
+
   const valueFormatted =
     wishlistValue && wishlistValue.totalGbp > 0
       ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(
@@ -89,8 +98,6 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
         )
       : null;
 
-  const cardsForClient = allCardsForGrid.slice(0, take);
-  const totalCards = allCardsForGrid.length;
   const showingCount = cardsForClient.length;
   const nextTake = Math.min(totalCards, showingCount + LOAD_MORE_STEP);
   const canLoadMore = showingCount > 0 && showingCount < totalCards;
