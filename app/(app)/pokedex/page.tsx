@@ -1,9 +1,7 @@
-import Link from "next/link";
-
 import { getCachedPokemonFilterOptions } from "@/lib/cardsFilterOptionsServer";
-import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 import { getCurrentCustomer } from "@/lib/auth";
-import { fetchCollectionCardEntries } from "@/lib/storefrontCardMaps";
+import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
+import { PokedexList } from "@/components/PokedexList";
 
 const TOTAL_POKEMON_COUNT = 1025;
 
@@ -34,29 +32,7 @@ export default async function PokedexPage() {
       ) : (
         <div className="mb-4" aria-hidden />
       )}
-      <ul className="grid grid-cols-3 gap-3 sm:gap-4">
-        {pokemon.map((item) => (
-          <li key={item.nationalDexNumber}>
-            <Link
-              href={`/pokedex/${item.nationalDexNumber}`}
-              prefetch={false}
-              className="flex flex-col items-center gap-2 rounded-xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-2 py-3 text-center shadow-sm transition hover:border-[var(--foreground)]/22 hover:bg-[var(--foreground)]/8 active:opacity-90"
-              aria-label={`View cards for ${item.name}`}
-            >
-              <img
-                src={normalizePokemonImageSrc(item.imageUrl)}
-                alt=""
-                className="h-14 w-14 object-contain sm:h-16 sm:w-16"
-                loading="lazy"
-                decoding="async"
-              />
-              <span className="line-clamp-2 text-[11px] font-semibold leading-snug sm:text-xs">
-                {item.name}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <PokedexList pokemon={pokemon} collectedDexIds={collectedDexIds} />
     </main>
   );
 }

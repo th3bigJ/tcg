@@ -25,6 +25,8 @@ type CollectCardGridWithTagsProps = {
   wishlistEntryIdsByMasterCardId: Record<string, { id: string; printing?: string }>;
   collectionLinesByMasterCardId: Record<string, CollectionLineSummary[]>;
   cardPricesByMasterCardId: Record<string, number>;
+  manualPriceMasterCardIds?: Set<string>;
+  gradingByMasterCardId?: Record<string, { company: string; grade: string; imageUrl?: string }>;
 };
 
 export function CollectCardGridWithTags({
@@ -36,13 +38,15 @@ export function CollectCardGridWithTags({
   wishlistEntryIdsByMasterCardId,
   collectionLinesByMasterCardId,
   cardPricesByMasterCardId,
+  manualPriceMasterCardIds,
+  gradingByMasterCardId,
 }: CollectCardGridWithTagsProps) {
   const [groupBySet, setGroupBySet] = useState(false);
   const [search, setSearch] = useState("");
   const [rarity, setRarity] = useState("");
   const [category, setCategory] = useState("");
   const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(false);
-  const [sortOrder, setSortOrder] = useState<SortOrder>("");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("price-desc");
 
   // Count unique cards per set from the full unfiltered list
   const collectedCountBySetCode = useMemo(() => {
@@ -83,8 +87,10 @@ export function CollectCardGridWithTags({
 
     if (sortOrder === "price-desc") {
       result = [...result].sort((a, b) => {
-        const pa = (a.masterCardId ? cardPricesByMasterCardId[a.masterCardId] : undefined) ?? 0;
-        const pb = (b.masterCardId ? cardPricesByMasterCardId[b.masterCardId] : undefined) ?? 0;
+        const ka = a.collectionGroupKey ?? a.masterCardId ?? "";
+        const kb = b.collectionGroupKey ?? b.masterCardId ?? "";
+        const pa = (ka ? cardPricesByMasterCardId[ka] : undefined) ?? 0;
+        const pb = (kb ? cardPricesByMasterCardId[kb] : undefined) ?? 0;
         return pb - pa;
       });
     } else if (sortOrder === "release-desc") {
@@ -134,6 +140,8 @@ export function CollectCardGridWithTags({
         wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
         collectionLinesByMasterCardId={collectionLinesByMasterCardId}
         cardPricesByMasterCardId={cardPricesByMasterCardId}
+        manualPriceMasterCardIds={manualPriceMasterCardIds}
+        gradingByMasterCardId={gradingByMasterCardId}
         groupBySet={groupBySet}
         collectedCountBySetCode={groupBySet ? collectedCountBySetCode : undefined}
       />

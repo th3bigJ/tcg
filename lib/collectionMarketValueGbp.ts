@@ -1,4 +1,4 @@
-import type { StorefrontCardEntry } from "@/lib/storefrontCardMaps";
+import { type StorefrontCardEntry, collectionGroupKeyFromEntry } from "@/lib/storefrontCardMaps";
 import { getPricingForSet, getPricingForCard } from "@/lib/r2Pricing";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import { getTcgplayerVariantBlock } from "@/lib/tcgdexMarketLinks";
@@ -70,22 +70,26 @@ function estimateUnitGbpFromPricing(
 }
 
 /**
- * Returns a map of masterCardId → unit price in GBP for display under each card.
+ * Returns a map of {@link collectionGroupKeyFromEntry} → unit price in GBP for display under each card,
+ * plus a set of those keys whose price came from a manual entry (graded/unlisted).
  */
 export async function estimateCardUnitPricesGbp(
   entries: StorefrontCardEntry[],
-): Promise<Record<string, number>> {
+): Promise<{ prices: Record<string, number>; manualPriceIds: Set<string> }> {
   const multipliers = await fetchGbpConversionMultipliers();
   const out: Record<string, number> = {};
+  const manualPriceIds = new Set<string>();
 
-  // Group by setCode to minimise R2 fetches
+  // Group by setCode to minimise R2 fetches (one row per distinct variant + condition + grade)
   const bySet = new Map<string, StorefrontCardEntry[]>();
   const seen = new Set<string>();
   for (const e of entries) {
     const mid = e.masterCardId?.trim();
     const setCode = e.set?.trim();
-    if (!mid || !setCode || seen.has(mid)) continue;
-    seen.add(mid);
+    if (!mid || !setCode) continue;
+    const gk = collectionGroupKeyFromEntry(e);
+    if (seen.has(gk)) continue;
+    seen.add(gk);
     if (!bySet.has(setCode)) bySet.set(setCode, []);
     bySet.get(setCode)!.push(e);
   }
@@ -93,21 +97,35 @@ export async function estimateCardUnitPricesGbp(
   await Promise.all(
     [...bySet.entries()].map(async ([setCode, cardEntries]) => {
       const pricingMap = await getPricingForSet(setCode);
-      if (!pricingMap) return;
       for (const e of cardEntries) {
         const mid = e.masterCardId?.trim();
         const ext = e.externalId?.trim();
+        const gk = collectionGroupKeyFromEntry(e);
         if (!mid || !ext) continue;
-        const fallback = e.legacyExternalId?.trim() ? [e.legacyExternalId.trim()] : undefined;
-        const entry = getPricingForCard(pricingMap, ext, fallback);
-        if (!entry) continue;
-        const price = estimateUnitGbpFromPricing(entry.tcgplayer, entry.cardmarket, entry.scrydex, multipliers, e.printing);
-        if (price !== null) out[mid] = price;
+        // Graded/unlisted manual prices always take priority over scraped pricing
+        if (e.gradedMarketPrice !== undefined) {
+          out[gk] = e.gradedMarketPrice;
+          manualPriceIds.add(gk);
+          continue;
+        }
+        if (e.unlistedPrice !== undefined) {
+          out[gk] = e.unlistedPrice;
+          manualPriceIds.add(gk);
+          continue;
+        }
+        if (pricingMap) {
+          const fallback = e.legacyExternalId?.trim() ? [e.legacyExternalId.trim()] : undefined;
+          const entry = getPricingForCard(pricingMap, ext, fallback);
+          if (entry) {
+            const price = estimateUnitGbpFromPricing(entry.tcgplayer, entry.cardmarket, entry.scrydex, multipliers, e.printing);
+            if (price !== null) out[gk] = price;
+          }
+        }
       }
     }),
   );
 
-  return out;
+  return { prices: out, manualPriceIds };
 }
 
 export type CollectionMarketValueResult = {
@@ -128,7 +146,7 @@ export async function estimateCollectionMarketValueGbp(
   type RowKey = string;
   const rowMap = new Map<
     RowKey,
-    { quantity: number; externalId: string; printing?: string; legacyExternalId?: string; setCode: string }
+    { quantity: number; externalId: string; printing?: string; legacyExternalId?: string; setCode: string; manualPrice?: number }
   >();
   let rowsWithoutExternalId = 0;
 
@@ -145,12 +163,13 @@ export async function estimateCollectionMarketValueGbp(
     }
     const printing = e.printing?.trim() || e.targetPrinting?.trim() || undefined;
     const legacyExternalId = e.legacyExternalId?.trim() || undefined;
+    const manualPrice = e.gradedMarketPrice ?? e.unlistedPrice;
     const key: RowKey = `${ext}::${printing ?? ""}`;
     const prev = rowMap.get(key);
     if (prev) {
       rowMap.set(key, { ...prev, quantity: prev.quantity + q });
     } else {
-      rowMap.set(key, { quantity: q, externalId: ext, printing, legacyExternalId, setCode });
+      rowMap.set(key, { quantity: q, externalId: ext, printing, legacyExternalId, setCode, manualPrice });
     }
   }
 
@@ -174,7 +193,12 @@ export async function estimateCollectionMarketValueGbp(
       for (const key of keys) {
         const row = rowMap.get(key)!;
         if (!pricingMap) {
-          unitByKey.set(key, null);
+          unitByKey.set(key, row.manualPrice ?? null);
+          continue;
+        }
+        // Graded/unlisted manual prices always take priority over scraped pricing
+        if (row.manualPrice !== undefined) {
+          unitByKey.set(key, row.manualPrice);
           continue;
         }
         const fallback = row.legacyExternalId ? [row.legacyExternalId] : undefined;
@@ -193,8 +217,9 @@ export async function estimateCollectionMarketValueGbp(
   let missingPriceForId = 0;
 
   for (const key of rowKeys) {
-    const qty = rowMap.get(key)?.quantity ?? 0;
-    const unit = unitByKey.get(key) ?? null;
+    const row = rowMap.get(key);
+    const qty = row?.quantity ?? 0;
+    const unit = unitByKey.get(key) ?? row?.manualPrice ?? null;
     if (unit === null) {
       missingPriceForId += 1;
       continue;

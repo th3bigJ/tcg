@@ -4,7 +4,7 @@ import {
   groupExpansionSetsBySeries,
 } from "@/lib/expansionsPageQueries";
 import { getCurrentCustomer } from "@/lib/auth";
-import { fetchCollectionCardEntries } from "@/lib/storefrontCardMaps";
+import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 
 export default async function ExpansionsPage() {
   const [rows, customer] = await Promise.all([getCachedExpansionSetRows(), getCurrentCustomer()]);

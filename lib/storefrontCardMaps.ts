@@ -1,10 +1,12 @@
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
+import { resolveMediaURL } from "@/lib/media";
 import { getCardMapById } from "@/lib/staticCardIndex";
 import { getAllSets } from "@/lib/staticCards";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { ITEM_CONDITIONS, getItemConditionName } from "@/lib/referenceData";
+import { ITEM_CONDITIONS } from "@/lib/referenceData";
 
 export type StorefrontCardExtras = {
+  /** Stable key for collection line(s): variant + condition + grade. Set on merged collection grid rows. */
+  collectionGroupKey?: string;
   collectionEntryId?: string;
   wishlistEntryId?: string;
   conditionLabel?: string;
@@ -15,14 +17,29 @@ export type StorefrontCardExtras = {
   targetConditionId?: string;
   targetPrinting?: string;
   addedAt?: string;
+  conditionId?: string;
+  gradedMarketPrice?: number;
+  unlistedPrice?: number;
+  gradingCompany?: string;
+  gradeValue?: string;
+  gradedImageUrl?: string;
+  gradedSerial?: string;
 };
 
 export type CollectionLineSummary = {
   entryId: string;
   quantity: number;
+  conditionId?: string;
   conditionLabel: string;
   printing: string;
   language: string;
+  addedAt?: string;
+  gradingCompany?: string;
+  gradeValue?: string;
+  gradedMarketPrice?: number;
+  unlistedPrice?: number;
+  gradedImageUrl?: string;
+  gradedSerial?: string;
 };
 
 export type StorefrontCardEntry = CardsPageCardEntry & StorefrontCardExtras;
@@ -109,21 +126,65 @@ export function mapCustomerCollectionRow(row: Record<string, unknown>, condition
   if (!base) return null;
 
   const entryId = row.id != null ? String(row.id) : "";
+  const conditionId = typeof row.condition_id === "string" && row.condition_id.trim() ? row.condition_id.trim() : undefined;
   const conditionLabel = conditionName ?? "";
   const qty = typeof row.quantity === "number" && Number.isFinite(row.quantity) ? row.quantity : 1;
   const printing = typeof row.printing === "string" && row.printing.trim() ? row.printing.trim() : undefined;
   const language = typeof row.language === "string" && row.language.trim() ? row.language.trim() : undefined;
   const addedAt = typeof row.added_at === "string" && row.added_at ? row.added_at : undefined;
+  const gradedMarketPrice = typeof row.graded_market_price === "number" && Number.isFinite(row.graded_market_price) ? row.graded_market_price : undefined;
+  const unlistedPrice = typeof row.unlisted_price === "number" && Number.isFinite(row.unlisted_price) ? row.unlisted_price : undefined;
+  const gradingCompany = typeof row.grading_company === "string" && row.grading_company && row.grading_company !== "none" ? row.grading_company : undefined;
+  const gradeValue = typeof row.grade_value === "string" && row.grade_value ? row.grade_value : undefined;
+  const gradedImageRaw = typeof row.graded_image === "string" && row.graded_image ? row.graded_image : undefined;
+  const gradedImageUrl = gradedImageRaw ? resolveMediaURL(gradedImageRaw) : undefined;
+  const gradedSerial = typeof row.graded_serial === "string" && row.graded_serial.trim() ? row.graded_serial.trim() : undefined;
 
   return {
     ...base,
     ...(entryId ? { collectionEntryId: entryId } : {}),
+    ...(conditionId ? { conditionId } : {}),
     ...(conditionLabel ? { conditionLabel } : {}),
     ...(printing ? { printing } : {}),
     ...(language ? { language } : {}),
     ...(addedAt ? { addedAt } : {}),
+    ...(gradedMarketPrice !== undefined ? { gradedMarketPrice } : {}),
+    ...(unlistedPrice !== undefined ? { unlistedPrice } : {}),
+    ...(gradingCompany !== undefined ? { gradingCompany } : {}),
+    ...(gradeValue !== undefined ? { gradeValue } : {}),
+    ...(gradedImageUrl !== undefined ? { gradedImageUrl } : {}),
+    ...(gradedSerial !== undefined ? { gradedSerial } : {}),
     quantity: qty,
   };
+}
+
+/** Groups lines by catalog card + printing + condition + grade (not by master id alone). */
+export function collectionGroupKeyFromEntry(
+  e: Pick<
+    StorefrontCardEntry,
+    "masterCardId" | "conditionLabel" | "printing" | "language" | "gradingCompany" | "gradeValue" | "targetPrinting"
+  >,
+): string {
+  const mid = e.masterCardId?.trim() ?? "";
+  const printing = e.printing?.trim() || e.targetPrinting?.trim() || "Standard";
+  const conditionLabel = e.conditionLabel?.trim() ? e.conditionLabel.trim() : "—";
+  const language = e.language?.trim() ? e.language.trim() : "English";
+  const gc = e.gradingCompany?.trim() ?? "";
+  const gv = e.gradeValue?.trim() ?? "";
+  return `${mid}|${printing}|${conditionLabel}|${language}|${gc}|${gv}`;
+}
+
+export function collectionGroupKeyFromLine(
+  masterCardId: string,
+  line: Pick<CollectionLineSummary, "conditionLabel" | "printing" | "language" | "gradingCompany" | "gradeValue">,
+): string {
+  const mid = masterCardId.trim();
+  const printing = line.printing?.trim() ? line.printing.trim() : "Standard";
+  const conditionLabel = line.conditionLabel?.trim() ? line.conditionLabel.trim() : "—";
+  const language = line.language?.trim() ? line.language.trim() : "English";
+  const gc = line.gradingCompany?.trim() ?? "";
+  const gv = line.gradeValue?.trim() ?? "";
+  return `${mid}|${printing}|${conditionLabel}|${language}|${gc}|${gv}`;
 }
 
 export function groupCollectionLinesByMasterCardId(
@@ -137,9 +198,17 @@ export function groupCollectionLinesByMasterCardId(
     const line: CollectionLineSummary = {
       entryId,
       quantity: typeof e.quantity === "number" && Number.isFinite(e.quantity) && e.quantity >= 1 ? e.quantity : 1,
+      ...(e.conditionId ? { conditionId: e.conditionId } : {}),
       conditionLabel: e.conditionLabel?.trim() ? e.conditionLabel.trim() : "—",
       printing: e.printing?.trim() ? e.printing.trim() : "Standard",
       language: e.language?.trim() ? e.language.trim() : "English",
+      ...(e.addedAt ? { addedAt: e.addedAt } : {}),
+      ...(e.gradingCompany ? { gradingCompany: e.gradingCompany } : {}),
+      ...(e.gradeValue ? { gradeValue: e.gradeValue } : {}),
+      ...(e.gradedMarketPrice !== undefined ? { gradedMarketPrice: e.gradedMarketPrice } : {}),
+      ...(e.unlistedPrice !== undefined ? { unlistedPrice: e.unlistedPrice } : {}),
+      ...(e.gradedImageUrl ? { gradedImageUrl: e.gradedImageUrl } : {}),
+      ...(e.gradedSerial ? { gradedSerial: e.gradedSerial } : {}),
     };
     if (!map[mid]) map[mid] = [];
     map[mid].push(line);
@@ -156,36 +225,85 @@ export function groupCollectionLinesByMasterCardId(
   return map;
 }
 
+/** Same as {@link groupCollectionLinesByMasterCardId}, but map keys are {@link collectionGroupKeyFromEntry} (variant + condition + grade). */
+export function groupCollectionLinesByGroupKey(
+  entries: StorefrontCardEntry[],
+): Record<string, CollectionLineSummary[]> {
+  const map: Record<string, CollectionLineSummary[]> = {};
+  for (const e of entries) {
+    const mid = e.masterCardId;
+    const entryId = e.collectionEntryId;
+    if (!mid || !entryId) continue;
+    const gk = collectionGroupKeyFromEntry(e);
+    const line: CollectionLineSummary = {
+      entryId,
+      quantity: typeof e.quantity === "number" && Number.isFinite(e.quantity) && e.quantity >= 1 ? e.quantity : 1,
+      ...(e.conditionId ? { conditionId: e.conditionId } : {}),
+      conditionLabel: e.conditionLabel?.trim() ? e.conditionLabel.trim() : "—",
+      printing: e.printing?.trim() ? e.printing.trim() : "Standard",
+      language: e.language?.trim() ? e.language.trim() : "English",
+      ...(e.addedAt ? { addedAt: e.addedAt } : {}),
+      ...(e.gradingCompany ? { gradingCompany: e.gradingCompany } : {}),
+      ...(e.gradeValue ? { gradeValue: e.gradeValue } : {}),
+      ...(e.gradedMarketPrice !== undefined ? { gradedMarketPrice: e.gradedMarketPrice } : {}),
+      ...(e.unlistedPrice !== undefined ? { unlistedPrice: e.unlistedPrice } : {}),
+      ...(e.gradedImageUrl ? { gradedImageUrl: e.gradedImageUrl } : {}),
+      ...(e.gradedSerial ? { gradedSerial: e.gradedSerial } : {}),
+    };
+    if (!map[gk]) map[gk] = [];
+    map[gk].push(line);
+  }
+  for (const key of Object.keys(map)) {
+    map[key].sort((a, b) => {
+      const c = a.conditionLabel.localeCompare(b.conditionLabel);
+      if (c !== 0) return c;
+      const p = a.printing.localeCompare(b.printing);
+      if (p !== 0) return p;
+      return a.language.localeCompare(b.language);
+    });
+  }
+  return map;
+}
+
 /**
- * One tile per catalog card: sums quantities across all rows for the same masterCardId.
+ * One tile per unique variant + condition + grade: sums quantities only when those match.
  * Preserves first-seen order (newest first).
  */
 export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): StorefrontCardEntry[] {
-  const processedMasters = new Set<string>();
-  const out: StorefrontCardEntry[] = [];
+  const keyOrder: string[] = [];
+  const seenKey = new Set<string>();
+  const byKey = new Map<string, StorefrontCardEntry[]>();
 
   for (const e of entries) {
     const mid = e.masterCardId;
     if (!mid) {
-      out.push({ ...e });
       continue;
     }
-    if (processedMasters.has(mid)) continue;
-    processedMasters.add(mid);
+    const gk = collectionGroupKeyFromEntry(e);
+    if (!seenKey.has(gk)) {
+      seenKey.add(gk);
+      keyOrder.push(gk);
+    }
+    const list = byKey.get(gk) ?? [];
+    list.push(e);
+    byKey.set(gk, list);
+  }
 
+  const out: StorefrontCardEntry[] = [];
+  for (const gk of keyOrder) {
+    const group = byKey.get(gk);
+    if (!group?.length) continue;
+    const first = group[0]!;
     let total = 0;
-    for (const x of entries) {
-      if (x.masterCardId !== mid) continue;
+    for (const x of group) {
       const q = typeof x.quantity === "number" && Number.isFinite(x.quantity) && x.quantity >= 1 ? x.quantity : 1;
       total += q;
     }
-
     out.push({
-      ...e,
+      ...first,
       quantity: total,
-      conditionLabel: undefined,
-      collectionEntryId: undefined,
-      printing: undefined,
+      collectionGroupKey: gk,
+      collectionEntryId: group.length === 1 ? first.collectionEntryId : undefined,
     });
   }
 
@@ -216,69 +334,4 @@ export function mapCustomerWishlistRow(row: Record<string, unknown>, conditionNa
     ...(targetPrinting ? { targetPrinting } : {}),
     ...(addedAt ? { addedAt } : {}),
   };
-}
-
-export async function fetchCollectionCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {
-  const supabase = await createSupabaseServerClient();
-
-  const { data, error } = await supabase
-    .from("customer_collections")
-    .select("id, master_card_id, quantity, printing, language, added_at, condition_id")
-    .eq("customer_id", customerId)
-    .order("added_at", { ascending: false })
-    .limit(2000);
-
-  if (error || !data) return [];
-
-  return data
-    .map((row) => {
-      const conditionName = getItemConditionName(row.condition_id as string | null);
-      return mapCustomerCollectionRow(row as unknown as Record<string, unknown>, conditionName);
-    })
-    .filter((e): e is StorefrontCardEntry => Boolean(e));
-}
-
-export async function fetchWishlistCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {
-  const supabase = await createSupabaseServerClient();
-
-  const { data } = await supabase
-    .from("customer_wishlists")
-    .select("id, master_card_id, priority, target_condition_id, target_printing, added_at")
-    .eq("customer_id", customerId)
-    .order("added_at", { ascending: false })
-    .limit(2000);
-
-  if (!data) return [];
-
-  return data
-    .map((row) => {
-      const conditionName = getItemConditionName(row.target_condition_id as string | null);
-      return mapCustomerWishlistRow(row as unknown as Record<string, unknown>, conditionName);
-    })
-    .filter((e): e is StorefrontCardEntry => Boolean(e));
-}
-
-export async function fetchWishlistIdsByMasterCard(
-  customerId: string,
-): Promise<Record<string, { id: string; printing?: string }>> {
-  const supabase = await createSupabaseServerClient();
-
-  const { data } = await supabase
-    .from("customer_wishlists")
-    .select("id, master_card_id, target_printing")
-    .eq("customer_id", customerId)
-    .limit(2000);
-
-  const map: Record<string, { id: string; printing?: string }> = {};
-  for (const row of data ?? []) {
-    const mid = row.master_card_id as string;
-    const wid = row.id as string;
-    if (mid && wid && map[mid] === undefined) {
-      map[mid] = {
-        id: wid,
-        printing: typeof row.target_printing === "string" ? row.target_printing : undefined,
-      };
-    }
-  }
-  return map;
 }

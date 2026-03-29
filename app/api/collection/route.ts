@@ -41,6 +41,10 @@ type CollectionPostBody = {
   purchaseType?: string;
   pricePaid?: number | null;
   purchaseDate?: string | null;
+  gradingCompany?: string | null;
+  gradeValue?: string | null;
+  gradedMarketPrice?: number | null;
+  unlistedPrice?: number | null;
 };
 
 export async function POST(request: NextRequest) {
@@ -80,21 +84,40 @@ export async function POST(request: NextRequest) {
       ? new Date(body.purchaseDate).toISOString()
       : null;
 
+  const gradingCompany =
+    typeof body.gradingCompany === "string" && body.gradingCompany.trim() ? body.gradingCompany.trim() : null;
+  const gradeValue =
+    typeof body.gradeValue === "string" && body.gradeValue.trim() ? body.gradeValue.trim() : null;
+  const gradedMarketPrice =
+    typeof body.gradedMarketPrice === "number" && Number.isFinite(body.gradedMarketPrice) && body.gradedMarketPrice >= 0
+      ? body.gradedMarketPrice
+      : null;
+  const unlistedPrice =
+    typeof body.unlistedPrice === "number" && Number.isFinite(body.unlistedPrice) && body.unlistedPrice >= 0
+      ? body.unlistedPrice
+      : null;
+
   const { supabase } = createSupabaseRouteHandlerClient(request);
+
+  const insertRow: Record<string, unknown> = {
+    customer_id: customer.id,
+    master_card_id: masterCardId,
+    condition_id: conditionId,
+    quantity,
+    printing,
+    language,
+    purchase_type: purchaseType,
+    price_paid: pricePaid,
+    added_at: purchaseDate ?? new Date().toISOString(),
+    grading_company: gradingCompany ?? "none",
+    grade_value: gradeValue,
+  };
+  if (gradedMarketPrice !== null) insertRow.graded_market_price = gradedMarketPrice;
+  if (unlistedPrice !== null) insertRow.unlisted_price = unlistedPrice;
 
   const { data: created, error } = await supabase
     .from("customer_collections")
-    .insert({
-      customer_id: customer.id,
-      master_card_id: masterCardId,
-      condition_id: conditionId,
-      quantity,
-      printing,
-      language,
-      purchase_type: purchaseType,
-      price_paid: pricePaid,
-      added_at: purchaseDate ?? new Date().toISOString(),
-    })
+    .insert(insertRow)
     .select()
     .single();
 
@@ -158,6 +181,15 @@ export async function DELETE(request: NextRequest) {
 type CollectionPatchBody = {
   id?: string;
   quantity?: number;
+  conditionId?: string | null;
+  printing?: string | null;
+  purchaseDate?: string | null;
+  gradingCompany?: string | null;
+  gradeValue?: string | null;
+  gradedMarketPrice?: number | null;
+  unlistedPrice?: number | null;
+  gradedImage?: string | null;
+  gradedSerial?: string | null;
 };
 
 export async function PATCH(request: NextRequest) {
@@ -178,21 +210,52 @@ export async function PATCH(request: NextRequest) {
     return jsonResponseWithAuthCookies({ error: "id is required" }, authCookieResponse, { status: 400 });
   }
 
-  const quantity =
-    typeof body.quantity === "number" && Number.isFinite(body.quantity) ? Math.floor(body.quantity) : NaN;
-  if (!Number.isFinite(quantity) || quantity < 1) {
-    return jsonResponseWithAuthCookies(
-      { error: "quantity must be a whole number ≥ 1 (use DELETE to remove a row)" },
-      authCookieResponse,
-      { status: 400 },
-    );
+  const updates: Record<string, unknown> = {};
+
+  if (typeof body.quantity === "number") {
+    const quantity = Number.isFinite(body.quantity) ? Math.floor(body.quantity) : NaN;
+    if (!Number.isFinite(quantity) || quantity < 1) {
+      return jsonResponseWithAuthCookies(
+        { error: "quantity must be a whole number ≥ 1" },
+        authCookieResponse,
+        { status: 400 },
+      );
+    }
+    updates.quantity = quantity;
+  }
+
+  if ("conditionId" in body) updates.condition_id = body.conditionId?.trim() || null;
+  if ("printing" in body) updates.printing = body.printing?.trim() || null;
+  if ("purchaseDate" in body) {
+    const raw = body.purchaseDate?.trim();
+    updates.added_at = raw ? new Date(raw).toISOString() : null;
+  }
+  if ("gradingCompany" in body) updates.grading_company = body.gradingCompany?.trim() || "none";
+  if ("gradeValue" in body) updates.grade_value = body.gradeValue?.trim() || null;
+  if ("gradedMarketPrice" in body) {
+    updates.graded_market_price =
+      typeof body.gradedMarketPrice === "number" && Number.isFinite(body.gradedMarketPrice) && body.gradedMarketPrice >= 0
+        ? body.gradedMarketPrice
+        : null;
+  }
+  if ("unlistedPrice" in body) {
+    updates.unlisted_price =
+      typeof body.unlistedPrice === "number" && Number.isFinite(body.unlistedPrice) && body.unlistedPrice >= 0
+        ? body.unlistedPrice
+        : null;
+  }
+  if ("gradedImage" in body) updates.graded_image = body.gradedImage?.trim() || null;
+  if ("gradedSerial" in body) updates.graded_serial = body.gradedSerial?.trim() || null;
+
+  if (Object.keys(updates).length === 0) {
+    return jsonResponseWithAuthCookies({ error: "No fields to update" }, authCookieResponse, { status: 400 });
   }
 
   const { supabase } = createSupabaseRouteHandlerClient(request);
 
   const { data: updated, error } = await supabase
     .from("customer_collections")
-    .update({ quantity })
+    .update(updates)
     .eq("id", idRaw)
     .eq("customer_id", customer.id)
     .select()

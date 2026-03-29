@@ -7,12 +7,15 @@ import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
 import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
 import {
-  fetchCollectionCardEntries,
+  collectionGroupKeyFromEntry,
   fetchItemConditionOptions,
-  fetchWishlistCardEntries,
-  fetchWishlistIdsByMasterCard,
   groupCollectionLinesByMasterCardId,
 } from "@/lib/storefrontCardMaps";
+import {
+  fetchCollectionCardEntries,
+  fetchWishlistCardEntries,
+  fetchWishlistIdsByMasterCard,
+} from "@/lib/storefrontCardMapsServer";
 
 const INITIAL_TAKE = 30;
 const LOAD_MORE_STEP = 30;
@@ -46,7 +49,10 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   const take = Number.isFinite(rawTake) && rawTake > 0 ? rawTake : INITIAL_TAKE;
 
   const entries = await fetchWishlistCardEntries(customer.id);
-  const allCardsForGrid = structuredClone(entries) as typeof entries;
+  const allCardsForGrid = entries.map((e) => ({
+    ...e,
+    collectionGroupKey: collectionGroupKeyFromEntry(e),
+  }));
 
   const [
     collectionEntries,
@@ -69,10 +75,13 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
 
-  const [wishlistValue, cardPricesByMasterCardId] = await Promise.all([
+  const [wishlistValue, pricesResult] = await Promise.all([
     entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
-    entries.length > 0 ? estimateCardUnitPricesGbp(entries) : Promise.resolve({}),
+    entries.length > 0
+      ? estimateCardUnitPricesGbp(entries)
+      : Promise.resolve({ prices: {}, manualPriceIds: new Set<string>() }),
   ]);
+  const cardPricesByMasterCardId = pricesResult.prices;
   const valueFormatted =
     wishlistValue && wishlistValue.totalGbp > 0
       ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(

@@ -7,12 +7,12 @@ import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
 import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
 import {
-  fetchCollectionCardEntries,
+  collectionGroupKeyFromEntry,
   fetchItemConditionOptions,
-  fetchWishlistIdsByMasterCard,
-  groupCollectionLinesByMasterCardId,
+  groupCollectionLinesByGroupKey,
   mergeCollectionEntriesForGrid,
 } from "@/lib/storefrontCardMaps";
+import { fetchCollectionCardEntries, fetchWishlistIdsByMasterCard } from "@/lib/storefrontCardMapsServer";
 
 const INITIAL_TAKE = 30;
 const LOAD_MORE_STEP = 30;
@@ -51,7 +51,19 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
     fetchWishlistIdsByMasterCard(customer.id),
     getCachedFilterFacets(),
   ]);
-  const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(entries);
+  const collectionLinesByMasterCardId = groupCollectionLinesByGroupKey(entries);
+
+  // Build grading label + image map per variant+condition+grade (not just master id)
+  const gradingByMasterCardId: Record<string, { company: string; grade: string; imageUrl?: string }> = {};
+  for (const e of entries) {
+    if (e.gradingCompany && e.gradeValue) {
+      gradingByMasterCardId[collectionGroupKeyFromEntry(e)] = {
+        company: e.gradingCompany,
+        grade: e.gradeValue,
+        imageUrl: e.gradedImageUrl,
+      };
+    }
+  }
   const allCardsForGrid = mergeCollectionEntriesForGrid(entries);
   const cardsForClient = allCardsForGrid.slice(0, take);
   const totalCards = allCardsForGrid.length;
@@ -64,10 +76,12 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
 
-  const [collectionValue, cardPricesByMasterCardId] = await Promise.all([
+  const [collectionValue, pricesResult] = await Promise.all([
     entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
-    entries.length > 0 ? estimateCardUnitPricesGbp(entries) : Promise.resolve({}),
+    entries.length > 0 ? estimateCardUnitPricesGbp(entries) : Promise.resolve({ prices: {}, manualPriceIds: new Set<string>() }),
   ]);
+  const cardPricesByMasterCardId = pricesResult.prices;
+  const manualPriceMasterCardIds = pricesResult.manualPriceIds;
   const valueFormatted =
     collectionValue && collectionValue.totalGbp > 0
       ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(
@@ -132,6 +146,8 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
                 wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
                 collectionLinesByMasterCardId={collectionLinesByMasterCardId}
                 cardPricesByMasterCardId={cardPricesByMasterCardId}
+                manualPriceMasterCardIds={manualPriceMasterCardIds}
+                gradingByMasterCardId={gradingByMasterCardId}
               />
             </div>
           </CardsResultsScroll>

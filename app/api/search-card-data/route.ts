@@ -2,11 +2,8 @@ import { type NextRequest } from "next/server";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
 import { createSupabaseRouteHandlerClient, jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
-import {
-  fetchCollectionCardEntries,
-  fetchItemConditionOptions,
-  groupCollectionLinesByMasterCardId,
-} from "@/lib/storefrontCardMaps";
+import { fetchItemConditionOptions, groupCollectionLinesByMasterCardId } from "@/lib/storefrontCardMaps";
+import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 
 export async function GET(request: NextRequest) {
   const { customer, authCookieResponse } = await getCurrentCustomerForApiRoute(request);

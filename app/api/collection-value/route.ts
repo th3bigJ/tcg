@@ -49,15 +49,24 @@ export async function GET(request: NextRequest) {
   const { supabase } = createSupabaseRouteHandlerClient(request);
   const { data } = await supabase
     .from("customer_collections")
-    .select("master_card_id, quantity")
+    .select("master_card_id, quantity, graded_market_price, unlisted_price")
     .eq("customer_id", customer.id)
     .limit(2000);
 
   const qtyByMasterCardId: Record<string, number> = {};
+  const manualPriceByMasterCardId: Record<string, number> = {};
   for (const row of data ?? []) {
     const mid = typeof row.master_card_id === "string" ? row.master_card_id.trim() : "";
     const qty = typeof row.quantity === "number" ? row.quantity : 1;
-    if (mid) qtyByMasterCardId[mid] = (qtyByMasterCardId[mid] ?? 0) + qty;
+    if (!mid) continue;
+    qtyByMasterCardId[mid] = (qtyByMasterCardId[mid] ?? 0) + qty;
+    const manual =
+      typeof row.graded_market_price === "number" && Number.isFinite(row.graded_market_price)
+        ? row.graded_market_price
+        : typeof row.unlisted_price === "number" && Number.isFinite(row.unlisted_price)
+          ? row.unlisted_price
+          : null;
+    if (manual !== null) manualPriceByMasterCardId[mid] = manual;
   }
 
   const masterCardIds = Object.keys(qtyByMasterCardId);
@@ -102,7 +111,7 @@ export async function GET(request: NextRequest) {
   let cardCount = 0;
   for (const [mid, qty] of Object.entries(qtyByMasterCardId)) {
     cardCount += qty;
-    const price = prices[mid];
+    const price = prices[mid] ?? manualPriceByMasterCardId[mid];
     if (price !== undefined) totalValue += price * qty;
   }
 
