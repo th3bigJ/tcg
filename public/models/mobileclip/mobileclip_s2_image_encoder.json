@@ -1,0 +1,41 @@
+{
+  "model_name": "MobileCLIP-S2",
+  "pretrained": "datacompdr",
+  "embedding_dim": 512,
+  "input": {
+    "name": "image",
+    "shape": [
+      1,
+      3,
+      256,
+      256
+    ],
+    "dtype": "float32",
+    "mean": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "std": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "output": {
+    "name": "embedding",
+    "shape": [
+      1,
+      512
+    ],
+    "dtype": "float32",
+    "normalized": true
+  },
+  "onnx": {
+    "path": "public/models/mobileclip/mobileclip_s2_image_encoder.onnx",
+    "opset": 18,
+    "external_data_path": "public/models/mobileclip/mobileclip_s2_image_encoder.onnx.data",
+    "size_bytes": 2337750,
+    "external_data_size_bytes": 143589376
+  }
+}

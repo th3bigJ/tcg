@@ -32,6 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.venv-mobileclip/
+# ONNX external weights (often > GitHub 100MB limit); generate via scripts/mobileclip_export.py
+public/models/mobileclip/*.onnx.data
+__pycache__/
+*.pyc
 
 # vercel
 .vercel

@@ -1,0 +1,77 @@
+{
+  "format": "float32-row-major",
+  "metric": "cosine",
+  "count": 3,
+  "embeddingDim": 512,
+  "binaryPath": "/models/mobileclip/card-embeddings.f32",
+  "onnxModelPath": "/models/mobileclip/mobileclip_s2_image_encoder.onnx",
+  "onnxExternalDataPath": "/models/mobileclip/mobileclip_s2_image_encoder.onnx.data",
+  "onnxModelSha256": "smoketest",
+  "encoder": {
+    "modelName": "MobileCLIP-S2",
+    "pretrained": "datacompdr",
+    "inputSize": 256,
+    "mean": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "std": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "cards": [
+    {
+      "masterCardId": "smoketest-water",
+      "externalId": null,
+      "tcgdexId": null,
+      "setCode": "demo",
+      "setTcgdexId": null,
+      "setName": "Smoke Test",
+      "cardNumber": "SMOKE-1",
+      "cardName": "Smoke Test Water Icon",
+      "fullDisplayName": "Smoke Test Water Icon",
+      "rarity": "Demo",
+      "lowSrc": "/media/images/40px-Water-attack.png",
+      "highSrc": "/media/images/40px-Water-attack.png",
+      "filename": "40px-Water-attack.png",
+      "image": "/media/images/40px-Water-attack.png"
+    },
+    {
+      "masterCardId": "smoketest-fire",
+      "externalId": null,
+      "tcgdexId": null,
+      "setCode": "demo",
+      "setTcgdexId": null,
+      "setName": "Smoke Test",
+      "cardNumber": "SMOKE-2",
+      "cardName": "Smoke Test Fire Icon",
+      "fullDisplayName": "Smoke Test Fire Icon",
+      "rarity": "Demo",
+      "lowSrc": "/media/images/40px-Fire-attack.png",
+      "highSrc": "/media/images/40px-Fire-attack.png",
+      "filename": "40px-Fire-attack.png",
+      "image": "/media/images/40px-Fire-attack.png"
+    },
+    {
+      "masterCardId": "smoketest-grass",
+      "externalId": null,
+      "tcgdexId": null,
+      "setCode": "demo",
+      "setTcgdexId": null,
+      "setName": "Smoke Test",
+      "cardNumber": "SMOKE-3",
+      "cardName": "Smoke Test Grass Icon",
+      "fullDisplayName": "Smoke Test Grass Icon",
+      "rarity": "Demo",
+      "lowSrc": "/media/images/40px-Grass-attack.png",
+      "highSrc": "/media/images/40px-Grass-attack.png",
+      "filename": "40px-Grass-attack.png",
+      "image": "/media/images/40px-Grass-attack.png"
+    }
+  ],
+  "missingImages": [],
+  "smokeTest": true
+}

@@ -12,6 +12,15 @@ import {
 } from "@/lib/onnxCardDetector";
 import { CardGrid } from "@/components/CardGrid";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
+import {
+  loadMobileClipEmbeddingIndex,
+  probeMobileClipAssets,
+  searchMobileClipEmbeddingIndex,
+  type LoadedMobileClipEmbeddingIndex,
+  type MobileClipSearchHit,
+} from "@/lib/mobileclipEmbeddingIndex";
+import { embedImageWithMobileClip } from "@/lib/mobileclipOnnx";
+import { resolveMediaURL } from "@/lib/media";
 
 const VIEWPORT_ASPECT = 3 / 4;
 const GUIDE = {
@@ -57,6 +66,35 @@ type IdentifyState =
       confidence: "high" | "low";
     }
   | { status: "error"; message: string };
+
+type VisualState =
+  | { status: "idle" }
+  | { status: "loading-assets" }
+  | { status: "running" }
+  | {
+      status: "done";
+      inferenceMs: number;
+      topMatches: MobileClipSearchHit[];
+      modelName: string;
+      indexCount: number;
+    }
+  | { status: "error"; message: string };
+
+type VisualAssetsState =
+  | { status: "checking" }
+  | { status: "ready"; modelName: string; indexCount: number; smokeTest?: boolean }
+  | { status: "missing"; message: string };
+
+type CombinedHit = {
+  key: string;
+  cardName: string;
+  cardNumber: string;
+  setLabel: string;
+  imageSrc: string;
+  href: string;
+  sources: string[];
+  score: number;
+};
 
 const OCR_REGIONS = {
   name: { xStart: 0.06, xEnd: 0.8, yStart: 0.02, yEnd: 0.14 },
@@ -273,6 +311,54 @@ function parseCardNumber(raw: string) {
   return match?.[1]?.toUpperCase() ?? "";
 }
 
+function buildCombinedHits(
+  identifyState: IdentifyState,
+  visualState: VisualState,
+) {
+  const combined = new Map<string, CombinedHit>();
+
+  if (identifyState.status === "done") {
+    identifyState.candidates.forEach((candidate, index) => {
+      const key = candidate.masterCardId ?? `${candidate.set}:${candidate.filename}`;
+      const existing = combined.get(key);
+      const score = 1 / (index + 1);
+      combined.set(key, {
+        key,
+        cardName: candidate.cardName,
+        cardNumber: candidate.cardNumber || "No number",
+        setLabel: candidate.setName || candidate.set,
+        imageSrc: candidate.lowSrc,
+        href: `/cards?search=${encodeURIComponent(candidate.cardName)}`,
+        sources: existing ? [...existing.sources, "ocr"] : ["ocr"],
+        score: (existing?.score ?? 0) + score,
+      });
+    });
+  }
+
+  if (visualState.status === "done") {
+    visualState.topMatches.forEach((match, index) => {
+      const key = match.card.masterCardId ?? `${match.card.setCode}:${match.card.filename}`;
+      const existing = combined.get(key);
+      const score = 1 / (index + 1);
+      combined.set(key, {
+        key,
+        cardName: match.card.cardName || "Unknown card",
+        cardNumber: match.card.cardNumber || "No number",
+        setLabel: match.card.setName || match.card.setCode || "Unknown set",
+        imageSrc: resolveMediaURL(match.card.lowSrc || match.card.image),
+        href: `/cards?search=${encodeURIComponent(match.card.cardName ?? "")}`,
+        sources: existing ? [...existing.sources, "visual"] : ["visual"],
+        score: (existing?.score ?? 0) + score,
+      });
+    });
+  }
+
+  return [...combined.values()]
+    .map((hit) => ({ ...hit, sources: [...new Set(hit.sources)] }))
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 8);
+}
+
 export function OnnxScanLab({
   customerLoggedIn = false,
 }: {
@@ -281,6 +367,7 @@ export function OnnxScanLab({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const cropCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const embeddingIndexPromiseRef = useRef<Promise<LoadedMobileClipEmbeddingIndex> | null>(null);
   const [cameraError, setCameraError] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
   const [modelFile, setModelFile] = useState<File | null>(null);
@@ -289,6 +376,10 @@ export function OnnxScanLab({
   );
   const [detectionState, setDetectionState] = useState<DetectionState>({ status: "idle" });
   const [identifyState, setIdentifyState] = useState<IdentifyState>({ status: "idle" });
+  const [visualState, setVisualState] = useState<VisualState>({ status: "idle" });
+  const [visualAssetsState, setVisualAssetsState] = useState<VisualAssetsState>({
+    status: "checking",
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -332,10 +423,49 @@ export function OnnxScanLab({
     };
   }, []);
 
+  async function refreshVisualAssets(signal?: { cancelled: boolean }) {
+    setVisualAssetsState({ status: "checking" });
+    try {
+      const metadata = await probeMobileClipAssets();
+      if (signal?.cancelled) return;
+      setVisualAssetsState({
+        status: "ready",
+        modelName: metadata.encoder.modelName,
+        indexCount: metadata.count,
+        smokeTest: metadata.smokeTest,
+      });
+    } catch (error) {
+      if (signal?.cancelled) return;
+      setVisualAssetsState({
+        status: "missing",
+        message: error instanceof Error ? error.message : "MobileCLIP assets are not available yet.",
+      });
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkAssets() {
+      try {
+        await refreshVisualAssets({ cancelled });
+      } catch {}
+    }
+
+    void checkAssets();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const combinedHits = buildCombinedHits(identifyState, visualState);
+
   async function runFromCanvas(sourceCanvas: HTMLCanvasElement) {
     const sourceUrl = canvasToDataUrl(sourceCanvas);
     setDetectionState({ status: "running" });
     setIdentifyState({ status: "idle" });
+    setVisualState({ status: "idle" });
 
     try {
       const file = await canvasToFile(sourceCanvas);
@@ -441,6 +571,53 @@ export function OnnxScanLab({
           error instanceof Error ? error.message : "Could not identify the card from the OCR strips.",
       });
     }
+  }
+
+  async function identifyCardVisually() {
+    const cropCanvas = cropCanvasRef.current;
+    if (!cropCanvas || detectionState.status !== "done") return;
+
+    setVisualState((current) =>
+      current.status === "idle" ? { status: "loading-assets" } : { status: "running" },
+    );
+
+    try {
+      if (!embeddingIndexPromiseRef.current) {
+        embeddingIndexPromiseRef.current = loadMobileClipEmbeddingIndex();
+      }
+
+      setVisualState({ status: "loading-assets" });
+      const index = await embeddingIndexPromiseRef.current;
+      setVisualState({ status: "running" });
+
+      const startedAt = performance.now();
+      const queryEmbedding = await embedImageWithMobileClip(cropCanvas);
+      const inferenceMs = performance.now() - startedAt;
+      const topMatches = searchMobileClipEmbeddingIndex(queryEmbedding, index, 6);
+
+      setVisualState({
+        status: "done",
+        inferenceMs,
+        topMatches,
+        modelName: index.metadata.encoder.modelName,
+        indexCount: index.metadata.count,
+      });
+    } catch (error) {
+      setVisualState({
+        status: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Could not run MobileCLIP visual matching on this crop.",
+      });
+    }
+  }
+
+  async function runAllMatching() {
+    await Promise.all([
+      identifyCard(),
+      visualAssetsState.status === "ready" ? identifyCardVisually() : Promise.resolve(),
+    ]);
   }
 
   async function capture() {
@@ -558,10 +735,45 @@ export function OnnxScanLab({
           <button
             type="button"
             onClick={() => void identifyCard()}
-            disabled={detectionState.status !== "done" || identifyState.status === "running"}
+            disabled={
+              detectionState.status !== "done" ||
+              identifyState.status === "running" ||
+              visualState.status === "running" ||
+              visualState.status === "loading-assets"
+            }
             className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white transition active:opacity-80 disabled:opacity-40"
           >
             {identifyState.status === "running" ? "Reading Card" : "Identify Card"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void identifyCardVisually()}
+            disabled={
+              detectionState.status !== "done" ||
+              visualAssetsState.status !== "ready" ||
+              visualState.status === "loading-assets" ||
+              visualState.status === "running"
+            }
+            className="rounded-full border border-cyan-300/35 bg-cyan-300/12 px-4 py-2 text-sm font-medium text-white transition active:opacity-80 disabled:opacity-40"
+          >
+            {visualState.status === "loading-assets"
+              ? "Loading Visual Index"
+              : visualState.status === "running"
+                ? "Matching Visually"
+                : "Visual Match"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void runAllMatching()}
+            disabled={
+              detectionState.status !== "done" ||
+              identifyState.status === "running" ||
+              visualState.status === "loading-assets" ||
+              visualState.status === "running"
+            }
+            className="rounded-full border border-emerald-300/35 bg-emerald-300/12 px-4 py-2 text-sm font-medium text-white transition active:opacity-80 disabled:opacity-40"
+          >
+            Run Both
           </button>
         </div>
       </div>
@@ -613,6 +825,11 @@ export function OnnxScanLab({
             </DataRow>
             <DataRow label="Camera">{cameraReady ? "ready" : "waiting"}</DataRow>
             <DataRow label="Status">{detectionState.status}</DataRow>
+            <DataRow label="Visual Assets">
+              {visualAssetsState.status === "ready"
+                ? `${visualAssetsState.modelName} · ${visualAssetsState.indexCount.toLocaleString()}${visualAssetsState.smokeTest ? " demo" : ""}`
+                : visualAssetsState.status}
+            </DataRow>
             <DataRow label="Inference">
               {detectionState.status === "done"
                 ? `${Math.round(detectionState.detection.inferenceMs)} ms`
@@ -679,6 +896,138 @@ export function OnnxScanLab({
               customerLoggedIn={customerLoggedIn}
             />
             )}
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-3xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/4 p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--foreground)]/50">
+          MobileCLIP Visual Match
+        </p>
+
+        {visualAssetsState.status === "missing" ? (
+          <div className="mt-4 grid gap-3">
+            <p className="rounded-2xl border border-amber-500/20 bg-amber-500/8 px-4 py-3 text-sm text-amber-200">
+              {visualAssetsState.message}
+            </p>
+            <p className="text-sm text-[var(--foreground)]/58">
+              Generate the MobileCLIP assets first, then reload this page to test visual matching.
+            </p>
+            <div>
+              <button
+                type="button"
+                onClick={() => void refreshVisualAssets()}
+                className="rounded-full border border-[var(--foreground)]/15 px-3 py-2 text-sm text-[var(--foreground)]/72 transition hover:bg-[var(--foreground)]/6"
+              >
+                Re-check Assets
+              </button>
+            </div>
+          </div>
+        ) : visualState.status === "idle" ? (
+          <div className="mt-4 grid gap-3">
+            {visualAssetsState.status === "ready" && visualAssetsState.smokeTest ? (
+              <p className="rounded-2xl border border-amber-500/20 bg-amber-500/8 px-4 py-3 text-sm text-amber-200">
+                The current embedding index is a smoke-test demo built from local placeholder
+                images. The full card catalog index still needs to be generated for meaningful
+                recognition.
+              </p>
+            ) : null}
+            <p className="text-sm text-[var(--foreground)]/58">
+              This path uses the unwarped card crop as a full-image embedding query instead of OCR.
+              It will load the MobileCLIP ONNX model and the precomputed card embedding index when
+              you press <span className="font-medium">Visual Match</span>.
+            </p>
+          </div>
+        ) : visualState.status === "loading-assets" ? (
+          <p className="mt-4 text-sm text-[var(--foreground)]/72">
+            Loading the MobileCLIP model and precomputed embedding index…
+          </p>
+        ) : visualState.status === "running" ? (
+          <p className="mt-4 text-sm text-[var(--foreground)]/72">
+            Embedding the crop and running cosine similarity search…
+          </p>
+        ) : visualState.status === "error" ? (
+          <p className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-300">
+            {visualState.message}
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-4">
+            <div className="grid gap-2 text-sm">
+              <DataRow label="Encoder">{visualState.modelName}</DataRow>
+              <DataRow label="Index Size">{visualState.indexCount.toLocaleString()} cards</DataRow>
+              <DataRow label="Query Time">{`${Math.round(visualState.inferenceMs)} ms`}</DataRow>
+            </div>
+
+            {visualState.topMatches.length === 0 ? (
+              <p className="text-sm text-[var(--foreground)]/58">
+                The visual index loaded, but it did not return any matches for this crop.
+              </p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {visualState.topMatches.map((match) => (
+                  <Link
+                    key={`${match.card.masterCardId ?? match.index}-${match.index}`}
+                    href={`/cards?search=${encodeURIComponent(match.card.cardName ?? "")}`}
+                    className="overflow-hidden rounded-2xl border border-cyan-400/18 bg-cyan-400/4 transition hover:bg-cyan-400/8"
+                  >
+                    <div className="relative aspect-[3/4] bg-black/10">
+                      <Image
+                        src={resolveMediaURL(match.card.image)}
+                        alt={match.card.cardName ?? "Matched card"}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="grid gap-1 px-3 py-3 text-sm">
+                      <p className="font-medium">{match.card.cardName || "Unknown card"}</p>
+                      <p className="text-[var(--foreground)]/58">
+                        {match.card.cardNumber || "No number"} · {match.card.setCode || "Unknown set"}
+                      </p>
+                      <p className="font-mono text-[12px] text-cyan-200/80">
+                        cosine {match.score.toFixed(4)}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-3xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/4 p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--foreground)]/50">
+          Combined Candidates
+        </p>
+
+        {combinedHits.length === 0 ? (
+          <p className="mt-4 text-sm text-[var(--foreground)]/58">
+            Run OCR, visual match, or both, and this panel will combine the strongest candidates in
+            one shortlist.
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {combinedHits.map((hit) => (
+              <Link
+                key={hit.key}
+                href={hit.href}
+                className="overflow-hidden rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/3 transition hover:bg-[var(--foreground)]/6"
+              >
+                <div className="relative aspect-[3/4] bg-black/10">
+                  <Image src={hit.imageSrc} alt={hit.cardName} fill unoptimized className="object-cover" />
+                </div>
+                <div className="grid gap-1 px-3 py-3 text-sm">
+                  <p className="font-medium">{hit.cardName}</p>
+                  <p className="text-[var(--foreground)]/58">
+                    {hit.cardNumber} · {hit.setLabel}
+                  </p>
+                  <p className="font-mono text-[12px] text-[var(--foreground)]/48">
+                    {hit.sources.join(" + ")}
+                  </p>
+                </div>
+              </Link>
+            ))}
           </div>
         )}
       </div>
