@@ -1083,6 +1083,10 @@ const CardGridItem = memo(function CardGridItem({
   const unitPrice = variant === "browse" ? lazyPrice : unitPriceProp;
   const qtySelected = tradeSelectedQty ?? 0;
   const pickActive = Boolean(tradePickMode && qtySelected > 0);
+  const showCollectedBadge =
+    (owned && variant === "browse") || (viewerOwnsOnWishlist && variant === "wishlist");
+  const showWishlistBadge =
+    !showCollectedBadge && wishlisted && (variant === "wishlist" || variant === "browse");
 
   return (
     <li ref={liRef} className="card-grid-item flex flex-col">
@@ -1134,6 +1138,41 @@ const CardGridItem = memo(function CardGridItem({
             </span>
           </div>
         ) : null}
+        {showCollectedBadge ? (
+          <span
+            className="pointer-events-none absolute bottom-1.5 right-1.5 z-[9] flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 ring-2 ring-[var(--background)]"
+            style={{ right: "0.375rem", bottom: "0.375rem" }}
+            title={variant === "wishlist" ? "You own this card" : "In your collection"}
+            aria-label={variant === "wishlist" ? "You own this card" : "In your collection"}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        ) : null}
+        {showWishlistBadge ? (
+          <span
+            className="pointer-events-none absolute bottom-1.5 right-1.5 z-[9] flex h-6 w-6 shrink-0 items-center justify-center rounded-full ring-2 ring-[var(--background)]"
+            style={{ background: "#ef4444", right: "0.375rem", bottom: "0.375rem" }}
+            title="On your wishlist"
+            aria-label="On your wishlist"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="white" aria-hidden>
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
+            </svg>
+          </span>
+        ) : null}
         <button
           type="button"
           className="absolute inset-0 z-10 cursor-pointer border-0 bg-transparent p-0"
@@ -1180,34 +1219,6 @@ const CardGridItem = memo(function CardGridItem({
             </span>
           ) : null}
         </div>
-        {owned && variant === "browse" ? (
-          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500">
-            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </span>
-        ) : null}
-        {wishlisted && (variant === "wishlist" || variant === "browse") ? (
-          <span
-            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 flex shrink-0 items-center justify-center rounded-full"
-            style={{ width: 20, height: 20, background: "#ef4444" }}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="white" aria-hidden>
-              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
-            </svg>
-          </span>
-        ) : null}
-        {viewerOwnsOnWishlist && variant === "wishlist" ? (
-          <span
-            className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 ring-2 ring-[var(--background)]"
-            title="You own this card"
-            aria-label="You own this card"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </span>
-        ) : null}
       </div>
     </li>
   );
