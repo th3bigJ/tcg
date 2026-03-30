@@ -98,7 +98,7 @@ function inferFirstRawVariantSlugFromHtml(html: string): string | null {
   return null;
 }
 
-function extractSingleDomGradePriceUsd(html: string, company: "PSA" | "ACE", grade: 10): number | null {
+function extractSingleDomGradePriceUsd(html: string, company: "PSA" | "ACE", grade: number): number | null {
   // Scrydex grade blocks have changed markup a few times; match by visible label and
   // then capture the first nearby dollar amount, independent of CSS class names.
   const labelRe = new RegExp(`>\\s*${company}\\s*${grade}\\s*<\\/span>[\\s\\S]{0,500}?\\$([\\d.,]+)`, "g");
