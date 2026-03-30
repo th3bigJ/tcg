@@ -229,7 +229,7 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
     <>
       <nav
         className="pointer-events-none fixed inset-x-0 bottom-0 z-[1000] isolate"
-        style={{ padding: "0.5rem 1.25rem max(0.375rem, env(safe-area-inset-bottom, 0px))" }}
+        style={{ padding: "0.5rem 1.25rem env(safe-area-inset-bottom, 0px)" }}
         aria-label="Main navigation"
       >
         <div
@@ -249,7 +249,7 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
             const Icon = icons[i];
             const itemClass = `flex min-w-0 basis-0 flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium leading-tight transition-all sm:text-[11px]`;
             const itemStyle: React.CSSProperties = {
-              borderRadius: "1.875rem",
+              borderRadius: "29px",
               padding: "0.375rem 0.75rem",
               color: active ? "white" : "rgba(255,255,255,0.45)",
               background: active ? "rgba(255,255,255,0.15)" : "transparent",
