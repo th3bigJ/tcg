@@ -78,6 +78,17 @@ export function scrydexPsa10VariantKey(baseVariantLabel: string): string {
   return `${canonicalScrydexVariantLabel(baseVariantLabel)}${SCRYDEX_FLAT_PSA10_KEY_SUFFIX}`;
 }
 
+/**
+ * Suffix on flat merged keys (`Holofoil ACE 10`) before collation into
+ * `{ holofoil: { raw, psa10, ace10 } }` for storage.
+ */
+export const SCRYDEX_FLAT_ACE10_KEY_SUFFIX = " ACE 10";
+
+/** Flat merge key for ACE 10 before `collateFlatExternalScrapeUsdToByVariant`. */
+export function scrydexAce10VariantKey(baseVariantLabel: string): string {
+  return `${canonicalScrydexVariantLabel(baseVariantLabel)}${SCRYDEX_FLAT_ACE10_KEY_SUFFIX}`;
+}
+
 function inferFirstRawVariantSlugFromHtml(html: string): string | null {
   const parts = html.split(/new Chartkick\[["']LineChart["']\]\(/);
   for (const part of parts) {
@@ -124,6 +135,26 @@ export function parseScrydexCardPagePsa10Usd(html: string): Record<string, numbe
 
   const label = scrydexRawVariantSlugToLabel(slug);
   out[scrydexPsa10VariantKey(label)] = domPrices[0];
+  return out;
+}
+
+/**
+ * ACE 10 USD per print from `_ACE_{slug}_history` charts with `"ACE 10"` series.
+ */
+export function parseScrydexCardPageAce10Usd(html: string): Record<string, number> {
+  const out: Record<string, number> = {};
+  const parts = html.split(/new Chartkick\[["']LineChart["']\]\(/);
+  for (const part of parts) {
+    const idM = part.match(/^"([^"]*ACE_(\w+)_history)"/);
+    if (!idM) continue;
+    const variantSlug = idM[2];
+    const dataBody = extractNamedSeriesDataBody(part, "ACE 10");
+    if (!dataBody) continue;
+    const usd = lastFiniteUsdFromNmDataBody(dataBody);
+    if (usd === null) continue;
+    const label = scrydexRawVariantSlugToLabel(variantSlug);
+    out[scrydexAce10VariantKey(label)] = usd;
+  }
   return out;
 }
 

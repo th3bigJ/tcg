@@ -7,6 +7,7 @@ import { getCurrentCustomer } from "@/lib/auth";
 import {
   CARDS_LOAD_MORE_STEP,
   fetchMasterCardsPage,
+  generateShuffledSetOrder,
   getCachedFilterFacets,
   resolveCardsCategoryFilter,
   resolveCardsTakeFromParams,
@@ -157,12 +158,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     getCachedSetFilterOptions(availableSetCodes),
     getCachedPokemonFilterOptions(),
   ]);
+
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
   const setSymbolsByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
+
+  const setOrder = generateShuffledSetOrder();
 
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
   const parsedPokemonDex = Number.parseInt(selectedPokemon, 10);
@@ -171,6 +175,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     ? pokemonFilterOptions.find((option) => option.nationalDexNumber === parsedPokemonDex) ?? null
     : null;
   const hasSelectedRarity = rarityOptions.includes(selectedRarity);
+
   const activeSet = hasSelectedSet ? selectedSet : "";
   const activePokemon = hasSelectedPokemon ? String(parsedPokemonDex) : "";
   const activePokemonDex = hasSelectedPokemon ? parsedPokemonDex : null;
@@ -194,6 +199,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     categoryQueryVariants,
     page: 1,
     perPage: requestedTake,
+    setOrder,
   });
 
   const showingCount = cardsForGrid.length;
@@ -267,6 +273,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 rarityOptions={rarityOptions}
                 categoryOptions={categoryOptions}
                 resetHref={clearTagFiltersHref}
+                defaultRandomOrder={true}
               />
             </CardsResultsScroll>
           </section>

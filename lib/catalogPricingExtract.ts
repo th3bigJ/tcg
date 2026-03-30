@@ -2,6 +2,7 @@ import type { GbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import {
   canonicalScrydexVariantLabel,
   SCRYDEX_FLAT_PSA10_KEY_SUFFIX,
+  SCRYDEX_FLAT_ACE10_KEY_SUFFIX,
 } from "@/lib/scrydexMepCardPagePricing";
 
 /** Non-variant keys on TCGdex `tcgplayer` objects. */
@@ -53,10 +54,11 @@ export function extractCardmarketAvgsGbp(
   return Object.keys(out).length > 0 ? out : null;
 }
 
-/** Per-variant Scrydex scrape: raw (NM/list) and graded PSA 10 in USD or GBP. */
+/** Per-variant Scrydex scrape: raw (NM/list), PSA 10, and ACE 10 in USD or GBP. */
 export type ExternalScrapeVariantNumbers = {
   raw?: number;
   psa10?: number;
+  ace10?: number;
 };
 
 export type ExternalScrapeByVariantNumbers = Record<string, ExternalScrapeVariantNumbers>;
@@ -84,7 +86,7 @@ export function externalScrapeVariantSlugFromFlatKey(flatKey: string): string {
 }
 
 /**
- * Turn flat merged USD (`Holofoil`, `Holofoil PSA 10`) into `{ holofoil: { raw, psa10 } }`.
+ * Turn flat merged USD (`Holofoil`, `Holofoil PSA 10`, `Holofoil ACE 10`) into `{ holofoil: { raw, psa10, ace10 } }`.
  */
 export function collateFlatExternalScrapeUsdToByVariant(
   flatUsd: Record<string, number>,
@@ -97,6 +99,11 @@ export function collateFlatExternalScrapeUsdToByVariant(
       const slug = externalScrapeVariantSlugFromFlatKey(base);
       const prev = out[slug] ?? {};
       out[slug] = { ...prev, psa10: v };
+    } else if (k.endsWith(SCRYDEX_FLAT_ACE10_KEY_SUFFIX)) {
+      const base = k.slice(0, -SCRYDEX_FLAT_ACE10_KEY_SUFFIX.length);
+      const slug = externalScrapeVariantSlugFromFlatKey(base);
+      const prev = out[slug] ?? {};
+      out[slug] = { ...prev, ace10: v };
     } else {
       const slug = externalScrapeVariantSlugFromFlatKey(k);
       const prev = out[slug] ?? {};
@@ -119,6 +126,9 @@ export function convertExternalScrapeByVariantUsdToGbp(
     }
     if (typeof rec.psa10 === "number" && Number.isFinite(rec.psa10)) {
       next.psa10 = rec.psa10 * usdToGbp;
+    }
+    if (typeof rec.ace10 === "number" && Number.isFinite(rec.ace10)) {
+      next.ace10 = rec.ace10 * usdToGbp;
     }
     if (Object.keys(next).length > 0) out[slug] = next;
   }

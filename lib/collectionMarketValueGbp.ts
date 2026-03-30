@@ -11,12 +11,22 @@ function readMarketFromVariantBlock(block: unknown): number | null {
   return typeof m === "number" && Number.isFinite(m) ? m : null;
 }
 
+/** Returns the scrydex graded price key for a given grading company + grade (e.g. "ace"+"10" → "ace10"). */
+function scrydexGradedKey(gradingCompany: string, gradeValue: string): string | null {
+  const co = gradingCompany.trim().toLowerCase();
+  const gv = gradeValue.trim().replace(/\s+/g, "");
+  if (!co || !gv) return null;
+  return `${co}${gv}`; // e.g. "psa10", "ace10", "bgs9.5"
+}
+
 function estimateUnitGbpFromPricing(
   tcgplayer: unknown,
   cardmarket: unknown,
   scrydex: unknown,
   multipliers: { usdToGbp: number; eurToGbp: number },
   printing?: string,
+  gradingCompany?: string,
+  gradeValue?: string,
 ): number | null {
   const tpObj = tcgplayer && typeof tcgplayer === "object" ? (tcgplayer as Record<string, unknown>) : null;
   if (tpObj) {
@@ -50,20 +60,27 @@ function estimateUnitGbpFromPricing(
         : null;
     if (avgSell !== null) return avgSell * multipliers.eurToGbp;
   }
-  // Fall back to Scrydex: { [variant]: { raw: number } } — raw is already GBP
+  // Fall back to Scrydex: { [variant]: { raw: number, psa10?: number, ace10?: number } } — already GBP
   const scObj = scrydex && typeof scrydex === "object" ? (scrydex as Record<string, unknown>) : null;
   if (scObj) {
-    if (printing?.trim()) {
-      const block = scObj[printing.trim()];
-      if (block && typeof block === "object") {
-        const r = (block as Record<string, unknown>).raw;
-        if (typeof r === "number" && Number.isFinite(r)) return r;
+    const gradedKey = gradingCompany && gradeValue ? scrydexGradedKey(gradingCompany, gradeValue) : null;
+    const readGradedOrRaw = (block: unknown): number | null => {
+      if (!block || typeof block !== "object") return null;
+      const b = block as Record<string, unknown>;
+      if (gradedKey) {
+        const g = b[gradedKey];
+        if (typeof g === "number" && Number.isFinite(g)) return g;
       }
+      const r = b.raw;
+      return typeof r === "number" && Number.isFinite(r) ? r : null;
+    };
+    if (printing?.trim()) {
+      const v = readGradedOrRaw(scObj[printing.trim()]);
+      if (v !== null) return v;
     }
     for (const block of Object.values(scObj)) {
-      if (!block || typeof block !== "object") continue;
-      const r = (block as Record<string, unknown>).raw;
-      if (typeof r === "number" && Number.isFinite(r)) return r;
+      const v = readGradedOrRaw(block);
+      if (v !== null) return v;
     }
   }
   return null;
@@ -117,7 +134,7 @@ export async function estimateCardUnitPricesGbp(
           const fallback = e.legacyExternalId?.trim() ? [e.legacyExternalId.trim()] : undefined;
           const entry = getPricingForCard(pricingMap, ext, fallback);
           if (entry) {
-            const price = estimateUnitGbpFromPricing(entry.tcgplayer, entry.cardmarket, entry.scrydex, multipliers, e.printing);
+            const price = estimateUnitGbpFromPricing(entry.tcgplayer, entry.cardmarket, entry.scrydex, multipliers, e.printing, e.gradingCompany, e.gradeValue);
             if (price !== null) out[gk] = price;
           }
         }
@@ -146,7 +163,7 @@ export async function estimateCollectionMarketValueGbp(
   type RowKey = string;
   const rowMap = new Map<
     RowKey,
-    { quantity: number; externalId: string; printing?: string; legacyExternalId?: string; setCode: string; manualPrice?: number }
+    { quantity: number; externalId: string; printing?: string; legacyExternalId?: string; setCode: string; manualPrice?: number; gradingCompany?: string; gradeValue?: string }
   >();
   let rowsWithoutExternalId = 0;
 
@@ -164,12 +181,14 @@ export async function estimateCollectionMarketValueGbp(
     const printing = e.printing?.trim() || e.targetPrinting?.trim() || undefined;
     const legacyExternalId = e.legacyExternalId?.trim() || undefined;
     const manualPrice = e.gradedMarketPrice ?? e.unlistedPrice;
-    const key: RowKey = `${ext}::${printing ?? ""}`;
+    const gradingCompany = e.gradingCompany?.trim() || undefined;
+    const gradeValue = e.gradeValue?.trim() || undefined;
+    const key: RowKey = `${ext}::${printing ?? ""}::${gradingCompany ?? ""}::${gradeValue ?? ""}`;
     const prev = rowMap.get(key);
     if (prev) {
       rowMap.set(key, { ...prev, quantity: prev.quantity + q });
     } else {
-      rowMap.set(key, { quantity: q, externalId: ext, printing, legacyExternalId, setCode, manualPrice });
+      rowMap.set(key, { quantity: q, externalId: ext, printing, legacyExternalId, setCode, manualPrice, gradingCompany, gradeValue });
     }
   }
 
@@ -207,7 +226,7 @@ export async function estimateCollectionMarketValueGbp(
           unitByKey.set(key, null);
           continue;
         }
-        unitByKey.set(key, estimateUnitGbpFromPricing(entry.tcgplayer, entry.cardmarket, entry.scrydex, multipliers, row.printing));
+        unitByKey.set(key, estimateUnitGbpFromPricing(entry.tcgplayer, entry.cardmarket, entry.scrydex, multipliers, row.printing, row.gradingCompany, row.gradeValue));
       }
     }),
   );

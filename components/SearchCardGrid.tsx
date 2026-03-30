@@ -36,6 +36,8 @@ type Props = {
   rarityOptions: string[];
   categoryOptions: string[];
   resetHref: string;
+  defaultGroupBySet?: boolean;
+  defaultRandomOrder?: boolean;
 };
 
 export function SearchCardGrid({
@@ -54,10 +56,15 @@ export function SearchCardGrid({
   rarityOptions,
   categoryOptions,
   resetHref,
+  defaultGroupBySet = true,
+  defaultRandomOrder,
 }: Props) {
   const [cardData, setCardData] = useState<SearchCardData | null>(null);
-  const [groupBySet, setGroupBySet] = useState(false);
+  const [groupBySet, setGroupBySet] = useState(defaultGroupBySet);
+  const [randomOrder, setRandomOrder] = useState(defaultRandomOrder ?? false);
   const [sortOrder, setSortOrder] = useState<SortOrder>("");
+  // Stable per-session seed so the shuffle doesn't change on re-renders
+  const shuffleSeed = useRef(Math.floor(Math.random() * 0xffffffff));
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
   const pricesFetchedRef = useRef(false);
 
@@ -113,6 +120,8 @@ export function SearchCardGrid({
         <CardTagFilterRow
           groupBySet={groupBySet}
           onGroupBySetChange={setGroupBySet}
+          randomOrder={defaultRandomOrder !== undefined ? randomOrder : undefined}
+          onRandomOrderChange={defaultRandomOrder !== undefined ? setRandomOrder : undefined}
           sortControl={{
             value: sortOrder,
             onChange: (v) => setSortOrder(v as SortOrder),
@@ -142,6 +151,7 @@ export function SearchCardGrid({
         wishlistEntryIdsByMasterCardId={cardData?.wishlistMap}
         collectionLinesByMasterCardId={cardData?.collectionLines}
         groupBySet={groupBySet}
+        groupShuffleSeed={randomOrder ? shuffleSeed.current : undefined}
       />
     </>
   );

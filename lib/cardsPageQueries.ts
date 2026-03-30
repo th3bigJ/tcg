@@ -280,6 +280,22 @@ export async function fetchSetMarketValue(setCode: string): Promise<number | nul
   }
 }
 
+// ─── Shuffled set order (call once server-side, pass to fetchMasterCardsPage) ─
+
+export function generateShuffledSetOrder(): string[] {
+  const orderedRows = getDefaultCardOrder();
+  const seen = new Set<string>();
+  const setCodes: string[] = [];
+  for (const row of orderedRows) {
+    if (!seen.has(row.setCode)) { seen.add(row.setCode); setCodes.push(row.setCode); }
+  }
+  for (let i = setCodes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [setCodes[i], setCodes[j]] = [setCodes[j]!, setCodes[i]!];
+  }
+  return setCodes;
+}
+
 // ─── Main card page fetch ─────────────────────────────────────────────────────
 
 export async function fetchMasterCardsPage(params: {
@@ -293,6 +309,8 @@ export async function fetchMasterCardsPage(params: {
   categoryQueryVariants: string[];
   page: number;
   perPage: number;
+  /** Pre-shuffled set order for the default unfiltered view. Generated once server-side to avoid hydration mismatches. */
+  setOrder?: string[];
 }): Promise<{ entries: CardsPageCardEntry[]; totalDocs: number }> {
   const pageSize = Math.min(CARDS_TAKE_MAX, Math.max(1, Math.floor(params.perPage)));
   const setMetaMap = getSetMetaMap();
@@ -352,7 +370,7 @@ export async function fetchMasterCardsPage(params: {
     return { entries, totalDocs };
   }
 
-  // ── Default unfiltered path (use cached order directly) ───────────────────
+  // ── Default unfiltered path (interleave one card per set, round-robin) ─────
   const isDefaultUnfiltered =
     !params.activeSet &&
     !params.activeRarity &&
@@ -364,9 +382,25 @@ export async function fetchMasterCardsPage(params: {
   const orderedRows = getDefaultCardOrder();
 
   if (isDefaultUnfiltered) {
-    const totalDocs = orderedRows.length;
+    // Group rows by set, preserving within-set order (card number descending from getDefaultCardOrder)
+    const setQueues = new Map<string, typeof orderedRows>();
+    for (const row of orderedRows) {
+      let q = setQueues.get(row.setCode);
+      if (!q) { q = []; setQueues.set(row.setCode, q); }
+      q.push(row);
+    }
+    // Use caller-supplied set order (pre-shuffled server-side) or fall back to natural order
+    const setCodes = params.setOrder ?? [...setQueues.keys()];
+    // All cards from one set before moving to the next (shuffled set order)
+    const interleaved: typeof orderedRows = [];
+    for (const code of setCodes) {
+      const q = setQueues.get(code)!;
+      for (const row of q) interleaved.push(row);
+    }
+
+    const totalDocs = interleaved.length;
     const startIndex = (params.page - 1) * pageSize;
-    const pageRows = orderedRows.slice(startIndex, startIndex + pageSize);
+    const pageRows = interleaved.slice(startIndex, startIndex + pageSize);
     if (pageRows.length === 0) return { entries: [], totalDocs };
 
     const cardMap = getCardMapById();

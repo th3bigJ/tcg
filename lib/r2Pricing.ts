@@ -31,7 +31,7 @@ export async function getPricingForSet(setCode: string): Promise<SetPricingMap |
 
   try {
     const res = await fetch(url, {
-      next: { revalidate: 86400 }, // 24h
+      next: { revalidate: process.env.NODE_ENV === "development" ? 0 : 86400 },
     });
     if (!res.ok) return null;
     return (await res.json()) as SetPricingMap;

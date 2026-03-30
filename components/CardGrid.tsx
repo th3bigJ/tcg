@@ -66,6 +66,12 @@ function readPsa10(block: unknown): number | null {
   return typeof o.psa10 === "number" && Number.isFinite(o.psa10) ? o.psa10 : null;
 }
 
+function readAce10(block: unknown): number | null {
+  if (!block || typeof block !== "object") return null;
+  const o = block as Record<string, unknown>;
+  return typeof o.ace10 === "number" && Number.isFinite(o.ace10) ? o.ace10 : null;
+}
+
 function readUsdLowHigh(block: unknown): { low: number | null; high: number | null } {
   if (!block || typeof block !== "object") return { low: null, high: null };
   const o = block as Record<string, unknown>;
@@ -172,7 +178,7 @@ function ModalCardPricing({
           const tpObj = tp && typeof tp === "object" ? (tp as Record<string, unknown>) : null;
           const keys = tpObj
             ? Object.entries(tpObj)
-                .filter(([, block]) => readUsdMarket(block) !== null)
+                .filter(([, block]) => readUsdMarket(block) !== null || readPsa10(block) !== null || readAce10(block) !== null)
                 .map(([k]) => k)
             : [];
           cb(keys.length > 0 ? keys : ["Unlisted"]);
@@ -203,16 +209,17 @@ function ModalCardPricing({
   const tpObj =
     tpRoot && typeof tpRoot === "object" ? (tpRoot as Record<string, unknown>) : null;
 
-  /** All variant keys that have at least a raw price. */
+  /** All variant keys that have at least one price. */
   const variantRows = useMemo(() => {
     if (!tpObj) return [];
     return Object.entries(tpObj)
-      .filter(([, block]) => readUsdMarket(block) !== null)
       .map(([key, block]) => ({
         key,
-        raw: readUsdMarket(block)!,
+        raw: readUsdMarket(block),
         psa10: readPsa10(block),
-      }));
+        ace10: readAce10(block),
+      }))
+      .filter(({ raw, psa10, ace10 }) => raw !== null || psa10 !== null || ace10 !== null);
   }, [tpObj]);
 
   const showUnlistedRow = pricingLoaded && variantRows.length === 0 && (onAdd ?? onWishlist);
@@ -256,60 +263,72 @@ function ModalCardPricing({
       <h4 className="text-sm font-bold tracking-tight text-white">Market prices</h4>
       <div className="flex flex-col gap-2">
         {showDexRows
-          ? variantRows.map(({ key, raw, psa10 }) => {
+          ? variantRows.map(({ key, raw, psa10, ace10 }) => {
               const isFilled = wishlistedVariant === key;
               return (
                 <div
                   key={key}
-                  className="flex min-h-[52px] items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3"
+                  className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3"
                 >
-                  <span className="shrink-0 text-sm font-medium text-white">
-                    {variantLabel(key)}
-                  </span>
-                  <div className="flex flex-1 items-center justify-evenly">
-                    <div className="flex flex-col items-center">
-                      <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">Raw</span>
-                      <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(raw)}</span>
-                    </div>
-                    {psa10 !== null ? (
-                      <div className="flex flex-col items-center">
-                        <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">PSA 10</span>
-                        <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(psa10)}</span>
-                      </div>
+                  <div className="flex items-center gap-2">
+                    <span className="flex-1 text-sm font-medium text-white">
+                      {variantLabel(key)}
+                    </span>
+                    {onAdd ? (
+                      <button
+                        type="button"
+                        onClick={() => onAdd(key)}
+                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold text-white transition hover:bg-white/20"
+                        aria-label={`Add ${variantLabel(key)} to collection`}
+                      >
+                        +
+                      </button>
+                    ) : null}
+                    {onWishlist ? (
+                      <button
+                        type="button"
+                        onClick={() => onWishlist(key)}
+                        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${isFilled ? "" : "text-white"}`}
+                        aria-label={isFilled ? "Remove from wishlist" : `Add ${variantLabel(key)} to wishlist`}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill={isFilled ? "currentColor" : "none"}
+                          stroke={isFilled ? "none" : "currentColor"}
+                          strokeWidth={isFilled ? undefined : 2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={isFilled ? "text-red-500" : "text-white"}
+                          aria-hidden
+                        >
+                          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
+                        </svg>
+                      </button>
                     ) : null}
                   </div>
-                  {onAdd ? (
-                    <button
-                      type="button"
-                      onClick={() => onAdd(key)}
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold text-white transition hover:bg-white/20"
-                      aria-label={`Add ${variantLabel(key)} to collection`}
-                    >
-                      +
-                    </button>
-                  ) : null}
-                  {onWishlist ? (
-                    <button
-                      type="button"
-                      onClick={() => onWishlist(key)}
-                      className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${isFilled ? "" : "text-white"}`}
-                      aria-label={isFilled ? "Remove from wishlist" : `Add ${variantLabel(key)} to wishlist`}
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill={isFilled ? "currentColor" : "none"}
-                        stroke={isFilled ? "none" : "currentColor"}
-                        strokeWidth={isFilled ? undefined : 2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className={isFilled ? "text-red-500" : "text-white"}
-                        aria-hidden
-                      >
-                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
-                      </svg>
-                    </button>
+                  {(raw !== null || psa10 !== null || ace10 !== null) ? (
+                    <div className="grid grid-cols-3 divide-x divide-white/10">
+                      {raw !== null ? (
+                        <div className="flex flex-col items-center">
+                          <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">Raw</span>
+                          <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(raw)}</span>
+                        </div>
+                      ) : <div />}
+                      {psa10 !== null ? (
+                        <div className="flex flex-col items-center">
+                          <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">PSA 10</span>
+                          <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(psa10)}</span>
+                        </div>
+                      ) : <div />}
+                      {ace10 !== null ? (
+                        <div className="flex flex-col items-center">
+                          <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">ACE 10</span>
+                          <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(ace10)}</span>
+                        </div>
+                      ) : <div />}
+                    </div>
                   ) : null}
                 </div>
               );
@@ -1141,13 +1160,13 @@ const CardGridItem = memo(function CardGridItem({
           </span>
         ) : null}
         <div className="min-w-0">
-          {card.cardName ? (
+          {(card.cardName || card.setName || card.set) ? (
             <span
               className={`block line-clamp-1 text-center text-[10px] font-medium ${
                 tradePickMode && pickActive ? "font-semibold text-emerald-500 dark:text-emerald-400" : "text-[var(--foreground)]/80"
               }`}
             >
-              {card.cardName}
+              {[card.cardName, card.setName || card.set].filter(Boolean).join(" - ")}
             </span>
           ) : null}
           {unitPrice !== null ? (
@@ -1169,8 +1188,11 @@ const CardGridItem = memo(function CardGridItem({
           </span>
         ) : null}
         {wishlisted && (variant === "wishlist" || variant === "browse") ? (
-          <span className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="text-white" aria-hidden>
+          <span
+            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 flex shrink-0 items-center justify-center rounded-full"
+            style={{ width: 20, height: 20, background: "#ef4444" }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="white" aria-hidden>
               <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
             </svg>
           </span>
@@ -1213,6 +1235,7 @@ export function CardGrid({
   manualPriceMasterCardIds,
   gradingByMasterCardId,
   groupBySet = false,
+  groupShuffleSeed,
   collectedCountBySetCode,
   tradePickMode = false,
   tradeSelectedQtyByEntryId = EMPTY_TRADE_QTY,
@@ -1239,6 +1262,8 @@ export function CardGrid({
   manualPriceMasterCardIds?: Set<string>;
   gradingByMasterCardId?: Record<string, { company: string; grade: string; imageUrl?: string }>;
   groupBySet?: boolean;
+  /** When set, shuffles set groups using this seed and sorts cards within each group by card number descending */
+  groupShuffleSeed?: number;
   /** When provided, shows "X collected" in grouped set headers */
   collectedCountBySetCode?: Record<string, number>;
   /** Shared collection trade wizard: tap tiles to cycle quantity instead of opening the modal */
@@ -1252,6 +1277,7 @@ export function CardGrid({
   const allowMutations = Boolean(customerLoggedIn && !readOnly);
   const [localWishlistMap, setLocalWishlistMap] = useState(wishlistEntryIdsByMasterCardId);
   const [addSheetOpen, setAddSheetOpen] = useState(false);
+  const [addIsGraded, setAddIsGraded] = useState(false);
   const [addConditionId, setAddConditionId] = useState("");
   const [addQuantity, setAddQuantity] = useState(1);
   const [addPrinting, setAddPrinting] = useState<string>("Standard");
@@ -1268,15 +1294,14 @@ export function CardGrid({
 
   const [addUnlistedPrice, setAddUnlistedPrice] = useState<string>("");
 
-  // ── Graded card sheet ──────────────────────────────────────────────────────
-  const [gradedSheetOpen, setGradedSheetOpen] = useState(false);
+  // ── Graded card fields (used within the add sheet when addIsGraded) ────────
   const [gradedCompany, setGradedCompany] = useState<string>("PSA");
   const [gradedValue, setGradedValue] = useState<string>("");
-  const [gradedPrinting, setGradedPrinting] = useState<string>("Standard");
-  const [gradedMarketPrice, setGradedMarketPrice] = useState<string>("");
+  const [gradedSerial, setGradedSerial] = useState<string>("");
+  const [gradedImageFile, setGradedImageFile] = useState<File | null>(null);
+  const [gradedImagePreview, setGradedImagePreview] = useState<string>("");
   const [gradedPurchaseDate, setGradedPurchaseDate] = useState<string>("");
   const [gradedPricePaid, setGradedPricePaid] = useState<string>("");
-  const [gradedPending, setGradedPending] = useState(false);
 
   // ── Edit collection line sheet ─────────────────────────────────────────────
   const [editSheetOpen, setEditSheetOpen] = useState(false);
@@ -1462,27 +1487,20 @@ export function CardGrid({
     setAddPricePaid("");
     setAddPurchaseDate(new Date().toISOString().slice(0, 10));
     setAddUnlistedPrice("");
+    setAddIsGraded(false);
+    setGradedCompany("PSA");
+    setGradedValue("");
+    setGradedSerial("");
+    setGradedImageFile(null);
+    setGradedImagePreview("");
+    setGradedPricePaid("");
+    setGradedPurchaseDate(new Date().toISOString().slice(0, 10));
     setAddSheetOpen(true);
   }, [allowMutations, customerLoggedIn, goLogin, itemConditions, pricingVariants, readOnly, selectedCard?.masterCardId]);
 
-  const onOpenGradedSheet = useCallback(() => {
-    if (!allowMutations) {
-      if (!readOnly && !customerLoggedIn) goLogin();
-      return;
-    }
-    if (!selectedCard?.masterCardId) return;
-    setGradedCompany("PSA");
-    setGradedValue("");
-    setGradedPrinting(pricingVariants[0] ?? "Standard");
-    setGradedMarketPrice("");
-    setGradedPricePaid("");
-    setGradedPurchaseDate(new Date().toISOString().slice(0, 10));
-    setGradedSheetOpen(true);
-  }, [allowMutations, customerLoggedIn, goLogin, pricingVariants, readOnly, selectedCard?.masterCardId]);
-
   const submitGradedCollection = useCallback(async () => {
     if (!selectedCard?.masterCardId) return;
-    setGradedPending(true);
+    setAddPending(true);
     try {
       const res = await fetch("/api/collection", {
         method: "POST",
@@ -1491,14 +1509,14 @@ export function CardGrid({
           masterCardId: selectedCard.masterCardId,
           conditionId: "graded",
           quantity: 1,
-          printing: gradedPrinting,
+          printing: addPrinting,
           language: "English",
           purchaseType: gradedPricePaid !== "" ? "bought" : undefined,
           pricePaid: gradedPricePaid !== "" ? parseFloat(gradedPricePaid) : undefined,
           purchaseDate: gradedPurchaseDate || undefined,
           gradingCompany: gradedCompany,
           gradeValue: gradedValue,
-          gradedMarketPrice: gradedMarketPrice !== "" ? parseFloat(gradedMarketPrice) : undefined,
+          gradedSerial: gradedSerial.trim() || undefined,
         }),
       });
       let j: { doc?: { id?: string | number }; error?: string };
@@ -1510,32 +1528,40 @@ export function CardGrid({
       const rawId = j.doc?.id;
       const mid = selectedCard.masterCardId;
       if (rawId !== undefined && mid) {
+        if (gradedImageFile) {
+          const fd = new FormData();
+          fd.append("entryId", String(rawId));
+          fd.append("file", gradedImageFile);
+          await fetch("/api/collection/upload-image", { method: "POST", body: fd }).catch(() => {});
+        }
         const gradedConditionLabel = getItemConditionName("graded").trim() || "graded";
         const line: CollectionLineSummary = {
           entryId: String(rawId),
           quantity: 1,
           conditionLabel: gradedConditionLabel,
-          printing: gradedPrinting,
+          printing: addPrinting,
           language: "English",
           gradingCompany: gradedCompany,
           gradeValue: gradedValue,
+          gradedSerial: gradedSerial.trim() || undefined,
         };
         const gk = collectionGroupKeyFromLine(mid, line);
         setLocalCollectionLinesByMasterCardId((prev) => mergeCollectionLine(prev, gk, line));
       }
-      setGradedSheetOpen(false);
+      setAddSheetOpen(false);
       if (variant !== "browse") router.refresh();
     } catch {
       /* network error */
     } finally {
-      setGradedPending(false);
+      setAddPending(false);
     }
   }, [
+    addPrinting,
     gradedCompany,
-    gradedMarketPrice,
+    gradedImageFile,
     gradedPricePaid,
-    gradedPrinting,
     gradedPurchaseDate,
+    gradedSerial,
     gradedValue,
     router,
     selectedCard?.masterCardId,
@@ -2339,16 +2365,6 @@ export function CardGrid({
                   cardNumber: selectedCard.cardNumber,
                 }}
               />
-              {allowMutations && selectedCard.masterCardId ? (
-                <button
-                  type="button"
-                  onClick={onOpenGradedSheet}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3 text-sm font-medium text-white transition hover:bg-white/[0.12]"
-                >
-                  <span className="text-base leading-none">🏆</span>
-                  Add graded card
-                </button>
-              ) : null}
             </div>
 
             <div className="flex w-full min-w-0 flex-col gap-6 sm:gap-8 md:min-h-0 md:gap-2 md:overflow-y-auto md:rounded-xl md:border md:border-white/15 md:bg-black/35 md:p-4 md:shadow-[0_20px_60px_rgba(0,0,0,0.45)] md:backdrop-blur-md">
@@ -2504,31 +2520,22 @@ export function CardGrid({
           <h2 className="text-lg font-semibold">Add to collection</h2>
           <p className="mt-1 text-sm text-[var(--foreground)]/65">{selectedCard?.cardName}</p>
           <div className="mt-4 flex flex-col gap-3">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Condition</span>
-              <select
-                value={addConditionId}
-                onChange={(e) => setAddConditionId(e.target.value)}
-                className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+            <div className="flex rounded-md border border-[var(--foreground)]/20 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setAddIsGraded(false)}
+                className={`flex-1 px-3 py-2 text-sm font-medium transition ${!addIsGraded ? "bg-[var(--foreground)]/15" : "opacity-50"}`}
               >
-                <option value="">— Optional —</option>
-                {itemConditions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Quantity</span>
-              <input
-                type="number"
-                min={1}
-                value={addQuantity}
-                onChange={(e) => setAddQuantity(Math.max(1, Number.parseInt(e.target.value, 10) || 1))}
-                className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-              />
-            </label>
+                Raw
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddIsGraded(true)}
+                className={`flex-1 px-3 py-2 text-sm font-medium transition ${addIsGraded ? "bg-[var(--foreground)]/15" : "opacity-50"}`}
+              >
+                Graded
+              </button>
+            </div>
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium">Version</span>
               <select
@@ -2549,41 +2556,169 @@ export function CardGrid({
                     ))}
               </select>
             </label>
-            {addPrinting === "Unlisted" && (
-              <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium">Market value (£)</span>
-                <input
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  placeholder="0.00"
-                  value={addUnlistedPrice}
-                  onChange={(e) => setAddUnlistedPrice(e.target.value)}
-                  className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-                />
-              </label>
-            )}
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">How obtained</span>
-              <div className="flex gap-2">
-                {(["", "packed", "bought"] as const).map((val) => (
-                  <button
-                    key={val}
-                    type="button"
-                    onClick={() => setAddPurchaseType(val)}
-                    className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition ${
-                      addPurchaseType === val
-                        ? "border-[var(--foreground)]/50 bg-[var(--foreground)]/15"
-                        : "border-[var(--foreground)]/20 bg-transparent opacity-60"
-                    }`}
-                  >
-                    {val === "" ? "—" : val.charAt(0).toUpperCase() + val.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </label>
-            {addPurchaseType === "bought" && (
+            {!addIsGraded && (
               <>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Condition</span>
+                  <select
+                    value={addConditionId}
+                    onChange={(e) => setAddConditionId(e.target.value)}
+                    className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                  >
+                    <option value="">— Optional —</option>
+                    {itemConditions.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Quantity</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={addQuantity}
+                    onChange={(e) => setAddQuantity(Math.max(1, Number.parseInt(e.target.value, 10) || 1))}
+                    className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                  />
+                </label>
+                {addPrinting === "Unlisted" && (
+                  <label className="flex flex-col gap-1 text-sm">
+                    <span className="font-medium">Market value (£)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      placeholder="0.00"
+                      value={addUnlistedPrice}
+                      onChange={(e) => setAddUnlistedPrice(e.target.value)}
+                      className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                    />
+                  </label>
+                )}
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">How obtained</span>
+                  <div className="flex gap-2">
+                    {(["", "packed", "bought"] as const).map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setAddPurchaseType(val)}
+                        className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition ${
+                          addPurchaseType === val
+                            ? "border-[var(--foreground)]/50 bg-[var(--foreground)]/15"
+                            : "border-[var(--foreground)]/20 bg-transparent opacity-60"
+                        }`}
+                      >
+                        {val === "" ? "—" : val.charAt(0).toUpperCase() + val.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </label>
+                {addPurchaseType === "bought" && (
+                  <>
+                    <label className="flex flex-col gap-1 text-sm">
+                      <span className="font-medium">Price paid (£)</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        placeholder="0.00"
+                        value={addPricePaid}
+                        onChange={(e) => setAddPricePaid(e.target.value)}
+                        className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm">
+                      <span className="font-medium">Purchase date</span>
+                      <input
+                        type="date"
+                        value={addPurchaseDate}
+                        onChange={(e) => setAddPurchaseDate(e.target.value)}
+                        className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                      />
+                    </label>
+                  </>
+                )}
+              </>
+            )}
+            {addIsGraded && (
+              <>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Grading company</span>
+                  <div className="flex flex-wrap gap-2">
+                    {(["PSA", "ACE"] as const).map((co) => (
+                      <button
+                        key={co}
+                        type="button"
+                        onClick={() => setGradedCompany(co)}
+                        className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
+                          gradedCompany === co
+                            ? "border-[var(--foreground)]/50 bg-[var(--foreground)]/15"
+                            : "border-[var(--foreground)]/20 bg-transparent opacity-60"
+                        }`}
+                      >
+                        {co}
+                      </button>
+                    ))}
+                  </div>
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Grade</span>
+                  <input
+                    type="text"
+                    placeholder="e.g. 10, 9.5, A"
+                    value={gradedValue}
+                    onChange={(e) => setGradedValue(e.target.value)}
+                    className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Cert serial</span>
+                  <input
+                    type="text"
+                    placeholder="e.g. 12345678"
+                    value={gradedSerial}
+                    onChange={(e) => setGradedSerial(e.target.value)}
+                    className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                  />
+                </label>
+                <div className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Photo</span>
+                  <div className="flex items-center gap-3">
+                    {gradedImagePreview ? (
+                      <div className="relative shrink-0">
+                        <img
+                          src={gradedImagePreview}
+                          alt="Graded card preview"
+                          className="h-16 w-12 rounded-lg object-contain bg-black/30"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => { setGradedImageFile(null); setGradedImagePreview(""); }}
+                          className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--background)] text-[9px] text-[var(--foreground)]/60 shadow"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : null}
+                    <label className="cursor-pointer rounded-lg border border-[var(--foreground)]/20 bg-[var(--foreground)]/5 px-2.5 py-1.5 text-xs font-medium transition hover:bg-[var(--foreground)]/10">
+                      {gradedImageFile ? "Change" : gradedImagePreview ? "Replace" : "Add photo"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (!f) return;
+                          setGradedImageFile(f);
+                          setGradedImagePreview(URL.createObjectURL(f));
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="font-medium">Price paid (£)</span>
                   <input
@@ -2591,8 +2726,8 @@ export function CardGrid({
                     min={0}
                     step={0.01}
                     placeholder="0.00"
-                    value={addPricePaid}
-                    onChange={(e) => setAddPricePaid(e.target.value)}
+                    value={gradedPricePaid}
+                    onChange={(e) => setGradedPricePaid(e.target.value)}
                     className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
                   />
                 </label>
@@ -2600,8 +2735,8 @@ export function CardGrid({
                   <span className="font-medium">Purchase date</span>
                   <input
                     type="date"
-                    value={addPurchaseDate}
-                    onChange={(e) => setAddPurchaseDate(e.target.value)}
+                    value={gradedPurchaseDate}
+                    onChange={(e) => setGradedPurchaseDate(e.target.value)}
                     className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
                   />
                 </label>
@@ -2618,8 +2753,8 @@ export function CardGrid({
             </button>
             <button
               type="button"
-              disabled={addPending}
-              onClick={() => void submitAddCollection()}
+              disabled={addPending || (addIsGraded && !gradedValue.trim())}
+              onClick={() => void (addIsGraded ? submitGradedCollection() : submitAddCollection())}
               className="flex-1 rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium disabled:opacity-50"
             >
               {addPending ? "Saving…" : "Save"}
@@ -2630,128 +2765,8 @@ export function CardGrid({
       document.body,
     );
 
-  const GRADING_COMPANIES = ["PSA", "BGS", "CGC", "SGC", "ACE", "Other"];
 
-  const gradedSheet =
-    gradedSheetOpen &&
-    typeof document !== "undefined" &&
-    createPortal(
-      <div
-        className="fixed inset-0 z-[10001] flex flex-col justify-end bg-black/60"
-        onClick={() => setGradedSheetOpen(false)}
-        role="presentation"
-      >
-        <div
-          className="max-h-[85dvh] overflow-y-auto rounded-t-2xl border border-[var(--foreground)]/15 bg-[var(--background)] p-4 text-[var(--foreground)] shadow-xl"
-          onClick={(e) => e.stopPropagation()}
-          role="dialog"
-          aria-label="Add graded card"
-        >
-          <h2 className="text-lg font-semibold">Add graded card</h2>
-          <p className="mt-1 text-sm text-[var(--foreground)]/65">{selectedCard?.cardName}</p>
-          <div className="mt-4 flex flex-col gap-3">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Grading company</span>
-              <div className="flex flex-wrap gap-2">
-                {GRADING_COMPANIES.map((co) => (
-                  <button
-                    key={co}
-                    type="button"
-                    onClick={() => setGradedCompany(co)}
-                    className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
-                      gradedCompany === co
-                        ? "border-[var(--foreground)]/50 bg-[var(--foreground)]/15"
-                        : "border-[var(--foreground)]/20 bg-transparent opacity-60"
-                    }`}
-                  >
-                    {co}
-                  </button>
-                ))}
-              </div>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Grade</span>
-              <input
-                type="text"
-                placeholder="e.g. 10, 9.5, A"
-                value={gradedValue}
-                onChange={(e) => setGradedValue(e.target.value)}
-                className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Version</span>
-              <select
-                value={gradedPrinting}
-                onChange={(e) => setGradedPrinting(e.target.value)}
-                className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-              >
-                {pricingVariants.filter((v) => v !== "Unlisted").length > 0
-                  ? pricingVariants.filter((v) => v !== "Unlisted").map((v) => (
-                      <option key={v} value={v}>{variantLabel(v)}</option>
-                    ))
-                  : PRINTING_OPTIONS.map((p) => (
-                      <option key={p} value={p}>{p}</option>
-                    ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Market value (£)</span>
-              <input
-                type="number"
-                min={0}
-                step={0.01}
-                placeholder="0.00"
-                value={gradedMarketPrice}
-                onChange={(e) => setGradedMarketPrice(e.target.value)}
-                className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Price paid (£)</span>
-              <input
-                type="number"
-                min={0}
-                step={0.01}
-                placeholder="0.00"
-                value={gradedPricePaid}
-                onChange={(e) => setGradedPricePaid(e.target.value)}
-                className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Purchase date</span>
-              <input
-                type="date"
-                value={gradedPurchaseDate}
-                onChange={(e) => setGradedPurchaseDate(e.target.value)}
-                className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-              />
-            </label>
-          </div>
-          <div className="mt-6 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setGradedSheetOpen(false)}
-              className="flex-1 rounded-md border border-[var(--foreground)]/25 px-4 py-2 text-sm font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={gradedPending || !gradedValue.trim()}
-              onClick={() => void submitGradedCollection()}
-              className="flex-1 rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium disabled:opacity-50"
-            >
-              {gradedPending ? "Saving…" : "Save"}
-            </button>
-          </div>
-        </div>
-      </div>,
-      document.body,
-    );
-
-  const EDIT_GRADING_COMPANIES = ["PSA", "BGS", "CGC", "SGC", "ACE", "Other"];
+  const EDIT_GRADING_COMPANIES = ["PSA", "ACE"];
 
   const editSheet =
     editSheetOpen &&
@@ -3349,12 +3364,28 @@ export function CardGrid({
       groupMap[code].push({ card, globalIndex });
     });
 
-    // Sort groups newest-first by the release date of the first card in each group
-    groupOrder.sort((a, b) => {
-      const dateA = groupMap[a]?.[0]?.card.setReleaseDate ?? "";
-      const dateB = groupMap[b]?.[0]?.card.setReleaseDate ?? "";
-      return dateB.localeCompare(dateA);
-    });
+    if (groupShuffleSeed !== undefined) {
+      // Shuffle set groups with the provided seed
+      let s = groupShuffleSeed;
+      for (let i = groupOrder.length - 1; i > 0; i--) {
+        s = (s * 1664525 + 1013904223) & 0xffffffff;
+        const j = Math.abs(s) % (i + 1);
+        [groupOrder[i], groupOrder[j]] = [groupOrder[j]!, groupOrder[i]!];
+      }
+      // Sort cards within each group by card number descending
+      for (const code of groupOrder) {
+        groupMap[code]!.sort((a, b) =>
+          (b.card.cardNumber || "").localeCompare(a.card.cardNumber || "", undefined, { numeric: true }),
+        );
+      }
+    } else {
+      // Default: sort groups newest-first by release date
+      groupOrder.sort((a, b) => {
+        const dateA = groupMap[a]?.[0]?.card.setReleaseDate ?? "";
+        const dateB = groupMap[b]?.[0]?.card.setReleaseDate ?? "";
+        return dateB.localeCompare(dateA);
+      });
+    }
 
     return (
       <div className="flex flex-col gap-6">
@@ -3455,7 +3486,6 @@ export function CardGrid({
       {gridContent}
       {modal && createPortal(modal, document.body)}
       {addSheet}
-      {gradedSheet}
       {editSheet}
       {wishSheet}
       {removalSheet}

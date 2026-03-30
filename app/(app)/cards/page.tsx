@@ -6,6 +6,7 @@ import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import {
   CARDS_LOAD_MORE_STEP,
   fetchMasterCardsPage,
+  generateShuffledSetOrder,
   getCachedFilterFacets,
   resolveCardsCategoryFilter,
   resolveCardsTakeFromParams,
@@ -82,6 +83,8 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     resolvedSearchParams.page,
   );
 
+  const setOrder = generateShuffledSetOrder();
+
   const [{ entries: cardsForGrid, totalDocs: filteredCount }, customer] = await Promise.all([
     fetchMasterCardsPage({
       activeSet,
@@ -94,6 +97,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
       categoryQueryVariants,
       page: 1,
       perPage: requestedTake,
+      setOrder,
     }),
     getCurrentCustomer(),
   ]);

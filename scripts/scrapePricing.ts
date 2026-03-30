@@ -25,9 +25,11 @@ import {
   fetchScrydexCardPageHtml,
   parseScrydexCardPageRawNearMintUsd,
   parseScrydexCardPagePsa10Usd,
+  parseScrydexCardPageAce10Usd,
   mergeScrydexExpansionAndDetailUsd,
   canonicalScrydexVariantLabel,
   SCRYDEX_FLAT_PSA10_KEY_SUFFIX,
+  SCRYDEX_FLAT_ACE10_KEY_SUFFIX,
 } from "../lib/scrydexMepCardPagePricing";
 import { scrydexMegaExpansionConfig } from "../lib/scrydexMegaEvolutionUrls";
 import { scrydexScarletVioletExpansionConfig } from "../lib/scrydexScarletVioletUrls";
@@ -125,7 +127,7 @@ function resolveExpansionConfigs(set: SetJsonEntry): ScrydexExpansionListConfig[
 
 // ─── Pricing helpers ──────────────────────────────────────────────────────────
 
-type ByVariant = Record<string, { raw?: number; psa10?: number }>;
+type ByVariant = Record<string, { raw?: number; psa10?: number; ace10?: number }>;
 
 function slugFromLabel(label: string): string {
   const compact = label.toLowerCase().replace(/[\s-_]+/g, "");
@@ -152,6 +154,10 @@ function collateFlatToByVariant(flatUsd: Record<string, number>): ByVariant {
       const base = k.slice(0, -SCRYDEX_FLAT_PSA10_KEY_SUFFIX.length);
       const slug = slugFromLabel(canonicalScrydexVariantLabel(base));
       out[slug] = { ...out[slug], psa10: v };
+    } else if (k.endsWith(SCRYDEX_FLAT_ACE10_KEY_SUFFIX)) {
+      const base = k.slice(0, -SCRYDEX_FLAT_ACE10_KEY_SUFFIX.length);
+      const slug = slugFromLabel(canonicalScrydexVariantLabel(base));
+      out[slug] = { ...out[slug], ace10: v };
     } else {
       const slug = slugFromLabel(canonicalScrydexVariantLabel(k));
       out[slug] = { ...out[slug], raw: v };
@@ -163,9 +169,10 @@ function collateFlatToByVariant(flatUsd: Record<string, number>): ByVariant {
 function convertByVariantUsdToGbp(byVariant: ByVariant, usdToGbp: number): ByVariant {
   const out: ByVariant = {};
   for (const [slug, rec] of Object.entries(byVariant)) {
-    const next: { raw?: number; psa10?: number } = {};
+    const next: { raw?: number; psa10?: number; ace10?: number } = {};
     if (typeof rec.raw === "number") next.raw = rec.raw * usdToGbp;
     if (typeof rec.psa10 === "number") next.psa10 = rec.psa10 * usdToGbp;
+    if (typeof rec.ace10 === "number") next.ace10 = rec.ace10 * usdToGbp;
     if (Object.keys(next).length > 0) out[slug] = next;
   }
   return out;
@@ -307,14 +314,16 @@ async function scrapeSet(
       const html = cardPath ? (pathHtml.get(cardPath) ?? "") : "";
       const detailUsd = html ? parseScrydexCardPageRawNearMintUsd(html) : {};
       const psa10Usd = html ? parseScrydexCardPagePsa10Usd(html) : {};
+      const ace10Usd = html ? parseScrydexCardPageAce10Usd(html) : {};
       flatUsd = {
         ...flatUsd,
         ...mergeScrydexExpansionAndDetailUsd(listUsd, detailUsd),
         ...psa10Usd,
+        ...ace10Usd,
       };
     }
     const byVariant = collateFlatToByVariant(flatUsd);
-    const hasPrice = Object.values(byVariant).some((r) => Number.isFinite(r.raw) || Number.isFinite(r.psa10));
+    const hasPrice = Object.values(byVariant).some((r) => Number.isFinite(r.raw) || Number.isFinite(r.psa10) || Number.isFinite(r.ace10));
     if (!hasPrice) continue;
 
     const scrydexGbp = convertByVariantUsdToGbp(byVariant, usdToGbp);

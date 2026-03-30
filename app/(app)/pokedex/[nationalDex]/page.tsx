@@ -125,6 +125,7 @@ export default async function PokedexPokemonCardsPage({
                 rarityOptions={[]}
                 categoryOptions={[]}
                 resetHref={`/pokedex/${dexNum}`}
+                defaultGroupBySet={false}
               />
             </CardsResultsScroll>
           </div>

@@ -57,6 +57,10 @@ export type CardTagFilterRowProps = {
   groupBySet: boolean;
   onGroupBySetChange: (value: boolean) => void;
 
+  /** Random order toggle — only shown when provided */
+  randomOrder?: boolean;
+  onRandomOrderChange?: (value: boolean) => void;
+
   /** Local search (collect/wishlist) — filters cards in-memory, no URL changes */
   localSearch?: {
     value: string;
@@ -112,6 +116,8 @@ export type CardTagFilterRowProps = {
 export function CardTagFilterRow({
   groupBySet,
   onGroupBySetChange,
+  randomOrder,
+  onRandomOrderChange,
   localSearch,
   localFilters,
   sortControl,
@@ -319,6 +325,35 @@ export function CardTagFilterRow({
           }
           onClick={() => onGroupBySetChange(!groupBySet)}
         />
+
+        {/* Random order toggle — only shown when provided */}
+        {onRandomOrderChange !== undefined ? (
+          <TagButton
+            label="Random"
+            active={randomOrder ?? false}
+            icon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22" />
+                <path d="m18 2 4 4-4 4" />
+                <path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2" />
+                <path d="M22 18h-5.9c-1.3 0-2.5-.7-3.1-1.8l-.3-.5" />
+                <path d="m18 14 4 4-4 4" />
+              </svg>
+            }
+            onClick={() => onRandomOrderChange(!randomOrder)}
+          />
+        ) : null}
 
         {/* Sort dropdown */}
         {sortControl ? (

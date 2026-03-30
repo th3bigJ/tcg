@@ -76,8 +76,8 @@ export function CardsResultsScroll({
   }, [canLoadMore, loadMoreHref, scrollRestoreKey]);
 
   function handleTouchStart(e: React.TouchEvent) {
-    if (!scrollsWindow) return;
-    if (window.scrollY > 0) return;
+    const scrollTop = scrollsWindow ? window.scrollY : (scrollRef.current?.scrollTop ?? 0);
+    if (scrollTop > 0) return;
     touchStartYRef.current = e.touches[0]!.clientY;
   }
 
@@ -124,7 +124,7 @@ export function CardsResultsScroll({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {scrollsWindow && (pullY > 0 || isRefreshing) ? (
+      {(pullY > 0 || isRefreshing) ? (
         <div
           className="pointer-events-none flex items-center justify-center gap-2 overflow-hidden transition-[height]"
           style={{ height: isRefreshing ? 40 : pullY * 0.55 }}
