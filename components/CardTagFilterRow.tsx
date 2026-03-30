@@ -4,6 +4,23 @@ import React, { useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+// ── Auto-width select wrapper ──────────────────────────────────────────────────
+// A grid trick: the hidden span sizes the container to the selected option text,
+// then the select stretches to fill it. Works on iOS Safari where width:auto fails.
+
+function AutoWidthSelect({ children, selectedLabel, className, style, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { selectedLabel: string }) {
+  return (
+    <div style={{ display: "inline-grid" }}>
+      <span style={{ gridArea: "1/1", visibility: "hidden", whiteSpace: "nowrap", fontSize: "0.75rem", fontWeight: 500, padding: "0 1.75rem 0 0.75rem", pointerEvents: "none" }} aria-hidden>
+        {selectedLabel}
+      </span>
+      <select style={{ gridArea: "1/1", width: "100%", ...style }} className={className} {...props}>
+        {children}
+      </select>
+    </div>
+  );
+}
+
 // ── Tag button ────────────────────────────────────────────────────────────────
 
 type TagButtonProps = {
@@ -362,11 +379,12 @@ export function CardTagFilterRow({
         {/* Sort dropdown */}
         {sortControl ? (
           <div className="relative shrink-0">
-            <select
+            <AutoWidthSelect
               value={sortControl.value}
+              selectedLabel={sortControl.options.find((o) => o.value === sortControl.value)?.label ?? "Sort"}
               onChange={(e) => sortControl.onChange(e.currentTarget.value)}
               aria-label="Sort order"
-              className={`h-8 w-28 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
+              className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
                 (sortControl.defaultValue !== undefined
                   ? sortControl.value !== sortControl.defaultValue
                   : Boolean(sortControl.value))
@@ -377,7 +395,7 @@ export function CardTagFilterRow({
               {sortControl.options.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
-            </select>
+            </AutoWidthSelect>
             <ChevronDown />
           </div>
         ) : null}
@@ -386,11 +404,12 @@ export function CardTagFilterRow({
         {localFilters ? (
           <>
             <div className="relative shrink-0">
-              <select
+              <AutoWidthSelect
                 value={localFilters.rarity}
+                selectedLabel={localFilters.rarity || "Rarity"}
                 onChange={(e) => localFilters.onRarityChange(e.currentTarget.value)}
                 aria-label="Filter by rarity"
-                className={`h-8 w-28 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
+                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
                   localFilters.rarity
                     ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
                     : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
@@ -400,16 +419,17 @@ export function CardTagFilterRow({
                 {localFilters.rarityOptions.map((r) => (
                   <option key={r} value={r}>{r}</option>
                 ))}
-              </select>
+              </AutoWidthSelect>
               <ChevronDown />
             </div>
 
             <div className="relative shrink-0">
-              <select
+              <AutoWidthSelect
                 value={localFilters.category}
+                selectedLabel={localFilters.category || "Card type"}
                 onChange={(e) => localFilters.onCategoryChange(e.currentTarget.value)}
                 aria-label="Filter by card type"
-                className={`h-8 w-28 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
+                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
                   localFilters.category
                     ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
                     : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
@@ -419,7 +439,7 @@ export function CardTagFilterRow({
                 {localFilters.categoryOptions.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
-              </select>
+              </AutoWidthSelect>
               <ChevronDown />
             </div>
 
@@ -447,8 +467,9 @@ export function CardTagFilterRow({
           <>
             {/* Rarity dropdown */}
             <div className="relative shrink-0">
-              <select
+              <AutoWidthSelect
                 name="rarity-select"
+                selectedLabel={sf.activeRarity || "Rarity"}
                 value={sf.activeRarity}
                 onChange={(e) => {
                   const val = e.currentTarget.value;
@@ -465,7 +486,7 @@ export function CardTagFilterRow({
                   router.push(`${sf.formAction}?${params.toString()}`);
                 }}
                 aria-label="Filter by rarity"
-                className={`h-8 w-28 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
+                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
                   sf.activeRarity
                     ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
                     : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
@@ -475,14 +496,15 @@ export function CardTagFilterRow({
                 {sf.rarityOptions.map((r) => (
                   <option key={r} value={r}>{r}</option>
                 ))}
-              </select>
+              </AutoWidthSelect>
               <ChevronDown />
             </div>
 
             {/* Card type dropdown */}
             <div className="relative shrink-0">
-              <select
+              <AutoWidthSelect
                 name="category-select"
+                selectedLabel={sf.activeCategory || "Card type"}
                 value={sf.activeCategory}
                 onChange={(e) => {
                   const val = e.currentTarget.value;
@@ -499,7 +521,7 @@ export function CardTagFilterRow({
                   router.push(`${sf.formAction}?${params.toString()}`);
                 }}
                 aria-label="Filter by card type"
-                className={`h-8 w-28 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
+                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
                   sf.activeCategory
                     ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
                     : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
@@ -509,7 +531,7 @@ export function CardTagFilterRow({
                 {sf.categoryOptions.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
-              </select>
+              </AutoWidthSelect>
               <ChevronDown />
             </div>
 

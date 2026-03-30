@@ -134,7 +134,7 @@ export function SearchCardsTabGrid({
             }}
             options={[{ value: "", label: "Rarity" }, ...rarityOptions.map((v) => ({ value: v, label: v }))]}
             ariaLabel="Filter by rarity"
-            widthClass="w-28"
+            widthClass="w-auto"
           />
           <FilterChipSelect
             value={activeCategory}

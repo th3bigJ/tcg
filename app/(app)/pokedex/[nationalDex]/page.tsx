@@ -9,10 +9,12 @@ import {
 import {
   CARDS_TAKE_MAX,
   fetchMasterCardsPage,
+  fetchCardsMarketValue,
   getCachedFilterFacets,
 } from "@/lib/cardsPageQueries";
 import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 import { getCurrentCustomer } from "@/lib/auth";
+import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 
 type PokedexPokemonCardsPageProps = {
   params: Promise<{ nationalDex: string }>;
@@ -55,6 +57,15 @@ export default async function PokedexPokemonCardsPage({
     }),
     getCurrentCustomer(),
   ]);
+
+  const collectionEntries = customer ? await fetchCollectionCardEntries(customer.id) : [];
+  const ownedMasterCardIds = new Set(
+    collectionEntries.map((e) => e.masterCardId?.trim() ?? "").filter((v) => v.length > 0),
+  );
+  const cardMasterCardIds = new Set(cardsForGrid.map((c) => c.masterCardId ?? "").filter(Boolean));
+  const ownedCount = [...cardMasterCardIds].filter((id) => ownedMasterCardIds.has(id)).length;
+  const marketValue = await fetchCardsMarketValue(cardsForGrid, customer ? ownedMasterCardIds : undefined);
+  const missingCount = marketValue?.missingCount ?? (filteredCount - ownedCount);
 
   const scrollRestoreKey = [String(dexNum), "pokedex-pokemon"].join("|");
 
@@ -99,7 +110,15 @@ export default async function PokedexPokemonCardsPage({
               </h1>
               <p className="text-xs text-[var(--foreground)]/60">
                 {filteredCount} card{filteredCount === 1 ? "" : "s"}
+                {marketValue != null ? (
+                  <> · <span className="text-[var(--foreground)]/80">£{marketValue.totalValueGbp.toFixed(2)} market value</span></>
+                ) : null}
               </p>
+              {customer && missingCount > 0 ? (
+                <p className="text-xs text-[var(--foreground)]/80">
+                  {missingCount} card{missingCount === 1 ? "" : "s"} needed · £{marketValue?.missingValueGbp.toFixed(2) ?? "—"} to complete
+                </p>
+              ) : null}
             </div>
           </header>
 

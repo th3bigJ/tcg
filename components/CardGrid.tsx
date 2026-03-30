@@ -1224,6 +1224,30 @@ const CardGridItem = memo(function CardGridItem({
             </span>
           </div>
         ) : null}
+        {showCollectedBadge ? (
+          <span
+            className="pointer-events-none absolute z-20 flex h-6 w-6 items-center justify-center rounded-full"
+            style={{ background: "#22c55e", bottom: "6px", right: "6px", boxShadow: "0 4px 12px rgba(0,0,0,0.28)", outline: "2px solid var(--background)" }}
+            title={variant === "wishlist" ? "You own this card" : "In your collection"}
+            aria-label={variant === "wishlist" ? "You own this card" : "In your collection"}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        ) : null}
+        {showWishlistBadge ? (
+          <span
+            className="pointer-events-none absolute z-20 flex h-6 w-6 items-center justify-center rounded-full"
+            style={{ background: "#ef4444", bottom: "6px", right: "6px", boxShadow: "0 4px 12px rgba(0,0,0,0.28)", outline: "2px solid var(--background)" }}
+            title="On your wishlist"
+            aria-label="On your wishlist"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="white" aria-hidden>
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
+            </svg>
+          </span>
+        ) : null}
         <button
           type="button"
           className="absolute inset-0 z-10 cursor-pointer border-0 bg-transparent p-0"
@@ -1287,41 +1311,6 @@ const CardGridItem = memo(function CardGridItem({
             )}
           </span>
         </div>
-        {showCollectedBadge ? (
-          <span
-            className="pointer-events-none absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.28)] ring-2 ring-[var(--background)]"
-            style={{ background: "#22c55e" }}
-            title={variant === "wishlist" ? "You own this card" : "In your collection"}
-            aria-label={variant === "wishlist" ? "You own this card" : "In your collection"}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </span>
-        ) : null}
-        {showWishlistBadge ? (
-          <span
-            className="pointer-events-none absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.28)] ring-2 ring-[var(--background)]"
-            style={{ background: "#ef4444" }}
-            title="On your wishlist"
-            aria-label="On your wishlist"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="white" aria-hidden>
-              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
-            </svg>
-          </span>
-        ) : null}
       </div>
     </li>
   );

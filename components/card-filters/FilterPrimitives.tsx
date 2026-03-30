@@ -90,7 +90,7 @@ export function FilterChipSelect({
   options,
   ariaLabel,
   defaultValue,
-  widthClass = "w-28",
+  widthClass = "w-auto",
 }: FilterChipSelectProps) {
   const active = defaultValue !== undefined ? value !== defaultValue : Boolean(value);
   return (
@@ -99,7 +99,8 @@ export function FilterChipSelect({
         value={value}
         onChange={(e) => onChange(e.currentTarget.value)}
         aria-label={ariaLabel}
-        className={`h-8 ${widthClass} rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
+        style={{ width: "auto" }}
+        className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
           active
             ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
             : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"

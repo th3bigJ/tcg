@@ -386,6 +386,76 @@ export async function fetchSetCompletionValue(
   }
 }
 
+/**
+ * Sum the lowest raw GBP price for a list of cards spanning multiple sets.
+ * Returns total market value and (if ownedMasterCardIds provided) missing value.
+ */
+export async function fetchCardsMarketValue(
+  cards: CardsPageCardEntry[],
+  ownedMasterCardIds?: Set<string>,
+): Promise<{ totalValueGbp: number; missingValueGbp: number; missingCount: number } | null> {
+  try {
+    const { getPricingForSet, getPricingForCard } = await import("@/lib/r2Pricing");
+
+    const cardsBySet = new Map<string, CardsPageCardEntry[]>();
+    for (const card of cards) {
+      const set = card.set?.trim() ?? "";
+      if (!set) continue;
+      const list = cardsBySet.get(set) ?? [];
+      list.push(card);
+      cardsBySet.set(set, list);
+    }
+
+    const pricingMaps = await Promise.all(
+      [...cardsBySet.keys()].map(async (setCode) => [setCode, await getPricingForSet(setCode)] as const),
+    );
+    const pricingBySet = new Map(pricingMaps);
+
+    let totalValueGbp = 0;
+    let missingValueGbp = 0;
+    let missingCount = 0;
+    const seen = new Set<string>();
+
+    for (const card of cards) {
+      const masterCardId = card.masterCardId?.trim() ?? "";
+      const externalId = card.externalId?.trim() ?? "";
+      const uniqueKey = masterCardId || externalId;
+      if (!uniqueKey || seen.has(uniqueKey)) continue;
+      seen.add(uniqueKey);
+
+      const pricing = pricingBySet.get(card.set?.trim() ?? "");
+      if (!pricing || !externalId) continue;
+
+      const fallback = card.legacyExternalId?.trim() ? [card.legacyExternalId.trim()] : undefined;
+      const entry = getPricingForCard(pricing, externalId, fallback);
+      const scrydex = entry?.scrydex;
+      if (!scrydex || typeof scrydex !== "object" || Array.isArray(scrydex)) continue;
+
+      let lowest = Infinity;
+      for (const v of Object.values(scrydex as Record<string, unknown>)) {
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+          const raw = (v as Record<string, unknown>).raw;
+          if (typeof raw === "number" && Number.isFinite(raw) && raw > 0 && raw < lowest) {
+            lowest = raw;
+          }
+        }
+      }
+      if (lowest === Infinity) continue;
+
+      totalValueGbp += lowest;
+      const isOwned = ownedMasterCardIds && masterCardId && ownedMasterCardIds.has(masterCardId);
+      if (!isOwned) {
+        missingValueGbp += lowest;
+        missingCount++;
+      }
+    }
+
+    return { totalValueGbp, missingValueGbp, missingCount };
+  } catch {
+    return null;
+  }
+}
+
 // ─── Shuffled set order (call once server-side, pass to fetchMasterCardsPage) ─
 
 export function generateShuffledSetOrder(): string[] {
@@ -426,6 +496,10 @@ export async function fetchMasterCardsPage(params: {
   function toEntry(card: CardJsonEntry): CardsPageCardEntry | null {
     return cardJsonEntryToCardsPageEntry(card, setMetaMap.get(card.setCode));
   }
+
+  const orderedRows = getDefaultCardOrder();
+  const orderRank = new Map<string, number>();
+  orderedRows.forEach((row, index) => orderRank.set(row.id, index));
 
   // ── Pokemon dex filter path ────────────────────────────────────────────────
   if (params.activePokemonDex !== null) {
@@ -482,10 +556,6 @@ export async function fetchMasterCardsPage(params: {
     !params.activeArtist &&
     !params.excludeCommonUncommon &&
     params.categoryQueryVariants.length === 0;
-
-  const orderedRows = getDefaultCardOrder();
-  const orderRank = new Map<string, number>();
-  orderedRows.forEach((row, index) => orderRank.set(row.id, index));
 
   if (isDefaultUnfiltered) {
     if (params.randomSeed) {

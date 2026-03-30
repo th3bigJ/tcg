@@ -18,7 +18,8 @@ export function SearchBrowseTabs({ activeTab, cardsHref = "/search" }: Props) {
         href={href}
         role="tab"
         aria-selected={isActive}
-        className={`flex-1 rounded-lg px-2 py-2 text-center text-xs font-medium transition sm:text-sm ${
+        style={{ borderRadius: "999px" }}
+        className={`flex-1 px-2 py-2 text-center text-xs font-medium transition sm:text-sm ${
           isActive
             ? "bg-[var(--foreground)]/15 text-[var(--foreground)]"
             : "text-[var(--foreground)]/55 hover:text-[var(--foreground)]/85"
@@ -31,7 +32,8 @@ export function SearchBrowseTabs({ activeTab, cardsHref = "/search" }: Props) {
 
   return (
     <div
-      className="mb-3 flex shrink-0 gap-1 rounded-xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 p-1"
+      className="mb-3 flex shrink-0 gap-1 border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 p-1"
+      style={{ borderRadius: "999px" }}
       role="tablist"
       aria-label="Search browse"
     >
