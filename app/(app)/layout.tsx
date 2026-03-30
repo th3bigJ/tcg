@@ -55,7 +55,7 @@ export default async function RootLayout({
     >
       <body className="flex min-h-[100dvh] flex-col bg-[var(--background)] text-[var(--foreground)]">
         <DevRuntimeGuards />
-        <div className="relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)]">
+        <div className="relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)]" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
           {children}
         </div>
         <BottomNav isLoggedIn={Boolean(customer)} />
