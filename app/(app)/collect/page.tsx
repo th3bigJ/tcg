@@ -72,18 +72,17 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
   }
   const allCardsForGrid = mergeCollectionEntriesForGrid(entries);
 
-  const setFilterOptions = await getCachedSetFilterOptions((facets ?? {}).setCodes ?? []);
+  const [setFilterOptions, collectionValue, pricesResult] = await Promise.all([
+    getCachedSetFilterOptions((facets ?? {}).setCodes ?? []),
+    entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
+    entries.length > 0 ? estimateCardUnitPricesGbp(entries) : Promise.resolve({ prices: {}, manualPriceIds: new Set<string>() }),
+  ]);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
   const setSymbolsByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
-
-  const [collectionValue, pricesResult] = await Promise.all([
-    entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
-    entries.length > 0 ? estimateCardUnitPricesGbp(entries) : Promise.resolve({ prices: {}, manualPriceIds: new Set<string>() }),
-  ]);
   const cardPricesByMasterCardId = { ...pricesResult.prices };
   const manualPriceMasterCardIds = pricesResult.manualPriceIds;
 

@@ -70,9 +70,13 @@ export function getCardsBySet(setCode: string): CardJsonEntry[] {
   }
 }
 
+let _allCards: CardJsonEntry[] | null = null;
+
 export function getAllCards(): CardJsonEntry[] {
+  if (_allCards) return _allCards;
   const codes = getAllSetCodes();
-  return codes.flatMap(getCardsBySet);
+  _allCards = codes.flatMap(getCardsBySet);
+  return _allCards;
 }
 
 export function getCardByMasterCardId(id: string): CardJsonEntry | null {

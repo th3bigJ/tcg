@@ -1199,7 +1199,6 @@ const CardGridItem = memo(function CardGridItem({
   const showWishlistBadge =
     !showCollectedBadge && wishlisted && (variant === "wishlist" || variant === "browse");
   const tileSetName = card.setName || card.set;
-  const tileSetSymbolSrc = card.setSymbolSrc || setSymbolsByCode?.[card.set] || "";
   const firstRowText = card.cardName || "";
 
   return (
@@ -1312,23 +1311,15 @@ const CardGridItem = memo(function CardGridItem({
             </span>
           ) : null}
           {tileSetName ? (
-            <span className="mt-0.5 flex items-center justify-center gap-1 text-[10px] font-medium text-[var(--foreground)]/68">
-              {tileSetSymbolSrc ? (
-                <img
-                  src={tileSetSymbolSrc}
-                  alt=""
-                  aria-hidden
-                  className="h-3 w-auto shrink-0 object-contain"
-                />
-              ) : null}
-              <span className="line-clamp-1">{tileSetName}</span>
+            <span className="mt-0.5 block line-clamp-1 text-[10px] font-medium text-[var(--foreground)]/68">
+              {tileSetName}
             </span>
           ) : null}
           <span className="mt-0.5 block text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
             {unitPrice !== null || (priceLabel?.trim() ?? "") ? (
               <>
                 {gradingLabel
-                  ? <span title={gradingLabel}>🏆 {gradingLabel} · </span>
+                  ? <span title={gradingLabel}>{gradingLabel} · </span>
                   : isManualPrice
                     ? <span title="Manually set price">✎ </span>
                     : null
@@ -1487,6 +1478,29 @@ export function CardGrid({
     }
   }, [collectionLinesByMasterCardId]);
 
+  // Precompute owned/quantity maps so each tile doesn't call cardHasOwnedLines/ownedCopyCount inline
+  const ownedByMapKey = useMemo(() => {
+    const out: Record<string, boolean> = {};
+    for (const key of Object.keys(localCollectionLinesByMasterCardId)) {
+      out[key] = (localCollectionLinesByMasterCardId[key]?.length ?? 0) > 0;
+    }
+    return out;
+  }, [localCollectionLinesByMasterCardId]);
+
+  const ownedQuantityByMapKey = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const [key, lines] of Object.entries(localCollectionLinesByMasterCardId)) {
+      let total = 0;
+      for (const line of lines) {
+        total += typeof line.quantity === "number" && Number.isFinite(line.quantity) && line.quantity > 0
+          ? Math.floor(line.quantity)
+          : 1;
+      }
+      out[key] = total;
+    }
+    return out;
+  }, [localCollectionLinesByMasterCardId]);
+
   const collectionPriceMetaByMasterCardId = useMemo(() => {
     const out: Record<string, { label: string | null; hasManual: boolean }> = {};
     for (const [mid, lines] of Object.entries(localCollectionLinesByMasterCardId)) {
@@ -1567,16 +1581,19 @@ export function CardGrid({
     return { prev: null as CardEntry | null, next: null as CardEntry | null };
   }, [normalizedCards, selectedCard, selectedIndex, standaloneModalCard]);
 
+  // Re-sync the selected index when the cards array changes (e.g. after router.refresh()).
+  // Does NOT depend on selectedIndex — that would cause a bounce-back when viewNext/viewPrevious
+  // sets the index before the identity effect (below) has updated selectedCardIdentity.
+  const normalizedCardsRef = useRef(normalizedCards);
+  normalizedCardsRef.current = normalizedCards;
   useEffect(() => {
     if (standaloneModalCard !== null) return;
-    if (selectedIndex === null) return;
-    if (!selectedCardIdentity) {
-      const nextIdentity = cardEntryIdentity(normalizedCards[selectedIndex] ?? null);
-      if (nextIdentity) setSelectedCardIdentity(nextIdentity);
-      return;
-    }
+    if (!selectedCardIdentity) return;
 
-    const matchedIndex = normalizedCards.findIndex(
+    const cards = normalizedCardsRef.current;
+    const currentIndex = selectedIndexRef.current;
+
+    const matchedIndex = cards.findIndex(
       (card) => cardEntryIdentity(card) === selectedCardIdentity,
     );
 
@@ -1586,10 +1603,10 @@ export function CardGrid({
       return;
     }
 
-    if (matchedIndex !== selectedIndex) {
+    if (currentIndex !== null && matchedIndex !== currentIndex) {
       setSelectedIndex(matchedIndex);
     }
-  }, [normalizedCards, selectedCardIdentity, selectedIndex, standaloneModalCard]);
+  }, [normalizedCards, selectedCardIdentity, standaloneModalCard]);
 
   useEffect(() => {
     if (standaloneModalCard !== null) {
@@ -3628,8 +3645,8 @@ export function CardGrid({
               variant === "collection" && mid && mapKey === mid
                 ? collectionPriceMetaByMasterCardId[mid]
                 : undefined;
-            const owned = cardHasOwnedLines(card, localCollectionLinesByMasterCardId);
-            const ownedQuantity = ownedCopyCount(card, localCollectionLinesByMasterCardId);
+            const owned = Boolean(ownedByMapKey[mapKey] || (card.masterCardId && ownedByMapKey[card.masterCardId]));
+            const ownedQuantity = ownedQuantityByMapKey[mapKey] ?? (card.masterCardId ? ownedQuantityByMapKey[card.masterCardId] ?? 0 : 0);
             const isManualPrice =
               variant === "collection"
                 ? Boolean(collectionPriceMeta?.hasManual)
@@ -3765,8 +3782,8 @@ export function CardGrid({
                     variant === "collection" && mid && mapKey === mid
                       ? collectionPriceMetaByMasterCardId[mid]
                       : undefined;
-                  const owned = cardHasOwnedLines(card, localCollectionLinesByMasterCardId);
-                  const ownedQuantity = ownedCopyCount(card, localCollectionLinesByMasterCardId);
+                  const owned = Boolean(ownedByMapKey[mapKey] || (card.masterCardId && ownedByMapKey[card.masterCardId]));
+                  const ownedQuantity = ownedQuantityByMapKey[mapKey] ?? (card.masterCardId ? ownedQuantityByMapKey[card.masterCardId] ?? 0 : 0);
                   const isManualPrice =
                     variant === "collection"
                       ? Boolean(collectionPriceMeta?.hasManual)
