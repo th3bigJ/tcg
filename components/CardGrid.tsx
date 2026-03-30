@@ -607,6 +607,12 @@ function sameCardEntry(a: CardEntry | null, b: CardEntry | null): boolean {
   return a.set === b.set && a.filename === b.filename;
 }
 
+function cardEntryIdentity(card: CardEntry | null): string | null {
+  if (!card) return null;
+  if (card.masterCardId) return `master:${card.masterCardId}`;
+  return `file:${card.set}/${card.filename}`;
+}
+
 /** Keep in sync with `globals.css` `.card-viewer-overlay` `--card-viewer-carousel-gap` (used in transform math). */
 const MODAL_CAROUSEL_GAP_PX = 32;
 
@@ -703,6 +709,7 @@ function ModalDexOtherCardsSection({
   selectedCard,
   normalizedCards,
   setSelectedIndex,
+  setSelectedCardIdentity,
   setStandaloneModalCard,
 }: {
   variant: "mobile" | "desktop";
@@ -712,6 +719,7 @@ function ModalDexOtherCardsSection({
   selectedCard: CardEntry;
   normalizedCards: CardEntry[];
   setSelectedIndex: (index: number | null) => void;
+  setSelectedCardIdentity: (identity: string | null) => void;
   setStandaloneModalCard: (card: CardEntry | null) => void;
 }) {
   const isDesktop = variant === "desktop";
@@ -760,9 +768,11 @@ function ModalDexOtherCardsSection({
             if (gi >= 0) {
               setStandaloneModalCard(null);
               setSelectedIndex(gi);
+              setSelectedCardIdentity(cardEntryIdentity(normalizedCards[gi] ?? null));
             } else {
               setStandaloneModalCard(card);
               setSelectedIndex(null);
+              setSelectedCardIdentity(cardEntryIdentity(card));
             }
           }}
           className={btnClass(isCurrent)}
@@ -1379,6 +1389,7 @@ export function CardGrid({
   );
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedCardIdentity, setSelectedCardIdentity] = useState<string | null>(null);
   const [standaloneModalCard, setStandaloneModalCard] = useState<CardEntry | null>(null);
   const [nationalDexStrip, setNationalDexStrip] = useState<CardEntry[]>([]);
   const [nationalDexStripLoading, setNationalDexStripLoading] = useState(false);
@@ -1416,6 +1427,42 @@ export function CardGrid({
 
     return { prev: null as CardEntry | null, next: null as CardEntry | null };
   }, [normalizedCards, selectedCard, selectedIndex, standaloneModalCard]);
+
+  useEffect(() => {
+    if (standaloneModalCard !== null) return;
+    if (selectedIndex === null) return;
+    if (!selectedCardIdentity) {
+      const nextIdentity = cardEntryIdentity(normalizedCards[selectedIndex] ?? null);
+      if (nextIdentity) setSelectedCardIdentity(nextIdentity);
+      return;
+    }
+
+    const matchedIndex = normalizedCards.findIndex(
+      (card) => cardEntryIdentity(card) === selectedCardIdentity,
+    );
+
+    if (matchedIndex === -1) {
+      setSelectedIndex(null);
+      setSelectedCardIdentity(null);
+      return;
+    }
+
+    if (matchedIndex !== selectedIndex) {
+      setSelectedIndex(matchedIndex);
+    }
+  }, [normalizedCards, selectedCardIdentity, selectedIndex, standaloneModalCard]);
+
+  useEffect(() => {
+    if (standaloneModalCard !== null) {
+      setSelectedCardIdentity(cardEntryIdentity(standaloneModalCard));
+      return;
+    }
+    if (selectedIndex === null) {
+      setSelectedCardIdentity(null);
+      return;
+    }
+    setSelectedCardIdentity(cardEntryIdentity(normalizedCards[selectedIndex] ?? null));
+  }, [normalizedCards, selectedIndex, standaloneModalCard]);
 
   const collectionLinesForSelected = useMemo(() => {
     const key = selectedCard ? cardCollectionMapKey(selectedCard) : "";
@@ -1456,7 +1503,8 @@ export function CardGrid({
   const openModal = useCallback((index: number) => {
     setStandaloneModalCard(null);
     setSelectedIndex(index);
-  }, []);
+    setSelectedCardIdentity(cardEntryIdentity(normalizedCards[index] ?? null));
+  }, [normalizedCards]);
 
   const hideGridAutoOpenedRef = useRef(false);
   useEffect(() => {
@@ -1473,6 +1521,7 @@ export function CardGrid({
   const closeModal = useCallback(() => {
     setAddSheetOpen(false);
     setSelectedIndex(null);
+    setSelectedCardIdentity(null);
     setStandaloneModalCard(null);
     setNationalDexStrip([]);
     setNationalDexStripLoading(false);
@@ -1834,7 +1883,7 @@ export function CardGrid({
     variant,
   ]);
 
-  const toggleWishlist = useCallback(async (variant?: string) => {
+  const toggleWishlist = useCallback(async (targetVariant?: string) => {
     if (!selectedCard?.masterCardId) return;
     if (!allowMutations) {
       if (!readOnly && !customerLoggedIn) goLogin();
@@ -1862,21 +1911,26 @@ export function CardGrid({
       } finally {
         setWishPending(false);
       }
-    } else if (variant) {
+    } else if (targetVariant) {
       // Variant specified directly — add immediately without sheet
-      setWishVariant(variant);
+      setWishVariant(targetVariant);
       setWishPending(true);
       try {
         const res = await fetch("/api/wishlist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ masterCardId: mid, targetPrinting: variant }),
+          body: JSON.stringify({ masterCardId: mid, targetPrinting: targetVariant }),
         });
         if (res.ok) {
           let j: { doc?: { id?: string | number } };
           try { j = (await res.json()) as { doc?: { id?: string | number } }; } catch { j = {}; }
           const wid = j.doc?.id;
-          if (wid !== undefined) setLocalWishlistMap((m) => ({ ...m, [mid]: { id: String(wid), printing: variant } }));
+          if (wid !== undefined) {
+            setLocalWishlistMap((m) => ({
+              ...m,
+              [mid]: { id: String(wid), printing: targetVariant },
+            }));
+          }
           if (variant !== "browse") router.refresh();
         }
       } catch {
@@ -2265,7 +2319,7 @@ export function CardGrid({
       </button>
 
       <div
-        className="relative mx-auto flex min-h-[100dvh] w-full min-w-0 max-w-[1460px] flex-col overflow-x-hidden px-3 pb-14 pt-4 sm:px-6 md:h-[100dvh] md:max-h-[100dvh] md:min-h-0 md:overflow-hidden md:px-8 md:pb-5 md:pt-6"
+        className="relative mx-auto flex min-h-[100dvh] w-full min-w-0 max-w-[1460px] flex-col overflow-x-hidden px-3 pb-14 pt-[max(1rem,calc(env(safe-area-inset-top,0px)+0.75rem))] sm:px-6 md:h-[100dvh] md:max-h-[100dvh] md:min-h-0 md:overflow-hidden md:px-8 md:pb-5 md:pt-6"
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleModalTouchStart}
         onTouchMove={handleModalTouchMove}
@@ -2326,6 +2380,7 @@ export function CardGrid({
                 selectedCard={selectedCard}
                 normalizedCards={normalizedCards}
                 setSelectedIndex={setSelectedIndex}
+                setSelectedCardIdentity={setSelectedCardIdentity}
                 setStandaloneModalCard={setStandaloneModalCard}
               />
             ) : null}
@@ -2499,6 +2554,7 @@ export function CardGrid({
                   selectedCard={selectedCard}
                   normalizedCards={normalizedCards}
                   setSelectedIndex={setSelectedIndex}
+                  setSelectedCardIdentity={setSelectedCardIdentity}
                   setStandaloneModalCard={setStandaloneModalCard}
                 />
               ) : (
