@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { ExpansionsList } from "@/components/ExpansionsList";
 import { PokedexList } from "@/components/PokedexList";
 import { SearchBrowseTabs } from "@/components/SearchBrowseTabs";
-import { SearchCardGrid } from "@/components/SearchCardGrid";
+import { SearchCardsTabGrid } from "@/components/SearchCardsTabGrid";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCurrentCustomer } from "@/lib/auth";
 import {
@@ -23,6 +23,7 @@ import {
 import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 
 const TOTAL_POKEMON_COUNT = 1025;
+const SEARCH_CARDS_INITIAL_TAKE = 105;
 
 function parseExcludeCommonUncommon(value: string | undefined): boolean {
   const v = (value ?? "").trim().toLowerCase();
@@ -185,10 +186,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const activeRarity = hasSelectedRarity ? selectedRarity : "";
   const activeSearch = selectedSearch;
   const activeArtist = selectedArtist;
-  const requestedTake = resolveCardsTakeFromParams(
-    resolvedSearchParams.take,
-    resolvedSearchParams.page,
-  );
+  const requestedTake =
+    resolvedSearchParams.take || resolvedSearchParams.page
+      ? resolveCardsTakeFromParams(
+          resolvedSearchParams.take,
+          resolvedSearchParams.page,
+        )
+      : SEARCH_CARDS_INITIAL_TAKE;
 
   const { entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
     activeSet,
@@ -262,7 +266,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               loadMoreStep={CARDS_LOAD_MORE_STEP}
               scrollRestoreKey={scrollRestoreKey}
             >
-              <SearchCardGrid
+              <SearchCardsTabGrid
                 cards={cardsForGrid}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
@@ -278,9 +282,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 rarityOptions={rarityOptions}
                 categoryOptions={categoryOptions}
                 resetHref={clearTagFiltersHref}
-                defaultGroupBySet={false}
-                showGroupBySetTag={false}
-                defaultSortOrder="price-desc"
               />
             </CardsResultsScroll>
           </section>

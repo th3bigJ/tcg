@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SearchCardGrid } from "@/components/SearchCardGrid";
+import { ExpansionSetCardGrid } from "@/components/ExpansionSetCardGrid";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
 import {
@@ -146,7 +146,7 @@ export default async function ExpansionSetCardsPage({
               loadMoreStep={0}
               scrollRestoreKey={scrollRestoreKey}
             >
-              <SearchCardGrid
+              <ExpansionSetCardGrid
                 cards={cardsForGrid}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
@@ -161,7 +161,6 @@ export default async function ExpansionSetCardsPage({
                 rarityOptions={rarityOptions}
                 categoryOptions={categoryOptions}
                 resetHref={setPath}
-                defaultSortOrder="price-desc"
               />
             </CardsResultsScroll>
           </div>

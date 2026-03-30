@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SearchCardGrid } from "@/components/SearchCardGrid";
+import { PokedexCardGrid } from "@/components/PokedexCardGrid";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import {
   getCachedPokemonFilterOptions,
@@ -110,23 +110,11 @@ export default async function PokedexPokemonCardsPage({
               loadMoreStep={0}
               scrollRestoreKey={scrollRestoreKey}
             >
-              <SearchCardGrid
+              <PokedexCardGrid
                 cards={cardsForGrid}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
-                formAction={`/pokedex/${dexNum}`}
-                activeSearch=""
-                activeSet=""
-                activePokemon={String(dexNum)}
-                activeRarity=""
-                activeCategory=""
-                excludeCommonUncommon={false}
-                rarityOptions={[]}
-                categoryOptions={[]}
-                resetHref={`/pokedex/${dexNum}`}
-                defaultGroupBySet={false}
-                defaultSortOrder="price-desc"
               />
             </CardsResultsScroll>
           </div>

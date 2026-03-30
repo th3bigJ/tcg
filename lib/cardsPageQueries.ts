@@ -194,6 +194,22 @@ function categoryFacetKey(value: string): string {
 
 const EXCLUDED_BASIC_RARITIES = new Set(["common", "uncommon"]);
 
+function cardMatchesSearchQuery(card: CardJsonEntry, rawQuery: string): boolean {
+  const query = rawQuery.trim().toLocaleLowerCase();
+  if (!query) return true;
+
+  const searchableValues: string[] = [
+    card.cardNumber ?? "",
+    card.cardName ?? "",
+    card.fullDisplayName ?? "",
+    card.artist ?? "",
+    ...(Array.isArray(card.elementTypes) ? card.elementTypes : []).map((value) => String(value ?? "")),
+    ...(Array.isArray(card.dexIds) ? card.dexIds : []).map((value) => String(value ?? "")),
+  ];
+
+  return searchableValues.some((value) => value.toLocaleLowerCase().includes(query));
+}
+
 function cardMatchesFilters(
   card: CardJsonEntry,
   params: {
@@ -223,9 +239,7 @@ function cardMatchesFilters(
     if (!params.categoryQueryVariants.includes(cardCategory)) return false;
   }
 
-  const q = params.activeSearch.trim();
-  if (q && !(card.cardName ?? "").toLocaleLowerCase().includes(q.toLocaleLowerCase()))
-    return false;
+  if (!cardMatchesSearchQuery(card, params.activeSearch)) return false;
 
   if (
     params.activeArtist &&
@@ -424,10 +438,6 @@ export async function fetchMasterCardsPage(params: {
       return true;
     });
 
-    const orderedRows = getDefaultCardOrder();
-    const orderRank = new Map<string, number>();
-    orderedRows.forEach((row, index) => orderRank.set(row.id, index));
-
     filteredCandidates.sort((a, b) => {
       const ra = orderRank.get(a.id);
       const rb = orderRank.get(b.id);
@@ -462,6 +472,8 @@ export async function fetchMasterCardsPage(params: {
     params.categoryQueryVariants.length === 0;
 
   const orderedRows = getDefaultCardOrder();
+  const orderRank = new Map<string, number>();
+  orderedRows.forEach((row, index) => orderRank.set(row.id, index));
 
   if (isDefaultUnfiltered) {
     if (params.randomSeed) {
@@ -521,17 +533,6 @@ export async function fetchMasterCardsPage(params: {
     const matched = setCards.filter((c) =>
       cardMatchesFilters(c, params)
     );
-    // Sort matched cards by the global default order
-    const orderRank = new Map<string, number>();
-    orderedRows.forEach((row, index) => orderRank.set(row.id, index));
-    matched.sort((a, b) => {
-      const ra = orderRank.get(a.masterCardId);
-      const rb = orderRank.get(b.masterCardId);
-      if (ra !== undefined && rb !== undefined && ra !== rb) return ra - rb;
-      if (ra === undefined) return 1;
-      if (rb === undefined) return -1;
-      return a.masterCardId.localeCompare(b.masterCardId);
-    });
     filteredIds = matched.map((c) => c.masterCardId);
   } else {
     // Scan ordered rows, preserving sort order
@@ -545,9 +546,31 @@ export async function fetchMasterCardsPage(params: {
       .filter((id): id is string => id !== null);
   }
 
-  const totalDocs = filteredIds.length;
+  const searchQuery = params.activeSearch.trim();
+  const releaseSortedFilteredIds = searchQuery
+    ? [...filteredIds].sort((a, b) => {
+        const cardA = getCardMapById().get(a);
+        const cardB = getCardMapById().get(b);
+        const releaseA = cardA ? setMetaMap.get(cardA.setCode)?.releaseDate ?? "" : "";
+        const releaseB = cardB ? setMetaMap.get(cardB.setCode)?.releaseDate ?? "" : "";
+        const releaseCompare = releaseB.localeCompare(releaseA);
+        if (releaseCompare !== 0) return releaseCompare;
+        const rankA = orderRank.get(a);
+        const rankB = orderRank.get(b);
+        if (rankA !== undefined && rankB !== undefined && rankA !== rankB) return rankA - rankB;
+        if (rankA === undefined && rankB !== undefined) return 1;
+        if (rankB === undefined && rankA !== undefined) return -1;
+        return a.localeCompare(b);
+      })
+    : filteredIds;
+
+  const orderedFilteredIds = params.randomSeed && !searchQuery
+    ? shuffleRowsWithSeed(releaseSortedFilteredIds, params.randomSeed)
+    : releaseSortedFilteredIds;
+
+  const totalDocs = orderedFilteredIds.length;
   const startIndex = (params.page - 1) * pageSize;
-  const pageIds = filteredIds.slice(startIndex, startIndex + pageSize);
+  const pageIds = orderedFilteredIds.slice(startIndex, startIndex + pageSize);
   if (pageIds.length === 0) return { entries: [], totalDocs };
 
   const cardMap = getCardMapById();

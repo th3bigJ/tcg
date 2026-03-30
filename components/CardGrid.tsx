@@ -1104,6 +1104,7 @@ const CardGridItem = memo(function CardGridItem({
   gradingLabel,
   gradedImageSrc,
   onOpen,
+  setSymbolsByCode,
   viewerOwnsOnWishlist,
   tradePickMode,
   tradeSelectedQty,
@@ -1120,6 +1121,7 @@ const CardGridItem = memo(function CardGridItem({
   gradingLabel?: string;
   gradedImageSrc?: string;
   onOpen: (index: number) => void;
+  setSymbolsByCode?: Record<string, string>;
   /** Shared wishlist: viewer owns this master card */
   viewerOwnsOnWishlist?: boolean;
   /** Tap cycles selected quantity (trade wizard); skips opening the card modal */
@@ -1168,6 +1170,9 @@ const CardGridItem = memo(function CardGridItem({
     (owned && variant === "browse") || (viewerOwnsOnWishlist && variant === "wishlist");
   const showWishlistBadge =
     !showCollectedBadge && wishlisted && (variant === "wishlist" || variant === "browse");
+  const tileSetName = card.setName || card.set;
+  const tileSetSymbolSrc = card.setSymbolSrc || setSymbolsByCode?.[card.set] || "";
+  const firstRowText = card.cardName || "";
 
   return (
     <li ref={liRef} className="card-grid-item flex flex-col">
@@ -1238,36 +1243,53 @@ const CardGridItem = memo(function CardGridItem({
           }
         />
       </div>
-      <div className="relative mt-1 flex items-center gap-2">
+      <div className="relative mt-1 min-h-[2.9rem]">
         {(variant === "collection" ? (card.quantity ?? 1) : tileOwnedQuantity) > 1 ? (
           <span className="absolute left-0 top-0 inline-flex rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">
             ×{variant === "collection" ? card.quantity : tileOwnedQuantity}
           </span>
         ) : null}
-        <div className="min-w-0 flex-1">
-          {(card.cardName || card.setName || card.set) ? (
+        <div className="min-w-0 px-7 text-center">
+          {firstRowText ? (
             <span
-              className={`block line-clamp-1 text-center text-[10px] font-medium ${
-                tradePickMode && pickActive ? "font-semibold text-emerald-500 dark:text-emerald-400" : "text-[var(--foreground)]/80"
+              className={`block line-clamp-1 text-[10px] font-medium ${
+                tradePickMode && pickActive ? "font-semibold text-emerald-500 dark:text-emerald-400" : "text-[var(--foreground)]/85"
               }`}
             >
-              {[card.cardName, card.setName || card.set].filter(Boolean).join(" - ")}
+              {firstRowText}
             </span>
           ) : null}
-          {unitPrice !== null ? (
-            <span className="block mt-0.5 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
-              {gradingLabel
-                ? <span title={gradingLabel}>🏆 {gradingLabel} · </span>
-                : isManualPrice
-                  ? <span title="Manually set price">✎ </span>
-                  : null
-              }{formatMoneyGbp(unitPrice)}
+          {tileSetName ? (
+            <span className="mt-0.5 flex items-center justify-center gap-1 text-[10px] font-medium text-[var(--foreground)]/68">
+              {tileSetSymbolSrc ? (
+                <img
+                  src={tileSetSymbolSrc}
+                  alt=""
+                  aria-hidden
+                  className="h-3 w-auto shrink-0 object-contain"
+                />
+              ) : null}
+              <span className="line-clamp-1">{tileSetName}</span>
             </span>
           ) : null}
+          <span className="mt-0.5 block text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
+            {unitPrice !== null ? (
+              <>
+                {gradingLabel
+                  ? <span title={gradingLabel}>🏆 {gradingLabel} · </span>
+                  : isManualPrice
+                    ? <span title="Manually set price">✎ </span>
+                    : null
+                }{formatMoneyGbp(unitPrice)}
+              </>
+            ) : (
+              <span aria-hidden="true">&nbsp;</span>
+            )}
+          </span>
         </div>
         {showCollectedBadge ? (
           <span
-            className="pointer-events-none flex h-6 w-6 shrink-0 items-center justify-center rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.28)] ring-2 ring-[var(--background)]"
+            className="pointer-events-none absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.28)] ring-2 ring-[var(--background)]"
             style={{ background: "#22c55e" }}
             title={variant === "wishlist" ? "You own this card" : "In your collection"}
             aria-label={variant === "wishlist" ? "You own this card" : "In your collection"}
@@ -1290,7 +1312,7 @@ const CardGridItem = memo(function CardGridItem({
         ) : null}
         {showWishlistBadge ? (
           <span
-            className="pointer-events-none flex h-6 w-6 shrink-0 items-center justify-center rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.28)] ring-2 ring-[var(--background)]"
+            className="pointer-events-none absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.28)] ring-2 ring-[var(--background)]"
             style={{ background: "#ef4444" }}
             title="On your wishlist"
             aria-label="On your wishlist"
@@ -3544,6 +3566,7 @@ export function CardGrid({
                 gradingLabel={gradingLabel}
                 gradedImageSrc={gradedImageSrc}
                 onOpen={openModal}
+                setSymbolsByCode={setSymbolsByCode}
                 viewerOwnsOnWishlist={viewerOwnsOnWishlist}
                 tradePickMode={tradePickMode}
                 tradeSelectedQty={
@@ -3672,6 +3695,7 @@ export function CardGrid({
                       gradingLabel={gradingLabel}
                       gradedImageSrc={gradedImageSrc}
                       onOpen={openModal}
+                      setSymbolsByCode={setSymbolsByCode}
                       viewerOwnsOnWishlist={viewerOwnsOnWishlist}
                       tradePickMode={tradePickMode}
                       tradeSelectedQty={

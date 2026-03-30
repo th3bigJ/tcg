@@ -18,8 +18,8 @@ import {
   fetchWishlistIdsByMasterCard,
 } from "@/lib/storefrontCardMapsServer";
 
-const INITIAL_TAKE = 30;
-const LOAD_MORE_STEP = 30;
+const INITIAL_TAKE = 105;
+const LOAD_MORE_STEP = 42;
 
 type WishlistPageProps = {
   searchParams?: Promise<{ take?: string }>;

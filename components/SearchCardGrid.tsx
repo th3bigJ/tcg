@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import { CardTagFilterRow } from "@/components/CardTagFilterRow";
@@ -14,6 +14,8 @@ type SearchCardData = {
 
 type SortOrder = "" | "price-desc" | "release-desc";
 
+const appendOnlySortOrderCache = new Map<string, string[]>();
+
 const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
   { value: "", label: "Sort" },
   { value: "price-desc", label: "Price" },
@@ -22,6 +24,7 @@ const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
 
 type Props = {
   cards: CardEntry[];
+  initialCardPrices?: Record<string, number>;
   setLogosByCode?: Record<string, string>;
   setSymbolsByCode?: Record<string, string>;
   customerLoggedIn: boolean;
@@ -40,10 +43,12 @@ type Props = {
   defaultRandomOrder?: boolean;
   showGroupBySetTag?: boolean;
   defaultSortOrder?: SortOrder;
+  priceAppendOnlyKey?: string;
 };
 
 export function SearchCardGrid({
   cards,
+  initialCardPrices,
   setLogosByCode,
   setSymbolsByCode,
   customerLoggedIn,
@@ -62,12 +67,14 @@ export function SearchCardGrid({
   defaultRandomOrder,
   showGroupBySetTag = true,
   defaultSortOrder = "",
+  priceAppendOnlyKey,
 }: Props) {
   const [cardData, setCardData] = useState<SearchCardData | null>(null);
   const [groupBySet, setGroupBySet] = useState(defaultGroupBySet);
   const [randomOrder, setRandomOrder] = useState(defaultRandomOrder ?? false);
   const [sortOrder, setSortOrder] = useState<SortOrder>(defaultSortOrder);
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
+  const requestedPriceIdsRef = useRef<Set<string>>(new Set());
   const groupShuffleSeed = useMemo(
     () =>
       cards.reduce((seed, card, index) => {
@@ -79,6 +86,30 @@ export function SearchCardGrid({
         return nextSeed >>> 0;
       }, 2166136261),
     [cards],
+  );
+
+  const effectiveCardPrices = useMemo(
+    () => ({ ...(initialCardPrices ?? {}), ...(cardPrices ?? {}) }),
+    [initialCardPrices, cardPrices],
+  );
+
+  const sortCardsBatch = useMemo(
+    () => (inputCards: CardEntry[], activeSortOrder: SortOrder) => {
+      if (activeSortOrder === "release-desc") {
+        return [...inputCards].sort((a, b) =>
+          (b.setReleaseDate ?? "").localeCompare(a.setReleaseDate ?? ""),
+        );
+      }
+      if (activeSortOrder === "price-desc" && Object.keys(effectiveCardPrices).length > 0) {
+        return [...inputCards].sort(
+          (a, b) =>
+            (effectiveCardPrices[b.masterCardId ?? ""] ?? 0) -
+            (effectiveCardPrices[a.masterCardId ?? ""] ?? 0),
+        );
+      }
+      return inputCards;
+    },
+    [effectiveCardPrices],
   );
 
   useEffect(() => {
@@ -95,7 +126,7 @@ export function SearchCardGrid({
 
   const cardsMissingPrices = useMemo(() => {
     if (sortOrder !== "price-desc") return [];
-    const knownPrices = cardPrices ?? {};
+    const knownPrices = effectiveCardPrices;
     const seen = new Set<string>();
     return cards
       .map((card) => card.masterCardId)
@@ -105,16 +136,18 @@ export function SearchCardGrid({
         seen.add(id);
         return knownPrices[id] === undefined;
       });
-  }, [cards, sortOrder, cardPrices]);
+  }, [cards, sortOrder, effectiveCardPrices]);
 
   // Fetch prices for any cards in the current grid that don't have them yet.
   useEffect(() => {
-    if (cardsMissingPrices.length === 0) return;
+    const idsToFetch = cardsMissingPrices.filter((id) => !requestedPriceIdsRef.current.has(id));
+    if (idsToFetch.length === 0) return;
+    for (const id of idsToFetch) requestedPriceIdsRef.current.add(id);
     const controller = new AbortController();
     fetch("/api/card-pricing/bulk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ masterCardIds: cardsMissingPrices }),
+      body: JSON.stringify({ masterCardIds: idsToFetch }),
       signal: controller.signal,
     })
       .then((r) => (r.ok ? r.json() : null))
@@ -127,18 +160,57 @@ export function SearchCardGrid({
   }, [cardsMissingPrices]);
 
   const sortedCards = useMemo(() => {
-    if (sortOrder === "release-desc") {
-      return [...cards].sort((a, b) =>
-        (b.setReleaseDate ?? "").localeCompare(a.setReleaseDate ?? ""),
-      );
-    }
-    if (sortOrder === "price-desc" && cardPrices) {
-      return [...cards].sort(
-        (a, b) => (cardPrices[b.masterCardId ?? ""] ?? 0) - (cardPrices[a.masterCardId ?? ""] ?? 0),
-      );
+    if (sortOrder) {
+      if (priceAppendOnlyKey) {
+        const cardsById = new Map(
+          cards.map((card) => [card.masterCardId ?? `${card.set}/${card.filename}`, card]),
+        );
+        const previousOrder =
+          appendOnlySortOrderCache.get(`${priceAppendOnlyKey}:${sortOrder}`) ?? [];
+        const seen = new Set<string>();
+
+        const preserved = previousOrder
+          .map((id) => {
+            const card = cardsById.get(id);
+            if (card) seen.add(id);
+            return card;
+          })
+          .filter((card): card is CardEntry => Boolean(card));
+
+        const appended = cards
+          .filter((card) => {
+            const id = card.masterCardId ?? `${card.set}/${card.filename}`;
+            return !seen.has(id);
+          })
+          ;
+
+        return [...preserved, ...sortCardsBatch(appended, sortOrder)];
+      }
+
+      return sortCardsBatch(cards, sortOrder);
     }
     return cards;
-  }, [cards, sortOrder, cardPrices]);
+  }, [cards, sortOrder, sortCardsBatch, priceAppendOnlyKey]);
+
+  useEffect(() => {
+    if (!priceAppendOnlyKey) return;
+    if (!sortOrder) {
+      for (const key of appendOnlySortOrderCache.keys()) {
+        if (key.startsWith(`${priceAppendOnlyKey}:`)) {
+          appendOnlySortOrderCache.delete(key);
+        }
+      }
+      return;
+    }
+    if (sortOrder === "price-desc" && Object.keys(effectiveCardPrices).length === 0) {
+      appendOnlySortOrderCache.delete(`${priceAppendOnlyKey}:${sortOrder}`);
+      return;
+    }
+    appendOnlySortOrderCache.set(
+      `${priceAppendOnlyKey}:${sortOrder}`,
+      sortedCards.map((card) => card.masterCardId ?? `${card.set}/${card.filename}`),
+    );
+  }, [priceAppendOnlyKey, sortOrder, sortedCards, effectiveCardPrices]);
 
   return (
     <>

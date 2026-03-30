@@ -58,7 +58,7 @@ export const resolveMediaURL = (value: string | null | undefined): string => {
   if (/^https?:\/\//i.test(value)) return sanitizeAbsoluteMediaURL(value);
 
   const base = getMediaBaseURL();
-  if (!base) return value;
+  if (!base) return value.startsWith("/") ? value : `/${value}`;
 
   return `${base}/${value.replace(/^\/+/, "")}`;
 };
