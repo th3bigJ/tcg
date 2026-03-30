@@ -147,7 +147,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)] lg:box-border lg:flex lg:h-[calc(100dvh-var(--bottom-nav-offset))] lg:max-h-[calc(100dvh-var(--bottom-nav-offset))] lg:min-h-0 lg:shrink-0">
-      <main className="min-h-0 w-full flex-1 overflow-hidden px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+      <main className="min-h-0 w-full flex-1 overflow-hidden px-4 pb-4 pt-[var(--mobile-page-top-offset)] lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
         <div className="grid h-full min-h-0 items-stretch gap-4 lg:grid-cols-[20%_minmax(0,1fr)] lg:flex-1 lg:min-h-0 lg:overflow-hidden">
           <aside className="hidden min-h-0 h-full flex-col overflow-hidden rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-2 lg:flex lg:min-h-0">
             <div className="mb-3 flex shrink-0 items-center justify-between gap-2">

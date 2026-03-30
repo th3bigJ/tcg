@@ -45,7 +45,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-[var(--background)] px-4 py-8 text-[var(--foreground)]">
+    <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-8 pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
       <h1 className="text-xl font-semibold">Create account</h1>
       <p className="mt-2 max-w-md text-sm text-[var(--foreground)]/70">
         Registration uses Supabase Auth. If email confirmation is enabled in Supabase, check your inbox

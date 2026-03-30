@@ -28,7 +28,7 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
 
   if (!customer) {
     return (
-      <div className="flex min-h-full flex-col bg-[var(--background)] px-4 py-6 text-[var(--foreground)]">
+      <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-6 pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
         <h1 className="text-xl font-semibold">Collection</h1>
         <p className="mt-2 max-w-md text-sm text-[var(--foreground)]/70">
           Sign in to track cards you own. Browse the catalog from Search to add cards.

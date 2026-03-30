@@ -85,7 +85,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
     return (
       <div className={searchShellClass}>
-        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-[var(--mobile-page-top-offset)] lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
           <SearchBrowseTabs activeTab="sets" cardsHref="/search?tab=cards" />
           <div className="min-h-0 flex-1 overflow-y-auto pb-4">
             <ExpansionsList groups={groups} uniqueOwnedBySetCode={uniqueOwnedBySetCode} />
@@ -116,7 +116,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
     return (
       <div className={searchShellClass}>
-        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-[var(--mobile-page-top-offset)] lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
           <SearchBrowseTabs activeTab="pokedex" cardsHref="/search?tab=cards" />
           <div className="min-h-0 flex-1 overflow-y-auto pb-[max(1.5rem,var(--bottom-nav-offset))]">
             <h1 className="text-xl font-semibold tracking-tight">Pokédex</h1>
@@ -247,7 +247,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className={searchShellClass}>
-      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 py-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-[var(--mobile-page-top-offset)] lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
         <SearchBrowseTabs activeTab="cards" cardsHref={cardsTabHref} />
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <section className="flex min-h-0 flex-1 flex-col overflow-hidden lg:pr-1">
