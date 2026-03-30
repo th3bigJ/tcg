@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { TRADE_NOTIFICATIONS_UPDATED_EVENT } from "@/lib/tradeNotificationsConstants";
@@ -20,7 +20,7 @@ type MoreItem = {
 };
 
 function IconCollect({ active }: { active: boolean }) {
-  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
+  const c = active ? "text-white" : "text-white/45";
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -42,7 +42,7 @@ function IconCollect({ active }: { active: boolean }) {
 }
 
 function IconWishlist({ active }: { active: boolean }) {
-  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
+  const c = active ? "text-white" : "text-white/45";
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -61,7 +61,7 @@ function IconWishlist({ active }: { active: boolean }) {
 }
 
 function IconSearch({ active }: { active: boolean }) {
-  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
+  const c = active ? "text-white" : "text-white/45";
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -81,7 +81,7 @@ function IconSearch({ active }: { active: boolean }) {
 }
 
 function IconFriends({ active }: { active: boolean }) {
-  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
+  const c = active ? "text-white" : "text-white/45";
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -103,7 +103,7 @@ function IconFriends({ active }: { active: boolean }) {
 }
 
 function IconMore({ active }: { active: boolean }) {
-  const c = active ? "text-[var(--foreground)]" : "text-[var(--foreground)]/45";
+  const c = active ? "text-white" : "text-white/45";
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -129,12 +129,10 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname() ?? "";
   const [moreOpen, setMoreOpen] = useState(false);
   const [friendsUnreadCount, setFriendsUnreadCount] = useState(0);
+  const visibleFriendsUnreadCount = isLoggedIn ? friendsUnreadCount : 0;
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      setFriendsUnreadCount(0);
-      return;
-    }
+    if (!isLoggedIn) return;
     let cancelled = false;
     (async () => {
       try {
@@ -230,13 +228,32 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
     <>
       <nav
-        className="pointer-events-auto fixed inset-x-0 bottom-0 z-[1000] isolate border-t border-[var(--foreground)]/10 bg-[var(--background)] pb-[max(0.35rem,env(safe-area-inset-bottom,0px))] pt-1 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.35)]"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-[1000] isolate"
+        style={{ padding: "0.5rem 1.25rem max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.25rem))" }}
         aria-label="Main navigation"
       >
-        <div className="pointer-events-auto mx-auto flex h-14 max-w-2xl items-stretch justify-around px-0.5">
+        <div
+          className="pointer-events-auto mx-auto flex items-stretch justify-around gap-1"
+          style={{
+            height: "4.5rem",
+            maxWidth: "34rem",
+            borderRadius: "999px",
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "#000",
+            padding: "0.375rem 0.75rem",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+          }}
+        >
           {items.map((item, i) => {
             const active = item.match(pathname) || (item.label === "More" && moreOpen);
             const Icon = icons[i];
+            const itemClass = `flex min-w-0 basis-0 flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium leading-tight transition-all sm:text-[11px]`;
+            const itemStyle: React.CSSProperties = {
+              borderRadius: active ? "calc(999px - 0.375rem)" : "999px",
+              padding: "0.375rem 0.75rem",
+              color: active ? "white" : "rgba(255,255,255,0.45)",
+              background: active ? "rgba(255,255,255,0.15)" : "transparent",
+            };
 
             if (item.label === "More") {
               return (
@@ -244,11 +261,8 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
                   key={item.label}
                   type="button"
                   onClick={() => setMoreOpen(true)}
-                  className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-0.5 text-[9px] font-medium leading-tight transition-colors sm:text-[10px] ${
-                    active
-                      ? "text-[var(--foreground)]"
-                      : "text-[var(--foreground)]/50 hover:text-[var(--foreground)]/75"
-                  }`}
+                  className={itemClass}
+                  style={itemStyle}
                   aria-current={active ? "page" : undefined}
                   aria-haspopup="dialog"
                   aria-expanded={moreOpen}
@@ -261,8 +275,8 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
             }
 
             const friendsPendingLabel =
-              item.href === "/collect/shared" && friendsUnreadCount > 0
-                ? `Friends, ${friendsUnreadCount} unread ${friendsUnreadCount === 1 ? "notification" : "notifications"}`
+              item.href === "/collect/shared" && visibleFriendsUnreadCount > 0
+                ? `Friends, ${visibleFriendsUnreadCount} unread ${visibleFriendsUnreadCount === 1 ? "notification" : "notifications"}`
                 : undefined;
 
             return (
@@ -272,22 +286,19 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
                 prefetch={
                   item.href === "/search" || item.href === "/collect" || item.href === "/collect/shared"
                 }
-                className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-0.5 text-[9px] font-medium leading-tight transition-colors sm:text-[10px] ${
-                  active
-                    ? "text-[var(--foreground)]"
-                    : "text-[var(--foreground)]/50 hover:text-[var(--foreground)]/75"
-                }`}
+                className={itemClass}
+                style={itemStyle}
                 aria-current={active ? "page" : undefined}
                 aria-label={friendsPendingLabel}
               >
                 <span className="relative inline-flex">
                   <Icon active={active} />
-                  {item.href === "/collect/shared" && friendsUnreadCount > 0 ? (
+                  {item.href === "/collect/shared" && visibleFriendsUnreadCount > 0 ? (
                     <span
                       className="absolute -right-1 -top-0.5 flex min-h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold leading-none text-white dark:bg-red-500"
                       aria-hidden
                     >
-                      {friendsUnreadCount > 9 ? "9+" : friendsUnreadCount}
+                      {visibleFriendsUnreadCount > 9 ? "9+" : visibleFriendsUnreadCount}
                     </span>
                   ) : null}
                 </span>
