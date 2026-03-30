@@ -6,11 +6,13 @@ import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
 import {
   CARDS_TAKE_MAX,
   fetchMasterCardsPage,
+  fetchSetCompletionValue,
   fetchSetMarketValue,
   getCachedFilterFacets,
   resolveCardsCategoryFilter,
 } from "@/lib/cardsPageQueries";
 import { getCurrentCustomer } from "@/lib/auth";
+import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 
 type ExpansionSetCardsPageProps = {
   params: Promise<{ setCode: string }>;
@@ -55,7 +57,8 @@ export default async function ExpansionSetCardsPage({
   const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
     resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
 
-  const [{ entries: cardsForGrid, totalDocs: filteredCount }, customer, setMarketValue] =
+  const customer = await getCurrentCustomer();
+  const [{ entries: cardsForGrid, totalDocs: filteredCount }, setMarketValue, collectionEntries] =
     await Promise.all([
       fetchMasterCardsPage({
         activeSet,
@@ -69,9 +72,17 @@ export default async function ExpansionSetCardsPage({
         page: 1,
         perPage: CARDS_TAKE_MAX,
       }),
-      getCurrentCustomer(),
       fetchSetMarketValue(activeSet),
+      customer ? fetchCollectionCardEntries(customer.id) : Promise.resolve([]),
     ]);
+
+  const ownedMasterCardIds = new Set(
+    collectionEntries
+      .map((entry) => entry.masterCardId?.trim() ?? "")
+      .filter((value) => value.length > 0),
+  );
+  const setCompletionValue =
+    customer ? await fetchSetCompletionValue(activeSet, cardsForGrid, ownedMasterCardIds) : null;
 
   const setPath = `/expansions/${encodeURIComponent(activeSet)}`;
   const scrollRestoreKey = [activeSet, "expansion-set"].join("|");
@@ -119,6 +130,12 @@ export default async function ExpansionSetCardsPage({
                   <> · <span className="text-[var(--foreground)]/80">£{setMarketValue.toFixed(2)} set market value</span></>
                 )}
               </p>
+              {setCompletionValue != null ? (
+                <p className="text-xs text-[var(--foreground)]/80">
+                  {setCompletionValue.missingCount} card{setCompletionValue.missingCount === 1 ? "" : "s"} needed
+                  {" · "}£{setCompletionValue.totalValueGbp.toFixed(2)} value to complete
+                </p>
+              ) : null}
             </div>
           </header>
 

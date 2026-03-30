@@ -43,6 +43,42 @@ function cardCollectionMapKey(card: Pick<CardEntry, "collectionGroupKey" | "mast
   return card.collectionGroupKey ?? card.masterCardId ?? "";
 }
 
+function cardHasOwnedLines(
+  card: Pick<CardEntry, "collectionGroupKey" | "masterCardId">,
+  collectionLinesByKey: Record<string, CollectionLineSummary[]>,
+): boolean {
+  const groupKey = card.collectionGroupKey ?? "";
+  const masterCardId = card.masterCardId ?? "";
+  return Boolean(
+    (groupKey && collectionLinesByKey[groupKey]?.length) ||
+      (masterCardId && collectionLinesByKey[masterCardId]?.length),
+  );
+}
+
+function ownedCopyCount(
+  card: Pick<CardEntry, "collectionGroupKey" | "masterCardId">,
+  collectionLinesByKey: Record<string, CollectionLineSummary[]>,
+): number {
+  const groupKey = card.collectionGroupKey ?? "";
+  const masterCardId = card.masterCardId ?? "";
+  const merged = new Map<string, CollectionLineSummary>();
+
+  for (const line of groupKey ? collectionLinesByKey[groupKey] ?? [] : []) {
+    merged.set(line.entryId, line);
+  }
+  for (const line of masterCardId ? collectionLinesByKey[masterCardId] ?? [] : []) {
+    merged.set(line.entryId, line);
+  }
+
+  let total = 0;
+  for (const line of merged.values()) {
+    total += typeof line.quantity === "number" && Number.isFinite(line.quantity) && line.quantity > 0
+      ? Math.floor(line.quantity)
+      : 1;
+  }
+  return total;
+}
+
 const PRINTING_OPTIONS = [
   "Standard",
   "Reverse Holo",
@@ -437,6 +473,33 @@ function replaceCollectionLineQuantity(
   return next;
 }
 
+function selectedCollectionLines(
+  card: Pick<CardEntry, "collectionGroupKey" | "masterCardId"> | null,
+  collectionLinesByKey: Record<string, CollectionLineSummary[]>,
+): CollectionLineSummary[] {
+  if (!card) return [];
+
+  const groupKey = card.collectionGroupKey ?? "";
+  const masterCardId = card.masterCardId ?? "";
+  const merged = new Map<string, CollectionLineSummary>();
+
+  for (const line of groupKey ? collectionLinesByKey[groupKey] ?? [] : []) {
+    merged.set(line.entryId, line);
+  }
+
+  for (const line of masterCardId ? collectionLinesByKey[masterCardId] ?? [] : []) {
+    merged.set(line.entryId, line);
+  }
+
+  return [...merged.values()].sort((a, b) => {
+    const c = a.conditionLabel.localeCompare(b.conditionLabel);
+    if (c !== 0) return c;
+    const p = a.printing.localeCompare(b.printing);
+    if (p !== 0) return p;
+    return a.language.localeCompare(b.language);
+  });
+}
+
 function buildCertUrl(company: string, serial: string): string | null {
   const s = serial.trim();
   if (!s) return null;
@@ -454,6 +517,7 @@ function ModalYourCollectionSection({
   customerLoggedIn,
   masterCardId,
   onAdjustQuantity,
+  onAddCopy,
   adjustingEntryId,
   onEditLine,
   sectionTitle = "Your collection",
@@ -464,6 +528,7 @@ function ModalYourCollectionSection({
   customerLoggedIn: boolean;
   masterCardId?: string;
   onAdjustQuantity?: (entryId: string, delta: -1 | 1) => void;
+  onAddCopy?: (line?: CollectionLineSummary) => void;
   adjustingEntryId?: string | null;
   onEditLine?: (line: CollectionLineSummary) => void;
   sectionTitle?: string;
@@ -474,6 +539,7 @@ function ModalYourCollectionSection({
   if (variant !== "browse" && !customerLoggedIn && lines.length === 0 && !readOnlyLines) return null;
 
   const showQuantityControls = Boolean(customerLoggedIn && onAdjustQuantity);
+  const showAddControls = Boolean(customerLoggedIn && onAddCopy);
 
   return (
     <section className="flex flex-col gap-2" aria-label={sectionTitle}>
@@ -483,7 +549,7 @@ function ModalYourCollectionSection({
           <p className="text-xs leading-relaxed text-white/60">
             {readOnlyLines
               ? "They have no copies of this card saved."
-              : "No copies saved for this card yet. Tap + to add quantity, condition, and printing."}
+              : "No copies saved for this card yet. Tap + to add a copy with its own details."}
           </p>
         </div>
       ) : (
@@ -546,15 +612,17 @@ function ModalYourCollectionSection({
                       <span className="min-w-[2rem] text-center text-sm font-semibold tabular-nums text-white">
                         {line.quantity}
                       </span>
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => onAdjustQuantity?.(line.entryId, 1)}
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold leading-none text-white transition hover:bg-white/20 disabled:opacity-40"
-                        aria-label={`Add one ${line.printing} copy`}
-                      >
-                        +
-                      </button>
+                      {showAddControls ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => onAddCopy?.(line)}
+                          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold leading-none text-white transition hover:bg-white/20 disabled:opacity-40"
+                          aria-label={`Add another ${line.printing} copy with details`}
+                        >
+                          +
+                        </button>
+                      ) : null}
                     </div>
                   ) : (
                     <span className="shrink-0 text-right text-sm font-semibold tabular-nums text-white">
@@ -756,11 +824,11 @@ function ModalDexOtherCardsSection({
       <div key={`dex-skel-${variant}-${i}`} className={skelClass} aria-hidden />
     ))
   ) : (
-    nationalDexStrip.map((card) => {
+    nationalDexStrip.map((card, index) => {
       const isCurrent = sameCardEntry(card, selectedCard);
       return (
         <button
-          key={`${card.set}/${card.filename}-${variant}`}
+          key={`${cardEntryIdentity(card) ?? `${card.set}/${card.filename}/${index}`}-${variant}-${index}`}
           type="button"
           onClick={() => {
             if (isCurrent) return;
@@ -1030,6 +1098,7 @@ const CardGridItem = memo(function CardGridItem({
   variant,
   unitPrice: unitPriceProp,
   owned,
+  ownedQuantity,
   wishlisted,
   isManualPrice,
   gradingLabel,
@@ -1045,6 +1114,7 @@ const CardGridItem = memo(function CardGridItem({
   variant: "browse" | "collection" | "wishlist";
   unitPrice: number | null;
   owned: boolean;
+  ownedQuantity?: number;
   wishlisted?: boolean;
   isManualPrice?: boolean;
   gradingLabel?: string;
@@ -1093,6 +1163,7 @@ const CardGridItem = memo(function CardGridItem({
   const unitPrice = variant === "browse" ? lazyPrice : unitPriceProp;
   const qtySelected = tradeSelectedQty ?? 0;
   const pickActive = Boolean(tradePickMode && qtySelected > 0);
+  const tileOwnedQuantity = ownedQuantity ?? 0;
   const showCollectedBadge =
     (owned && variant === "browse") || (viewerOwnsOnWishlist && variant === "wishlist");
   const showWishlistBadge =
@@ -1148,10 +1219,56 @@ const CardGridItem = memo(function CardGridItem({
             </span>
           </div>
         ) : null}
+        <button
+          type="button"
+          className="absolute inset-0 z-10 cursor-pointer border-0 bg-transparent p-0"
+          onClick={() => {
+            if (tradePickMode && onTradePick && card.collectionEntryId) {
+              onTradePick(card.collectionEntryId, card, Math.max(1, card.quantity ?? 1));
+            } else {
+              onOpen(index);
+            }
+          }}
+          aria-label={
+            tradePickMode && card.collectionEntryId
+              ? pickActive
+                ? `${qtySelected} in trade — tap to change quantity for ${card.cardName ?? card.filename}`
+                : `Select copies of ${card.cardName ?? card.filename}`
+              : `View ${card.set} ${card.filename}`
+          }
+        />
+      </div>
+      <div className="relative mt-1 flex items-center gap-2">
+        {(variant === "collection" ? (card.quantity ?? 1) : tileOwnedQuantity) > 1 ? (
+          <span className="absolute left-0 top-0 inline-flex rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">
+            ×{variant === "collection" ? card.quantity : tileOwnedQuantity}
+          </span>
+        ) : null}
+        <div className="min-w-0 flex-1">
+          {(card.cardName || card.setName || card.set) ? (
+            <span
+              className={`block line-clamp-1 text-center text-[10px] font-medium ${
+                tradePickMode && pickActive ? "font-semibold text-emerald-500 dark:text-emerald-400" : "text-[var(--foreground)]/80"
+              }`}
+            >
+              {[card.cardName, card.setName || card.set].filter(Boolean).join(" - ")}
+            </span>
+          ) : null}
+          {unitPrice !== null ? (
+            <span className="block mt-0.5 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
+              {gradingLabel
+                ? <span title={gradingLabel}>🏆 {gradingLabel} · </span>
+                : isManualPrice
+                  ? <span title="Manually set price">✎ </span>
+                  : null
+              }{formatMoneyGbp(unitPrice)}
+            </span>
+          ) : null}
+        </div>
         {showCollectedBadge ? (
           <span
-            className="pointer-events-none absolute bottom-1.5 right-1.5 z-[9] flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 ring-2 ring-[var(--background)]"
-            style={{ right: "0.375rem", bottom: "0.375rem" }}
+            className="pointer-events-none flex h-6 w-6 shrink-0 items-center justify-center rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.28)] ring-2 ring-[var(--background)]"
+            style={{ background: "#22c55e" }}
             title={variant === "wishlist" ? "You own this card" : "In your collection"}
             aria-label={variant === "wishlist" ? "You own this card" : "In your collection"}
           >
@@ -1173,8 +1290,8 @@ const CardGridItem = memo(function CardGridItem({
         ) : null}
         {showWishlistBadge ? (
           <span
-            className="pointer-events-none absolute bottom-1.5 right-1.5 z-[9] flex h-6 w-6 shrink-0 items-center justify-center rounded-full ring-2 ring-[var(--background)]"
-            style={{ background: "#ef4444", right: "0.375rem", bottom: "0.375rem" }}
+            className="pointer-events-none flex h-6 w-6 shrink-0 items-center justify-center rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.28)] ring-2 ring-[var(--background)]"
+            style={{ background: "#ef4444" }}
             title="On your wishlist"
             aria-label="On your wishlist"
           >
@@ -1183,52 +1300,6 @@ const CardGridItem = memo(function CardGridItem({
             </svg>
           </span>
         ) : null}
-        <button
-          type="button"
-          className="absolute inset-0 z-10 cursor-pointer border-0 bg-transparent p-0"
-          onClick={() => {
-            if (tradePickMode && onTradePick && card.collectionEntryId) {
-              onTradePick(card.collectionEntryId, card, Math.max(1, card.quantity ?? 1));
-            } else {
-              onOpen(index);
-            }
-          }}
-          aria-label={
-            tradePickMode && card.collectionEntryId
-              ? pickActive
-                ? `${qtySelected} in trade — tap to change quantity for ${card.cardName ?? card.filename}`
-                : `Select copies of ${card.cardName ?? card.filename}`
-              : `View ${card.set} ${card.filename}`
-          }
-        />
-      </div>
-      <div className="relative mt-1">
-        {variant === "collection" && (card.quantity ?? 1) > 1 ? (
-          <span className="absolute left-0 top-0 inline-flex rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">
-            ×{card.quantity}
-          </span>
-        ) : null}
-        <div className="min-w-0">
-          {(card.cardName || card.setName || card.set) ? (
-            <span
-              className={`block line-clamp-1 text-center text-[10px] font-medium ${
-                tradePickMode && pickActive ? "font-semibold text-emerald-500 dark:text-emerald-400" : "text-[var(--foreground)]/80"
-              }`}
-            >
-              {[card.cardName, card.setName || card.set].filter(Boolean).join(" - ")}
-            </span>
-          ) : null}
-          {unitPrice !== null ? (
-            <span className="block mt-0.5 text-center text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
-              {gradingLabel
-                ? <span title={gradingLabel}>🏆 {gradingLabel} · </span>
-                : isManualPrice
-                  ? <span title="Manually set price">✎ </span>
-                  : null
-              }{formatMoneyGbp(unitPrice)}
-            </span>
-          ) : null}
-        </div>
       </div>
     </li>
   );
@@ -1348,7 +1419,9 @@ export function CardGrid({
   /** Map key in {@link localCollectionLinesByMasterCardId} (group key or master id). */
   const [pendingRemovalLinesMapKey, setPendingRemovalLinesMapKey] = useState<string | null>(null);
   const [pendingRemovalCardName, setPendingRemovalCardName] = useState<string>("");
-  const [removalReason, setRemovalReason] = useState<"" | "lost" | "traded" | "sold" | "damaged" | "gifted">("");
+  const [removalReason, setRemovalReason] = useState<
+    "" | "lost" | "traded" | "sold" | "damaged" | "gifted" | "built_deck"
+  >("");
   const [removalSaleValue, setRemovalSaleValue] = useState<string>("");
   type TradeItem =
     | { type: "card"; tempId: string; masterCardId: string; cardSearchQuery: string; cardSearchResults: { id: string; cardName: string; setName: string }[]; cardSearchLoading: boolean; quantity: number }
@@ -1465,9 +1538,7 @@ export function CardGrid({
   }, [normalizedCards, selectedIndex, standaloneModalCard]);
 
   const collectionLinesForSelected = useMemo(() => {
-    const key = selectedCard ? cardCollectionMapKey(selectedCard) : "";
-    if (!key) return [];
-    return localCollectionLinesByMasterCardId[key] ?? [];
+    return selectedCollectionLines(selectedCard, localCollectionLinesByMasterCardId);
   }, [localCollectionLinesByMasterCardId, selectedCard]);
 
   const [carouselSlotWidth, setCarouselSlotWidth] = useState(0);
@@ -1558,6 +1629,65 @@ export function CardGrid({
     setAddSheetOpen(true);
   }, [allowMutations, customerLoggedIn, goLogin, itemConditions, pricingVariants, readOnly, selectedCard?.masterCardId]);
 
+  const onOpenAddSheetForLine = useCallback((line?: CollectionLineSummary) => {
+    if (!allowMutations) {
+      if (!readOnly && !customerLoggedIn) goLogin();
+      return;
+    }
+    if (!selectedCard?.masterCardId) return;
+
+    const isGraded = Boolean(line?.gradingCompany && line?.gradeValue);
+    if (isGraded) {
+      setAddConditionId("graded");
+      setAddQuantity(1);
+      setAddPrinting(line?.printing?.trim() || "Standard");
+      setAddPurchaseType("");
+      setAddPricePaid("");
+      setAddPurchaseDate(new Date().toISOString().slice(0, 10));
+      setAddUnlistedPrice("");
+      setAddIsGraded(true);
+      setGradedCompany(line?.gradingCompany?.trim() || "PSA");
+      setGradedValue(line?.gradeValue?.trim() || "");
+      setGradedSerial("");
+      setGradedImageFile(null);
+      setGradedImagePreview("");
+      setGradedPricePaid("");
+      setGradedPurchaseDate(new Date().toISOString().slice(0, 10));
+      setAddSheetOpen(true);
+      return;
+    }
+
+    const preferredCondition =
+      line?.conditionId && itemConditions.some((c) => c.id === line.conditionId)
+        ? line.conditionId
+        : itemConditions.find((c) => c.name.trim() === (line?.conditionLabel?.trim() || ""))?.id;
+
+    setAddConditionId(preferredCondition ?? "");
+    setAddQuantity(1);
+    setAddPrinting(line?.printing?.trim() || pricingVariants[0] || "Standard");
+    setAddPurchaseType("");
+    setAddPricePaid("");
+    setAddPurchaseDate(new Date().toISOString().slice(0, 10));
+    setAddUnlistedPrice("");
+    setAddIsGraded(false);
+    setGradedCompany("PSA");
+    setGradedValue("");
+    setGradedSerial("");
+    setGradedImageFile(null);
+    setGradedImagePreview("");
+    setGradedPricePaid("");
+    setGradedPurchaseDate(new Date().toISOString().slice(0, 10));
+    setAddSheetOpen(true);
+  }, [
+    allowMutations,
+    customerLoggedIn,
+    goLogin,
+    itemConditions,
+    pricingVariants,
+    readOnly,
+    selectedCard?.masterCardId,
+  ]);
+
   const submitGradedCollection = useCallback(async () => {
     if (!selectedCard?.masterCardId) return;
     setAddPending(true);
@@ -1606,7 +1736,9 @@ export function CardGrid({
           gradedSerial: gradedSerial.trim() || undefined,
         };
         const gk = collectionGroupKeyFromLine(mid, line);
-        setLocalCollectionLinesByMasterCardId((prev) => mergeCollectionLine(prev, gk, line));
+        setLocalCollectionLinesByMasterCardId((prev) =>
+          mergeCollectionLine(mergeCollectionLine(prev, gk, line), mid, line),
+        );
       }
       setAddSheetOpen(false);
       if (variant !== "browse") router.refresh();
@@ -1671,7 +1803,9 @@ export function CardGrid({
           language: "English",
         };
         const gk = collectionGroupKeyFromLine(mid, line);
-        setLocalCollectionLinesByMasterCardId((prev) => mergeCollectionLine(prev, gk, line));
+        setLocalCollectionLinesByMasterCardId((prev) =>
+          mergeCollectionLine(mergeCollectionLine(prev, gk, line), mid, line),
+        );
       }
       setAddSheetOpen(false);
       if (variant !== "browse") router.refresh();
@@ -2068,7 +2202,7 @@ export function CardGrid({
     const absX = Math.abs(x);
     const absY = Math.abs(y);
     const horizontalThreshold = 56;
-    const verticalThreshold = 72;
+    const verticalThreshold = 120;
 
     const scrollTop = modalScrollContainerRef.current?.scrollTop ?? 0;
     const modalScrolledToTop = scrollTop <= 1;
@@ -2408,6 +2542,9 @@ export function CardGrid({
                 sectionTitle={collectionSectionTitle}
                 onAdjustQuantity={
                   allowMutations && selectedCard.masterCardId ? adjustCollectionQuantity : undefined
+                }
+                onAddCopy={
+                  allowMutations && selectedCard.masterCardId ? onOpenAddSheetForLine : undefined
                 }
                 adjustingEntryId={adjustingCollectionEntryId}
                 onEditLine={allowMutations ? openEditSheet : undefined}
@@ -3166,7 +3303,7 @@ export function CardGrid({
           <div className="mt-4 flex flex-col gap-1 text-sm">
             <span className="font-medium">Reason</span>
             <div className="mt-1 grid grid-cols-3 gap-2">
-              {(["lost", "sold", "traded", "damaged", "gifted"] as const).map((r) => (
+              {(["lost", "sold", "traded", "damaged", "gifted", "built_deck"] as const).map((r) => (
                 <button
                   key={r}
                   type="button"
@@ -3177,7 +3314,7 @@ export function CardGrid({
                       : "border-[var(--foreground)]/20 bg-transparent opacity-60"
                   }`}
                 >
-                  {r.charAt(0).toUpperCase() + r.slice(1)}
+                  {r === "built_deck" ? "Built deck" : r.charAt(0).toUpperCase() + r.slice(1)}
                 </button>
               ))}
             </div>
@@ -3381,7 +3518,8 @@ export function CardGrid({
             const mapKey = cardCollectionMapKey(card);
             const showPrice = mapKey !== "" && cardPricesByMasterCardId[mapKey] !== undefined;
             const unitPrice = showPrice ? cardPricesByMasterCardId[mapKey]! : null;
-            const owned = Boolean(mapKey && localCollectionLinesByMasterCardId[mapKey]?.length);
+            const owned = cardHasOwnedLines(card, localCollectionLinesByMasterCardId);
+            const ownedQuantity = ownedCopyCount(card, localCollectionLinesByMasterCardId);
             const isManualPrice = Boolean(mapKey && manualPriceMasterCardIds?.has(mapKey));
             const grading = mapKey ? gradingByMasterCardId?.[mapKey] : undefined;
             const gradingLabel = grading ? `${grading.company} ${grading.grade}` : undefined;
@@ -3400,6 +3538,7 @@ export function CardGrid({
                 variant={variant}
                 unitPrice={unitPrice ?? null}
                 owned={owned}
+                ownedQuantity={ownedQuantity}
                 wishlisted={wishlisted}
                 isManualPrice={isManualPrice}
                 gradingLabel={gradingLabel}
@@ -3507,7 +3646,8 @@ export function CardGrid({
                   const mapKey = cardCollectionMapKey(card);
                   const showPrice = mapKey !== "" && cardPricesByMasterCardId[mapKey] !== undefined;
                   const unitPrice = showPrice ? cardPricesByMasterCardId[mapKey]! : null;
-                  const owned = Boolean(mapKey && localCollectionLinesByMasterCardId[mapKey]?.length);
+                  const owned = cardHasOwnedLines(card, localCollectionLinesByMasterCardId);
+                  const ownedQuantity = ownedCopyCount(card, localCollectionLinesByMasterCardId);
                   const isManualPrice = Boolean(mapKey && manualPriceMasterCardIds?.has(mapKey));
                   const grading = mapKey ? gradingByMasterCardId?.[mapKey] : undefined;
                   const gradingLabel = grading ? `${grading.company} ${grading.grade}` : undefined;
@@ -3526,6 +3666,7 @@ export function CardGrid({
                       variant={variant}
                       unitPrice={unitPrice ?? null}
                       owned={owned}
+                      ownedQuantity={ownedQuantity}
                       wishlisted={wishlisted}
                       isManualPrice={isManualPrice}
                       gradingLabel={gradingLabel}

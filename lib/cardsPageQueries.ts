@@ -45,9 +45,9 @@ export type CardsPageCardEntry = {
 /** Legacy default page size (used only to interpret old `?page=` bookmarks). */
 export const CARDS_PER_PAGE = 80;
 /** First paint on /cards — how many cards to fetch before "Load more". */
-export const CARDS_INITIAL_TAKE = 30;
+export const CARDS_INITIAL_TAKE = 42;
 /** Each "Load more" adds this many additional cards (URL `take` grows by this). */
-export const CARDS_LOAD_MORE_STEP = 30;
+export const CARDS_LOAD_MORE_STEP = 42;
 /** Upper bound for a single /cards request (Payload `in` query + payload size). */
 export const CARDS_TAKE_MAX = 5000;
 
@@ -275,6 +275,62 @@ export async function fetchSetMarketValue(setCode: string): Promise<number | nul
     }
 
     return counted > 0 ? total : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Sum the lowest raw GBP price for cards in a set that are not already owned.
+ * Uses the same pricing source as {@link fetchSetMarketValue}.
+ */
+export async function fetchSetCompletionValue(
+  setCode: string,
+  cards: CardsPageCardEntry[],
+  ownedMasterCardIds: Set<string>,
+): Promise<{ missingCount: number; totalValueGbp: number } | null> {
+  try {
+    const { getPricingForSet, getPricingForCard } = await import("@/lib/r2Pricing");
+    const pricing = await getPricingForSet(setCode);
+    if (!pricing) return null;
+
+    let total = 0;
+    let counted = 0;
+    let missingCount = 0;
+    const seen = new Set<string>();
+
+    for (const card of cards) {
+      const masterCardId = card.masterCardId?.trim() ?? "";
+      if (masterCardId && ownedMasterCardIds.has(masterCardId)) continue;
+
+      const externalId = card.externalId?.trim() ?? "";
+      const uniqueKey = masterCardId || externalId || `${card.set}/${card.filename}`;
+      if (!externalId || seen.has(uniqueKey)) continue;
+      seen.add(uniqueKey);
+      missingCount++;
+
+      const fallback = card.legacyExternalId?.trim() ? [card.legacyExternalId.trim()] : undefined;
+      const entry = getPricingForCard(pricing, externalId, fallback);
+      const scrydex = entry?.scrydex;
+      if (!scrydex || typeof scrydex !== "object" || Array.isArray(scrydex)) continue;
+
+      let lowest = Infinity;
+      for (const v of Object.values(scrydex as Record<string, unknown>)) {
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+          const raw = (v as Record<string, unknown>).raw;
+          if (typeof raw === "number" && Number.isFinite(raw) && raw > 0 && raw < lowest) {
+            lowest = raw;
+          }
+        }
+      }
+
+      if (lowest !== Infinity) {
+        total += lowest;
+        counted++;
+      }
+    }
+
+    return missingCount > 0 ? { missingCount, totalValueGbp: counted > 0 ? total : 0 } : null;
   } catch {
     return null;
   }

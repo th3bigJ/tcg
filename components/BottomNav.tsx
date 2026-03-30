@@ -200,6 +200,11 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
   const moreItems: MoreItem[] = isLoggedIn
     ? [
         {
+          href: "/more/grade",
+          label: "Grade opportunities",
+          description: "Find the best cards in your collection to profit from grading.",
+        },
+        {
           href: "/account",
           label: "Account",
           description: "View your details and manage your sign-in.",

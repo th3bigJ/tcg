@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
 const SCROLL_STORAGE_KEY = "tcg-cards-load-more-scroll-y";
-const PULL_THRESHOLD = 72;
+const PULL_THRESHOLD = 112;
 
 type CardsResultsScrollProps = {
   children: ReactNode;
@@ -89,8 +89,8 @@ export function CardsResultsScroll({
       setPullY(0);
       return;
     }
-    // Resist the pull with square-root damping
-    setPullY(Math.min(PULL_THRESHOLD * 1.5, Math.sqrt(delta) * 5));
+    // Resist the pull so refresh needs a more deliberate drag.
+    setPullY(Math.min(PULL_THRESHOLD * 1.35, Math.sqrt(delta) * 4));
   }
 
   function handleTouchEnd() {
@@ -119,15 +119,15 @@ export function CardsResultsScroll({
   return (
     <div
       ref={scrollRef}
-      className={scrollsWindow ? "min-h-0" : "scrollbar-hide min-h-0 flex-1 overflow-y-auto"}
+      className={scrollsWindow ? "relative min-h-0" : "relative scrollbar-hide min-h-0 flex-1 overflow-y-auto"}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       {(pullY > 0 || isRefreshing) ? (
         <div
-          className="pointer-events-none flex items-center justify-center gap-2 overflow-hidden transition-[height]"
-          style={{ height: isRefreshing ? 40 : pullY * 0.55 }}
+          className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-center gap-2 overflow-hidden pt-[max(0.25rem,env(safe-area-inset-top,0px))] transition-[height]"
+          style={{ height: isRefreshing ? 44 : pullY * 0.45 }}
         >
           <svg
             className={isRefreshing ? "animate-spin" : ""}
