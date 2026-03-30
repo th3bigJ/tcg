@@ -229,7 +229,7 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
     <>
       <nav
         className="pointer-events-none fixed inset-x-0 bottom-0 z-[1000] isolate"
-        style={{ padding: "0.5rem 1.25rem max(2rem, env(safe-area-inset-bottom, 0px))" }}
+        style={{ padding: "0.5rem 1.25rem max(0.5rem, env(safe-area-inset-bottom, 0px))" }}
         aria-label="Main navigation"
       >
         <div
