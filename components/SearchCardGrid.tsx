@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import { CardTagFilterRow } from "@/components/CardTagFilterRow";
