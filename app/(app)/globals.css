@@ -5,7 +5,7 @@
   --foreground: #171717;
   --mobile-page-top-offset: max(1.5rem, calc(env(safe-area-inset-top, 0px) + 0.5rem));
   /* Fixed bottom nav: floating pill shell + safe area (matches BottomNav). */
-  --bottom-nav-offset: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  --bottom-nav-offset: calc(6.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 @theme inline {
