@@ -249,7 +249,7 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
             const Icon = icons[i];
             const itemClass = `flex min-w-0 basis-0 flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium leading-tight transition-all sm:text-[11px]`;
             const itemStyle: React.CSSProperties = {
-              borderRadius: "29px",
+              borderRadius: "28px",
               padding: "0.375rem 0.75rem",
               color: active ? "white" : "rgba(255,255,255,0.45)",
               background: active ? "rgba(255,255,255,0.15)" : "transparent",
