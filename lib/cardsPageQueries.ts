@@ -194,9 +194,17 @@ function categoryFacetKey(value: string): string {
 
 const EXCLUDED_BASIC_RARITIES = new Set(["common", "uncommon"]);
 
+function normalizeCardNumberSearchValue(value: string): string {
+  return value
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/\d+/gu, (digits) => String(Number.parseInt(digits, 10)));
+}
+
 function cardMatchesSearchQuery(card: CardJsonEntry, rawQuery: string): boolean {
   const query = rawQuery.trim().toLocaleLowerCase();
   if (!query) return true;
+  const normalizedQuery = normalizeCardNumberSearchValue(rawQuery);
 
   const searchableValues: string[] = [
     card.cardNumber ?? "",
@@ -207,7 +215,11 @@ function cardMatchesSearchQuery(card: CardJsonEntry, rawQuery: string): boolean 
     ...(Array.isArray(card.dexIds) ? card.dexIds : []).map((value) => String(value ?? "")),
   ];
 
-  return searchableValues.some((value) => value.toLocaleLowerCase().includes(query));
+  return searchableValues.some((value) => {
+    const normalizedValue = value.toLocaleLowerCase();
+    if (normalizedValue.includes(query)) return true;
+    return normalizeCardNumberSearchValue(value).includes(normalizedQuery);
+  });
 }
 
 function cardMatchesFilters(
