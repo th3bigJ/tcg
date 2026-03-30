@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { ExpansionsList } from "@/components/ExpansionsList";
 import { PokedexList } from "@/components/PokedexList";
 import { SearchBrowseTabs } from "@/components/SearchBrowseTabs";
@@ -7,7 +8,6 @@ import { getCurrentCustomer } from "@/lib/auth";
 import {
   CARDS_LOAD_MORE_STEP,
   fetchMasterCardsPage,
-  generateShuffledSetOrder,
   getCachedFilterFacets,
   resolveCardsCategoryFilter,
   resolveCardsTakeFromParams,
@@ -41,6 +41,7 @@ type SearchPageProps = {
     category?: string;
     artist?: string;
     tab?: string;
+    seed?: string;
   }>;
 };
 
@@ -166,7 +167,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
 
-  const setOrder = generateShuffledSetOrder();
+  const randomSeed =
+    (resolvedSearchParams.seed ?? "").trim() || randomUUID().slice(0, 8);
 
   const hasSelectedSet = setFilterOptions.some((option) => option.code === selectedSet);
   const parsedPokemonDex = Number.parseInt(selectedPokemon, 10);
@@ -199,7 +201,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     categoryQueryVariants,
     page: 1,
     perPage: requestedTake,
-    setOrder,
+    randomSeed,
   });
 
   const showingCount = cardsForGrid.length;
@@ -209,6 +211,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const buildCardsHref = (take?: number) => {
     const params = new URLSearchParams();
     params.set("tab", "cards");
+    params.set("seed", randomSeed);
     if (activeSet) params.set("set", activeSet);
     if (activePokemon) params.set("pokemon", activePokemon);
     if (activeRarity) params.set("rarity", activeRarity);
@@ -224,6 +227,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const loadMoreHref = buildCardsHref(nextTake);
   const scrollRestoreKey = [
     String(requestedTake),
+    randomSeed,
     activeSet,
     activePokemon,
     activeRarity,
@@ -236,6 +240,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const clearTagFiltersHref = (() => {
     const params = new URLSearchParams();
     params.set("tab", "cards");
+    params.set("seed", randomSeed);
     if (activeSet) params.set("set", activeSet);
     if (activePokemon) params.set("pokemon", activePokemon);
     if (activeSearch) params.set("search", activeSearch);
@@ -263,7 +268,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
                 formAction="/search"
-                extraHiddenFields={{ tab: "cards" }}
+                extraHiddenFields={{ tab: "cards", seed: randomSeed }}
                 activeSearch={activeSearch}
                 activeSet={activeSet}
                 activePokemon={activePokemon}
@@ -273,7 +278,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 rarityOptions={rarityOptions}
                 categoryOptions={categoryOptions}
                 resetHref={clearTagFiltersHref}
-                defaultRandomOrder={true}
+                defaultGroupBySet={false}
+                showGroupBySetTag={false}
+                defaultSortOrder="price-desc"
               />
             </CardsResultsScroll>
           </section>

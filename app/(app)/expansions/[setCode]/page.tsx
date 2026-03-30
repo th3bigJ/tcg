@@ -161,6 +161,7 @@ export default async function ExpansionSetCardsPage({
                 rarityOptions={rarityOptions}
                 categoryOptions={categoryOptions}
                 resetHref={setPath}
+                defaultSortOrder="price-desc"
               />
             </CardsResultsScroll>
           </div>

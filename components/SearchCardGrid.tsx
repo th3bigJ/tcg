@@ -38,6 +38,8 @@ type Props = {
   resetHref: string;
   defaultGroupBySet?: boolean;
   defaultRandomOrder?: boolean;
+  showGroupBySetTag?: boolean;
+  defaultSortOrder?: SortOrder;
 };
 
 export function SearchCardGrid({
@@ -58,15 +60,26 @@ export function SearchCardGrid({
   resetHref,
   defaultGroupBySet = true,
   defaultRandomOrder,
+  showGroupBySetTag = true,
+  defaultSortOrder = "",
 }: Props) {
   const [cardData, setCardData] = useState<SearchCardData | null>(null);
   const [groupBySet, setGroupBySet] = useState(defaultGroupBySet);
   const [randomOrder, setRandomOrder] = useState(defaultRandomOrder ?? false);
-  const [sortOrder, setSortOrder] = useState<SortOrder>("");
-  // Stable per-session seed so the shuffle doesn't change on re-renders
-  const shuffleSeed = useRef(Math.floor(Math.random() * 0xffffffff));
+  const [sortOrder, setSortOrder] = useState<SortOrder>(defaultSortOrder);
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
-  const pricesFetchedRef = useRef(false);
+  const groupShuffleSeed = useMemo(
+    () =>
+      cards.reduce((seed, card, index) => {
+        const source = `${card.masterCardId ?? card.filename}:${index}`;
+        let nextSeed = seed;
+        for (let i = 0; i < source.length; i++) {
+          nextSeed = Math.imul(nextSeed ^ source.charCodeAt(i), 16777619);
+        }
+        return nextSeed >>> 0;
+      }, 2166136261),
+    [cards],
+  );
 
   useEffect(() => {
     if (!customerLoggedIn) return;
@@ -80,25 +93,38 @@ export function SearchCardGrid({
     return () => controller.abort();
   }, [customerLoggedIn]);
 
-  // Fetch bulk prices the first time price sort is requested
+  const cardsMissingPrices = useMemo(() => {
+    if (sortOrder !== "price-desc") return [];
+    const knownPrices = cardPrices ?? {};
+    const seen = new Set<string>();
+    return cards
+      .map((card) => card.masterCardId)
+      .filter((id): id is string => Boolean(id))
+      .filter((id) => {
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return knownPrices[id] === undefined;
+      });
+  }, [cards, sortOrder, cardPrices]);
+
+  // Fetch prices for any cards in the current grid that don't have them yet.
   useEffect(() => {
-    if (sortOrder !== "price-desc" || pricesFetchedRef.current) return;
-    pricesFetchedRef.current = true;
-    const masterCardIds = cards
-      .map((c) => c.masterCardId)
-      .filter((id): id is string => Boolean(id));
-    if (masterCardIds.length === 0) return;
+    if (cardsMissingPrices.length === 0) return;
+    const controller = new AbortController();
     fetch("/api/card-pricing/bulk", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ masterCardIds }),
+      body: JSON.stringify({ masterCardIds: cardsMissingPrices }),
+      signal: controller.signal,
     })
       .then((r) => (r.ok ? r.json() : null))
       .then((data: { prices: Record<string, number> } | null) => {
-        if (data?.prices) setCardPrices(data.prices);
+        if (!data?.prices) return;
+        setCardPrices((current) => ({ ...(current ?? {}), ...data.prices }));
       })
       .catch(() => {});
-  }, [sortOrder, cards]);
+    return () => controller.abort();
+  }, [cardsMissingPrices]);
 
   const sortedCards = useMemo(() => {
     if (sortOrder === "release-desc") {
@@ -120,12 +146,14 @@ export function SearchCardGrid({
         <CardTagFilterRow
           groupBySet={groupBySet}
           onGroupBySetChange={setGroupBySet}
+          showGroupBySetTag={showGroupBySetTag}
           randomOrder={defaultRandomOrder !== undefined ? randomOrder : undefined}
           onRandomOrderChange={defaultRandomOrder !== undefined ? setRandomOrder : undefined}
           sortControl={{
             value: sortOrder,
             onChange: (v) => setSortOrder(v as SortOrder),
             options: SORT_OPTIONS,
+            defaultValue: defaultSortOrder,
           }}
           searchFilter={{
             formAction,
@@ -151,7 +179,7 @@ export function SearchCardGrid({
         wishlistEntryIdsByMasterCardId={cardData?.wishlistMap}
         collectionLinesByMasterCardId={cardData?.collectionLines}
         groupBySet={groupBySet}
-        groupShuffleSeed={randomOrder ? shuffleSeed.current : undefined}
+        groupShuffleSeed={randomOrder ? groupShuffleSeed : undefined}
       />
     </>
   );

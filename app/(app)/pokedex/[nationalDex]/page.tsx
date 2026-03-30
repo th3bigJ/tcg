@@ -126,6 +126,7 @@ export default async function PokedexPokemonCardsPage({
                 categoryOptions={[]}
                 resetHref={`/pokedex/${dexNum}`}
                 defaultGroupBySet={false}
+                defaultSortOrder="price-desc"
               />
             </CardsResultsScroll>
           </div>

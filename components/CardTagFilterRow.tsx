@@ -56,6 +56,7 @@ export type CardTagFilterRowProps = {
   /** Toggled locally — no URL involvement */
   groupBySet: boolean;
   onGroupBySetChange: (value: boolean) => void;
+  showGroupBySetTag?: boolean;
 
   /** Random order toggle — only shown when provided */
   randomOrder?: boolean;
@@ -116,6 +117,7 @@ export type CardTagFilterRowProps = {
 export function CardTagFilterRow({
   groupBySet,
   onGroupBySetChange,
+  showGroupBySetTag = true,
   randomOrder,
   onRandomOrderChange,
   localSearch,
@@ -301,30 +303,32 @@ export function CardTagFilterRow({
         ) : null}
 
         {/* Group by set toggle */}
-        <TagButton
-          label="Group by set"
-          active={groupBySet}
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
-            >
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-              <rect x="14" y="14" width="7" height="7" />
-            </svg>
-          }
-          onClick={() => onGroupBySetChange(!groupBySet)}
-        />
+        {showGroupBySetTag ? (
+          <TagButton
+            label="Group by set"
+            active={groupBySet}
+            icon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+              </svg>
+            }
+            onClick={() => onGroupBySetChange(!groupBySet)}
+          />
+        ) : null}
 
         {/* Random order toggle — only shown when provided */}
         {onRandomOrderChange !== undefined ? (

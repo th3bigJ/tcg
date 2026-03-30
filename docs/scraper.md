@@ -94,3 +94,38 @@ npm run scrape:pricing -- --series="Scarlet & Violet"
 npm run scrape:pricing -- --series="Mega Evolution"
 ```
 
+## Full Scrape In 4 Batches
+
+These four prompts cover all current series in the repo, split into roughly even chunks of about 5,000 cards each.
+
+### Batch 1
+
+Approx. 5,387 cards.
+
+```bash
+npm run scrape:pricing -- --series="Sword & Shield,Base,Neo,Gym,POP,Legendary Collection,Call of Legends,McDonald's Collection,Trainer kits"
+```
+
+### Batch 2
+
+Approx. 5,293 cards.
+
+```bash
+npm run scrape:pricing -- --series="Scarlet & Violet,Diamond & Pearl,Mega Evolution"
+```
+
+### Batch 3
+
+Approx. 4,947 cards.
+
+```bash
+npm run scrape:pricing -- --series="Sun & Moon,Black & White,E-Card"
+```
+
+### Batch 4
+
+Approx. 4,587 cards.
+
+```bash
+npm run scrape:pricing -- --series="XY,EX,Platinum,HeartGold & SoulSilver"
+```

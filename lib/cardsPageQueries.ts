@@ -51,6 +51,30 @@ export const CARDS_LOAD_MORE_STEP = 42;
 /** Upper bound for a single /cards request (Payload `in` query + payload size). */
 export const CARDS_TAKE_MAX = 5000;
 
+function createSeededRandom(seed: string) {
+  let h = 1779033703 ^ seed.length;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function seededRandom() {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  };
+}
+
+function shuffleRowsWithSeed<T>(rows: readonly T[], seed: string): T[] {
+  const shuffled = [...rows];
+  const random = createSeededRandom(seed);
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+  }
+  return shuffled;
+}
+
 /**
  * How many cards to load from the start (accumulating slice). Uses `take` when set;
  * falls back to legacy `page` (≈80 cards per page) then default initial take.
@@ -367,6 +391,8 @@ export async function fetchMasterCardsPage(params: {
   perPage: number;
   /** Pre-shuffled set order for the default unfiltered view. Generated once server-side to avoid hydration mismatches. */
   setOrder?: string[];
+  /** Stable seed for a fully randomized card feed that persists across "load more". */
+  randomSeed?: string;
 }): Promise<{ entries: CardsPageCardEntry[]; totalDocs: number }> {
   const pageSize = Math.min(CARDS_TAKE_MAX, Math.max(1, Math.floor(params.perPage)));
   const setMetaMap = getSetMetaMap();
@@ -438,6 +464,23 @@ export async function fetchMasterCardsPage(params: {
   const orderedRows = getDefaultCardOrder();
 
   if (isDefaultUnfiltered) {
+    if (params.randomSeed) {
+      const shuffledRows = shuffleRowsWithSeed(orderedRows, params.randomSeed);
+      const totalDocs = shuffledRows.length;
+      const startIndex = (params.page - 1) * pageSize;
+      const pageRows = shuffledRows.slice(startIndex, startIndex + pageSize);
+      if (pageRows.length === 0) return { entries: [], totalDocs };
+
+      const cardMap = getCardMapById();
+      const entries = pageRows
+        .map((row) => cardMap.get(row.id))
+        .filter((c): c is CardJsonEntry => Boolean(c))
+        .map(toEntry)
+        .filter((e): e is CardsPageCardEntry => e !== null);
+
+      return { entries, totalDocs };
+    }
+
     // Group rows by set, preserving within-set order (card number descending from getDefaultCardOrder)
     const setQueues = new Map<string, typeof orderedRows>();
     for (const row of orderedRows) {
