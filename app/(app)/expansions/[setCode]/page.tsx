@@ -153,14 +153,11 @@ export default async function ExpansionSetCardsPage({
                 customerLoggedIn={Boolean(customer)}
                 formAction={setPath}
                 activeSearch={activeSearch}
-                activeSet={activeSet}
-                activePokemon=""
                 activeRarity={activeRarity}
                 activeCategory={activeCategory}
                 excludeCommonUncommon={excludeCommonUncommon}
                 rarityOptions={rarityOptions}
                 categoryOptions={categoryOptions}
-                resetHref={setPath}
               />
             </CardsResultsScroll>
           </div>
