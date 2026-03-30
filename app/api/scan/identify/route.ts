@@ -16,12 +16,54 @@ function getSetMetaMap() {
   return setMetaMap;
 }
 
+// Pre-computed normalized card numbers keyed by masterCardId, built once per server lifetime.
+let normalizedNumberCache: Map<string, string> | null = null;
+
+function getNormalizedNumberCache() {
+  if (!normalizedNumberCache) {
+    normalizedNumberCache = new Map();
+    for (const card of getAllCards()) {
+      normalizedNumberCache.set(card.masterCardId, normalizeCardNumber((card.cardNumber ?? "").trim()));
+    }
+  }
+  return normalizedNumberCache;
+}
+
 function normalizeName(value: string) {
   return value
     .toLocaleLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Normalize a card number for fuzzy matching.
+ * Handles OCR artifacts (O→0), whitespace around slashes, and zero-padding
+ * differences between OCR output and catalog values.
+ *
+ * Examples:
+ *   "25/102"    → "025/102"  (pad numeric prefix to 3 digits)
+ *   "GG7O/159"  → "GG70/159" (O→0)
+ *   "swsh307/107" → "SWSH307/107" (uppercase)
+ */
+function normalizeCardNumber(value: string): string {
+  const cleaned = value
+    .toUpperCase()
+    .replace(/[Oo]/g, "0")
+    .replace(/\s*\/\s*/g, "/")
+    .trim();
+
+  // Split into prefix (letters) + numeric part + "/" + total
+  const match = cleaned.match(/^([A-Z]*)(\d+)\/(\d+)$/);
+  if (!match) return cleaned;
+  const [, letters, num, rest] = match;
+  // Zero-pad the numeric part to 3 digits when there's no letter prefix,
+  // or match catalog padding for letter-prefixed numbers (typically 2 digits)
+  const padded = letters
+    ? num!.padStart(2, "0")
+    : num!.padStart(3, "0");
+  return `${letters}${padded}/${rest}`;
 }
 
 function levenshteinDistance(left: string, right: string): number {
@@ -147,16 +189,18 @@ export async function POST(request: Request) {
   }
 
   const allCards = getAllCards();
+  const cardNumberCache = getNormalizedNumberCache();
   const hpNumber = Number.parseInt(rawHp, 10);
-  const exactNumberCards = rawNumber
-    ? allCards.filter((card) => (card.cardNumber ?? "").trim() === rawNumber)
+  const normalizedNumber = rawNumber ? normalizeCardNumber(rawNumber) : "";
+  const exactNumberCards = normalizedNumber
+    ? allCards.filter((card) => cardNumberCache.get(card.masterCardId) === normalizedNumber)
     : [];
   const workingCards = exactNumberCards.length > 0 ? exactNumberCards : allCards;
 
   const ranked = workingCards
     .map((card) => {
       let score = 0;
-      if (rawNumber && (card.cardNumber ?? "").trim() === rawNumber) {
+      if (normalizedNumber && cardNumberCache.get(card.masterCardId) === normalizedNumber) {
         score += 140;
       }
 
@@ -180,9 +224,9 @@ export async function POST(request: Request) {
   const top = ranked[0];
   const confidence: "high" | "low" =
     Boolean(
-      rawNumber &&
-        top?.cardNumber === rawNumber &&
-        (!rawHp || String(top.hp ?? "") === rawHp),
+      normalizedNumber &&
+        normalizeCardNumber((top?.cardNumber ?? "").trim()) === normalizedNumber &&
+        (!rawHp || String(top?.hp ?? "") === rawHp),
     )
       ? "high"
       : "low";

@@ -74,7 +74,9 @@ export async function POST(request: NextRequest) {
   const conditionId =
     typeof body.conditionId === "string" && body.conditionId.trim() ? body.conditionId.trim() : null;
   const purchaseType =
-    body.purchaseType === "packed" || body.purchaseType === "bought" ? body.purchaseType : null;
+    body.purchaseType === "packed" || body.purchaseType === "bought" || body.purchaseType === "traded"
+      ? body.purchaseType
+      : null;
   const pricePaid =
     purchaseType === "bought" && typeof body.pricePaid === "number" && Number.isFinite(body.pricePaid) && body.pricePaid >= 0
       ? body.pricePaid
@@ -99,11 +101,11 @@ export async function POST(request: NextRequest) {
 
   const { supabase } = createSupabaseRouteHandlerClient(request);
 
-  const insertRow: Record<string, unknown> = {
+  const baseRow: Record<string, unknown> = {
     customer_id: customer.id,
     master_card_id: masterCardId,
     condition_id: conditionId,
-    quantity,
+    quantity: 1,
     printing,
     language,
     purchase_type: purchaseType,
@@ -112,14 +114,14 @@ export async function POST(request: NextRequest) {
     grading_company: gradingCompany ?? "none",
     grade_value: gradeValue,
   };
-  if (gradedMarketPrice !== null) insertRow.graded_market_price = gradedMarketPrice;
-  if (unlistedPrice !== null) insertRow.unlisted_price = unlistedPrice;
+  if (gradedMarketPrice !== null) baseRow.graded_market_price = gradedMarketPrice;
+  if (unlistedPrice !== null) baseRow.unlisted_price = unlistedPrice;
 
-  const { data: created, error } = await supabase
+  const insertRows = Array.from({ length: quantity }, () => ({ ...baseRow }));
+  const { data: createdRows, error } = await supabase
     .from("customer_collections")
-    .insert(insertRow)
-    .select()
-    .single();
+    .insert(insertRows)
+    .select();
 
   if (error) {
     return jsonResponseWithAuthCookies({ error: error.message }, authCookieResponse, { status: 422 });
@@ -147,7 +149,9 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return jsonResponseWithAuthCookies({ doc: created }, authCookieResponse);
+  const docs = createdRows ?? [];
+  const doc = docs[0] ?? null;
+  return jsonResponseWithAuthCookies({ doc, docs }, authCookieResponse);
 }
 
 export async function DELETE(request: NextRequest) {

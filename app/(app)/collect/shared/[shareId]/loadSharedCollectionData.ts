@@ -9,7 +9,7 @@ import { estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
 import {
   collectionGroupKeyFromEntry,
   fetchItemConditionOptions,
-  groupCollectionLinesByGroupKey,
+  groupCollectionLinesByMasterCardId,
   mergeCollectionEntriesForGrid,
   storefrontEntriesToTradeGridCards,
   type StorefrontCardEntry,
@@ -105,7 +105,7 @@ export async function loadSharedCollectionData(
   const counterpartyCollectionForTrade = resolved.viewerIsOwner ? recipientCollectionEntries : ownerCollectionEntries;
 
   const wishlistEntryIdsByMasterCardId = await fetchWishlistIdsByMasterCard(ownerId);
-  const collectionLinesByMasterCardId = groupCollectionLinesByGroupKey(collectionEntries);
+  const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(collectionEntries);
 
   const gradingByMasterCardId: Record<string, { company: string; grade: string; imageUrl?: string }> = {};
   for (const e of collectionEntries) {
@@ -154,8 +154,8 @@ export async function loadSharedCollectionData(
       ? sortCollectGridRowsByPriceDesc(counterpartyTradeGridRaw, counterpartyTradePricesResult.prices)
       : counterpartyTradeGridRaw;
 
-  const viewerTradeLinesByMasterCardId = groupCollectionLinesByGroupKey(viewerCollectionForTrade);
-  const counterpartyTradeLinesByMasterCardId = groupCollectionLinesByGroupKey(counterpartyCollectionForTrade);
+  const viewerTradeLinesByMasterCardId = groupCollectionLinesByMasterCardId(viewerCollectionForTrade);
+  const counterpartyTradeLinesByMasterCardId = groupCollectionLinesByMasterCardId(counterpartyCollectionForTrade);
   const viewerTradeGradingByMasterCardId = gradingByGroupKeyFromEntries(viewerCollectionForTrade);
   const counterpartyTradeGradingByMasterCardId = gradingByGroupKeyFromEntries(counterpartyCollectionForTrade);
 
@@ -174,6 +174,16 @@ export async function loadSharedCollectionData(
     ),
   ];
 
+  const collectionCardPricesByMasterCardId: Record<string, number> = { ...cPricesResult.prices };
+  for (const e of collectionEntries) {
+    const mid = e.masterCardId?.trim();
+    if (!mid) continue;
+    const gk = collectionGroupKeyFromEntry(e);
+    const unit = cPricesResult.prices[gk];
+    if (unit === undefined) continue;
+    collectionCardPricesByMasterCardId[mid] = Math.max(collectionCardPricesByMasterCardId[mid] ?? 0, unit);
+  }
+
   return {
     shareId,
     viewerCustomerId: customerId,
@@ -189,7 +199,7 @@ export async function loadSharedCollectionData(
     itemConditions,
     wishlistEntryIdsByMasterCardId,
     collectionLinesByMasterCardId,
-    collectionCardPricesByMasterCardId: cPricesResult.prices,
+    collectionCardPricesByMasterCardId,
     wishlistCardPricesByMasterCardId: wPricesResult.prices,
     collectionManualPriceMasterCardIds: [...cPricesResult.manualPriceIds],
     wishlistManualPriceMasterCardIds: [...wPricesResult.manualPriceIds],

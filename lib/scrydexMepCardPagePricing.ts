@@ -98,6 +98,20 @@ function inferFirstRawVariantSlugFromHtml(html: string): string | null {
   return null;
 }
 
+function extractSingleDomGradePriceUsd(html: string, company: "PSA" | "ACE", grade: 10): number | null {
+  // Scrydex grade blocks have changed markup a few times; match by visible label and
+  // then capture the first nearby dollar amount, independent of CSS class names.
+  const labelRe = new RegExp(`>\\s*${company}\\s*${grade}\\s*<\\/span>[\\s\\S]{0,500}?\\$([\\d.,]+)`, "g");
+  const prices: number[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = labelRe.exec(html)) !== null) {
+    const v = Number.parseFloat(m[1].replace(/,/g, ""));
+    if (Number.isFinite(v)) prices.push(v);
+  }
+  if (prices.length !== 1) return null;
+  return prices[0];
+}
+
 /**
  * PSA 10 USD per print from `_PSA_{slug}_history` charts when the chart JSON includes a `"PSA 10"` series.
  * Scrydex sometimes embeds a PSA chart with only PSA 9 (etc.) while PSA 10 exists only in the price grid
@@ -120,21 +134,14 @@ export function parseScrydexCardPagePsa10Usd(html: string): Record<string, numbe
 
   if (Object.keys(out).length > 0) return out;
 
-  const domRe =
-    /font-medium">PSA 10<\/span><\/div><div class="flex flex-col text-body-12"><span class="[^"]*text-heading-20">\$([\d.]+)<\/span>/g;
-  const domPrices: number[] = [];
-  let dm: RegExpExecArray | null;
-  while ((dm = domRe.exec(html)) !== null) {
-    const v = Number.parseFloat(dm[1]);
-    if (Number.isFinite(v)) domPrices.push(v);
-  }
-  if (domPrices.length !== 1) return out;
+  const domPrice = extractSingleDomGradePriceUsd(html, "PSA", 10);
+  if (domPrice === null) return out;
 
   const slug = inferFirstRawVariantSlugFromHtml(html);
   if (!slug) return out;
 
   const label = scrydexRawVariantSlugToLabel(slug);
-  out[scrydexPsa10VariantKey(label)] = domPrices[0];
+  out[scrydexPsa10VariantKey(label)] = domPrice;
   return out;
 }
 
@@ -155,6 +162,45 @@ export function parseScrydexCardPageAce10Usd(html: string): Record<string, numbe
     const label = scrydexRawVariantSlugToLabel(variantSlug);
     out[scrydexAce10VariantKey(label)] = usd;
   }
+
+  if (Object.keys(out).length > 0) return out;
+
+  // Compatibility fallback: some Scrydex cards currently expose ACE 9 but not ACE 10.
+  // Use the highest available ACE grade series so callers still receive an ACE value.
+  for (const part of parts) {
+    const idM = part.match(/^"([^"]*ACE_(\w+)_history)"/);
+    if (!idM) continue;
+    const variantSlug = idM[2];
+    const gradeMatches = [...part.matchAll(/"name":"ACE (\d+)"/g)];
+    let bestGrade = -1;
+    let bestUsd: number | null = null;
+    for (const gm of gradeMatches) {
+      const grade = Number.parseInt(gm[1], 10);
+      if (!Number.isFinite(grade)) continue;
+      const dataBody = extractNamedSeriesDataBody(part, `ACE ${grade}`);
+      if (!dataBody) continue;
+      const usd = lastFiniteUsdFromNmDataBody(dataBody);
+      if (usd === null) continue;
+      if (grade > bestGrade) {
+        bestGrade = grade;
+        bestUsd = usd;
+      }
+    }
+    if (bestUsd === null) continue;
+    const label = scrydexRawVariantSlugToLabel(variantSlug);
+    out[scrydexAce10VariantKey(label)] = bestUsd;
+  }
+  if (Object.keys(out).length > 0) return out;
+
+  const domPrice = extractSingleDomGradePriceUsd(html, "ACE", 10);
+  const domFallback = domPrice ?? extractSingleDomGradePriceUsd(html, "ACE", 9);
+  if (domFallback === null) return out;
+
+  const slug = inferFirstRawVariantSlugFromHtml(html);
+  if (!slug) return out;
+
+  const label = scrydexRawVariantSlugToLabel(slug);
+  out[scrydexAce10VariantKey(label)] = domFallback;
   return out;
 }
 

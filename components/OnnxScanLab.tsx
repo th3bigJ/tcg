@@ -181,24 +181,6 @@ function drawDetectionOverlay(sourceCanvas: HTMLCanvasElement, corners: ScanPoin
   return overlayCanvas;
 }
 
-function canvasToFile(canvas: HTMLCanvasElement) {
-  return new Promise<File>((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("Could not encode the captured frame."));
-        return;
-      }
-
-      resolve(
-        new File([blob], `scan-${Date.now()}.jpg`, {
-          type: "image/jpeg",
-          lastModified: Date.now(),
-        }),
-      );
-    }, "image/jpeg", 0.95);
-  });
-}
-
 function canvasToDataUrl(canvas: HTMLCanvasElement) {
   return canvas.toDataURL("image/jpeg", 0.95);
 }
@@ -307,7 +289,8 @@ function parseHp(raw: string) {
 
 function parseCardNumber(raw: string) {
   const normalized = raw.replace(/[Oo]/g, "0").replace(/\s*\/\s*/g, "/");
-  const match = normalized.match(/\b([A-Z0-9]{1,6}\/\d{2,3})\b/i);
+  // Allow up to 8 chars before slash (covers "SWSH307"), 1+ digits after (covers "207/0")
+  const match = normalized.match(/\b([A-Z0-9]{1,8}\/\d+)\b/i);
   return match?.[1]?.toUpperCase() ?? "";
 }
 
@@ -368,6 +351,7 @@ export function OnnxScanLab({
   const streamRef = useRef<MediaStream | null>(null);
   const cropCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const embeddingIndexPromiseRef = useRef<Promise<LoadedMobileClipEmbeddingIndex> | null>(null);
+  const tesseractWorkerRef = useRef<Promise<Awaited<ReturnType<typeof import("tesseract.js")["createWorker"]>>> | null>(null);
   const [cameraError, setCameraError] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
   const [modelFile, setModelFile] = useState<File | null>(null);
@@ -459,6 +443,15 @@ export function OnnxScanLab({
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (tesseractWorkerRef.current) {
+        void tesseractWorkerRef.current.then((w) => w.terminate());
+        tesseractWorkerRef.current = null;
+      }
+    };
+  }, []);
+
   const combinedHits = buildCombinedHits(identifyState, visualState);
 
   async function runFromCanvas(sourceCanvas: HTMLCanvasElement) {
@@ -468,8 +461,7 @@ export function OnnxScanLab({
     setVisualState({ status: "idle" });
 
     try {
-      const file = await canvasToFile(sourceCanvas);
-      const bitmap = await createImageBitmap(file);
+      const bitmap = await createImageBitmap(sourceCanvas);
       const detection = await detectCardCorners(bitmap, modelFile);
       const overlayCanvas = drawDetectionOverlay(sourceCanvas, detection.corners);
       const cropCanvas = renderDetectionCrop(sourceCanvas, detection);
@@ -494,76 +486,80 @@ export function OnnxScanLab({
     }
   }
 
+  function getOrCreateTesseractWorker() {
+    if (!tesseractWorkerRef.current) {
+      tesseractWorkerRef.current = import("tesseract.js").then(({ createWorker }) =>
+        createWorker("eng"),
+      );
+    }
+    return tesseractWorkerRef.current;
+  }
+
   async function identifyCard() {
     const cropCanvas = cropCanvasRef.current;
     if (!cropCanvas || detectionState.status !== "done") return;
 
     setIdentifyState({ status: "running" });
     try {
-      const { createWorker } = await import("tesseract.js");
-      const worker = await createWorker("eng");
-      try {
-        const rawNameCanvas = cropRegion(cropCanvas, OCR_REGIONS.name, 3);
-        const rawHpCanvas = cropRegion(cropCanvas, OCR_REGIONS.hp, 4);
-        const rawNumberCanvas = cropRegion(cropCanvas, OCR_REGIONS.number, 5);
+      const worker = await getOrCreateTesseractWorker();
 
-        const nameCanvas = preprocessStrip(rawNameCanvas, 150, 1.35);
-        const hpCanvas = preprocessStrip(rawHpCanvas, 150, 1.45);
-        const numberCanvas = preprocessStrip(rawNumberCanvas, 145, 1.55);
+      const rawNameCanvas = cropRegion(cropCanvas, OCR_REGIONS.name, 3);
+      const rawHpCanvas = cropRegion(cropCanvas, OCR_REGIONS.hp, 4);
+      const rawNumberCanvas = cropRegion(cropCanvas, OCR_REGIONS.number, 5);
 
-        const [rawName, rawHp, rawNumber] = await Promise.all([
-          recognizeText(worker, nameCanvas, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,'-"),
-          recognizeText(worker, hpCanvas, "HP0123456789 "),
-          recognizeText(worker, numberCanvas, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/ "),
-        ]);
+      const nameCanvas = preprocessStrip(rawNameCanvas, 150, 1.35);
+      const hpCanvas = preprocessStrip(rawHpCanvas, 150, 1.45);
+      const numberCanvas = preprocessStrip(rawNumberCanvas, 145, 1.55);
 
-        const cardName = parseName(rawName);
-        const hp = parseHp(rawHp);
-        const cardNumber = parseCardNumber(rawNumber);
+      // Tesseract worker is not safe for concurrent calls — run sequentially
+      const rawName = await recognizeText(worker, nameCanvas, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,'-");
+      const rawHp = await recognizeText(worker, hpCanvas, "HP0123456789 ");
+      const rawNumber = await recognizeText(worker, numberCanvas, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/ ");
 
-        if (!cardName && !hp && !cardNumber) {
-          setIdentifyState({
-            status: "error",
-            message:
-              "OCR could not read a usable name, HP, or card number from this capture. Try another photo with a flatter card and sharper text.",
-          });
-          return;
-        }
+      const cardName = parseName(rawName);
+      const hp = parseHp(rawHp);
+      const cardNumber = parseCardNumber(rawNumber);
 
-        const response = await fetch("/api/scan/identify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cardName, cardNumber, hp }),
-        });
-
-        if (!response.ok) {
-          const bodyText = await response.text().catch(() => "");
-          throw new Error(
-            bodyText
-              ? `Search failed (${response.status}): ${bodyText}`
-              : `Search failed (${response.status})`,
-          );
-        }
-
-        const data = (await response.json()) as {
-          candidates: CardsPageCardEntry[];
-          confidence: "high" | "low";
-        };
-
+      if (!cardName && !hp && !cardNumber) {
         setIdentifyState({
-          status: "done",
-          ocr: { cardName, hp, cardNumber, rawName, rawHp, rawNumber },
-          preview: {
-            nameStripUrl: canvasToDataUrl(nameCanvas),
-            hpStripUrl: canvasToDataUrl(hpCanvas),
-            numberStripUrl: canvasToDataUrl(numberCanvas),
-          },
-          candidates: data.candidates,
-          confidence: data.confidence,
+          status: "error",
+          message:
+            "OCR could not read a usable name, HP, or card number from this capture. Try another photo with a flatter card and sharper text.",
         });
-      } finally {
-        await worker.terminate();
+        return;
       }
+
+      const response = await fetch("/api/scan/identify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardName, cardNumber, hp }),
+      });
+
+      if (!response.ok) {
+        const bodyText = await response.text().catch(() => "");
+        throw new Error(
+          bodyText
+            ? `Search failed (${response.status}): ${bodyText}`
+            : `Search failed (${response.status})`,
+        );
+      }
+
+      const data = (await response.json()) as {
+        candidates: CardsPageCardEntry[];
+        confidence: "high" | "low";
+      };
+
+      setIdentifyState({
+        status: "done",
+        ocr: { cardName, hp, cardNumber, rawName, rawHp, rawNumber },
+        preview: {
+          nameStripUrl: canvasToDataUrl(nameCanvas),
+          hpStripUrl: canvasToDataUrl(hpCanvas),
+          numberStripUrl: canvasToDataUrl(numberCanvas),
+        },
+        candidates: data.candidates,
+        confidence: data.confidence,
+      });
     } catch (error) {
       setIdentifyState({
         status: "error",
@@ -577,16 +573,12 @@ export function OnnxScanLab({
     const cropCanvas = cropCanvasRef.current;
     if (!cropCanvas || detectionState.status !== "done") return;
 
-    setVisualState((current) =>
-      current.status === "idle" ? { status: "loading-assets" } : { status: "running" },
-    );
+    setVisualState({ status: "loading-assets" });
 
     try {
       if (!embeddingIndexPromiseRef.current) {
         embeddingIndexPromiseRef.current = loadMobileClipEmbeddingIndex();
       }
-
-      setVisualState({ status: "loading-assets" });
       const index = await embeddingIndexPromiseRef.current;
       setVisualState({ status: "running" });
 
@@ -614,9 +606,11 @@ export function OnnxScanLab({
   }
 
   async function runAllMatching() {
+    const runVisual =
+      visualAssetsState.status === "ready" && !visualAssetsState.smokeTest;
     await Promise.all([
       identifyCard(),
-      visualAssetsState.status === "ready" ? identifyCardVisually() : Promise.resolve(),
+      runVisual ? identifyCardVisually() : Promise.resolve(),
     ]);
   }
 

@@ -10,7 +10,7 @@ import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/l
 import {
   collectionGroupKeyFromEntry,
   fetchItemConditionOptions,
-  groupCollectionLinesByGroupKey,
+  groupCollectionLinesByMasterCardId,
   mergeCollectionEntriesForGrid,
   totalCopiesFromMergedGrid,
 } from "@/lib/storefrontCardMaps";
@@ -53,7 +53,7 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
     fetchWishlistIdsByMasterCard(customer.id),
     getCachedFilterFacets(),
   ]);
-  const collectionLinesByMasterCardId = groupCollectionLinesByGroupKey(entries);
+  const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(entries);
 
   // Build grading label + image map per variant+condition+grade (not just master id)
   const gradingByMasterCardId: Record<string, { company: string; grade: string; imageUrl?: string }> = {};
@@ -80,7 +80,15 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
     entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
     entries.length > 0 ? estimateCardUnitPricesGbp(entries) : Promise.resolve({ prices: {}, manualPriceIds: new Set<string>() }),
   ]);
-  const cardPricesByMasterCardId = pricesResult.prices;
+  const cardPricesByMasterCardId = { ...pricesResult.prices };
+  for (const e of entries) {
+    const mid = e.masterCardId?.trim();
+    if (!mid) continue;
+    const gk = collectionGroupKeyFromEntry(e);
+    const unit = pricesResult.prices[gk];
+    if (unit === undefined) continue;
+    cardPricesByMasterCardId[mid] = Math.max(cardPricesByMasterCardId[mid] ?? 0, unit);
+  }
   const manualPriceMasterCardIds = pricesResult.manualPriceIds;
 
   const allCardsSortedByPrice =

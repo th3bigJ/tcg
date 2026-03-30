@@ -491,7 +491,26 @@ function selectedCollectionLines(
     merged.set(line.entryId, line);
   }
 
-  return [...merged.values()].sort((a, b) => {
+  const grouped = new Map<string, CollectionLineSummary>();
+  const order: string[] = [];
+  for (const line of merged.values()) {
+    const key = [
+      line.printing.trim().toLowerCase(),
+      line.conditionLabel.trim().toLowerCase(),
+      line.language.trim().toLowerCase(),
+      (line.gradingCompany ?? "").trim().toLowerCase(),
+      (line.gradeValue ?? "").trim().toLowerCase(),
+    ].join("|");
+    const existing = grouped.get(key);
+    if (!existing) {
+      grouped.set(key, { ...line });
+      order.push(key);
+      continue;
+    }
+    grouped.set(key, { ...existing, quantity: existing.quantity + line.quantity });
+  }
+
+  return order.map((k) => grouped.get(k)!).sort((a, b) => {
     const c = a.conditionLabel.localeCompare(b.conditionLabel);
     if (c !== 0) return c;
     const p = a.printing.localeCompare(b.printing);
@@ -1097,6 +1116,7 @@ const CardGridItem = memo(function CardGridItem({
   index,
   variant,
   unitPrice: unitPriceProp,
+  priceLabel,
   owned,
   ownedQuantity,
   wishlisted,
@@ -1114,6 +1134,7 @@ const CardGridItem = memo(function CardGridItem({
   index: number;
   variant: "browse" | "collection" | "wishlist";
   unitPrice: number | null;
+  priceLabel?: string | null;
   owned: boolean;
   ownedQuantity?: number;
   wishlisted?: boolean;
@@ -1297,14 +1318,14 @@ const CardGridItem = memo(function CardGridItem({
             </span>
           ) : null}
           <span className="mt-0.5 block text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
-            {unitPrice !== null ? (
+            {unitPrice !== null || (priceLabel?.trim() ?? "") ? (
               <>
                 {gradingLabel
                   ? <span title={gradingLabel}>🏆 {gradingLabel} · </span>
                   : isManualPrice
                     ? <span title="Manually set price">✎ </span>
                     : null
-                }{formatMoneyGbp(unitPrice)}
+                }{(priceLabel?.trim() ?? "") || formatMoneyGbp(unitPrice!)}
               </>
             ) : (
               <span aria-hidden="true">&nbsp;</span>
@@ -1384,7 +1405,7 @@ export function CardGrid({
   const [addConditionId, setAddConditionId] = useState("");
   const [addQuantity, setAddQuantity] = useState(1);
   const [addPrinting, setAddPrinting] = useState<string>("Standard");
-  const [addPurchaseType, setAddPurchaseType] = useState<"" | "packed" | "bought">("");
+  const [addPurchaseType, setAddPurchaseType] = useState<"packed" | "bought" | "traded">("packed");
   const [addPricePaid, setAddPricePaid] = useState<string>("");
   const [addPurchaseDate, setAddPurchaseDate] = useState<string>("");
   const [addPending, setAddPending] = useState(false);
@@ -1458,6 +1479,32 @@ export function CardGrid({
       setLocalCollectionLinesByMasterCardId(collectionLinesByMasterCardId);
     }
   }, [collectionLinesByMasterCardId]);
+
+  const collectionPriceMetaByMasterCardId = useMemo(() => {
+    const out: Record<string, { label: string | null; hasManual: boolean }> = {};
+    for (const [mid, lines] of Object.entries(localCollectionLinesByMasterCardId)) {
+      const variantPrices = new Map<string, number>();
+      let hasManual = false;
+      for (const line of lines) {
+        const groupKey = collectionGroupKeyFromLine(mid, line);
+        const unit = cardPricesByMasterCardId[groupKey];
+        if (unit === undefined) continue;
+        const variantName = line.printing?.trim() || "Standard";
+        if (!variantPrices.has(variantName)) {
+          variantPrices.set(variantName, unit);
+        }
+        if (manualPriceMasterCardIds?.has(groupKey)) hasManual = true;
+      }
+      const label =
+        variantPrices.size > 1
+          ? [...variantPrices.values()]
+              .map((v) => formatMoneyGbp(v))
+              .join(" / ")
+          : null;
+      out[mid] = { label, hasManual };
+    }
+    return out;
+  }, [cardPricesByMasterCardId, localCollectionLinesByMasterCardId, manualPriceMasterCardIds]);
 
   const normalizedCards = useMemo(
     () =>
@@ -1625,7 +1672,7 @@ export function CardGrid({
     setAddConditionId(nearMint?.id ?? itemConditions[0]?.id ?? "");
     setAddQuantity(1);
     setAddPrinting(variant ?? pricingVariants[0] ?? "Standard");
-    setAddPurchaseType("");
+    setAddPurchaseType("packed");
     setAddPricePaid("");
     setAddPurchaseDate(new Date().toISOString().slice(0, 10));
     setAddUnlistedPrice("");
@@ -1652,7 +1699,7 @@ export function CardGrid({
       setAddConditionId("graded");
       setAddQuantity(1);
       setAddPrinting(line?.printing?.trim() || "Standard");
-      setAddPurchaseType("");
+      setAddPurchaseType("packed");
       setAddPricePaid("");
       setAddPurchaseDate(new Date().toISOString().slice(0, 10));
       setAddUnlistedPrice("");
@@ -1676,7 +1723,7 @@ export function CardGrid({
     setAddConditionId(preferredCondition ?? "");
     setAddQuantity(1);
     setAddPrinting(line?.printing?.trim() || pricingVariants[0] || "Standard");
-    setAddPurchaseType("");
+    setAddPurchaseType("packed");
     setAddPricePaid("");
     setAddPurchaseDate(new Date().toISOString().slice(0, 10));
     setAddUnlistedPrice("");
@@ -1780,18 +1827,18 @@ export function CardGrid({
         body: JSON.stringify({
           masterCardId: selectedCard.masterCardId,
           conditionId: addConditionId || undefined,
-          quantity: addQuantity,
+          quantity: Math.max(1, Math.floor(addQuantity) || 1),
           printing: addPrinting === "Unlisted" ? "Standard" : addPrinting,
           language: "English",
-          purchaseType: addPurchaseType || undefined,
+          purchaseType: addPurchaseType,
           pricePaid: addPurchaseType === "bought" && addPricePaid !== "" ? parseFloat(addPricePaid) : undefined,
           purchaseDate: addPurchaseType === "bought" && addPurchaseDate ? addPurchaseDate : undefined,
           unlistedPrice: addPrinting === "Unlisted" && addUnlistedPrice !== "" ? parseFloat(addUnlistedPrice) : undefined,
         }),
       });
-      let j: { doc?: { id?: string | number }; error?: string };
+      let j: { doc?: { id?: string | number }; docs?: { id?: string | number }[]; error?: string };
       try {
-        j = (await res.json()) as { doc?: { id?: string | number }; error?: string };
+        j = (await res.json()) as { doc?: { id?: string | number }; docs?: { id?: string | number }[]; error?: string };
       } catch {
         return;
       }
@@ -1799,24 +1846,32 @@ export function CardGrid({
         console.error("[collection add]", res.status, j.error);
         return;
       }
-      const rawId = j.doc?.id;
       const mid = selectedCard.masterCardId;
-      if (rawId !== undefined && mid) {
+      const createdIds = Array.isArray(j.docs)
+        ? j.docs.map((d) => d?.id).filter((id): id is string | number => id !== undefined)
+        : j.doc?.id !== undefined
+          ? [j.doc.id]
+          : [];
+      if (createdIds.length > 0 && mid) {
         const conditionName = addConditionId
           ? itemConditions.find((c) => c.id === addConditionId)?.name?.trim() || "—"
           : "—";
         const resolvedPrinting = addPrinting === "Unlisted" ? "Standard" : addPrinting;
-        const line: CollectionLineSummary = {
-          entryId: String(rawId),
-          quantity: addQuantity,
-          conditionLabel: conditionName,
-          printing: resolvedPrinting,
-          language: "English",
-        };
-        const gk = collectionGroupKeyFromLine(mid, line);
-        setLocalCollectionLinesByMasterCardId((prev) =>
-          mergeCollectionLine(mergeCollectionLine(prev, gk, line), mid, line),
-        );
+        setLocalCollectionLinesByMasterCardId((prev) => {
+          let next = prev;
+          for (const id of createdIds) {
+            const line: CollectionLineSummary = {
+              entryId: String(id),
+              quantity: 1,
+              conditionLabel: conditionName,
+              printing: resolvedPrinting,
+              language: "English",
+            };
+            const gk = collectionGroupKeyFromLine(mid, line);
+            next = mergeCollectionLine(mergeCollectionLine(next, gk, line), mid, line);
+          }
+          return next;
+        });
       }
       setAddSheetOpen(false);
       if (variant !== "browse") router.refresh();
@@ -2790,13 +2845,44 @@ export function CardGrid({
                 </label>
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="font-medium">Quantity</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={addQuantity}
-                    onChange={(e) => setAddQuantity(Math.max(1, Number.parseInt(e.target.value, 10) || 1))}
-                    className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAddQuantity((q) => Math.max(1, Math.floor(q || 1) - 1))}
+                      className="inline-flex shrink-0 items-center justify-center border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 text-lg font-semibold leading-none text-[var(--foreground)] transition hover:bg-[var(--foreground)]/20"
+                      style={{ width: 40, height: 40, minWidth: 40, borderRadius: "9999px", padding: 0 }}
+                      aria-label="Decrease quantity"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      value={addQuantity < 1 ? "" : addQuantity}
+                      onChange={(e) => {
+                        const raw = e.target.value.trim();
+                        if (raw === "") {
+                          setAddQuantity(0);
+                          return;
+                        }
+                        const parsed = Number.parseInt(raw, 10);
+                        if (Number.isFinite(parsed)) setAddQuantity(parsed);
+                      }}
+                      onBlur={() => {
+                        setAddQuantity((q) => (Number.isFinite(q) && q >= 1 ? Math.floor(q) : 1));
+                      }}
+                      className="min-w-0 flex-1 rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2 text-center"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setAddQuantity((q) => Math.max(1, Math.floor(q || 1) + 1))}
+                      className="inline-flex shrink-0 items-center justify-center border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 text-lg font-semibold leading-none text-[var(--foreground)] transition hover:bg-[var(--foreground)]/20"
+                      style={{ width: 40, height: 40, minWidth: 40, borderRadius: "9999px", padding: 0 }}
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+                  </div>
                 </label>
                 {addPrinting === "Unlisted" && (
                   <label className="flex flex-col gap-1 text-sm">
@@ -2815,7 +2901,7 @@ export function CardGrid({
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="font-medium">How obtained</span>
                   <div className="flex gap-2">
-                    {(["", "packed", "bought"] as const).map((val) => (
+                    {(["packed", "bought", "traded"] as const).map((val) => (
                       <button
                         key={val}
                         type="button"
@@ -2826,7 +2912,7 @@ export function CardGrid({
                             : "border-[var(--foreground)]/20 bg-transparent opacity-60"
                         }`}
                       >
-                        {val === "" ? "—" : val.charAt(0).toUpperCase() + val.slice(1)}
+                        {val.charAt(0).toUpperCase() + val.slice(1)}
                       </button>
                     ))}
                   </div>
@@ -3529,13 +3615,20 @@ export function CardGrid({
             const mapKey = cardCollectionMapKey(card);
             const showPrice = mapKey !== "" && cardPricesByMasterCardId[mapKey] !== undefined;
             const unitPrice = showPrice ? cardPricesByMasterCardId[mapKey]! : null;
+            const mid = card.masterCardId?.trim() ?? "";
+            const collectionPriceMeta =
+              variant === "collection" && mid && mapKey === mid
+                ? collectionPriceMetaByMasterCardId[mid]
+                : undefined;
             const owned = cardHasOwnedLines(card, localCollectionLinesByMasterCardId);
             const ownedQuantity = ownedCopyCount(card, localCollectionLinesByMasterCardId);
-            const isManualPrice = Boolean(mapKey && manualPriceMasterCardIds?.has(mapKey));
+            const isManualPrice =
+              variant === "collection"
+                ? Boolean(collectionPriceMeta?.hasManual)
+                : Boolean(mapKey && manualPriceMasterCardIds?.has(mapKey));
             const grading = mapKey ? gradingByMasterCardId?.[mapKey] : undefined;
             const gradingLabel = grading ? `${grading.company} ${grading.grade}` : undefined;
             const gradedImageSrc = grading?.imageUrl;
-            const mid = card.masterCardId ?? "";
             const viewerOwnsOnWishlist =
               variant === "wishlist" && viewerOwnedMasterCardIds && mid
                 ? viewerOwnedMasterCardIds.has(mid)
@@ -3548,6 +3641,7 @@ export function CardGrid({
                 index={index}
                 variant={variant}
                 unitPrice={unitPrice ?? null}
+                priceLabel={collectionPriceMeta?.label ?? null}
                 owned={owned}
                 ownedQuantity={ownedQuantity}
                 wishlisted={wishlisted}
@@ -3658,13 +3752,20 @@ export function CardGrid({
                   const mapKey = cardCollectionMapKey(card);
                   const showPrice = mapKey !== "" && cardPricesByMasterCardId[mapKey] !== undefined;
                   const unitPrice = showPrice ? cardPricesByMasterCardId[mapKey]! : null;
+                  const mid = card.masterCardId?.trim() ?? "";
+                  const collectionPriceMeta =
+                    variant === "collection" && mid && mapKey === mid
+                      ? collectionPriceMetaByMasterCardId[mid]
+                      : undefined;
                   const owned = cardHasOwnedLines(card, localCollectionLinesByMasterCardId);
                   const ownedQuantity = ownedCopyCount(card, localCollectionLinesByMasterCardId);
-                  const isManualPrice = Boolean(mapKey && manualPriceMasterCardIds?.has(mapKey));
+                  const isManualPrice =
+                    variant === "collection"
+                      ? Boolean(collectionPriceMeta?.hasManual)
+                      : Boolean(mapKey && manualPriceMasterCardIds?.has(mapKey));
                   const grading = mapKey ? gradingByMasterCardId?.[mapKey] : undefined;
                   const gradingLabel = grading ? `${grading.company} ${grading.grade}` : undefined;
                   const gradedImageSrc = grading?.imageUrl;
-                  const mid = card.masterCardId ?? "";
                   const viewerOwnsOnWishlist =
                     variant === "wishlist" && viewerOwnedMasterCardIds && mid
                       ? viewerOwnedMasterCardIds.has(mid)
@@ -3677,6 +3778,7 @@ export function CardGrid({
                       index={globalIndex}
                       variant={variant}
                       unitPrice={unitPrice ?? null}
+                      priceLabel={collectionPriceMeta?.label ?? null}
                       owned={owned}
                       ownedQuantity={ownedQuantity}
                       wishlisted={wishlisted}
