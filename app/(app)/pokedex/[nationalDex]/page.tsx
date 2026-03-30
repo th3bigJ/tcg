@@ -73,7 +73,7 @@ export default async function PokedexPokemonCardsPage({
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pt-4">
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pt-[var(--mobile-page-top-offset)]">
         <div className="flex min-h-0 flex-1 flex-col">
           <header className="mb-0 flex shrink-0 items-center gap-2 border-b border-[var(--foreground)]/10 pb-2">
             <Link
