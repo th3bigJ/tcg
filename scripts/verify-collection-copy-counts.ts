@@ -85,4 +85,34 @@ function assert(cond: boolean, msg: string) {
   assert(collectionCopyTotalsMatch([e1, e2], merged), "totals must match");
 }
 
+// Same master: raw vs graded → two tiles (not merged)
+{
+  const mid = "card-d";
+  const eRaw = baseEntry({
+    masterCardId: mid,
+    collectionEntryId: "raw-1",
+    quantity: 1,
+    printing: "Standard",
+    conditionLabel: "Near Mint",
+    language: "English",
+  });
+  const eGraded = baseEntry({
+    masterCardId: mid,
+    collectionEntryId: "graded-1",
+    quantity: 1,
+    printing: "Standard",
+    conditionLabel: "graded",
+    language: "English",
+    gradingCompany: "PSA",
+    gradeValue: "10",
+  });
+  assert(
+    collectionGroupKeyFromEntry(eRaw) !== collectionGroupKeyFromEntry(eGraded),
+    "raw vs graded keys must differ",
+  );
+  const merged = mergeCollectionEntriesForGrid([eRaw, eGraded]);
+  assert(merged.length === 2, "expect 2 tiles for raw + graded");
+  assert(collectionCopyTotalsMatch([eRaw, eGraded], merged), "totals must match");
+}
+
 console.log("ok: collection copy count invariants");

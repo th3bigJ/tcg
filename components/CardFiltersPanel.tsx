@@ -23,10 +23,12 @@ type CardFiltersPanelProps = {
   sets: SetFilterOption[];
   pokemon: PokemonFilterOption[];
   rarityOptions: string[];
+  energyOptions?: string[];
   categoryOptions?: string[];
   activeSet: string;
   activePokemonDex: string;
   activeRarity: string;
+  activeEnergy?: string;
   activeSearch: string;
   excludeCommonUncommon: boolean;
   activeCategory: string;
@@ -45,6 +47,7 @@ function buildCardsHref(params: {
   set?: string;
   pokemon?: string;
   rarity: string;
+  energy: string;
   search: string;
   excludeCommonUncommon: boolean;
   category: string;
@@ -53,6 +56,7 @@ function buildCardsHref(params: {
   if (params.set) query.set("set", params.set);
   if (params.pokemon) query.set("pokemon", params.pokemon);
   if (params.rarity) query.set("rarity", params.rarity);
+  if (params.energy.trim()) query.set("energy", params.energy.trim());
   if (params.search) query.set("search", params.search);
   if (params.excludeCommonUncommon) query.set("exclude_cu", "1");
   const cat = params.category.trim();
@@ -65,10 +69,12 @@ export function CardFiltersPanel({
   sets,
   pokemon,
   rarityOptions,
+  energyOptions: energyOptionsProp,
   categoryOptions: categoryOptionsProp,
   activeSet,
   activePokemonDex,
   activeRarity,
+  activeEnergy: activeEnergyProp,
   activeSearch,
   excludeCommonUncommon,
   activeCategory,
@@ -76,6 +82,8 @@ export function CardFiltersPanel({
   showSetPokemonFilter = true,
 }: CardFiltersPanelProps) {
   const categoryOptions = categoryOptionsProp ?? [];
+  const energyOptions = energyOptionsProp ?? [];
+  const activeEnergy = activeEnergyProp ?? "";
   const [activeTab, setActiveTab] = useState<"sets" | "pokemon">("sets");
   const [setSearchText, setSetSearchText] = useState("");
   const [pokemonSearchText, setPokemonSearchText] = useState("");
@@ -124,6 +132,7 @@ export function CardFiltersPanel({
 
   const linkFilterState = {
     rarity: activeRarity,
+    energy: activeEnergy,
     search: activeSearch,
     excludeCommonUncommon,
     category: activeCategory,
@@ -135,7 +144,7 @@ export function CardFiltersPanel({
         method="get"
         action="/cards"
         className="mb-3 flex flex-col gap-3"
-        key={`filter-form-${activeRarity}-${excludeCommonUncommon ? "xcu" : ""}-${activeCategory}`}
+        key={`filter-form-${activeRarity}-${activeEnergy}-${excludeCommonUncommon ? "xcu" : ""}-${activeCategory}`}
       >
         {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
         {activePokemonDex ? <input type="hidden" name="pokemon" value={activePokemonDex} /> : null}
@@ -162,6 +171,47 @@ export function CardFiltersPanel({
               {rarityOptions.map((rarity) => (
                 <option key={rarity} value={rarity}>
                   {rarity}
+                </option>
+              ))}
+            </select>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--foreground)]/55"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="filter-panel-energy"
+            className="mb-1.5 block text-[11px] font-medium text-[var(--foreground)]/65"
+          >
+            Energy type
+          </label>
+          <div className="relative">
+            <select
+              id="filter-panel-energy"
+              name="energy"
+              defaultValue={activeEnergy}
+              onChange={(event) => {
+                event.currentTarget.form?.requestSubmit();
+                onSelection?.();
+              }}
+              className="w-full rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-2 py-1.5 pr-7 text-xs shadow-[0_1px_0_rgba(255,255,255,0.03)_inset] outline-none transition focus:border-[var(--foreground)]/40 focus:ring-2 focus:ring-[var(--foreground)]/20 [appearance:none] [-webkit-appearance:none] [background-image:none]"
+            >
+              <option value="">All energy types</option>
+              {energyOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
                 </option>
               ))}
             </select>

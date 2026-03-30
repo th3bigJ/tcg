@@ -9,6 +9,7 @@ import { estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
 import {
   collectionGroupKeyFromEntry,
   fetchItemConditionOptions,
+  groupCollectionLinesByGroupKey,
   groupCollectionLinesByMasterCardId,
   mergeCollectionEntriesForGrid,
   storefrontEntriesToTradeGridCards,
@@ -105,7 +106,10 @@ export async function loadSharedCollectionData(
   const counterpartyCollectionForTrade = resolved.viewerIsOwner ? recipientCollectionEntries : ownerCollectionEntries;
 
   const wishlistEntryIdsByMasterCardId = await fetchWishlistIdsByMasterCard(ownerId);
-  const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(collectionEntries);
+  const collectionLinesByMasterCardId = {
+    ...groupCollectionLinesByMasterCardId(collectionEntries),
+    ...groupCollectionLinesByGroupKey(collectionEntries),
+  };
 
   const gradingByMasterCardId: Record<string, { company: string; grade: string; imageUrl?: string }> = {};
   for (const e of collectionEntries) {
@@ -175,14 +179,6 @@ export async function loadSharedCollectionData(
   ];
 
   const collectionCardPricesByMasterCardId: Record<string, number> = { ...cPricesResult.prices };
-  for (const e of collectionEntries) {
-    const mid = e.masterCardId?.trim();
-    if (!mid) continue;
-    const gk = collectionGroupKeyFromEntry(e);
-    const unit = cPricesResult.prices[gk];
-    if (unit === undefined) continue;
-    collectionCardPricesByMasterCardId[mid] = Math.max(collectionCardPricesByMasterCardId[mid] ?? 0, unit);
-  }
 
   return {
     shareId,

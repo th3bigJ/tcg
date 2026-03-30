@@ -2,7 +2,7 @@
  * In-memory indices built once from static card JSON.
  * Replaces the unstable_cache Payload queries for:
  *   - default card sort order
- *   - filter facets (set codes, rarities, categories)
+ *   - filter facets (set codes, rarities, categories, energy types)
  *   - pokemon dex index
  *
  * All functions are synchronous — no caching layer needed since
@@ -108,6 +108,8 @@ export type FilterFacets = {
   rarityDisplayValues: string[];
   categoryDisplayValues: string[];
   categoryMatchGroups: Record<string, string[]>;
+  /** Distinct `elementTypes` values from card JSON (e.g. Fire, Water). */
+  energyTypeDisplayValues: string[];
 };
 
 let _filterFacets: FilterFacets | null = null;
@@ -117,6 +119,7 @@ export function getFilterFacets(): FilterFacets {
 
   const setCodes = getAllSetCodes();
   const rarityMap = new Map<string, string>();
+  const energyMap = new Map<string, string>();
   const categoryGroups = new Map<string, Set<string>>();
 
   for (const code of setCodes) {
@@ -128,6 +131,15 @@ export function getFilterFacets(): FilterFacets {
         if (display) {
           const key = display.toLocaleLowerCase();
           if (!rarityMap.has(key)) rarityMap.set(key, display);
+        }
+      }
+
+      if (Array.isArray(card.elementTypes)) {
+        for (const raw of card.elementTypes) {
+          const display = normalizeFilterValue(String(raw ?? ""));
+          if (!display) continue;
+          const key = display.toLocaleLowerCase();
+          if (!energyMap.has(key)) energyMap.set(key, display);
         }
       }
 
@@ -157,6 +169,7 @@ export function getFilterFacets(): FilterFacets {
   _filterFacets = {
     setCodes,
     rarityDisplayValues: [...rarityMap.values()].sort((a, b) => a.localeCompare(b)),
+    energyTypeDisplayValues: [...energyMap.values()].sort((a, b) => a.localeCompare(b)),
     categoryDisplayValues,
     categoryMatchGroups,
   };

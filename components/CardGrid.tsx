@@ -26,7 +26,7 @@ import { collectionGroupKeyFromLine, type CollectionLineSummary } from "@/lib/st
 import { getItemConditionName } from "@/lib/referenceData";
 
 export type CardEntry = CardsPageCardEntry & {
-  /** When set (collection grid), indexes {@link collectionLinesByMasterCardId} for this tile’s lines only. */
+  /** When set (collection grid), {@link collectionGroupKeyFromEntry} — indexes line maps and graded image lookup. */
   collectionGroupKey?: string;
   collectionEntryId?: string;
   wishlistEntryId?: string;
@@ -49,10 +49,8 @@ function cardHasOwnedLines(
 ): boolean {
   const groupKey = card.collectionGroupKey ?? "";
   const masterCardId = card.masterCardId ?? "";
-  return Boolean(
-    (groupKey && collectionLinesByKey[groupKey]?.length) ||
-      (masterCardId && collectionLinesByKey[masterCardId]?.length),
-  );
+  if (groupKey && collectionLinesByKey[groupKey]?.length) return true;
+  return Boolean(masterCardId && collectionLinesByKey[masterCardId]?.length);
 }
 
 function ownedCopyCount(
@@ -61,17 +59,15 @@ function ownedCopyCount(
 ): number {
   const groupKey = card.collectionGroupKey ?? "";
   const masterCardId = card.masterCardId ?? "";
-  const merged = new Map<string, CollectionLineSummary>();
-
-  for (const line of groupKey ? collectionLinesByKey[groupKey] ?? [] : []) {
-    merged.set(line.entryId, line);
-  }
-  for (const line of masterCardId ? collectionLinesByKey[masterCardId] ?? [] : []) {
-    merged.set(line.entryId, line);
-  }
+  const lines =
+    groupKey && collectionLinesByKey[groupKey]?.length
+      ? collectionLinesByKey[groupKey] ?? []
+      : masterCardId
+        ? collectionLinesByKey[masterCardId] ?? []
+        : [];
 
   let total = 0;
-  for (const line of merged.values()) {
+  for (const line of lines) {
     total += typeof line.quantity === "number" && Number.isFinite(line.quantity) && line.quantity > 0
       ? Math.floor(line.quantity)
       : 1;
@@ -481,19 +477,20 @@ function selectedCollectionLines(
 
   const groupKey = card.collectionGroupKey ?? "";
   const masterCardId = card.masterCardId ?? "";
-  const merged = new Map<string, CollectionLineSummary>();
 
-  for (const line of groupKey ? collectionLinesByKey[groupKey] ?? [] : []) {
-    merged.set(line.entryId, line);
-  }
-
-  for (const line of masterCardId ? collectionLinesByKey[masterCardId] ?? [] : []) {
-    merged.set(line.entryId, line);
-  }
+  const linesForCollapse: CollectionLineSummary[] = (() => {
+    const fromGroup = groupKey ? collectionLinesByKey[groupKey] ?? [] : [];
+    if (fromGroup.length > 0) return fromGroup;
+    const merged = new Map<string, CollectionLineSummary>();
+    for (const line of masterCardId ? collectionLinesByKey[masterCardId] ?? [] : []) {
+      merged.set(line.entryId, line);
+    }
+    return [...merged.values()];
+  })();
 
   const grouped = new Map<string, CollectionLineSummary>();
   const order: string[] = [];
-  for (const line of merged.values()) {
+  for (const line of linesForCollapse) {
     const key = [
       line.printing.trim().toLowerCase(),
       line.conditionLabel.trim().toLowerCase(),
@@ -690,13 +687,23 @@ function compareCardsForOtherStrip(a: CardEntry, b: CardEntry): number {
 
 function sameCardEntry(a: CardEntry | null, b: CardEntry | null): boolean {
   if (!a || !b) return false;
-  if (a.masterCardId && b.masterCardId) return a.masterCardId === b.masterCardId;
+  if (a.masterCardId && b.masterCardId) {
+    if (a.masterCardId !== b.masterCardId) return false;
+    const ga = a.collectionGroupKey ?? "";
+    const gb = b.collectionGroupKey ?? "";
+    if (ga || gb) return ga === gb;
+    return true;
+  }
   return a.set === b.set && a.filename === b.filename;
 }
 
 function cardEntryIdentity(card: CardEntry | null): string | null {
   if (!card) return null;
-  if (card.masterCardId) return `master:${card.masterCardId}`;
+  if (card.masterCardId) {
+    const gk = card.collectionGroupKey?.trim();
+    if (gk) return `master:${card.masterCardId}|gk:${gk}`;
+    return `master:${card.masterCardId}`;
+  }
   return `file:${card.set}/${card.filename}`;
 }
 
@@ -1483,6 +1490,7 @@ export function CardGrid({
   const collectionPriceMetaByMasterCardId = useMemo(() => {
     const out: Record<string, { label: string | null; hasManual: boolean }> = {};
     for (const [mid, lines] of Object.entries(localCollectionLinesByMasterCardId)) {
+      if (mid.includes("|")) continue;
       const variantPrices = new Map<string, number>();
       let hasManual = false;
       for (const line of lines) {

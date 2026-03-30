@@ -33,6 +33,7 @@ type CardsPageProps = {
     exclude_cu?: string;
     category?: string;
     artist?: string;
+    energy?: string;
   }>;
 };
 
@@ -48,6 +49,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const facets = (await getCachedFilterFacets()) ?? {};
   const availableSetCodes = facets.setCodes ?? [];
   const rarityOptions = facets.rarityDisplayValues ?? [];
+  const energyOptions = facets.energyTypeDisplayValues ?? [];
   const categoryOptions = facets.categoryDisplayValues ?? [];
   const categoryMatchGroups = facets.categoryMatchGroups ?? {};
   const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
@@ -71,11 +73,14 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
       ) ?? null
     : null;
   const hasSelectedRarity = rarityOptions.includes(selectedRarity);
+  const selectedEnergy = (resolvedSearchParams.energy ?? "").trim();
+  const hasSelectedEnergy = energyOptions.includes(selectedEnergy);
   const activeSet = hasSelectedSet ? selectedSet : "";
   const activePokemon = hasSelectedPokemon ? String(parsedPokemonDex) : "";
   const activePokemonDex = hasSelectedPokemon ? parsedPokemonDex : null;
   const activePokemonName = activePokemonOption?.name ?? null;
   const activeRarity = hasSelectedRarity ? selectedRarity : "";
+  const activeEnergy = hasSelectedEnergy ? selectedEnergy : "";
   const activeSearch = selectedSearch;
 
   const requestedTake = resolveCardsTakeFromParams(
@@ -91,6 +96,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
       activePokemonDex,
       activePokemonName,
       activeRarity,
+      activeEnergy,
       activeSearch,
       activeArtist,
       excludeCommonUncommon,
@@ -115,6 +121,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     if (activeSet) params.set("set", activeSet);
     if (activePokemon) params.set("pokemon", activePokemon);
     if (activeRarity) params.set("rarity", activeRarity);
+    if (activeEnergy) params.set("energy", activeEnergy);
     if (activeSearch) params.set("search", activeSearch);
     if (activeArtist) params.set("artist", activeArtist);
     if (excludeCommonUncommon) params.set("exclude_cu", "1");
@@ -129,6 +136,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     activeSet,
     activePokemon,
     activeRarity,
+    activeEnergy,
     activeSearch,
     activeArtist,
     excludeCommonUncommon ? "1" : "",
@@ -138,6 +146,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const resetFiltersHref = (() => {
     const params = new URLSearchParams();
     if (activeRarity) params.set("rarity", activeRarity);
+    if (activeEnergy) params.set("energy", activeEnergy);
     if (activeSearch) params.set("search", activeSearch);
     if (excludeCommonUncommon) params.set("exclude_cu", "1");
     if (activeCategory) params.set("category", activeCategory);
@@ -167,10 +176,12 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 sets={setFilterOptions}
                 pokemon={pokemonFilterOptions}
                 rarityOptions={rarityOptions}
+                energyOptions={energyOptions}
                 categoryOptions={categoryOptions}
                 activeSet={activeSet}
                 activePokemonDex={activePokemon}
                 activeRarity={activeRarity}
+                activeEnergy={activeEnergy}
                 activeSearch={activeSearch}
                 excludeCommonUncommon={excludeCommonUncommon}
                 activeCategory={activeCategory}
@@ -182,8 +193,10 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               activeSet={activeSet}
               activePokemon={activePokemon}
               activeRarity={activeRarity}
+              activeEnergy={activeEnergy}
               activeSearch={activeSearch}
               rarityOptions={rarityOptions}
+              energyOptions={energyOptions}
               categoryOptions={categoryOptions}
               excludeCommonUncommon={excludeCommonUncommon}
               activeCategory={activeCategory}
@@ -196,6 +209,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
                 {activePokemon ? <input type="hidden" name="pokemon" value={activePokemon} /> : null}
                 {activeRarity ? <input type="hidden" name="rarity" value={activeRarity} /> : null}
+                {activeEnergy ? <input type="hidden" name="energy" value={activeEnergy} /> : null}
                 {excludeCommonUncommon ? (
                   <input type="hidden" name="exclude_cu" value="1" />
                 ) : null}
@@ -229,6 +243,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 {activeSet ||
                 activePokemon ||
                 activeRarity ||
+                activeEnergy ||
                 activeSearch ||
                 excludeCommonUncommon ||
                 activeCategory
@@ -252,9 +267,11 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 activeSet={activeSet}
                 activePokemon={activePokemon}
                 activeRarity={activeRarity}
+                activeEnergy={activeEnergy}
                 activeCategory={activeCategory}
                 excludeCommonUncommon={excludeCommonUncommon}
                 rarityOptions={rarityOptions}
+                energyOptions={energyOptions}
                 categoryOptions={categoryOptions}
                 resetHref={resetFiltersHref}
               />

@@ -34,9 +34,11 @@ type Props = {
   activeSet: string;
   activePokemon: string;
   activeRarity: string;
+  activeEnergy: string;
   activeCategory: string;
   excludeCommonUncommon: boolean;
   rarityOptions: string[];
+  energyOptions: string[];
   categoryOptions: string[];
   resetHref: string;
   defaultGroupBySet?: boolean;
@@ -58,9 +60,11 @@ export function SearchCardGrid({
   activeSet,
   activePokemon,
   activeRarity,
+  activeEnergy,
   activeCategory,
   excludeCommonUncommon,
   rarityOptions,
+  energyOptions,
   categoryOptions,
   resetHref,
   defaultGroupBySet = true,
@@ -234,9 +238,11 @@ export function SearchCardGrid({
             activeSet,
             activePokemon,
             activeRarity,
+            activeEnergy,
             activeCategory,
             excludeCommonUncommon,
             rarityOptions: rarityOptions ?? [],
+            energyOptions: energyOptions ?? [],
             categoryOptions: categoryOptions ?? [],
             resetHref,
           }}

@@ -21,6 +21,7 @@ type ExpansionSetCardsPageProps = {
     rarity?: string;
     exclude_cu?: string;
     category?: string;
+    energy?: string;
   }>;
 };
 
@@ -40,6 +41,7 @@ export default async function ExpansionSetCardsPage({
   const facets = (await getCachedFilterFacets()) ?? {};
   const availableSetCodes = facets.setCodes ?? [];
   const rarityOptions = facets.rarityDisplayValues ?? [];
+  const energyOptions = facets.energyTypeDisplayValues ?? [];
   const categoryOptions = facets.categoryDisplayValues ?? [];
   const categoryMatchGroups = facets.categoryMatchGroups ?? {};
   const setFilterOptions = await getCachedSetFilterOptions(availableSetCodes);
@@ -57,6 +59,9 @@ export default async function ExpansionSetCardsPage({
   const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
     resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
 
+  const selectedEnergy = resolvedSearchParams.energy?.trim() ?? "";
+  const activeEnergy = energyOptions.includes(selectedEnergy) ? selectedEnergy : "";
+
   const customer = await getCurrentCustomer();
   const [{ entries: cardsForGrid, totalDocs: filteredCount }, setMarketValue, collectionEntries] =
     await Promise.all([
@@ -65,6 +70,7 @@ export default async function ExpansionSetCardsPage({
         activePokemonDex: null,
         activePokemonName: null,
         activeRarity,
+        activeEnergy,
         activeSearch,
         activeArtist: "",
         excludeCommonUncommon,
@@ -157,6 +163,8 @@ export default async function ExpansionSetCardsPage({
                 activeCategory={activeCategory}
                 excludeCommonUncommon={excludeCommonUncommon}
                 rarityOptions={rarityOptions}
+                activeEnergy={activeEnergy}
+                energyOptions={energyOptions}
                 categoryOptions={categoryOptions}
               />
             </CardsResultsScroll>

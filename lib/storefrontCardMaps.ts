@@ -288,9 +288,9 @@ export function groupCollectionLinesByGroupKey(
 }
 
 /**
- * One tile per master card in collection grids: variants/conditions are grouped together.
- * Variant/condition details remain available via line maps for the modal "Your collection" section.
- * Preserves first-seen order (newest first).
+ * One tile per catalog variant in collection grids: same printing/condition/language/grade bucket merges
+ * (qty sums). Graded lines are never merged with raw/ungraded lines for the same master card.
+ * Preserves first-seen order of group keys (newest first).
  */
 export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): StorefrontCardEntry[] {
   const keyOrder: string[] = [];
@@ -302,13 +302,14 @@ export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): S
     if (!mid) {
       continue;
     }
-    if (!seenKey.has(mid)) {
-      seenKey.add(mid);
-      keyOrder.push(mid);
+    const gk = collectionGroupKeyFromEntry(e);
+    if (!seenKey.has(gk)) {
+      seenKey.add(gk);
+      keyOrder.push(gk);
     }
-    const list = byKey.get(mid) ?? [];
+    const list = byKey.get(gk) ?? [];
     list.push(e);
-    byKey.set(mid, list);
+    byKey.set(gk, list);
   }
 
   const out: StorefrontCardEntry[] = [];
@@ -323,7 +324,7 @@ export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): S
     out.push({
       ...first,
       quantity: total,
-      collectionGroupKey: first.masterCardId,
+      collectionGroupKey: key,
       collectionEntryId: group.length === 1 ? first.collectionEntryId : undefined,
     });
   }

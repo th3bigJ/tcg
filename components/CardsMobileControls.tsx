@@ -22,8 +22,10 @@ type CardsMobileControlsProps = {
   activeSet: string;
   activePokemon: string;
   activeRarity: string;
+  activeEnergy: string;
   activeSearch: string;
   rarityOptions: string[];
+  energyOptions: string[];
   categoryOptions: string[];
   excludeCommonUncommon: boolean;
   activeCategory: string;
@@ -39,8 +41,10 @@ export function CardsMobileControls({
   activeSet,
   activePokemon,
   activeRarity,
+  activeEnergy,
   activeSearch,
   rarityOptions,
+  energyOptions,
   categoryOptions,
   excludeCommonUncommon,
   activeCategory,
@@ -70,6 +74,7 @@ export function CardsMobileControls({
           {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
           {activePokemon ? <input type="hidden" name="pokemon" value={activePokemon} /> : null}
           {activeRarity ? <input type="hidden" name="rarity" value={activeRarity} /> : null}
+          {activeEnergy ? <input type="hidden" name="energy" value={activeEnergy} /> : null}
           {excludeCommonUncommon ? <input type="hidden" name="exclude_cu" value="1" /> : null}
           {activeCategory ? <input type="hidden" name="category" value={activeCategory} /> : null}
           <input
@@ -192,10 +197,12 @@ export function CardsMobileControls({
             sets={setFilterOptions}
             pokemon={pokemonFilterOptions}
             rarityOptions={rarityOptions}
+            energyOptions={energyOptions}
             categoryOptions={categoryOptions}
             activeSet={activeSet}
             activePokemonDex={activePokemon}
             activeRarity={activeRarity}
+            activeEnergy={activeEnergy}
             activeSearch={activeSearch}
             excludeCommonUncommon={excludeCommonUncommon}
             activeCategory={activeCategory}

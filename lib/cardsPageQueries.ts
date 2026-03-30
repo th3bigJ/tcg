@@ -1,3 +1,4 @@
+import { cardMatchesEnergyTypeSelection } from "@/lib/cardEnergyFilter";
 import type { CardJsonEntry } from "@/lib/staticCards";
 import { getCardsBySet, getAllSets } from "@/lib/staticCards";
 import {
@@ -227,6 +228,7 @@ function cardMatchesFilters(
   params: {
     activeSet: string;
     activeRarity: string;
+    activeEnergy: string;
     activeSearch: string;
     activeArtist: string;
     excludeCommonUncommon: boolean;
@@ -240,6 +242,8 @@ function cardMatchesFilters(
     (card.rarity ?? "").trim() !== params.activeRarity
   )
     return false;
+
+  if (!cardMatchesEnergyTypeSelection(card.elementTypes, params.activeEnergy)) return false;
 
   if (params.excludeCommonUncommon) {
     const lr = (card.rarity ?? "").trim().toLocaleLowerCase();
@@ -477,6 +481,8 @@ export function generateShuffledSetOrder(): string[] {
 export async function fetchMasterCardsPage(params: {
   activeSet: string;
   activeRarity: string;
+  /** Canonical display label from `energyTypeDisplayValues` facets (URL `energy`). */
+  activeEnergy: string;
   activeSearch: string;
   activeArtist: string;
   activePokemonDex: number | null;
@@ -505,6 +511,7 @@ export async function fetchMasterCardsPage(params: {
   if (params.activePokemonDex !== null) {
     const dexIndex = getPokemonDexIndex();
     const candidates = dexIndex[String(params.activePokemonDex)] ?? [];
+    const cardMapForDex = getCardMapById();
 
     const searchQuery = params.activeSearch.trim().toLocaleLowerCase();
     const categoryFilterKey =
@@ -521,6 +528,12 @@ export async function fetchMasterCardsPage(params: {
         if (EXCLUDED_BASIC_RARITIES.has(lr)) return false;
       }
       if (categoryFilterKey && entry.categoryKey !== categoryFilterKey) return false;
+      if (params.activeEnergy.trim()) {
+        const card = cardMapForDex.get(entry.id);
+        if (!card || !cardMatchesEnergyTypeSelection(card.elementTypes, params.activeEnergy)) {
+          return false;
+        }
+      }
       return true;
     });
 
@@ -552,6 +565,7 @@ export async function fetchMasterCardsPage(params: {
   const isDefaultUnfiltered =
     !params.activeSet &&
     !params.activeRarity &&
+    !params.activeEnergy.trim() &&
     !params.activeSearch &&
     !params.activeArtist &&
     !params.excludeCommonUncommon &&

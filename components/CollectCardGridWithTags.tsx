@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import { CardTagFilterRow } from "@/components/CardTagFilterRow";
+import { cardMatchesEnergyTypeSelection } from "@/lib/cardEnergyFilter";
 import type { CollectionLineSummary, StorefrontCardExtras } from "@/lib/storefrontCardMaps";
 
 const COMMON_UNCOMMON = new Set(["Common", "Uncommon"]);
@@ -61,6 +62,7 @@ export function CollectCardGridWithTags({
   const [groupBySet, setGroupBySet] = useState(false);
   const [search, setSearch] = useState("");
   const [rarity, setRarity] = useState("");
+  const [energy, setEnergy] = useState("");
   const [category, setCategory] = useState("");
   const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(false);
   const [duplicatesOnly, setDuplicatesOnly] = useState(false);
@@ -81,6 +83,17 @@ export function CollectCardGridWithTags({
     const seen = new Set<string>();
     for (const card of cards) if (card.rarity) seen.add(card.rarity);
     return Array.from(seen).sort();
+  }, [cards]);
+
+  const energyOptions = useMemo(() => {
+    const seen = new Set<string>();
+    for (const card of cards) {
+      for (const t of card.elementTypes ?? []) {
+        const s = String(t ?? "").trim();
+        if (s) seen.add(s);
+      }
+    }
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
   }, [cards]);
 
   const categoryOptions = useMemo(() => {
@@ -108,6 +121,7 @@ export function CollectCardGridWithTags({
         if (!name.includes(q) && !number.includes(q) && !artist.includes(q)) return false;
       }
       if (rarity && card.rarity !== rarity) return false;
+      if (energy && !cardMatchesEnergyTypeSelection(card.elementTypes, energy)) return false;
       if (category && card.category !== category) return false;
       if (excludeCommonUncommon && COMMON_UNCOMMON.has(card.rarity)) return false;
       if (duplicatesOnly && (card.quantity ?? 1) <= 1) return false;
@@ -137,6 +151,7 @@ export function CollectCardGridWithTags({
     cards,
     search,
     rarity,
+    energy,
     category,
     excludeCommonUncommon,
     duplicatesOnly,
@@ -167,6 +182,9 @@ export function CollectCardGridWithTags({
             rarity,
             onRarityChange: setRarity,
             rarityOptions,
+            energy,
+            onEnergyChange: setEnergy,
+            energyOptions,
             category,
             onCategoryChange: setCategory,
             categoryOptions,

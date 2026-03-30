@@ -90,6 +90,9 @@ export type CardTagFilterRowProps = {
     rarity: string;
     onRarityChange: (value: string) => void;
     rarityOptions: string[];
+    energy: string;
+    onEnergyChange: (value: string) => void;
+    energyOptions: string[];
     category: string;
     onCategoryChange: (value: string) => void;
     categoryOptions: string[];
@@ -123,9 +126,11 @@ export type CardTagFilterRowProps = {
     activeSet: string;
     activePokemon: string;
     activeRarity: string;
+    activeEnergy: string;
     activeCategory: string;
     excludeCommonUncommon: boolean;
     rarityOptions: string[];
+    energyOptions: string[];
     categoryOptions: string[];
     resetHref: string;
   };
@@ -147,13 +152,19 @@ export function CardTagFilterRow({
   const formRef = useRef<HTMLFormElement>(null);
 
   const sf = searchFilter
-    ? { ...searchFilter, rarityOptions: searchFilter.rarityOptions ?? [], categoryOptions: searchFilter.categoryOptions ?? [] }
+    ? {
+        ...searchFilter,
+        rarityOptions: searchFilter.rarityOptions ?? [],
+        energyOptions: searchFilter.energyOptions ?? [],
+        categoryOptions: searchFilter.categoryOptions ?? [],
+      }
     : undefined;
   const hasActiveFilters = sf
-    ? Boolean(sf.activeRarity || sf.activeCategory || sf.excludeCommonUncommon)
+    ? Boolean(sf.activeRarity || sf.activeEnergy || sf.activeCategory || sf.excludeCommonUncommon)
     : localFilters
       ? Boolean(
           localFilters.rarity ||
+          localFilters.energy ||
           localFilters.category ||
           localFilters.excludeCommonUncommon ||
           localFilters.duplicatesOnly,
@@ -213,6 +224,7 @@ export function CardTagFilterRow({
           {sf.activeSet ? <input type="hidden" name="set" value={sf.activeSet} /> : null}
           {sf.activePokemon ? <input type="hidden" name="pokemon" value={sf.activePokemon} /> : null}
           {sf.activeRarity ? <input type="hidden" name="rarity" value={sf.activeRarity} /> : null}
+          {sf.activeEnergy ? <input type="hidden" name="energy" value={sf.activeEnergy} /> : null}
           {sf.excludeCommonUncommon ? <input type="hidden" name="exclude_cu" value="1" /> : null}
           {sf.activeCategory ? <input type="hidden" name="category" value={sf.activeCategory} /> : null}
 
@@ -252,6 +264,7 @@ export function CardTagFilterRow({
                 if (sf.activeSet) params.set("set", sf.activeSet);
                 if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
                 if (sf.activeRarity) params.set("rarity", sf.activeRarity);
+                if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
                 if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
                 if (sf.activeCategory) params.set("category", sf.activeCategory);
                 router.push(`${sf.formAction}?${params.toString()}`);
@@ -295,6 +308,7 @@ export function CardTagFilterRow({
             type="button"
             onClick={() => {
               localFilters.onRarityChange("");
+              localFilters.onEnergyChange("");
               localFilters.onCategoryChange("");
               localFilters.onExcludeCommonUncommonChange(false);
               localFilters.onDuplicatesOnlyChange?.(false);
@@ -425,6 +439,26 @@ export function CardTagFilterRow({
 
             <div className="relative shrink-0">
               <AutoWidthSelect
+                value={localFilters.energy}
+                selectedLabel={localFilters.energy || "Energy"}
+                onChange={(e) => localFilters.onEnergyChange(e.currentTarget.value)}
+                aria-label="Filter by energy type"
+                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
+                  localFilters.energy
+                    ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
+                    : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
+                }`}
+              >
+                <option value="">Energy</option>
+                {localFilters.energyOptions.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </AutoWidthSelect>
+              <ChevronDown />
+            </div>
+
+            <div className="relative shrink-0">
+              <AutoWidthSelect
                 value={localFilters.category}
                 selectedLabel={localFilters.category || "Card type"}
                 onChange={(e) => localFilters.onCategoryChange(e.currentTarget.value)}
@@ -482,6 +516,7 @@ export function CardTagFilterRow({
                   if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
                   if (val) params.set("rarity", val);
                   if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
+                  if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
                   if (sf.activeCategory) params.set("category", sf.activeCategory);
                   router.push(`${sf.formAction}?${params.toString()}`);
                 }}
@@ -495,6 +530,42 @@ export function CardTagFilterRow({
                 <option value="">Rarity</option>
                 {sf.rarityOptions.map((r) => (
                   <option key={r} value={r}>{r}</option>
+                ))}
+              </AutoWidthSelect>
+              <ChevronDown />
+            </div>
+
+            {/* Energy type dropdown */}
+            <div className="relative shrink-0">
+              <AutoWidthSelect
+                name="energy-select"
+                selectedLabel={sf.activeEnergy || "Energy"}
+                value={sf.activeEnergy}
+                onChange={(e) => {
+                  const val = e.currentTarget.value;
+                  const params = new URLSearchParams();
+                  if (sf.extraHiddenFields) {
+                    for (const [k, v] of Object.entries(sf.extraHiddenFields)) params.set(k, v);
+                  }
+                  if (sf.activeSearch) params.set("search", sf.activeSearch);
+                  if (sf.activeSet) params.set("set", sf.activeSet);
+                  if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
+                  if (sf.activeRarity) params.set("rarity", sf.activeRarity);
+                  if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
+                  if (val) params.set("energy", val);
+                  if (sf.activeCategory) params.set("category", sf.activeCategory);
+                  router.push(`${sf.formAction}?${params.toString()}`);
+                }}
+                aria-label="Filter by energy type"
+                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
+                  sf.activeEnergy
+                    ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
+                    : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
+                }`}
+              >
+                <option value="">Energy</option>
+                {sf.energyOptions.map((t) => (
+                  <option key={t} value={t}>{t}</option>
                 ))}
               </AutoWidthSelect>
               <ChevronDown />
@@ -517,6 +588,7 @@ export function CardTagFilterRow({
                   if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
                   if (sf.activeRarity) params.set("rarity", sf.activeRarity);
                   if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
+                  if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
                   if (val) params.set("category", val);
                   router.push(`${sf.formAction}?${params.toString()}`);
                 }}
@@ -548,6 +620,7 @@ export function CardTagFilterRow({
                 if (sf.activeSet) params.set("set", sf.activeSet);
                 if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
                 if (sf.activeRarity) params.set("rarity", sf.activeRarity);
+                if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
                 if (sf.activeCategory) params.set("category", sf.activeCategory);
                 if (!sf.excludeCommonUncommon) params.set("exclude_cu", "1");
                 router.push(`${sf.formAction}?${params.toString()}`);

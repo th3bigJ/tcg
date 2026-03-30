@@ -23,8 +23,10 @@ type PokedexPokemonCardsPageProps = {
 
 export default async function PokedexPokemonCardsPage({
   params,
+  searchParams,
 }: PokedexPokemonCardsPageProps) {
   const { nationalDex: rawDex } = await params;
+  const resolvedSearchParams = (await searchParams) ?? {};
   const dexNum = Number.parseInt(decodeURIComponent(rawDex).trim(), 10);
   if (!Number.isFinite(dexNum) || dexNum <= 0) notFound();
 
@@ -34,6 +36,9 @@ export default async function PokedexPokemonCardsPage({
 
   const facets = (await getCachedFilterFacets()) ?? {};
   const availableSetCodes = facets.setCodes ?? [];
+  const energyOptions = facets.energyTypeDisplayValues ?? [];
+  const selectedEnergy = (resolvedSearchParams.energy ?? "").trim();
+  const activeEnergy = energyOptions.includes(selectedEnergy) ? selectedEnergy : "";
   const setFilterOptions = await getCachedSetFilterOptions(availableSetCodes);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
@@ -48,6 +53,7 @@ export default async function PokedexPokemonCardsPage({
       activePokemonDex: dexNum,
       activePokemonName: pokemonMeta.name,
       activeRarity: "",
+      activeEnergy,
       activeSearch: "",
       activeArtist: "",
       excludeCommonUncommon: false,
@@ -67,7 +73,8 @@ export default async function PokedexPokemonCardsPage({
   const marketValue = await fetchCardsMarketValue(cardsForGrid, customer ? ownedMasterCardIds : undefined);
   const missingCount = marketValue?.missingCount ?? (filteredCount - ownedCount);
 
-  const scrollRestoreKey = [String(dexNum), "pokedex-pokemon"].join("|");
+  const scrollRestoreKey = [String(dexNum), "pokedex-pokemon", activeEnergy].join("|");
+  const pokedexFilterBasePath = `/pokedex/${encodeURIComponent(String(dexNum))}`;
 
   const imageSrc = normalizePokemonImageSrc(pokemonMeta.imageUrl);
 
@@ -134,6 +141,9 @@ export default async function PokedexPokemonCardsPage({
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
+                formAction={pokedexFilterBasePath}
+                activeEnergy={activeEnergy}
+                energyOptions={energyOptions}
               />
             </CardsResultsScroll>
           </div>

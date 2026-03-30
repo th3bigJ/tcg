@@ -41,6 +41,7 @@ type SearchPageProps = {
     exclude_cu?: string;
     category?: string;
     artist?: string;
+    energy?: string;
     tab?: string;
     seed?: string;
   }>;
@@ -151,6 +152,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const facets = (await getCachedFilterFacets()) ?? {};
   const availableSetCodes = facets.setCodes ?? [];
   const rarityOptions = facets.rarityDisplayValues ?? [];
+  const energyOptions = facets.energyTypeDisplayValues ?? [];
   const categoryOptions = facets.categoryDisplayValues ?? [];
   const categoryMatchGroups = facets.categoryMatchGroups ?? {};
   const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
@@ -178,12 +180,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     ? pokemonFilterOptions.find((option) => option.nationalDexNumber === parsedPokemonDex) ?? null
     : null;
   const hasSelectedRarity = rarityOptions.includes(selectedRarity);
+  const selectedEnergy = (resolvedSearchParams.energy ?? "").trim();
+  const hasSelectedEnergy = energyOptions.includes(selectedEnergy);
 
   const activeSet = hasSelectedSet ? selectedSet : "";
   const activePokemon = hasSelectedPokemon ? String(parsedPokemonDex) : "";
   const activePokemonDex = hasSelectedPokemon ? parsedPokemonDex : null;
   const activePokemonName = activePokemonOption?.name ?? null;
   const activeRarity = hasSelectedRarity ? selectedRarity : "";
+  const activeEnergy = hasSelectedEnergy ? selectedEnergy : "";
   const activeSearch = selectedSearch;
   const activeArtist = selectedArtist;
   const requestedTake =
@@ -199,6 +204,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     activePokemonDex,
     activePokemonName,
     activeRarity,
+    activeEnergy,
     activeSearch,
     activeArtist,
     excludeCommonUncommon,
@@ -219,6 +225,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (activeSet) params.set("set", activeSet);
     if (activePokemon) params.set("pokemon", activePokemon);
     if (activeRarity) params.set("rarity", activeRarity);
+    if (activeEnergy) params.set("energy", activeEnergy);
     if (activeSearch) params.set("search", activeSearch);
     if (activeArtist) params.set("artist", activeArtist);
     if (excludeCommonUncommon) params.set("exclude_cu", "1");
@@ -235,6 +242,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     activeSet,
     activePokemon,
     activeRarity,
+    activeEnergy,
     activeSearch,
     activeArtist,
     excludeCommonUncommon ? "1" : "",
@@ -277,9 +285,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 activeSet={activeSet}
                 activePokemon={activePokemon}
                 activeRarity={activeRarity}
+                activeEnergy={activeEnergy}
                 activeCategory={activeCategory}
                 excludeCommonUncommon={excludeCommonUncommon}
                 rarityOptions={rarityOptions}
+                energyOptions={energyOptions}
                 categoryOptions={categoryOptions}
                 resetHref={clearTagFiltersHref}
               />

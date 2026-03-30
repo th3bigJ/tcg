@@ -10,6 +10,7 @@ import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/l
 import {
   collectionGroupKeyFromEntry,
   fetchItemConditionOptions,
+  groupCollectionLinesByGroupKey,
   groupCollectionLinesByMasterCardId,
 } from "@/lib/storefrontCardMaps";
 import {
@@ -67,7 +68,10 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     getCachedFilterFacets().then((r) => r ?? {}),
   ]);
 
-  const collectionLinesByMasterCardId = groupCollectionLinesByMasterCardId(collectionEntries);
+  const collectionLinesByMasterCardId = {
+    ...groupCollectionLinesByMasterCardId(collectionEntries),
+    ...groupCollectionLinesByGroupKey(collectionEntries),
+  };
   const setFilterOptions = await getCachedSetFilterOptions(facets.setCodes ?? []);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),

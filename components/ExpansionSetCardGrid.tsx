@@ -36,9 +36,11 @@ type Props = {
   formAction: string;
   activeSearch: string;
   activeRarity: string;
+  activeEnergy: string;
   activeCategory: string;
   excludeCommonUncommon: boolean;
   rarityOptions: string[];
+  energyOptions: string[];
   categoryOptions: string[];
 };
 
@@ -50,9 +52,11 @@ export function ExpansionSetCardGrid({
   formAction,
   activeSearch,
   activeRarity,
+  activeEnergy,
   activeCategory,
   excludeCommonUncommon,
   rarityOptions,
+  energyOptions,
   categoryOptions,
 }: Props) {
   const router = useRouter();
@@ -62,7 +66,7 @@ export function ExpansionSetCardGrid({
   const [rarePlusOnly, setRarePlusOnly] = useState(excludeCommonUncommon);
   const [notOwnedOnly, setNotOwnedOnly] = useState(false);
   const hasActiveFilters = Boolean(
-    sortOrder || activeRarity || activeCategory || rarePlusOnly || notOwnedOnly,
+    sortOrder || activeRarity || activeEnergy || activeCategory || rarePlusOnly || notOwnedOnly,
   );
 
   useEffect(() => {
@@ -131,12 +135,15 @@ export function ExpansionSetCardGrid({
 
   const pushFilterState = (next: {
     rarity?: string;
+    energy?: string;
     category?: string;
     excludeCu?: boolean;
   }) => {
     const params = new URLSearchParams();
     if (activeSearch) params.set("search", activeSearch);
     if (next.rarity ?? activeRarity) params.set("rarity", next.rarity ?? activeRarity);
+    const nextEnergy = next.energy !== undefined ? next.energy : activeEnergy;
+    if (nextEnergy) params.set("energy", nextEnergy);
     if (next.excludeCu ?? excludeCommonUncommon) params.set("exclude_cu", "1");
     if (next.category ?? activeCategory) params.set("category", next.category ?? activeCategory);
     router.push(`${formAction}${params.size > 0 ? `?${params.toString()}` : ""}`);
@@ -171,6 +178,13 @@ export function ExpansionSetCardGrid({
             onChange={(value) => pushFilterState({ rarity: value })}
             options={[{ value: "", label: "Rarity" }, ...rarityOptions.map((v) => ({ value: v, label: v }))]}
             ariaLabel="Filter by rarity"
+          />
+          <FilterChipSelect
+            value={activeEnergy}
+            onChange={(value) => pushFilterState({ energy: value })}
+            options={[{ value: "", label: "Energy" }, ...energyOptions.map((v) => ({ value: v, label: v }))]}
+            ariaLabel="Filter by energy type"
+            widthClass="w-auto"
           />
           <FilterChipSelect
             value={activeCategory}

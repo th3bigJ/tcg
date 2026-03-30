@@ -32,9 +32,11 @@ type Props = {
   activeSet: string;
   activePokemon: string;
   activeRarity: string;
+  activeEnergy: string;
   activeCategory: string;
   excludeCommonUncommon: boolean;
   rarityOptions: string[];
+  energyOptions: string[];
   categoryOptions: string[];
   resetHref: string;
 };
@@ -50,9 +52,11 @@ export function SearchCardsTabGrid({
   activeSet,
   activePokemon,
   activeRarity,
+  activeEnergy,
   activeCategory,
   excludeCommonUncommon,
   rarityOptions,
+  energyOptions,
   categoryOptions,
   resetHref,
 }: Props) {
@@ -60,7 +64,7 @@ export function SearchCardsTabGrid({
   const [cardData, setCardData] = useState<SearchCardData | null>(null);
   const [notOwnedOnly, setNotOwnedOnly] = useState(false);
   const hasActiveFilters = Boolean(
-    activeRarity || activeCategory || excludeCommonUncommon || notOwnedOnly,
+    activeRarity || activeEnergy || activeCategory || excludeCommonUncommon || notOwnedOnly,
   );
 
   useEffect(() => {
@@ -100,6 +104,7 @@ export function SearchCardsTabGrid({
           {activeSet ? <input type="hidden" name="set" value={activeSet} /> : null}
           {activePokemon ? <input type="hidden" name="pokemon" value={activePokemon} /> : null}
           {activeRarity ? <input type="hidden" name="rarity" value={activeRarity} /> : null}
+          {activeEnergy ? <input type="hidden" name="energy" value={activeEnergy} /> : null}
           {excludeCommonUncommon ? <input type="hidden" name="exclude_cu" value="1" /> : null}
           {activeCategory ? <input type="hidden" name="category" value={activeCategory} /> : null}
           <FilterSearchInput defaultValue={activeSearch} />
@@ -129,11 +134,32 @@ export function SearchCardsTabGrid({
               if (activePokemon) params.set("pokemon", activePokemon);
               if (value) params.set("rarity", value);
               if (excludeCommonUncommon) params.set("exclude_cu", "1");
+              if (activeEnergy) params.set("energy", activeEnergy);
               if (activeCategory) params.set("category", activeCategory);
               router.push(`${formAction}?${params.toString()}`);
             }}
             options={[{ value: "", label: "Rarity" }, ...rarityOptions.map((v) => ({ value: v, label: v }))]}
             ariaLabel="Filter by rarity"
+            widthClass="w-auto"
+          />
+          <FilterChipSelect
+            value={activeEnergy}
+            onChange={(value) => {
+              const params = new URLSearchParams();
+              if (extraHiddenFields) {
+                for (const [k, v] of Object.entries(extraHiddenFields)) params.set(k, v);
+              }
+              if (activeSearch) params.set("search", activeSearch);
+              if (activeSet) params.set("set", activeSet);
+              if (activePokemon) params.set("pokemon", activePokemon);
+              if (activeRarity) params.set("rarity", activeRarity);
+              if (excludeCommonUncommon) params.set("exclude_cu", "1");
+              if (value) params.set("energy", value);
+              if (activeCategory) params.set("category", activeCategory);
+              router.push(`${formAction}?${params.toString()}`);
+            }}
+            options={[{ value: "", label: "Energy" }, ...energyOptions.map((v) => ({ value: v, label: v }))]}
+            ariaLabel="Filter by energy type"
             widthClass="w-auto"
           />
           <FilterChipSelect
@@ -148,6 +174,7 @@ export function SearchCardsTabGrid({
               if (activePokemon) params.set("pokemon", activePokemon);
               if (activeRarity) params.set("rarity", activeRarity);
               if (excludeCommonUncommon) params.set("exclude_cu", "1");
+              if (activeEnergy) params.set("energy", activeEnergy);
               if (value) params.set("category", value);
               router.push(`${formAction}?${params.toString()}`);
             }}
@@ -168,6 +195,7 @@ export function SearchCardsTabGrid({
               if (activePokemon) params.set("pokemon", activePokemon);
               if (activeRarity) params.set("rarity", activeRarity);
               if (!excludeCommonUncommon) params.set("exclude_cu", "1");
+              if (activeEnergy) params.set("energy", activeEnergy);
               if (activeCategory) params.set("category", activeCategory);
               router.push(`${formAction}?${params.toString()}`);
             }}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import {
@@ -31,6 +32,10 @@ type Props = {
   setLogosByCode?: Record<string, string>;
   setSymbolsByCode?: Record<string, string>;
   customerLoggedIn: boolean;
+  /** Base path for filter URL updates, e.g. `/pokedex/25` */
+  formAction: string;
+  activeEnergy: string;
+  energyOptions: string[];
 };
 
 export function PokedexCardGrid({
@@ -38,14 +43,20 @@ export function PokedexCardGrid({
   setLogosByCode,
   setSymbolsByCode,
   customerLoggedIn,
+  formAction,
+  activeEnergy,
+  energyOptions,
 }: Props) {
+  const router = useRouter();
   const [cardData, setCardData] = useState<SearchCardData | null>(null);
   const [groupBySet, setGroupBySet] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>("");
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
   const [rarePlusOnly, setRarePlusOnly] = useState(false);
   const [notOwnedOnly, setNotOwnedOnly] = useState(false);
-  const hasActiveFilters = Boolean(groupBySet || sortOrder || rarePlusOnly || notOwnedOnly);
+  const hasActiveFilters = Boolean(
+    groupBySet || sortOrder || rarePlusOnly || notOwnedOnly || activeEnergy,
+  );
 
   useEffect(() => {
     if (!customerLoggedIn) return;
@@ -112,6 +123,7 @@ export function PokedexCardGrid({
     setSortOrder("");
     setRarePlusOnly(false);
     setNotOwnedOnly(false);
+    if (activeEnergy) router.push(formAction);
   };
 
   return (
@@ -130,6 +142,17 @@ export function PokedexCardGrid({
             options={SORT_OPTIONS}
             ariaLabel="Sort order"
             defaultValue=""
+          />
+          <FilterChipSelect
+            value={activeEnergy}
+            onChange={(value) => {
+              const params = new URLSearchParams();
+              if (value) params.set("energy", value);
+              router.push(`${formAction}${params.size > 0 ? `?${params.toString()}` : ""}`);
+            }}
+            options={[{ value: "", label: "Energy" }, ...energyOptions.map((v) => ({ value: v, label: v }))]}
+            ariaLabel="Filter by energy type"
+            widthClass="w-auto"
           />
           <FilterChipButton
             label="Rare+ only"
