@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { startTransition, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
 const SCROLL_STORAGE_KEY = "tcg-cards-load-more-scroll-y";
+const PULL_THRESHOLD = 72;
 
 type CardsResultsScrollProps = {
   children: ReactNode;
@@ -27,6 +28,9 @@ export function CardsResultsScroll({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const prevScrollRestoreKeyRef = useRef<string | null>(null);
+  const [isRefreshing, startRefreshTransition] = useTransition();
+  const [pullY, setPullY] = useState(0);
+  const touchStartYRef = useRef<number | null>(null);
 
   useLayoutEffect(() => {
     if (prevScrollRestoreKeyRef.current !== scrollRestoreKey) {
@@ -71,6 +75,35 @@ export function CardsResultsScroll({
     };
   }, [canLoadMore, loadMoreHref, scrollRestoreKey]);
 
+  function handleTouchStart(e: React.TouchEvent) {
+    if (!scrollsWindow) return;
+    if (window.scrollY > 0) return;
+    touchStartYRef.current = e.touches[0]!.clientY;
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (touchStartYRef.current === null) return;
+    const delta = e.touches[0]!.clientY - touchStartYRef.current;
+    if (delta <= 0) {
+      touchStartYRef.current = null;
+      setPullY(0);
+      return;
+    }
+    // Resist the pull with square-root damping
+    setPullY(Math.min(PULL_THRESHOLD * 1.5, Math.sqrt(delta) * 5));
+  }
+
+  function handleTouchEnd() {
+    if (touchStartYRef.current === null) return;
+    touchStartYRef.current = null;
+    if (pullY >= PULL_THRESHOLD && !isRefreshing) {
+      startRefreshTransition(() => {
+        router.refresh();
+      });
+    }
+    setPullY(0);
+  }
+
   function handleLoadMore() {
     if (isLoadingMore) return;
     setIsLoadingMore(true);
@@ -81,11 +114,38 @@ export function CardsResultsScroll({
     });
   }
 
+  const pullProgress = Math.min(1, pullY / PULL_THRESHOLD);
+
   return (
     <div
       ref={scrollRef}
       className={scrollsWindow ? "min-h-0" : "scrollbar-hide min-h-0 flex-1 overflow-y-auto"}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
+      {scrollsWindow && (pullY > 0 || isRefreshing) ? (
+        <div
+          className="pointer-events-none flex items-center justify-center overflow-hidden transition-all"
+          style={{ height: isRefreshing ? 40 : pullY * 0.55 }}
+        >
+          <svg
+            className={isRefreshing ? "animate-spin" : ""}
+            style={{
+              opacity: isRefreshing ? 1 : pullProgress,
+              transform: `rotate(${pullProgress * 270}deg)`,
+              transition: isRefreshing ? undefined : "none",
+            }}
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+          >
+            <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25" />
+            <path d="M10 2a8 8 0 0 1 8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+      ) : null}
       {children}
       {canLoadMore ? (
         <div className="flex items-center justify-center pb-[var(--bottom-nav-offset,0px)] pt-6">
