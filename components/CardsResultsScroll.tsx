@@ -126,24 +126,27 @@ export function CardsResultsScroll({
     >
       {scrollsWindow && (pullY > 0 || isRefreshing) ? (
         <div
-          className="pointer-events-none flex items-center justify-center overflow-hidden transition-all"
+          className="pointer-events-none flex items-center justify-center gap-2 overflow-hidden transition-[height]"
           style={{ height: isRefreshing ? 40 : pullY * 0.55 }}
         >
           <svg
             className={isRefreshing ? "animate-spin" : ""}
             style={{
               opacity: isRefreshing ? 1 : pullProgress,
-              transform: `rotate(${pullProgress * 270}deg)`,
+              transform: isRefreshing ? undefined : `rotate(${pullProgress * 270}deg)`,
               transition: isRefreshing ? undefined : "none",
             }}
-            width="20"
-            height="20"
+            width="18"
+            height="18"
             viewBox="0 0 20 20"
             fill="none"
           >
             <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2" strokeOpacity="0.25" />
             <path d="M10 2a8 8 0 0 1 8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
+          {isRefreshing ? (
+            <span className="text-xs text-[var(--foreground)]/60">Loading</span>
+          ) : null}
         </div>
       ) : null}
       {children}

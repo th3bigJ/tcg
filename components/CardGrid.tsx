@@ -1001,6 +1001,7 @@ const CardGridItem = memo(function CardGridItem({
   variant,
   unitPrice: unitPriceProp,
   owned,
+  wishlisted,
   isManualPrice,
   gradingLabel,
   gradedImageSrc,
@@ -1015,6 +1016,7 @@ const CardGridItem = memo(function CardGridItem({
   variant: "browse" | "collection" | "wishlist";
   unitPrice: number | null;
   owned: boolean;
+  wishlisted?: boolean;
   isManualPrice?: boolean;
   gradingLabel?: string;
   gradedImageSrc?: string;
@@ -1163,6 +1165,13 @@ const CardGridItem = memo(function CardGridItem({
           <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-green-500">
             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        ) : null}
+        {wishlisted && (variant === "wishlist" || variant === "browse") ? (
+          <span className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" className="text-white" aria-hidden>
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
             </svg>
           </span>
         ) : null}
@@ -3300,6 +3309,7 @@ export function CardGrid({
               variant === "wishlist" && viewerOwnedMasterCardIds && mid
                 ? viewerOwnedMasterCardIds.has(mid)
                 : false;
+            const wishlisted = mid ? Boolean(localWishlistMap[mid]) : false;
             return (
               <CardGridItem
                 key={card.collectionEntryId ?? card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
@@ -3308,6 +3318,7 @@ export function CardGrid({
                 variant={variant}
                 unitPrice={unitPrice ?? null}
                 owned={owned}
+                wishlisted={wishlisted}
                 isManualPrice={isManualPrice}
                 gradingLabel={gradingLabel}
                 gradedImageSrc={gradedImageSrc}
@@ -3408,6 +3419,7 @@ export function CardGrid({
                     variant === "wishlist" && viewerOwnedMasterCardIds && mid
                       ? viewerOwnedMasterCardIds.has(mid)
                       : false;
+                  const wishlisted = mid ? Boolean(localWishlistMap[mid]) : false;
                   return (
                     <CardGridItem
                       key={card.collectionEntryId ?? card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${globalIndex}`}
@@ -3416,6 +3428,7 @@ export function CardGrid({
                       variant={variant}
                       unitPrice={unitPrice ?? null}
                       owned={owned}
+                      wishlisted={wishlisted}
                       isManualPrice={isManualPrice}
                       gradingLabel={gradingLabel}
                       gradedImageSrc={gradedImageSrc}
