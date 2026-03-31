@@ -130,7 +130,7 @@ export default async function GradeOpportunitiesPage() {
 
   if (!customer) {
     return (
-      <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-6 pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
+      <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-6 pt-2 text-[var(--foreground)]">
         <h1 className="text-xl font-semibold">Grade opportunities</h1>
         <p className="mt-2 max-w-md text-sm text-[var(--foreground)]/70">
           Sign in to see which cards in your collection are worth grading.
@@ -148,7 +148,7 @@ export default async function GradeOpportunitiesPage() {
   const opportunities = await buildGradeOpportunities(customer.id);
 
   return (
-    <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-8 pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
+    <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-8 pt-2 text-[var(--foreground)]">
       <h1 className="text-xl font-semibold">Grade opportunities</h1>
       <p className="mt-1 text-sm text-[var(--foreground)]/60">
         Ungraded cards in your collection sorted by potential profit after grading.

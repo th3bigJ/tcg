@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -78,8 +79,10 @@ export async function loadOrCreateStorefrontCustomer(user: User): Promise<Storef
 /**
  * Resolves the logged-in Supabase user to a `customers` row.
  * Creates the row automatically on first login.
+ * Memoized per-request with React.cache so multiple calls in the same render
+ * (layout + page) only hit Supabase once.
  */
-export async function getCurrentCustomer(): Promise<StorefrontCustomer | null> {
+export const getCurrentCustomer = cache(async function getCurrentCustomer(): Promise<StorefrontCustomer | null> {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return null;
   }
@@ -89,7 +92,7 @@ export async function getCurrentCustomer(): Promise<StorefrontCustomer | null> {
 
   if (error || !user) return null;
   return loadOrCreateStorefrontCustomer(user);
-}
+});
 
 /**
  * For Route Handlers: validates Supabase session with cookie refresh support, then loads the customer.

@@ -11,7 +11,7 @@ export default async function AccountPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-6 pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
+    <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-6 pt-2 text-[var(--foreground)]">
       <h1 className="text-xl font-semibold">Account</h1>
       <p className="mt-4 text-sm">
         <span className="text-[var(--foreground)]/65">Name</span>

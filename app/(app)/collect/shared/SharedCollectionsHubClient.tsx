@@ -35,15 +35,14 @@ function formatTradeNotificationTime(iso: string): string {
 type Props = {
   outgoing: OutgoingShareListItem[];
   incoming: IncomingShareListItem[];
+  initialTradeNotifications: TradeNotificationListItem[];
 };
 
-type LocalListsState = {
-  baseSignature: string;
-  outgoing: OutgoingShareListItem[];
-  incoming: IncomingShareListItem[];
-};
-
-export function SharedCollectionsHubClient({ outgoing: initialOutgoing, incoming: initialIncoming }: Props) {
+export function SharedCollectionsHubClient({
+  outgoing: initialOutgoing,
+  incoming: initialIncoming,
+  initialTradeNotifications,
+}: Props) {
   const router = useRouter();
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [sharedWithSheetOpen, setSharedWithSheetOpen] = useState(false);
@@ -51,47 +50,28 @@ export function SharedCollectionsHubClient({ outgoing: initialOutgoing, incoming
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
-  const [tradeNotifs, setTradeNotifs] = useState<TradeNotificationListItem[]>([]);
-  const [tradeNotifsLoaded, setTradeNotifsLoaded] = useState(false);
-  const [localLists, setLocalLists] = useState<LocalListsState | null>(null);
-  const propsSignature = useMemo(
-    () => JSON.stringify({ outgoing: initialOutgoing, incoming: initialIncoming }),
-    [initialOutgoing, initialIncoming],
-  );
-  const activeLists = localLists?.baseSignature === propsSignature ? localLists : null;
-  const outgoing = activeLists?.outgoing ?? initialOutgoing;
-  const incoming = activeLists?.incoming ?? initialIncoming;
+  const [tradeNotifs, setTradeNotifs] = useState<TradeNotificationListItem[]>(initialTradeNotifications);
+  const [localOutgoing, setLocalOutgoing] = useState<OutgoingShareListItem[] | null>(null);
+  const [localIncoming, setLocalIncoming] = useState<IncomingShareListItem[] | null>(null);
+  const outgoing = localOutgoing ?? initialOutgoing;
+  const incoming = localIncoming ?? initialIncoming;
+
+  useEffect(() => {
+    setLocalOutgoing(null);
+    setLocalIncoming(null);
+  }, [initialIncoming, initialOutgoing]);
+
+  useEffect(() => {
+    setTradeNotifs(initialTradeNotifications);
+  }, [initialTradeNotifications]);
 
   const refresh = async () => {
     const r = await fetch("/api/profile-shares");
     if (!r.ok) return;
     const j = (await r.json()) as { outgoing?: OutgoingShareListItem[]; incoming?: IncomingShareListItem[] };
-    setLocalLists({
-      baseSignature: propsSignature,
-      outgoing: j.outgoing ?? outgoing,
-      incoming: j.incoming ?? incoming,
-    });
+    setLocalOutgoing(j.outgoing ?? outgoing);
+    setLocalIncoming(j.incoming ?? incoming);
   };
-
-  const loadTradeNotifications = useCallback(async () => {
-    try {
-      const r = await fetch("/api/trade-notifications", { credentials: "include" });
-      if (!r.ok) {
-        setTradeNotifs([]);
-        return;
-      }
-      const j = (await r.json()) as { notifications?: TradeNotificationListItem[] };
-      setTradeNotifs(j.notifications ?? []);
-    } catch {
-      setTradeNotifs([]);
-    } finally {
-      setTradeNotifsLoaded(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadTradeNotifications();
-  }, [loadTradeNotifications]);
 
   const openTradeNotification = useCallback(
     async (n: TradeNotificationListItem) => {
@@ -176,25 +156,45 @@ export function SharedCollectionsHubClient({ outgoing: initialOutgoing, incoming
     router.refresh();
   };
 
-  const pendingOutgoing = useMemo(
-    () => outgoing.filter((r) => r.status === "pending_recipient" || r.status === "pending_accept"),
-    [outgoing],
-  );
-  const pendingIncoming = useMemo(() => incoming.filter((r) => r.status === "pending_accept"), [incoming]);
-  const hasPending = pendingOutgoing.length > 0 || pendingIncoming.length > 0;
+  const {
+    pendingOutgoing,
+    pendingIncoming,
+    activeOutgoing,
+    activeIncoming,
+  } = useMemo(() => {
+    const nextPendingOutgoing: OutgoingShareListItem[] = [];
+    const nextPendingIncoming: IncomingShareListItem[] = [];
+    const nextActiveOutgoing: OutgoingShareListItem[] = [];
+    const nextActiveIncoming: IncomingShareListItem[] = [];
 
-  const activeOutgoing = useMemo(() => outgoing.filter((r) => r.status === "active"), [outgoing]);
-  const activeIncoming = useMemo(() => incoming.filter((r) => r.status === "active"), [incoming]);
+    for (const row of outgoing) {
+      if (row.status === "active") nextActiveOutgoing.push(row);
+      else if (row.status === "pending_recipient" || row.status === "pending_accept") nextPendingOutgoing.push(row);
+    }
+
+    for (const row of incoming) {
+      if (row.status === "active") nextActiveIncoming.push(row);
+      else if (row.status === "pending_accept") nextPendingIncoming.push(row);
+    }
+
+    return {
+      pendingOutgoing: nextPendingOutgoing,
+      pendingIncoming: nextPendingIncoming,
+      activeOutgoing: nextActiveOutgoing,
+      activeIncoming: nextActiveIncoming,
+    };
+  }, [incoming, outgoing]);
+  const hasPending = pendingOutgoing.length > 0 || pendingIncoming.length > 0;
   const hasActiveOutgoing = activeOutgoing.length > 0;
   const hasActiveIncoming = activeIncoming.length > 0;
   const hasActive = hasActiveOutgoing || hasActiveIncoming;
-  const hasUnreadTradeNotifs = tradeNotifsLoaded && tradeNotifs.length > 0;
+  const hasUnreadTradeNotifs = tradeNotifs.length > 0;
   const showMainStack = hasPending || hasActive || hasUnreadTradeNotifs;
 
   const closeSharedWithSheet = () => setSharedWithSheetOpen(false);
 
   return (
-    <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-[var(--bottom-nav-offset)] pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
+    <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-[var(--bottom-nav-offset)] pt-2 text-[var(--foreground)]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">Shared collections</h1>
         <button

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { DevRuntimeGuards } from "@/app/(app)/DevRuntimeGuards";
@@ -6,6 +7,8 @@ import { BottomNav } from "@/components/BottomNav";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { UniversalSearch } from "@/components/UniversalSearch";
 import { getCurrentCustomer } from "@/lib/auth";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { countUnreadTradeNotifications } from "@/lib/tradeNotificationsServer";
 
 import "./globals.css";
 
@@ -43,12 +46,41 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+function LayoutChromeFallback() {
+  return (
+    <>
+      <UniversalSearch isLoggedIn={false} />
+      <BottomNav isLoggedIn={false} initialFriendsUnreadCount={0} />
+    </>
+  );
+}
+
+async function LayoutChrome() {
+  const customer = await getCurrentCustomer();
+  const initialFriendsUnreadCount = customer
+    ? await (async () => {
+        const supabase = await createSupabaseServerClient();
+        return countUnreadTradeNotifications(supabase);
+      })()
+    : 0;
+
+  return (
+    <>
+      <UniversalSearch isLoggedIn={Boolean(customer)} />
+      <BottomNav
+        key={`${customer?.id ?? "guest"}:${initialFriendsUnreadCount}`}
+        isLoggedIn={Boolean(customer)}
+        initialFriendsUnreadCount={initialFriendsUnreadCount}
+      />
+    </>
+  );
+}
+
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const customer = await getCurrentCustomer();
 
   return (
     <html
@@ -58,11 +90,12 @@ export default async function RootLayout({
       <body className="flex min-h-[100dvh] flex-col bg-[var(--background)] text-[var(--foreground)]">
         <DevRuntimeGuards />
         <PullToRefresh />
-        <UniversalSearch isLoggedIn={Boolean(customer)} />
+        <Suspense fallback={<LayoutChromeFallback />}>
+          <LayoutChrome />
+        </Suspense>
         <div className="relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)] pt-[var(--top-search-offset)]">
           {children}
         </div>
-        <BottomNav isLoggedIn={Boolean(customer)} />
       </body>
     </html>
   );

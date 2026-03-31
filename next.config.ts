@@ -21,6 +21,7 @@ const extraAllowedDevOrigins =
     .filter(Boolean) ?? [];
 
 const nextConfig: NextConfig = {
+  cacheComponents: true,
   allowedDevOrigins: ["127.0.0.1", ...extraAllowedDevOrigins],
   transpilePackages: ["@supabase/ssr", "@supabase/supabase-js"],
   images: r2Hostname

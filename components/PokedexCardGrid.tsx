@@ -4,13 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import { readPersistedFilters, sortCards, DEFAULT_SORT } from "@/lib/persistedFilters";
-import type { CollectionLineSummary } from "@/lib/storefrontCardMaps";
-
-type SearchCardData = {
-  itemConditions: { id: string; name: string }[];
-  wishlistMap: Record<string, { id: string; printing?: string }>;
-  collectionLines: Record<string, CollectionLineSummary[]>;
-};
+import type { SearchCardDataPayload } from "@/lib/searchCardDataServer";
 
 type Props = {
   cards: CardEntry[];
@@ -20,6 +14,7 @@ type Props = {
   formAction: string;
   activeEnergy: string;
   energyOptions: string[];
+  initialSearchCardData?: SearchCardDataPayload | null;
 };
 
 export function PokedexCardGrid({
@@ -27,20 +22,11 @@ export function PokedexCardGrid({
   setLogosByCode,
   setSymbolsByCode,
   customerLoggedIn,
+  initialSearchCardData,
 }: Props) {
-  const [cardData, setCardData] = useState<SearchCardData | null>(null);
   const [sort, setSort] = useState(() => readPersistedFilters().sort ?? DEFAULT_SORT);
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
-
-  useEffect(() => {
-    if (!customerLoggedIn) return;
-    const controller = new AbortController();
-    fetch("/api/search-card-data", { signal: controller.signal })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: SearchCardData | null) => { if (data) setCardData(data); })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [customerLoggedIn]);
+  const cardData = customerLoggedIn ? initialSearchCardData ?? null : null;
 
   // Fetch prices if needed for sort
   useEffect(() => {

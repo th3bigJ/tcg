@@ -416,7 +416,7 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-full flex-col px-4 pb-6 pt-[var(--mobile-page-top-offset)]">
+    <div className="flex min-h-full flex-col px-4 pb-6 pt-2">
       {/* Header */}
       <div className="mb-4 flex items-center gap-3">
         <h1 className="flex-1 text-xl font-semibold">Transactions</h1>

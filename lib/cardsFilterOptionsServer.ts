@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { resolvePokemonMediaURL } from "@/lib/media";
 import type { PokemonJsonEntry } from "@/lib/staticDataTypes";
 import { getAllSets } from "@/lib/staticCards";
@@ -19,16 +21,13 @@ export type PokemonFilterOption = {
   imageUrl: string;
 };
 
-export function getCachedSetFilterOptions(setCodes: string[]): SetFilterOption[] {
-  if (setCodes.length === 0) return [];
-
-  const codeSet = new Set(setCodes);
+const getAllSetFilterOptions = cache(async function getAllSetFilterOptions(): Promise<SetFilterOption[]> {
+  "use cache";
   const results: SetFilterOption[] = [];
 
   for (const s of getAllSets()) {
     const code = s.code ?? s.tcgdexId;
-    if (!code || !codeSet.has(code)) continue;
-    if (!s.logoSrc) continue;
+    if (!code || !s.logoSrc) continue;
 
     const releaseYear = s.releaseDate
       ? new Date(s.releaseDate).getUTCFullYear()
@@ -52,17 +51,29 @@ export function getCachedSetFilterOptions(setCodes: string[]): SetFilterOption[]
     if (yearA !== yearB) return yearB - yearA;
     return a.name.localeCompare(b.name);
   });
+});
+
+export async function getCachedSetFilterOptions(setCodes: string[]): Promise<SetFilterOption[]> {
+  if (setCodes.length === 0) return [];
+
+  const codeSet = new Set(setCodes);
+  const options = await getAllSetFilterOptions();
+  return options.filter((option) => codeSet.has(option.code));
 }
 
-export function getCachedPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
+const getAllPokemonFilterOptions = cache(async function getAllPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
+  "use cache";
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const raw = require("../data/pokemon.json") as PokemonJsonEntry[];
-  const options: PokemonFilterOption[] = raw.map((p) => ({
+  return raw.map((p) => ({
     nationalDexNumber: p.nationalDexNumber,
     name: p.name,
     imageUrl: /^https?:\/\//i.test(p.imageUrl)
       ? p.imageUrl
       : resolvePokemonMediaURL(p.imageUrl),
   }));
-  return Promise.resolve(options);
+});
+
+export function getCachedPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
+  return getAllPokemonFilterOptions();
 }

@@ -12,6 +12,7 @@ import {
   resolveCardsCategoryFilter,
 } from "@/lib/cardsPageQueries";
 import { getCurrentCustomer } from "@/lib/auth";
+import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
 import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 
 type ExpansionSetCardsPageProps = {
@@ -89,6 +90,7 @@ export default async function ExpansionSetCardsPage({
   );
   const setCompletionValue =
     customer ? await fetchSetCompletionValue(activeSet, cardsForGrid, ownedMasterCardIds) : null;
+  const initialSearchCardData = customer ? await getSearchCardDataForCustomer(customer.id) : null;
 
   const setPath = `/expansions/${encodeURIComponent(activeSet)}`;
   const scrollRestoreKey = [activeSet, "expansion-set"].join("|");
@@ -154,6 +156,7 @@ export default async function ExpansionSetCardsPage({
             >
               <ExpansionSetCardGrid
                 cards={cardsForGrid}
+                initialSearchCardData={initialSearchCardData}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}

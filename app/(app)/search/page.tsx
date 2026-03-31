@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { Suspense } from "react";
 import { ExpansionsList } from "@/components/ExpansionsList";
 import { PokedexList } from "@/components/PokedexList";
 import { SearchBrowseTabs } from "@/components/SearchBrowseTabs";
@@ -21,6 +22,7 @@ import {
   getCachedExpansionSetRows,
   groupExpansionSetsBySeries,
 } from "@/lib/expansionsPageQueries";
+import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
 import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 
 const TOTAL_POKEMON_COUNT = 1025;
@@ -52,14 +54,30 @@ type SearchPageProps = {
 const searchShellClass =
   "flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)] lg:box-border lg:flex lg:h-[calc(100dvh-var(--bottom-nav-offset))] lg:max-h-[calc(100dvh-var(--bottom-nav-offset))] lg:min-h-0 lg:shrink-0";
 
-export default async function SearchPage({ searchParams }: SearchPageProps) {
+function SearchPageFallback() {
+  return (
+    <div className={searchShellClass}>
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-2 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col" />
+    </div>
+  );
+}
+
+export default function SearchPage({ searchParams }: SearchPageProps) {
+  return (
+    <Suspense fallback={<SearchPageFallback />}>
+      <SearchPageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function SearchPageContent({ searchParams }: SearchPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const tabRaw = (resolvedSearchParams.tab ?? "").trim().toLowerCase();
   const browseTab = tabRaw === "sets" ? "sets" : tabRaw === "pokedex" ? "pokedex" : "cards";
-
-  const customer = await getCurrentCustomer();
+  const customerPromise = getCurrentCustomer();
 
   if (browseTab === "sets") {
+    const customer = await customerPromise;
     const [rows, collectionEntries] = await Promise.all([
       getCachedExpansionSetRows(),
       customer ? fetchCollectionCardEntries(customer.id) : Promise.resolve([]),
@@ -101,6 +119,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   if (browseTab === "pokedex") {
+    const customer = await customerPromise;
     const missingOnly = resolvedSearchParams.missing_only === "1";
     const [pokemon, collectionEntries] = await Promise.all([
       getCachedPokemonFilterOptions(),
@@ -149,6 +168,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const excludeCommonUncommon = parseExcludeCommonUncommon(resolvedSearchParams.exclude_cu);
   const selectedCategory = (resolvedSearchParams.category ?? "").trim();
   const selectedArtist = (resolvedSearchParams.artist ?? "").trim();
+  const customer = await customerPromise;
 
   const facets = (await getCachedFilterFacets()) ?? {};
   const availableSetCodes = facets.setCodes ?? [];
@@ -214,6 +234,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     perPage: requestedTake,
     randomSeed,
   });
+  const initialSearchCardData = customer ? await getSearchCardDataForCustomer(customer.id) : null;
 
   const showingCount = cardsForGrid.length;
   const nextTake = Math.min(filteredCount, showingCount + CARDS_LOAD_MORE_STEP);
@@ -277,6 +298,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             >
               <SearchCardsTabGrid
                 cards={cardsForGrid}
+                initialSearchCardData={initialSearchCardData}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}

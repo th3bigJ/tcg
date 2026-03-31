@@ -17,6 +17,7 @@ import {
 } from "@/lib/cardsFilterOptionsServer";
 import { getCurrentCustomer } from "@/lib/auth";
 import { fetchPricesForMasterCardIds } from "@/lib/cardPricingBulk";
+import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
 
 function parseExcludeCommonUncommon(value: string | undefined): boolean {
   const v = (value ?? "").trim().toLowerCase();
@@ -108,6 +109,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     }),
     getCurrentCustomer(),
   ]);
+  const initialSearchCardData = customer ? await getSearchCardDataForCustomer(customer.id) : null;
 
   const initialCardPriceIds = cardsForGrid
     .slice(0, 105)
@@ -269,6 +271,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               <SearchCardGrid
                 cards={cardsForClient}
                 initialCardPrices={initialCardPrices}
+                initialSearchCardData={initialSearchCardData}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}

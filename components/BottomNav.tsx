@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffectEvent } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -125,17 +126,67 @@ function IconMore({ active }: { active: boolean }) {
 }
 
 const icons = [IconSearch, IconCollect, IconWishlist, IconFriends, IconMore] as const;
+const navItems: NavItem[] = [
+  {
+    href: "/search",
+    label: "Search",
+    match: (p) => p === "/search" || p.startsWith("/search?") || p.startsWith("/scan"),
+  },
+  {
+    href: "/collect",
+    label: "Collect",
+    match: (p) => p === "/collect",
+  },
+  {
+    href: "/wishlist",
+    label: "Wishlist",
+    match: (p) => p === "/wishlist",
+  },
+  {
+    href: "/collect/shared",
+    label: "Friends",
+    match: (p) => p.startsWith("/collect/shared"),
+  },
+  {
+    href: "/more",
+    label: "More",
+    match: (p) =>
+      p === "/more" ||
+      p.startsWith("/more/") ||
+      p.startsWith("/account") ||
+      p === "/login" ||
+      p === "/register",
+  },
+];
 
-export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
+export function BottomNav({
+  isLoggedIn,
+  initialFriendsUnreadCount = 0,
+}: {
+  isLoggedIn: boolean;
+  initialFriendsUnreadCount?: number;
+}) {
   const pathname = usePathname() ?? "";
   const [moreOpen, setMoreOpen] = useState(false);
-  const [friendsUnreadCount, setFriendsUnreadCount] = useState(0);
+  const [friendsUnreadCount, setFriendsUnreadCount] = useState(initialFriendsUnreadCount);
   const visibleFriendsUnreadCount = isLoggedIn ? friendsUnreadCount : 0;
 
-  useEffect(() => {
+  const refreshFriendsUnreadCount = useEffectEvent(async () => {
     if (!isLoggedIn) return;
+    try {
+      const res = await fetch("/api/trade-notifications?countOnly=1", { credentials: "include" });
+      if (!res.ok) return;
+      const j = (await res.json()) as { count?: number };
+      setFriendsUnreadCount(typeof j.count === "number" ? j.count : 0);
+    } catch {
+      setFriendsUnreadCount(0);
+    }
+  });
+
+  useEffect(() => {
+    if (!isLoggedIn || initialFriendsUnreadCount > 0) return;
     let cancelled = false;
-    (async () => {
+    void (async () => {
       try {
         const res = await fetch("/api/trade-notifications?countOnly=1", { credentials: "include" });
         if (!res.ok) return;
@@ -148,58 +199,14 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
     return () => {
       cancelled = true;
     };
-  }, [isLoggedIn, pathname]);
+  }, [initialFriendsUnreadCount, isLoggedIn]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
-    const onUpdate = () => {
-      void (async () => {
-        try {
-          const res = await fetch("/api/trade-notifications?countOnly=1", { credentials: "include" });
-          if (!res.ok) return;
-          const j = (await res.json()) as { count?: number };
-          setFriendsUnreadCount(typeof j.count === "number" ? j.count : 0);
-        } catch {
-          setFriendsUnreadCount(0);
-        }
-      })();
-    };
+    const onUpdate = () => void refreshFriendsUnreadCount();
     window.addEventListener(TRADE_NOTIFICATIONS_UPDATED_EVENT, onUpdate);
     return () => window.removeEventListener(TRADE_NOTIFICATIONS_UPDATED_EVENT, onUpdate);
   }, [isLoggedIn]);
-
-  const items: NavItem[] = [
-    {
-      href: "/search",
-      label: "Search",
-      match: (p) => p === "/search" || p.startsWith("/search?") || p.startsWith("/scan"),
-    },
-    {
-      href: "/collect",
-      label: "Collect",
-      match: (p) => p === "/collect",
-    },
-    {
-      href: "/wishlist",
-      label: "Wishlist",
-      match: (p) => p === "/wishlist",
-    },
-    {
-      href: "/collect/shared",
-      label: "Friends",
-      match: (p) => p.startsWith("/collect/shared"),
-    },
-    {
-      href: "/more",
-      label: "More",
-      match: (p) =>
-        p === "/more" ||
-        p.startsWith("/more/") ||
-        p.startsWith("/account") ||
-        p === "/login" ||
-        p === "/register",
-    },
-  ];
 
   const moreItems: MoreItem[] = isLoggedIn
     ? [
@@ -250,7 +257,7 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
             boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
           }}
         >
-          {items.map((item, i) => {
+          {navItems.map((item, i) => {
             const active = item.match(pathname) || (item.label === "More" && moreOpen);
             const Icon = icons[i];
             const itemClass = `flex min-w-0 basis-0 flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium leading-tight transition-all sm:text-[11px]`;
@@ -290,7 +297,10 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
                 key={`${item.href}-${item.label}`}
                 href={item.href}
                 prefetch={
-                  item.href === "/search" || item.href === "/collect" || item.href === "/collect/shared"
+                  item.href === "/search" ||
+                  item.href === "/collect" ||
+                  item.href === "/wishlist" ||
+                  item.href === "/collect/shared"
                 }
                 onClick={(event) => {
                   if (item.href === "/search" && pathname === "/search") {

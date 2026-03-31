@@ -15,6 +15,7 @@ import {
 } from "@/lib/cardsPageQueries";
 import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 import { getCurrentCustomer } from "@/lib/auth";
+import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
 import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 
 type PokedexPokemonCardsPageProps = {
@@ -74,6 +75,7 @@ export default async function PokedexPokemonCardsPage({
   ]);
 
   const collectionEntries = customer ? await fetchCollectionCardEntries(customer.id) : [];
+  const initialSearchCardData = customer ? await getSearchCardDataForCustomer(customer.id) : null;
   const ownedMasterCardIds = new Set(
     collectionEntries.map((e) => e.masterCardId?.trim() ?? "").filter((v) => v.length > 0),
   );
@@ -147,6 +149,7 @@ export default async function PokedexPokemonCardsPage({
             >
               <PokedexCardGrid
                 cards={cardsForGrid}
+                initialSearchCardData={initialSearchCardData}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}

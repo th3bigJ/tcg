@@ -4,13 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import { CardTagFilterRow } from "@/components/CardTagFilterRow";
-import type { CollectionLineSummary } from "@/lib/storefrontCardMaps";
-
-type SearchCardData = {
-  itemConditions: { id: string; name: string }[];
-  wishlistMap: Record<string, { id: string; printing?: string }>;
-  collectionLines: Record<string, CollectionLineSummary[]>;
-};
+import type { SearchCardDataPayload } from "@/lib/searchCardDataServer";
 
 type SortOrder = "" | "price-desc" | "release-desc";
 
@@ -46,6 +40,7 @@ type Props = {
   showGroupBySetTag?: boolean;
   defaultSortOrder?: SortOrder;
   priceAppendOnlyKey?: string;
+  initialSearchCardData?: SearchCardDataPayload | null;
 };
 
 export function SearchCardGrid({
@@ -72,13 +67,14 @@ export function SearchCardGrid({
   showGroupBySetTag = true,
   defaultSortOrder = "",
   priceAppendOnlyKey,
+  initialSearchCardData,
 }: Props) {
-  const [cardData, setCardData] = useState<SearchCardData | null>(null);
   const [groupBySet, setGroupBySet] = useState(defaultGroupBySet);
   const [randomOrder, setRandomOrder] = useState(defaultRandomOrder ?? false);
   const [sortOrder, setSortOrder] = useState<SortOrder>(defaultSortOrder);
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
   const requestedPriceIdsRef = useRef<Set<string>>(new Set());
+  const cardData = customerLoggedIn ? initialSearchCardData ?? null : null;
   const groupShuffleSeed = useMemo(
     () =>
       cards.reduce((seed, card, index) => {
@@ -115,18 +111,6 @@ export function SearchCardGrid({
     },
     [effectiveCardPrices],
   );
-
-  useEffect(() => {
-    if (!customerLoggedIn) return;
-    const controller = new AbortController();
-    fetch("/api/search-card-data", { signal: controller.signal })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: SearchCardData | null) => {
-        if (data) setCardData(data);
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [customerLoggedIn]);
 
   const cardsMissingPrices = useMemo(() => {
     if (sortOrder !== "price-desc") return [];
