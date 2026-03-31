@@ -6,8 +6,10 @@ import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { BOTTOM_CHROME_HIDDEN_TRANSFORM, BOTTOM_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
 import { SEARCH_NAV_RESELECT_EVENT } from "@/lib/searchNavEvents";
 import { TRADE_NOTIFICATIONS_UPDATED_EVENT } from "@/lib/tradeNotificationsConstants";
+import { useAutoHideChrome } from "@/lib/useAutoHideChrome";
 
 type NavItem = {
   href: string;
@@ -170,6 +172,7 @@ export function BottomNav({
   const [moreOpen, setMoreOpen] = useState(false);
   const [friendsUnreadCount, setFriendsUnreadCount] = useState(initialFriendsUnreadCount);
   const visibleFriendsUnreadCount = isLoggedIn ? friendsUnreadCount : 0;
+  const chromeVisible = useAutoHideChrome({ disabled: moreOpen });
 
   const refreshFriendsUnreadCount = useEffectEvent(async () => {
     if (!isLoggedIn) return;
@@ -241,8 +244,11 @@ export function BottomNav({
   return (
     <>
       <nav
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-[1000] isolate"
-        style={{ padding: "0.5rem 1.25rem max(0.25rem, calc(env(safe-area-inset-bottom, 0px) - 1rem))" }}
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-[1000] isolate transition-transform duration-200 ease-out"
+        style={{
+          padding: "0.5rem 1.25rem max(0.25rem, calc(env(safe-area-inset-bottom, 0px) - 1rem))",
+          transform: chromeVisible ? BOTTOM_CHROME_VISIBLE_TRANSFORM : BOTTOM_CHROME_HIDDEN_TRANSFORM,
+        }}
         aria-label="Main navigation"
       >
         <div

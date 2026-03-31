@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { TOP_CHROME_HIDDEN_TRANSFORM, TOP_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
 import { buildPokedexDetailHref, type SortOrder, DEFAULT_SORT } from "@/lib/persistedFilters";
+import { useAutoHideChrome } from "@/lib/useAutoHideChrome";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -251,6 +253,8 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const inputRef = useRef<HTMLInputElement>(null);
+  const modalTouchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const modalSwipeEligibleRef = useRef(false);
   const [query, setQuery] = useState("");
   const [modalMode, setModalMode] = useState<"closed" | "search" | "filters">("closed");
   const [results, setResults] = useState<SearchResults | null>(null);
@@ -397,11 +401,11 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     setModalMode("filters");
   };
 
-  const close = () => {
+  const close = useCallback(() => {
     setModalMode("closed");
     setQuery("");
     setResults(null);
-  };
+  }, []);
 
   const applyAndClose = () => {
     const href = buildCurrentPageHref();
@@ -510,6 +514,32 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     (filters.missingOnly ? 1 : 0);
 
   const isOpen = modalMode !== "closed";
+  const chromeVisible = useAutoHideChrome({ disabled: isOpen });
+
+  const handleModalTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    const touch = e.touches[0];
+    modalTouchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    modalSwipeEligibleRef.current = touch.clientY >= window.innerHeight / 2;
+  }, []);
+
+  const resetModalSwipe = useCallback(() => {
+    modalTouchStartRef.current = null;
+    modalSwipeEligibleRef.current = false;
+  }, []);
+
+  const handleModalTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!modalSwipeEligibleRef.current || !modalTouchStartRef.current) {
+      resetModalSwipe();
+      return;
+    }
+
+    const touch = e.changedTouches[0];
+    const deltaY = modalTouchStartRef.current.y - touch.clientY;
+    const deltaX = Math.abs(modalTouchStartRef.current.x - touch.clientX);
+
+    if (deltaY > 40 && deltaY > deltaX) close();
+    resetModalSwipe();
+  }, [close, resetModalSwipe]);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -524,8 +554,11 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     <>
       {/* Search bar shell — styled like BottomNav */}
       <div
-        className="pointer-events-none fixed inset-x-0 top-0 z-[1002] isolate"
-        style={{ padding: "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1.25rem 0.5rem" }}
+        className="pointer-events-none fixed inset-x-0 top-0 z-[1002] isolate transition-transform duration-200 ease-out"
+        style={{
+          padding: "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1.25rem 0.5rem",
+          transform: chromeVisible ? TOP_CHROME_VISIBLE_TRANSFORM : TOP_CHROME_HIDDEN_TRANSFORM,
+        }}
       >
         <div
           className="pointer-events-auto mx-auto flex items-center gap-2"
@@ -608,7 +641,13 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       {/* Modal — full screen, above everything */}
       {isOpen && typeof document !== "undefined"
         ? createPortal(
-            <div className="fixed inset-0 z-[1001] flex flex-col bg-black" style={{ paddingTop: "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 3.25rem + 0.75rem)" }}>
+            <div
+              className="fixed inset-0 z-[1001] flex flex-col bg-black"
+              style={{ paddingTop: "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 3.25rem + 0.75rem)" }}
+              onTouchStart={handleModalTouchStart}
+              onTouchEnd={handleModalTouchEnd}
+              onTouchCancel={resetModalSwipe}
+            >
               {/* Scrollable content */}
               <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto">
                 {modalMode === "filters" ? (
@@ -953,25 +992,10 @@ function ModalBottomBar({
   onClose: () => void;
   onApply?: () => void;
 }) {
-  const startYRef = useRef<number | null>(null);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    startYRef.current = e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (startYRef.current === null) return;
-    const delta = startYRef.current - e.changedTouches[0].clientY;
-    if (delta > 40) onClose();
-    startYRef.current = null;
-  };
-
   return (
     <div
       className="shrink-0 bg-black"
       style={{ paddingBottom: "max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))", paddingTop: "0.5rem" }}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
     >
       <div className="flex flex-col items-center gap-2">
         <button
