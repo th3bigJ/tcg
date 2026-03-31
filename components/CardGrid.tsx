@@ -1203,6 +1203,7 @@ export function CardGrid({
   const [editEntryId, setEditEntryId] = useState<string>("");
   const [editCardName, setEditCardName] = useState<string>("");
   const [editConditionId, setEditConditionId] = useState<string>("");
+  const [editQuantity, setEditQuantity] = useState<number>(1);
   const [editPrinting, setEditPrinting] = useState<string>("");
   const [editPurchaseDate, setEditPurchaseDate] = useState<string>("");
   const [editGradingCompany, setEditGradingCompany] = useState<string>("");
@@ -1795,6 +1796,7 @@ export function CardGrid({
     setEditEntryId(line.entryId);
     setEditCardName(selectedCard?.cardName ?? "");
     setEditConditionId(line.conditionId ?? "");
+    setEditQuantity(line.quantity ?? 1);
     setEditPrinting(line.printing ?? "");
     setEditPurchaseDate(line.addedAt ? line.addedAt.slice(0, 10) : "");
     setEditGradingCompany(line.gradingCompany ?? "");
@@ -1823,6 +1825,7 @@ export function CardGrid({
       }
 
       const patchBody: Record<string, unknown> = { id: editEntryId };
+      patchBody.quantity = Number.isFinite(editQuantity) && editQuantity >= 1 ? Math.floor(editQuantity) : 1;
       patchBody.conditionId = editConditionId.trim() || null;
       patchBody.printing = editPrinting.trim() || null;
       patchBody.purchaseDate = editPurchaseDate.trim() || null;
@@ -1857,7 +1860,19 @@ export function CardGrid({
     } finally {
       setEditPending(false);
     }
-  }, [editEntryId, editConditionId, editPrinting, editPurchaseDate, editGradingCompany, editGradeValue, editGradedMarketPrice, editUnlistedPrice, editGradedSerial, editImageFile, router, variant]);
+  }, [editEntryId, editQuantity, editConditionId, editPrinting, editPurchaseDate, editGradingCompany, editGradeValue, editGradedMarketPrice, editUnlistedPrice, editGradedSerial, editImageFile, router, variant]);
+
+  const editPrintingOptions = useMemo(() => {
+    const options = pricingVariants.length > 0
+      ? pricingVariants.map((variant) => ({ value: variant, label: variantLabel(variant) }))
+      : PRINTING_OPTIONS.map((printing) => ({ value: printing, label: printing }));
+
+    if (editPrinting.trim() && !options.some((option) => option.value === editPrinting)) {
+      options.unshift({ value: editPrinting, label: editPrinting });
+    }
+
+    return options;
+  }, [editPrinting, pricingVariants]);
 
   const submitRemoval = useCallback(async () => {
     if (!pendingRemovalEntryId || !removalReason) return;
@@ -3003,8 +3018,8 @@ export function CardGrid({
                   onChange={(e) => setEditPrinting(e.target.value)}
                   className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
                 >
-                  {PRINTING_OPTIONS.map((p) => (
-                    <option key={p} value={p}>{p}</option>
+                  {editPrintingOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
               </label>
@@ -3022,6 +3037,47 @@ export function CardGrid({
                 </select>
               </label>
             </div>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium">Quantity</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditQuantity((quantity) => Math.max(1, Math.floor(quantity || 1) - 1))}
+                  className="inline-flex shrink-0 items-center justify-center border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 text-lg font-semibold leading-none text-[var(--foreground)] transition hover:bg-[var(--foreground)]/20"
+                  style={{ width: 40, height: 40, minWidth: 40, borderRadius: "9999px", padding: 0 }}
+                  aria-label="Decrease quantity"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  value={editQuantity < 1 ? "" : editQuantity}
+                  onChange={(e) => {
+                    const raw = e.target.value.trim();
+                    if (raw === "") {
+                      setEditQuantity(0);
+                      return;
+                    }
+                    const parsed = Number.parseInt(raw, 10);
+                    if (Number.isFinite(parsed)) setEditQuantity(parsed);
+                  }}
+                  onBlur={() => {
+                    setEditQuantity((quantity) => (Number.isFinite(quantity) && quantity >= 1 ? Math.floor(quantity) : 1));
+                  }}
+                  className="min-w-0 flex-1 rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2 text-center"
+                />
+                <button
+                  type="button"
+                  onClick={() => setEditQuantity((quantity) => Math.max(1, Math.floor(quantity || 1) + 1))}
+                  className="inline-flex shrink-0 items-center justify-center border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 text-lg font-semibold leading-none text-[var(--foreground)] transition hover:bg-[var(--foreground)]/20"
+                  style={{ width: 40, height: 40, minWidth: 40, borderRadius: "9999px", padding: 0 }}
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
+              </div>
+            </label>
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium">Purchase date</span>
               <input
