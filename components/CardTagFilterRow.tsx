@@ -1,71 +1,17 @@
 "use client";
 
-import React, { useRef } from "react";
+import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-// ── Auto-width select wrapper ──────────────────────────────────────────────────
-// A grid trick: the hidden span sizes the container to the selected option text,
-// then the select stretches to fill it. Works on iOS Safari where width:auto fails.
-
-function AutoWidthSelect({ children, selectedLabel, className, style, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { selectedLabel: string }) {
-  return (
-    <div style={{ display: "inline-grid" }}>
-      <span style={{ gridArea: "1/1", visibility: "hidden", whiteSpace: "nowrap", fontSize: "0.75rem", fontWeight: 500, padding: "0 1.75rem 0 0.75rem", pointerEvents: "none" }} aria-hidden>
-        {selectedLabel}
-      </span>
-      <select style={{ gridArea: "1/1", width: "100%", ...style }} className={className} {...props}>
-        {children}
-      </select>
-    </div>
-  );
-}
-
-// ── Tag button ────────────────────────────────────────────────────────────────
-
-type TagButtonProps = {
-  label: string;
-  active: boolean;
-  icon?: React.ReactNode;
-  onClick: () => void;
-};
-
-function TagButton({ label, active, icon, onClick }: TagButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition active:scale-95 ${
-        active
-          ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-          : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12 hover:text-[var(--foreground)]"
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
-  );
-}
-
-// ── Chevron icon (shared by selects) ─────────────────────────────────────────
-
-function ChevronDown() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 opacity-55"
-      aria-hidden="true"
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-}
+import {
+  FilterChipButton,
+  FilterChipRow,
+  FilterChipSelect,
+  FilterClearChip,
+  FilterControlsShell,
+  FilterRoundIconButton,
+  FilterSearchInput,
+} from "@/components/card-filters/FilterPrimitives";
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -149,7 +95,6 @@ export function CardTagFilterRow({
   searchFilter,
 }: CardTagFilterRowProps) {
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null);
 
   const sf = searchFilter
     ? {
@@ -172,37 +117,20 @@ export function CardTagFilterRow({
       : false;
 
   return (
-    <div className="flex flex-col gap-6">
+    <FilterControlsShell>
       {/* Local search bar (collect/wishlist) */}
       {localSearch ? (
-        <div className="relative flex items-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-[var(--foreground)]/45"
-            aria-hidden="true"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <input
-            type="search"
+        <div className="relative">
+          <FilterSearchInput
             value={localSearch.value}
-            onChange={(e) => localSearch.onChange(e.currentTarget.value)}
-            placeholder="Search cards…"
-            aria-label="Search cards"
-            className="w-full rounded-full border border-[var(--foreground)]/20 bg-[var(--foreground)]/6 py-2 pl-8 pr-3 text-sm outline-none transition focus:border-[var(--foreground)]/35 focus:ring-2 focus:ring-[var(--foreground)]/15"
+            onChange={localSearch.onChange}
+            inputClassName={localSearch.value ? "pr-8" : undefined}
           />
           {localSearch.value ? (
             <button
               type="button"
               onClick={() => localSearch.onChange("")}
-              className="absolute right-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--foreground)]/20 text-[var(--foreground)]/70 transition hover:bg-[var(--foreground)]/30"
+              className="absolute right-2 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--foreground)]/20 text-[var(--foreground)]/70 transition hover:bg-[var(--foreground)]/30"
               aria-label="Clear search"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3" aria-hidden="true">
@@ -215,7 +143,7 @@ export function CardTagFilterRow({
 
       {/* URL search bar — only when URL filters are enabled */}
       {sf ? (
-        <form ref={formRef} method="get" action={sf.formAction} className="flex items-center gap-2">
+        <form method="get" action={sf.formAction} className="flex items-center gap-2">
           {sf.extraHiddenFields
             ? Object.entries(sf.extraHiddenFields).map(([k, v]) => (
                 <input key={k} type="hidden" name={k} value={v} />
@@ -228,34 +156,11 @@ export function CardTagFilterRow({
           {sf.excludeCommonUncommon ? <input type="hidden" name="exclude_cu" value="1" /> : null}
           {sf.activeCategory ? <input type="hidden" name="category" value={sf.activeCategory} /> : null}
 
-          <div className="relative flex-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--foreground)]/45"
-              aria-hidden="true"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input
-              type="search"
-              name="search"
-              defaultValue={sf.activeSearch}
-              placeholder="Search cards…"
-              aria-label="Search cards"
-              className="w-full rounded-full border border-[var(--foreground)]/20 bg-[var(--foreground)]/6 py-2 pl-8 pr-3 text-sm outline-none transition focus:border-[var(--foreground)]/35 focus:ring-2 focus:ring-[var(--foreground)]/15"
-            />
-          </div>
+          <FilterSearchInput defaultValue={sf.activeSearch} />
 
           {sf.activeSearch ? (
-            <button
-              type="button"
+            <FilterRoundIconButton
+              label="Clear search"
               onClick={() => {
                 const params = new URLSearchParams();
                 if (sf.extraHiddenFields) {
@@ -269,18 +174,16 @@ export function CardTagFilterRow({
                 if (sf.activeCategory) params.set("category", sf.activeCategory);
                 router.push(`${sf.formAction}?${params.toString()}`);
               }}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/70 transition hover:bg-[var(--foreground)]/14"
-              aria-label="Clear search"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
                 <path d="M18 6 6 18" /><path d="m6 6 12 12" />
               </svg>
-            </button>
+            </FilterRoundIconButton>
           ) : null}
 
           <Link
             href="/scan"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/40"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/40 transition hover:bg-[var(--foreground)]/14"
             aria-label="Open browser scan lab"
             title="Open browser scan lab"
           >
@@ -293,9 +196,9 @@ export function CardTagFilterRow({
       ) : null}
 
       {/* Tag row */}
-      <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-0.5">
+      <FilterChipRow>
         {ownedFilterTag ? (
-          <TagButton
+          <FilterChipButton
             label="Cards I own"
             active={ownedFilterTag.active}
             onClick={ownedFilterTag.onToggle}
@@ -304,8 +207,7 @@ export function CardTagFilterRow({
 
         {/* Clear filters — leftmost when active */}
         {hasActiveFilters && localFilters ? (
-          <button
-            type="button"
+          <FilterClearChip
             onClick={() => {
               localFilters.onRarityChange("");
               localFilters.onEnergyChange("");
@@ -313,29 +215,14 @@ export function CardTagFilterRow({
               localFilters.onExcludeCommonUncommonChange(false);
               localFilters.onDuplicatesOnlyChange?.(false);
             }}
-            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-400/40 bg-red-500/12 px-3 py-1.5 text-xs font-medium text-red-400 transition hover:bg-red-500/20 active:scale-95"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-            </svg>
-            Clear filters
-          </button>
+          />
         ) : hasActiveFilters && sf ? (
-          <button
-            type="button"
-            onClick={() => router.push(sf.resetHref)}
-            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-400/40 bg-red-500/12 px-3 py-1.5 text-xs font-medium text-red-400 transition hover:bg-red-500/20 active:scale-95"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-            </svg>
-            Clear filters
-          </button>
+          <FilterClearChip onClick={() => router.push(sf.resetHref)} />
         ) : null}
 
         {/* Group by set toggle */}
         {showGroupBySetTag ? (
-          <TagButton
+          <FilterChipButton
             label="Group by set"
             active={groupBySet}
             icon={
@@ -363,7 +250,7 @@ export function CardTagFilterRow({
 
         {/* Random order toggle — only shown when provided */}
         {onRandomOrderChange !== undefined ? (
-          <TagButton
+          <FilterChipButton
             label="Random"
             active={randomOrder ?? false}
             icon={
@@ -392,99 +279,48 @@ export function CardTagFilterRow({
 
         {/* Sort dropdown */}
         {sortControl ? (
-          <div className="relative shrink-0">
-            <AutoWidthSelect
-              value={sortControl.value}
-              selectedLabel={sortControl.options.find((o) => o.value === sortControl.value)?.label ?? "Sort"}
-              onChange={(e) => sortControl.onChange(e.currentTarget.value)}
-              aria-label="Sort order"
-              className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
-                (sortControl.defaultValue !== undefined
-                  ? sortControl.value !== sortControl.defaultValue
-                  : Boolean(sortControl.value))
-                  ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-                  : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
-              }`}
-            >
-              {sortControl.options.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </AutoWidthSelect>
-            <ChevronDown />
-          </div>
+          <FilterChipSelect
+            value={sortControl.value}
+            onChange={sortControl.onChange}
+            options={sortControl.options}
+            ariaLabel="Sort order"
+            defaultValue={sortControl.defaultValue}
+          />
         ) : null}
 
         {/* Local filter tags (collect/wishlist) */}
         {localFilters ? (
           <>
-            <div className="relative shrink-0">
-              <AutoWidthSelect
-                value={localFilters.rarity}
-                selectedLabel={localFilters.rarity || "Rarity"}
-                onChange={(e) => localFilters.onRarityChange(e.currentTarget.value)}
-                aria-label="Filter by rarity"
-                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
-                  localFilters.rarity
-                    ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-                    : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
-                }`}
-              >
-                <option value="">Rarity</option>
-                {localFilters.rarityOptions.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </AutoWidthSelect>
-              <ChevronDown />
-            </div>
+            <FilterChipSelect
+              value={localFilters.rarity}
+              onChange={localFilters.onRarityChange}
+              options={[{ value: "", label: "Rarity" }, ...localFilters.rarityOptions.map((value) => ({ value, label: value }))]}
+              ariaLabel="Filter by rarity"
+            />
 
-            <div className="relative shrink-0">
-              <AutoWidthSelect
-                value={localFilters.energy}
-                selectedLabel={localFilters.energy || "Energy"}
-                onChange={(e) => localFilters.onEnergyChange(e.currentTarget.value)}
-                aria-label="Filter by energy type"
-                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
-                  localFilters.energy
-                    ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-                    : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
-                }`}
-              >
-                <option value="">Energy</option>
-                {localFilters.energyOptions.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </AutoWidthSelect>
-              <ChevronDown />
-            </div>
+            <FilterChipSelect
+              value={localFilters.energy}
+              onChange={localFilters.onEnergyChange}
+              options={[{ value: "", label: "Energy" }, ...localFilters.energyOptions.map((value) => ({ value, label: value }))]}
+              ariaLabel="Filter by energy type"
+            />
 
-            <div className="relative shrink-0">
-              <AutoWidthSelect
-                value={localFilters.category}
-                selectedLabel={localFilters.category || "Card type"}
-                onChange={(e) => localFilters.onCategoryChange(e.currentTarget.value)}
-                aria-label="Filter by card type"
-                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
-                  localFilters.category
-                    ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-                    : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
-                }`}
-              >
-                <option value="">Card type</option>
-                {localFilters.categoryOptions.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </AutoWidthSelect>
-              <ChevronDown />
-            </div>
+            <FilterChipSelect
+              value={localFilters.category}
+              onChange={localFilters.onCategoryChange}
+              options={[{ value: "", label: "Card type" }, ...localFilters.categoryOptions.map((value) => ({ value, label: value }))]}
+              ariaLabel="Filter by card type"
+              widthClass="w-36"
+            />
 
-            <TagButton
+            <FilterChipButton
               label="Rare+ only"
               active={localFilters.excludeCommonUncommon}
               onClick={() => localFilters.onExcludeCommonUncommonChange(!localFilters.excludeCommonUncommon)}
             />
 
             {typeof localFilters.duplicatesOnly === "boolean" && localFilters.onDuplicatesOnlyChange ? (
-              <TagButton
+              <FilterChipButton
                 label="Duplicates only"
                 active={localFilters.duplicatesOnly}
                 onClick={() => {
@@ -500,115 +336,71 @@ export function CardTagFilterRow({
         {sf ? (
           <>
             {/* Rarity dropdown */}
-            <div className="relative shrink-0">
-              <AutoWidthSelect
-                name="rarity-select"
-                selectedLabel={sf.activeRarity || "Rarity"}
-                value={sf.activeRarity}
-                onChange={(e) => {
-                  const val = e.currentTarget.value;
-                  const params = new URLSearchParams();
-                  if (sf.extraHiddenFields) {
-                    for (const [k, v] of Object.entries(sf.extraHiddenFields)) params.set(k, v);
-                  }
-                  if (sf.activeSearch) params.set("search", sf.activeSearch);
-                  if (sf.activeSet) params.set("set", sf.activeSet);
-                  if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
-                  if (val) params.set("rarity", val);
-                  if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
-                  if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
-                  if (sf.activeCategory) params.set("category", sf.activeCategory);
-                  router.push(`${sf.formAction}?${params.toString()}`);
-                }}
-                aria-label="Filter by rarity"
-                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
-                  sf.activeRarity
-                    ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-                    : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
-                }`}
-              >
-                <option value="">Rarity</option>
-                {sf.rarityOptions.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </AutoWidthSelect>
-              <ChevronDown />
-            </div>
+            <FilterChipSelect
+              value={sf.activeRarity}
+              onChange={(val) => {
+                const params = new URLSearchParams();
+                if (sf.extraHiddenFields) {
+                  for (const [k, v] of Object.entries(sf.extraHiddenFields)) params.set(k, v);
+                }
+                if (sf.activeSearch) params.set("search", sf.activeSearch);
+                if (sf.activeSet) params.set("set", sf.activeSet);
+                if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
+                if (val) params.set("rarity", val);
+                if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
+                if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
+                if (sf.activeCategory) params.set("category", sf.activeCategory);
+                router.push(`${sf.formAction}?${params.toString()}`);
+              }}
+              options={[{ value: "", label: "Rarity" }, ...sf.rarityOptions.map((value) => ({ value, label: value }))]}
+              ariaLabel="Filter by rarity"
+            />
 
             {/* Energy type dropdown */}
-            <div className="relative shrink-0">
-              <AutoWidthSelect
-                name="energy-select"
-                selectedLabel={sf.activeEnergy || "Energy"}
-                value={sf.activeEnergy}
-                onChange={(e) => {
-                  const val = e.currentTarget.value;
-                  const params = new URLSearchParams();
-                  if (sf.extraHiddenFields) {
-                    for (const [k, v] of Object.entries(sf.extraHiddenFields)) params.set(k, v);
-                  }
-                  if (sf.activeSearch) params.set("search", sf.activeSearch);
-                  if (sf.activeSet) params.set("set", sf.activeSet);
-                  if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
-                  if (sf.activeRarity) params.set("rarity", sf.activeRarity);
-                  if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
-                  if (val) params.set("energy", val);
-                  if (sf.activeCategory) params.set("category", sf.activeCategory);
-                  router.push(`${sf.formAction}?${params.toString()}`);
-                }}
-                aria-label="Filter by energy type"
-                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
-                  sf.activeEnergy
-                    ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-                    : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
-                }`}
-              >
-                <option value="">Energy</option>
-                {sf.energyOptions.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </AutoWidthSelect>
-              <ChevronDown />
-            </div>
+            <FilterChipSelect
+              value={sf.activeEnergy}
+              onChange={(val) => {
+                const params = new URLSearchParams();
+                if (sf.extraHiddenFields) {
+                  for (const [k, v] of Object.entries(sf.extraHiddenFields)) params.set(k, v);
+                }
+                if (sf.activeSearch) params.set("search", sf.activeSearch);
+                if (sf.activeSet) params.set("set", sf.activeSet);
+                if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
+                if (sf.activeRarity) params.set("rarity", sf.activeRarity);
+                if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
+                if (val) params.set("energy", val);
+                if (sf.activeCategory) params.set("category", sf.activeCategory);
+                router.push(`${sf.formAction}?${params.toString()}`);
+              }}
+              options={[{ value: "", label: "Energy" }, ...sf.energyOptions.map((value) => ({ value, label: value }))]}
+              ariaLabel="Filter by energy type"
+            />
 
             {/* Card type dropdown */}
-            <div className="relative shrink-0">
-              <AutoWidthSelect
-                name="category-select"
-                selectedLabel={sf.activeCategory || "Card type"}
-                value={sf.activeCategory}
-                onChange={(e) => {
-                  const val = e.currentTarget.value;
-                  const params = new URLSearchParams();
-                  if (sf.extraHiddenFields) {
-                    for (const [k, v] of Object.entries(sf.extraHiddenFields)) params.set(k, v);
-                  }
-                  if (sf.activeSearch) params.set("search", sf.activeSearch);
-                  if (sf.activeSet) params.set("set", sf.activeSet);
-                  if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
-                  if (sf.activeRarity) params.set("rarity", sf.activeRarity);
-                  if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
-                  if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
-                  if (val) params.set("category", val);
-                  router.push(`${sf.formAction}?${params.toString()}`);
-                }}
-                aria-label="Filter by card type"
-                className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
-                  sf.activeCategory
-                    ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-                    : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
-                }`}
-              >
-                <option value="">Card type</option>
-                {sf.categoryOptions.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </AutoWidthSelect>
-              <ChevronDown />
-            </div>
+            <FilterChipSelect
+              value={sf.activeCategory}
+              onChange={(val) => {
+                const params = new URLSearchParams();
+                if (sf.extraHiddenFields) {
+                  for (const [k, v] of Object.entries(sf.extraHiddenFields)) params.set(k, v);
+                }
+                if (sf.activeSearch) params.set("search", sf.activeSearch);
+                if (sf.activeSet) params.set("set", sf.activeSet);
+                if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
+                if (sf.activeRarity) params.set("rarity", sf.activeRarity);
+                if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
+                if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
+                if (val) params.set("category", val);
+                router.push(`${sf.formAction}?${params.toString()}`);
+              }}
+              options={[{ value: "", label: "Card type" }, ...sf.categoryOptions.map((value) => ({ value, label: value }))]}
+              ariaLabel="Filter by card type"
+              widthClass="w-36"
+            />
 
             {/* Exclude C/U toggle */}
-            <TagButton
+            <FilterChipButton
               label="Rare+ only"
               active={sf.excludeCommonUncommon}
               onClick={() => {
@@ -629,7 +421,7 @@ export function CardTagFilterRow({
 
           </>
         ) : null}
-      </div>
-    </div>
+      </FilterChipRow>
+    </FilterControlsShell>
   );
 }

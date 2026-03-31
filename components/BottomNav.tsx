@@ -329,12 +329,12 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
             >
               <div
                 id="bottom-nav-more-sheet"
-                className="pointer-events-auto overflow-y-auto border border-[var(--foreground)]/15 bg-[var(--background)] p-4 text-[var(--foreground)] shadow-xl"
+                className="pointer-events-auto border border-[var(--foreground)]/15 bg-[var(--background)] p-4 text-[var(--foreground)] shadow-xl"
                 style={{
                   borderRadius: "28px",
-                  width: "calc(100vw - 2.5srem)",
+                  // Match nav shell width exactly: viewport minus 1.25rem side padding on each side.
+                  width: "calc(100vw - 2.5rem)",
                   maxWidth: "34rem",
-                  maxHeight: "min(22rem, 48dvh)",
                   marginBottom:
                     "calc(0.5rem + max(0.25rem, calc(env(safe-area-inset-bottom, 0px) - 1rem)) + 4.5rem + 0.35rem)",
                 }}
@@ -343,7 +343,6 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
                 aria-modal="true"
                 aria-label="More"
               >
-                <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[var(--foreground)]/18" />
                 <h2 className="text-lg font-semibold">More</h2>
                 <p className="mt-1 text-sm text-[var(--foreground)]/65">
                   {isLoggedIn

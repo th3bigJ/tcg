@@ -14,7 +14,7 @@ export function FilterChipButton({ label, active, icon, onClick }: FilterChipBut
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 ${
+      className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition active:scale-95 ${
         active
           ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
           : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12 hover:text-[var(--foreground)]"
@@ -35,7 +35,7 @@ export function FilterClearChip({ onClick }: FilterClearChipProps) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-400/40 bg-red-500/12 px-3 py-1.5 text-xs font-medium text-red-400 transition hover:bg-red-500/20 active:scale-95"
+      className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-red-400/40 bg-red-500/12 px-3 text-xs font-medium text-red-400 transition hover:bg-red-500/20 active:scale-95"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -97,31 +97,46 @@ export function FilterChipSelect({
     options.find((option) => option.value === value)?.label ??
     options[0]?.label ??
     "";
+  const sizingStyle =
+    widthClass === "w-auto"
+      ? { display: "inline-grid" as const }
+      : { display: "inline-grid" as const, width: "100%" };
 
   return (
-    <div className={`relative inline-grid shrink-0 ${widthClass}`}>
-      <span
-        className="pointer-events-none invisible col-start-1 row-start-1 whitespace-nowrap px-3 pr-7 text-xs font-medium"
-        aria-hidden="true"
-      >
-        {selectedLabel}
-      </span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.currentTarget.value)}
-        aria-label={ariaLabel}
-        className={`col-start-1 row-start-1 h-8 w-full rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
-          active
-            ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-            : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
-        }`}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+    <div className={`relative shrink-0 ${widthClass === "w-auto" ? "" : widthClass}`}>
+      <div style={sizingStyle}>
+        <span
+          style={{
+            gridArea: "1/1",
+            visibility: "hidden",
+            whiteSpace: "nowrap",
+            fontSize: "0.75rem",
+            fontWeight: 500,
+            padding: "0 1.75rem 0 0.75rem",
+            pointerEvents: "none",
+          }}
+          aria-hidden="true"
+        >
+          {selectedLabel}
+        </span>
+        <select
+          value={value}
+          onChange={(e) => onChange(e.currentTarget.value)}
+          aria-label={ariaLabel}
+          style={{ gridArea: "1/1", width: "100%" }}
+          className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
+            active
+              ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
+              : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"
+          }`}
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
       <FilterChevronDown />
     </div>
   );
@@ -132,6 +147,7 @@ type FilterSearchInputProps = {
   value?: string;
   onChange?: (value: string) => void;
   name?: string;
+  inputClassName?: string;
 };
 
 export function FilterSearchInput({
@@ -139,6 +155,7 @@ export function FilterSearchInput({
   value,
   onChange,
   name = "search",
+  inputClassName,
 }: FilterSearchInputProps) {
   return (
     <div className="relative flex-1">
@@ -164,7 +181,7 @@ export function FilterSearchInput({
         onChange={onChange ? (e) => onChange(e.currentTarget.value) : undefined}
         placeholder="Search cards…"
         aria-label="Search cards"
-        className="w-full rounded-full border border-[var(--foreground)]/20 bg-[var(--foreground)]/6 py-2 pl-8 pr-3 text-sm outline-none transition focus:border-[var(--foreground)]/35 focus:ring-2 focus:ring-[var(--foreground)]/15"
+        className={`w-full rounded-full border border-[var(--foreground)]/20 bg-[var(--foreground)]/6 py-2 pl-8 pr-3 text-sm outline-none transition focus:border-[var(--foreground)]/35 focus:ring-2 focus:ring-[var(--foreground)]/15 ${inputClassName ?? ""}`}
       />
     </div>
   );
@@ -194,7 +211,7 @@ export function FilterRoundIconButton({
 }
 
 export function FilterControlsShell({ children }: { children: ReactNode }) {
-  return <div className="mb-3 flex flex-col gap-6">{children}</div>;
+  return <div className="mb-3 flex flex-col gap-1">{children}</div>;
 }
 
 export function FilterChipRow({ children }: { children: ReactNode }) {
