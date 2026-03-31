@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
-import { readPersistedFilters, sortCards, DEFAULT_SORT } from "@/lib/persistedFilters";
+import { PERSISTED_FILTERS_UPDATED_EVENT, readPersistedFilters, sortCards, DEFAULT_SORT } from "@/lib/persistedFilters";
 import type { SearchCardDataPayload } from "@/lib/searchCardDataServer";
 
 type Props = {
@@ -54,7 +54,11 @@ export function ExpansionSetCardGrid({
   useEffect(() => {
     const handler = () => setSort(readPersistedFilters().sort ?? DEFAULT_SORT);
     window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    window.addEventListener(PERSISTED_FILTERS_UPDATED_EVENT, handler);
+    return () => {
+      window.removeEventListener("storage", handler);
+      window.removeEventListener(PERSISTED_FILTERS_UPDATED_EVENT, handler);
+    };
   }, []);
 
   const sortedCards = useMemo(() => {

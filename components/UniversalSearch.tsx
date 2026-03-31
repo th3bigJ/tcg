@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TOP_CHROME_HIDDEN_TRANSFORM, TOP_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
-import { buildPokedexDetailHref, type SortOrder, DEFAULT_SORT } from "@/lib/persistedFilters";
+import { buildPokedexDetailHref, type SortOrder, DEFAULT_SORT, persistFilters } from "@/lib/persistedFilters";
 import { useAutoHideChrome } from "@/lib/useAutoHideChrome";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -274,7 +274,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   const setFiltersAndPersist = (next: Filters) => {
     setFilters(next);
-    try { localStorage.setItem("tcg-filters", JSON.stringify(next)); } catch {}
+    persistFilters(next);
   };
 
   const filtersRef = useRef(filters);

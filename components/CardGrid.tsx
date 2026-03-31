@@ -2644,7 +2644,7 @@ export function CardGrid({
         role="presentation"
       >
         <div
-          className="max-h-[85dvh] overflow-y-auto rounded-t-2xl border border-[var(--foreground)]/15 bg-[var(--background)] p-4 text-[var(--foreground)] shadow-xl"
+          className="max-h-[85dvh] overflow-y-auto rounded-t-2xl border border-[var(--foreground)]/15 bg-[var(--background)] px-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom,0px)+1rem))] pt-4 text-[var(--foreground)] shadow-xl"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-label="Add to collection"

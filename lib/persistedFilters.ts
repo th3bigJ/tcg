@@ -1,4 +1,5 @@
 const STORAGE_KEY = "tcg-filters";
+export const PERSISTED_FILTERS_UPDATED_EVENT = "tcg:persisted-filters-updated";
 
 export type SortOrder =
   | "price-desc"
@@ -25,6 +26,15 @@ export function readPersistedFilters(): PersistedFilters {
     if (raw) return JSON.parse(raw) as PersistedFilters;
   } catch {}
   return {};
+}
+
+export function persistFilters(next: PersistedFilters): void {
+  try {
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      window.dispatchEvent(new CustomEvent(PERSISTED_FILTERS_UPDATED_EVENT, { detail: next }));
+    }
+  } catch {}
 }
 
 export function buildPokedexDetailHref(dexNumber: number): string {
