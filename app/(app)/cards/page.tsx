@@ -18,6 +18,7 @@ import {
 import { getCurrentCustomer } from "@/lib/auth";
 import { fetchPricesForMasterCardIds } from "@/lib/cardPricingBulk";
 import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
+import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 
 function parseExcludeCommonUncommon(value: string | undefined): boolean {
   const v = (value ?? "").trim().toLowerCase();
@@ -33,6 +34,7 @@ type CardsPageProps = {
     rarity?: string;
     search?: string;
     exclude_cu?: string;
+    exclude_owned?: string;
     category?: string;
     artist?: string;
     energy?: string;
@@ -46,6 +48,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();
   const selectedSearch = (resolvedSearchParams.search ?? "").trim();
   const excludeCommonUncommon = parseExcludeCommonUncommon(resolvedSearchParams.exclude_cu);
+  const excludeOwned = parseExcludeCommonUncommon(resolvedSearchParams.exclude_owned);
   const selectedCategory = (resolvedSearchParams.category ?? "").trim();
   const activeArtist = (resolvedSearchParams.artist ?? "").trim();
   const facets = (await getCachedFilterFacets()) ?? {};
@@ -92,23 +95,26 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
 
   const setOrder = generateShuffledSetOrder();
 
-  const [{ entries: cardsForGrid, totalDocs: filteredCount }, customer] = await Promise.all([
-    fetchMasterCardsPage({
-      activeSet,
-      activePokemonDex,
-      activePokemonName,
-      activeRarity,
-      activeEnergy,
-      activeSearch,
-      activeArtist,
-      excludeCommonUncommon,
-      categoryQueryVariants,
-      page: 1,
-      perPage: requestedTake,
-      setOrder,
-    }),
-    getCurrentCustomer(),
-  ]);
+  const customer = await getCurrentCustomer();
+  const collectionEntries = customer && excludeOwned ? await fetchCollectionCardEntries(customer.id) : [];
+  const excludedMasterCardIds = new Set(
+    collectionEntries.map((entry) => entry.masterCardId?.trim() ?? "").filter((value) => value.length > 0),
+  );
+  const { entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
+    activeSet,
+    activePokemonDex,
+    activePokemonName,
+    activeRarity,
+    activeEnergy,
+    activeSearch,
+    activeArtist,
+    excludeCommonUncommon,
+    excludedMasterCardIds: excludeOwned ? excludedMasterCardIds : undefined,
+    categoryQueryVariants,
+    page: 1,
+    perPage: requestedTake,
+    setOrder,
+  });
   const initialSearchCardData = customer ? await getSearchCardDataForCustomer(customer.id) : null;
 
   const initialCardPriceIds = cardsForGrid
@@ -136,6 +142,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     if (activeSearch) params.set("search", activeSearch);
     if (activeArtist) params.set("artist", activeArtist);
     if (excludeCommonUncommon) params.set("exclude_cu", "1");
+    if (excludeOwned) params.set("exclude_owned", "1");
     if (activeCategory) params.set("category", activeCategory);
     if (take !== undefined && take > 0) params.set("take", String(take));
     const query = params.toString();
@@ -151,6 +158,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     activeSearch,
     activeArtist,
     excludeCommonUncommon ? "1" : "",
+    excludeOwned ? "1" : "",
     activeCategory,
   ].join("|");
 
@@ -160,6 +168,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     if (activeEnergy) params.set("energy", activeEnergy);
     if (activeSearch) params.set("search", activeSearch);
     if (excludeCommonUncommon) params.set("exclude_cu", "1");
+    if (excludeOwned) params.set("exclude_owned", "1");
     if (activeCategory) params.set("category", activeCategory);
     const query = params.toString();
     return query ? `/cards?${query}` : "/cards";
@@ -195,6 +204,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 activeEnergy={activeEnergy}
                 activeSearch={activeSearch}
                 excludeCommonUncommon={excludeCommonUncommon}
+                excludeOwned={excludeOwned}
                 activeCategory={activeCategory}
               />
             </div>
@@ -210,6 +220,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
               energyOptions={energyOptions}
               categoryOptions={categoryOptions}
               excludeCommonUncommon={excludeCommonUncommon}
+              excludeOwned={excludeOwned}
               activeCategory={activeCategory}
               resetFiltersHref={resetFiltersHref}
               setFilterOptions={setFilterOptions}
@@ -224,6 +235,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 {excludeCommonUncommon ? (
                   <input type="hidden" name="exclude_cu" value="1" />
                 ) : null}
+                {excludeOwned ? <input type="hidden" name="exclude_owned" value="1" /> : null}
                 {activeCategory ? <input type="hidden" name="category" value={activeCategory} /> : null}
                 <input
                   type="search"
@@ -257,6 +269,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 activeEnergy ||
                 activeSearch ||
                 excludeCommonUncommon ||
+                excludeOwned ||
                 activeCategory
                   ? " (filtered)"
                   : ""}
@@ -283,6 +296,7 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
                 activeEnergy={activeEnergy}
                 activeCategory={activeCategory}
                 excludeCommonUncommon={excludeCommonUncommon}
+                excludeOwned={excludeOwned}
                 rarityOptions={rarityOptions}
                 energyOptions={energyOptions}
                 categoryOptions={categoryOptions}

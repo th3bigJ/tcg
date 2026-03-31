@@ -47,6 +47,7 @@ export default async function PokedexPokemonCardsPage({
   const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();
   const activeRarity = rarityOptions.includes(selectedRarity) ? selectedRarity : "";
   const excludeCommonUncommon = resolvedSearchParams.exclude_cu === "1";
+  const excludeOwned = resolvedSearchParams.exclude_owned === "1";
   const selectedCategory = (resolvedSearchParams.category ?? "").trim();
   const { queryVariants: categoryQueryVariants } = resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
   const setFilterOptions = await getCachedSetFilterOptions(availableSetCodes);
@@ -57,28 +58,26 @@ export default async function PokedexPokemonCardsPage({
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
 
-  const [{ entries: cardsForGrid, totalDocs: filteredCount }, customer] = await Promise.all([
-    fetchMasterCardsPage({
-      activeSet: "",
-      activePokemonDex: dexNum,
-      activePokemonName: pokemonMeta.name,
-      activeRarity,
-      activeEnergy,
-      activeSearch: "",
-      activeArtist: "",
-      excludeCommonUncommon,
-      categoryQueryVariants,
-      page: 1,
-      perPage: CARDS_TAKE_MAX,
-    }),
-    getCurrentCustomer(),
-  ]);
-
+  const customer = await getCurrentCustomer();
   const collectionEntries = customer ? await fetchCollectionCardEntries(customer.id) : [];
-  const initialSearchCardData = customer ? await getSearchCardDataForCustomer(customer.id) : null;
   const ownedMasterCardIds = new Set(
     collectionEntries.map((e) => e.masterCardId?.trim() ?? "").filter((v) => v.length > 0),
   );
+  const { entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
+    activeSet: "",
+    activePokemonDex: dexNum,
+    activePokemonName: pokemonMeta.name,
+    activeRarity,
+    activeEnergy,
+    activeSearch: "",
+    activeArtist: "",
+    excludeCommonUncommon,
+    excludedMasterCardIds: excludeOwned ? ownedMasterCardIds : undefined,
+    categoryQueryVariants,
+    page: 1,
+    perPage: CARDS_TAKE_MAX,
+  });
+  const initialSearchCardData = customer ? await getSearchCardDataForCustomer(customer.id) : null;
   const cardMasterCardIds = new Set(cardsForGrid.map((c) => c.masterCardId ?? "").filter(Boolean));
   const ownedCount = [...cardMasterCardIds].filter((id) => ownedMasterCardIds.has(id)).length;
   const marketValue = await fetchCardsMarketValue(cardsForGrid, customer ? ownedMasterCardIds : undefined);

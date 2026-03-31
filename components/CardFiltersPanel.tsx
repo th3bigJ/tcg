@@ -31,6 +31,7 @@ type CardFiltersPanelProps = {
   activeEnergy?: string;
   activeSearch: string;
   excludeCommonUncommon: boolean;
+  excludeOwned?: boolean;
   activeCategory: string;
   onSelection?: () => void;
   showSetPokemonFilter?: boolean;
@@ -50,6 +51,7 @@ function buildCardsHref(params: {
   energy: string;
   search: string;
   excludeCommonUncommon: boolean;
+  excludeOwned?: boolean;
   category: string;
 }): string {
   const query = new URLSearchParams();
@@ -59,6 +61,7 @@ function buildCardsHref(params: {
   if (params.energy.trim()) query.set("energy", params.energy.trim());
   if (params.search) query.set("search", params.search);
   if (params.excludeCommonUncommon) query.set("exclude_cu", "1");
+  if (params.excludeOwned) query.set("exclude_owned", "1");
   const cat = params.category.trim();
   if (cat) query.set("category", cat);
   const value = query.toString();
@@ -77,6 +80,7 @@ export function CardFiltersPanel({
   activeEnergy: activeEnergyProp,
   activeSearch,
   excludeCommonUncommon,
+  excludeOwned = false,
   activeCategory,
   onSelection,
   showSetPokemonFilter = true,
@@ -244,6 +248,21 @@ export function CardFiltersPanel({
             className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-[var(--foreground)]/30"
           />
           <span>Exclude Common and Uncommon</span>
+        </label>
+
+        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-2 py-2 text-xs text-[var(--foreground)]/90">
+          <input
+            type="checkbox"
+            name="exclude_owned"
+            value="1"
+            defaultChecked={excludeOwned}
+            onChange={(event) => {
+              event.currentTarget.form?.requestSubmit();
+              onSelection?.();
+            }}
+            className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-[var(--foreground)]/30"
+          />
+          <span>Hide cards I own</span>
         </label>
 
         <div>

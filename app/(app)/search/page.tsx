@@ -42,6 +42,7 @@ type SearchPageProps = {
     rarity?: string;
     search?: string;
     exclude_cu?: string;
+    exclude_owned?: string;
     category?: string;
     artist?: string;
     energy?: string;
@@ -166,9 +167,14 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
   const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();
   const selectedSearch = (resolvedSearchParams.search ?? "").trim();
   const excludeCommonUncommon = parseExcludeCommonUncommon(resolvedSearchParams.exclude_cu);
+  const excludeOwned = resolvedSearchParams.exclude_owned === "1";
   const selectedCategory = (resolvedSearchParams.category ?? "").trim();
   const selectedArtist = (resolvedSearchParams.artist ?? "").trim();
   const customer = await customerPromise;
+  const collectionEntries = customer && excludeOwned ? await fetchCollectionCardEntries(customer.id) : [];
+  const excludedMasterCardIds = new Set(
+    collectionEntries.map((entry) => entry.masterCardId?.trim() ?? "").filter((value) => value.length > 0),
+  );
 
   const facets = (await getCachedFilterFacets()) ?? {};
   const availableSetCodes = facets.setCodes ?? [];
@@ -229,6 +235,7 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
     activeSearch,
     activeArtist,
     excludeCommonUncommon,
+    excludedMasterCardIds,
     categoryQueryVariants,
     page: 1,
     perPage: requestedTake,
@@ -251,6 +258,7 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
     if (activeSearch) params.set("search", activeSearch);
     if (activeArtist) params.set("artist", activeArtist);
     if (excludeCommonUncommon) params.set("exclude_cu", "1");
+    if (excludeOwned) params.set("exclude_owned", "1");
     if (activeCategory) params.set("category", activeCategory);
     if (take !== undefined && take > 0) params.set("take", String(take));
     const qs = params.toString();
@@ -268,6 +276,7 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
     activeSearch,
     activeArtist,
     excludeCommonUncommon ? "1" : "",
+    excludeOwned ? "1" : "",
     activeCategory,
   ].join("|");
 
@@ -311,6 +320,7 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
                 activeEnergy={activeEnergy}
                 activeCategory={activeCategory}
                 excludeCommonUncommon={excludeCommonUncommon}
+                excludeOwned={excludeOwned}
                 rarityOptions={rarityOptions}
                 energyOptions={energyOptions}
                 categoryOptions={categoryOptions}

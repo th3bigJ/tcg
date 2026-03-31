@@ -21,6 +21,7 @@ type ExpansionSetCardsPageProps = {
     search?: string;
     rarity?: string;
     exclude_cu?: string;
+    exclude_owned?: string;
     category?: string;
     energy?: string;
   }>;
@@ -56,6 +57,7 @@ export default async function ExpansionSetCardsPage({
   const activeSearch = resolvedSearchParams.search?.trim() ?? "";
   const activeRarity = resolvedSearchParams.rarity?.trim() ?? "";
   const excludeCommonUncommon = resolvedSearchParams.exclude_cu === "1";
+  const excludeOwned = resolvedSearchParams.exclude_owned === "1";
   const selectedCategory = resolvedSearchParams.category?.trim() ?? "";
   const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
     resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
@@ -64,7 +66,13 @@ export default async function ExpansionSetCardsPage({
   const activeEnergy = energyOptions.includes(selectedEnergy) ? selectedEnergy : "";
 
   const customer = await getCurrentCustomer();
-  const [{ entries: cardsForGrid, totalDocs: filteredCount }, setMarketValue, collectionEntries] =
+  const collectionEntries = customer ? await fetchCollectionCardEntries(customer.id) : [];
+  const ownedMasterCardIds = new Set(
+    collectionEntries
+      .map((entry) => entry.masterCardId?.trim() ?? "")
+      .filter((value) => value.length > 0),
+  );
+  const [{ entries: cardsForGrid, totalDocs: filteredCount }, setMarketValue] =
     await Promise.all([
       fetchMasterCardsPage({
         activeSet,
@@ -75,19 +83,13 @@ export default async function ExpansionSetCardsPage({
         activeSearch,
         activeArtist: "",
         excludeCommonUncommon,
+        excludedMasterCardIds: excludeOwned ? ownedMasterCardIds : undefined,
         categoryQueryVariants,
         page: 1,
         perPage: CARDS_TAKE_MAX,
       }),
       fetchSetMarketValue(activeSet),
-      customer ? fetchCollectionCardEntries(customer.id) : Promise.resolve([]),
     ]);
-
-  const ownedMasterCardIds = new Set(
-    collectionEntries
-      .map((entry) => entry.masterCardId?.trim() ?? "")
-      .filter((value) => value.length > 0),
-  );
   const setCompletionValue =
     customer ? await fetchSetCompletionValue(activeSet, cardsForGrid, ownedMasterCardIds) : null;
   const initialSearchCardData = customer ? await getSearchCardDataForCustomer(customer.id) : null;

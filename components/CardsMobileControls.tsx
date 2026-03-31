@@ -28,6 +28,7 @@ type CardsMobileControlsProps = {
   energyOptions: string[];
   categoryOptions: string[];
   excludeCommonUncommon: boolean;
+  excludeOwned: boolean;
   activeCategory: string;
   resetFiltersHref: string;
   setFilterOptions: SetFilterOption[];
@@ -47,6 +48,7 @@ export function CardsMobileControls({
   energyOptions,
   categoryOptions,
   excludeCommonUncommon,
+  excludeOwned,
   activeCategory,
   resetFiltersHref,
   setFilterOptions,
@@ -76,6 +78,7 @@ export function CardsMobileControls({
           {activeRarity ? <input type="hidden" name="rarity" value={activeRarity} /> : null}
           {activeEnergy ? <input type="hidden" name="energy" value={activeEnergy} /> : null}
           {excludeCommonUncommon ? <input type="hidden" name="exclude_cu" value="1" /> : null}
+          {excludeOwned ? <input type="hidden" name="exclude_owned" value="1" /> : null}
           {activeCategory ? <input type="hidden" name="category" value={activeCategory} /> : null}
           <input
             type="search"
@@ -205,6 +208,7 @@ export function CardsMobileControls({
             activeEnergy={activeEnergy}
             activeSearch={activeSearch}
             excludeCommonUncommon={excludeCommonUncommon}
+            excludeOwned={excludeOwned}
             activeCategory={activeCategory}
             onSelection={() => setIsFilterModalOpen(false)}
             showSetPokemonFilter={showSetPokemonFilter}

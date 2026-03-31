@@ -44,6 +44,7 @@ type Filters = {
   rarity: string;
   energy: string;
   excludeCommonUncommon: boolean;
+  excludeCollected: boolean;
   category: string;
   missingOnly: boolean;
   sort: SortOrder;
@@ -267,9 +268,9 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [filters, setFilters] = useState<Filters>(() => {
     try {
       const saved = typeof window !== "undefined" ? localStorage.getItem("tcg-filters") : null;
-      if (saved) return { rarity: "", energy: "", excludeCommonUncommon: false, category: "", missingOnly: false, sort: DEFAULT_SORT, ...JSON.parse(saved) };
+      if (saved) return { rarity: "", energy: "", excludeCommonUncommon: false, excludeCollected: false, category: "", missingOnly: false, sort: DEFAULT_SORT, ...JSON.parse(saved) };
     } catch {}
-    return { rarity: "", energy: "", excludeCommonUncommon: false, category: "", missingOnly: false, sort: DEFAULT_SORT };
+    return { rarity: "", energy: "", excludeCommonUncommon: false, excludeCollected: false, category: "", missingOnly: false, sort: DEFAULT_SORT };
   });
 
   const setFiltersAndPersist = (next: Filters) => {
@@ -288,12 +289,13 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       if (url.origin !== window.location.origin) return null;
       const path = url.pathname;
       const f = filtersRef.current;
-      const hasFilters = f.rarity || f.energy || f.excludeCommonUncommon || f.category;
+      const hasFilters = f.rarity || f.energy || f.excludeCommonUncommon || f.excludeCollected || f.category;
 
       if (/^\/expansions\/[^/]+/.test(path)) {
         if (f.rarity) url.searchParams.set("rarity", f.rarity); else url.searchParams.delete("rarity");
         if (f.energy) url.searchParams.set("energy", f.energy); else url.searchParams.delete("energy");
         if (f.excludeCommonUncommon) url.searchParams.set("exclude_cu", "1"); else url.searchParams.delete("exclude_cu");
+        if (f.excludeCollected) url.searchParams.set("exclude_owned", "1"); else url.searchParams.delete("exclude_owned");
         if (f.category) url.searchParams.set("category", f.category); else url.searchParams.delete("category");
         return url.pathname + (url.search || "");
       }
@@ -302,6 +304,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         if (f.energy) url.searchParams.set("energy", f.energy); else url.searchParams.delete("energy");
         if (f.rarity) url.searchParams.set("rarity", f.rarity); else url.searchParams.delete("rarity");
         if (f.excludeCommonUncommon) url.searchParams.set("exclude_cu", "1"); else url.searchParams.delete("exclude_cu");
+        if (f.excludeCollected) url.searchParams.set("exclude_owned", "1"); else url.searchParams.delete("exclude_owned");
         if (f.category) url.searchParams.set("category", f.category); else url.searchParams.delete("category");
         return url.pathname + (url.search || "");
       }
@@ -312,6 +315,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           if (f.rarity) url.searchParams.set("rarity", f.rarity); else url.searchParams.delete("rarity");
           if (f.energy) url.searchParams.set("energy", f.energy); else url.searchParams.delete("energy");
           if (f.excludeCommonUncommon) url.searchParams.set("exclude_cu", "1"); else url.searchParams.delete("exclude_cu");
+          if (f.excludeCollected) url.searchParams.set("exclude_owned", "1"); else url.searchParams.delete("exclude_owned");
           if (f.category) url.searchParams.set("category", f.category); else url.searchParams.delete("category");
           return url.pathname + (url.search || "");
         }
@@ -428,6 +432,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       if (filters.rarity) p.set("rarity", filters.rarity);
       if (filters.energy) p.set("energy", filters.energy);
       if (filters.excludeCommonUncommon) p.set("exclude_cu", "1");
+      if (filters.excludeCollected) p.set("exclude_owned", "1");
       if (filters.category) p.set("category", filters.category);
       const s = p.toString();
       return s ? `/expansions/${expansionMatch[1]}?${s}` : `/expansions/${expansionMatch[1]}`;
@@ -438,6 +443,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       if (filters.energy) p.set("energy", filters.energy);
       if (filters.rarity) p.set("rarity", filters.rarity);
       if (filters.excludeCommonUncommon) p.set("exclude_cu", "1");
+      if (filters.excludeCollected) p.set("exclude_owned", "1");
       if (filters.category) p.set("category", filters.category);
       const s = p.toString();
       return s ? `/pokedex/${pokedexDetailMatch[1]}?${s}` : `/pokedex/${pokedexDetailMatch[1]}`;
@@ -456,6 +462,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         if (filters.rarity) p.set("rarity", filters.rarity);
         if (filters.energy) p.set("energy", filters.energy);
         if (filters.excludeCommonUncommon) p.set("exclude_cu", "1");
+        if (filters.excludeCollected) p.set("exclude_owned", "1");
         if (filters.category) p.set("category", filters.category);
       } else if (tab === "pokedex") {
         if (filters.missingOnly) p.set("missing_only", "1");
@@ -473,6 +480,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     if (filters.rarity) p.set("rarity", filters.rarity);
     if (filters.energy) p.set("energy", filters.energy);
     if (filters.excludeCommonUncommon) p.set("exclude_cu", "1");
+    if (filters.excludeCollected) p.set("exclude_owned", "1");
     if (filters.category) p.set("category", filters.category);
     const s = p.toString();
     return s ? `/search?tab=cards&${s}` : "/search?tab=cards";
@@ -510,6 +518,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     (filters.rarity ? 1 : 0) +
     (filters.energy ? 1 : 0) +
     (filters.excludeCommonUncommon ? 1 : 0) +
+    (filters.excludeCollected ? 1 : 0) +
     (filters.category ? 1 : 0) +
     (filters.missingOnly ? 1 : 0);
 
@@ -709,7 +718,7 @@ function FiltersPanel({
   onChange: (f: Filters) => void;
 }) {
   const hasActive =
-    filters.rarity || filters.energy || filters.excludeCommonUncommon || filters.category || filters.missingOnly;
+    filters.rarity || filters.energy || filters.excludeCommonUncommon || filters.excludeCollected || filters.category || filters.missingOnly;
 
   const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
     { value: "price-desc", label: "Price: high to low" },
@@ -728,7 +737,7 @@ function FiltersPanel({
           <button
             type="button"
             onClick={() =>
-              onChange({ rarity: "", energy: "", excludeCommonUncommon: false, category: "", missingOnly: false, sort: filters.sort })
+              onChange({ rarity: "", energy: "", excludeCommonUncommon: false, excludeCollected: false, category: "", missingOnly: false, sort: filters.sort })
             }
             className="text-[11px] text-red-400 hover:text-red-300"
           >
@@ -788,6 +797,18 @@ function FiltersPanel({
         />
         <span>Rare+ only (exclude Common &amp; Uncommon)</span>
       </label>
+
+      {isLoggedIn ? (
+        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-white/12 bg-white/5 px-3 py-2 text-xs text-white/90">
+          <input
+            type="checkbox"
+            checked={filters.excludeCollected}
+            onChange={(e) => onChange({ ...filters, excludeCollected: e.target.checked })}
+            className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-white/30"
+          />
+          <span>Hide cards I own</span>
+        </label>
+      ) : null}
 
       {isLoggedIn ? (
         <label className="flex cursor-pointer items-start gap-2 rounded-md border border-white/12 bg-white/5 px-3 py-2 text-xs text-white/90">

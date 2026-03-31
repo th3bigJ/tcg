@@ -31,6 +31,7 @@ type Props = {
   activeEnergy: string;
   activeCategory: string;
   excludeCommonUncommon: boolean;
+  excludeOwned?: boolean;
   rarityOptions: string[];
   energyOptions: string[];
   categoryOptions: string[];
@@ -58,6 +59,7 @@ export function SearchCardGrid({
   activeEnergy,
   activeCategory,
   excludeCommonUncommon,
+  excludeOwned = false,
   rarityOptions,
   energyOptions,
   categoryOptions,
@@ -225,6 +227,7 @@ export function SearchCardGrid({
             activeEnergy,
             activeCategory,
             excludeCommonUncommon,
+            excludeOwned,
             rarityOptions: rarityOptions ?? [],
             energyOptions: energyOptions ?? [],
             categoryOptions: categoryOptions ?? [],

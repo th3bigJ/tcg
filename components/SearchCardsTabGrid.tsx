@@ -25,6 +25,7 @@ type Props = {
   activeEnergy: string;
   activeCategory: string;
   excludeCommonUncommon: boolean;
+  excludeOwned?: boolean;
   rarityOptions: string[];
   energyOptions: string[];
   categoryOptions: string[];

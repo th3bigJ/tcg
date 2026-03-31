@@ -495,12 +495,21 @@ export async function fetchMasterCardsPage(params: {
   setOrder?: string[];
   /** Stable seed for a fully randomized card feed that persists across "load more". */
   randomSeed?: string;
+  excludedMasterCardIds?: Set<string>;
 }): Promise<{ entries: CardsPageCardEntry[]; totalDocs: number }> {
   const pageSize = Math.min(CARDS_TAKE_MAX, Math.max(1, Math.floor(params.perPage)));
   const setMetaMap = getSetMetaMap();
 
   function toEntry(card: CardJsonEntry): CardsPageCardEntry | null {
     return cardJsonEntryToCardsPageEntry(card, setMetaMap.get(card.setCode));
+  }
+
+  function isExcluded(card: CardJsonEntry): boolean {
+    return Boolean(
+      params.excludedMasterCardIds &&
+      card.masterCardId &&
+      params.excludedMasterCardIds.has(card.masterCardId),
+    );
   }
 
   const orderedRows = getDefaultCardOrder();
@@ -520,6 +529,9 @@ export async function fetchMasterCardsPage(params: {
         : "";
 
     const filteredCandidates = candidates.filter((entry) => {
+      const card = cardMapForDex.get(entry.id);
+      if (!card) return false;
+      if (isExcluded(card)) return false;
       if (params.activeSet && entry.setCode !== params.activeSet) return false;
       if (params.activeRarity && entry.rarity !== params.activeRarity) return false;
       if (searchQuery && !entry.cardNameLower.includes(searchQuery)) return false;
@@ -529,8 +541,7 @@ export async function fetchMasterCardsPage(params: {
       }
       if (categoryFilterKey && entry.categoryKey !== categoryFilterKey) return false;
       if (params.activeEnergy.trim()) {
-        const card = cardMapForDex.get(entry.id);
-        if (!card || !cardMatchesEnergyTypeSelection(card.elementTypes, params.activeEnergy)) {
+        if (!cardMatchesEnergyTypeSelection(card.elementTypes, params.activeEnergy)) {
           return false;
         }
       }
@@ -569,7 +580,8 @@ export async function fetchMasterCardsPage(params: {
     !params.activeSearch &&
     !params.activeArtist &&
     !params.excludeCommonUncommon &&
-    params.categoryQueryVariants.length === 0;
+    params.categoryQueryVariants.length === 0 &&
+    !params.excludedMasterCardIds?.size;
 
   if (isDefaultUnfiltered) {
     if (params.randomSeed) {
@@ -627,7 +639,7 @@ export async function fetchMasterCardsPage(params: {
   if (params.activeSet) {
     const setCards = getCardsBySet(params.activeSet);
     const matched = setCards.filter((c) =>
-      cardMatchesFilters(c, params)
+      !isExcluded(c) && cardMatchesFilters(c, params)
     );
     filteredIds = matched.map((c) => c.masterCardId);
   } else {
@@ -637,7 +649,7 @@ export async function fetchMasterCardsPage(params: {
       .map((row) => {
         const card = cardMap.get(row.id);
         if (!card) return null;
-        return cardMatchesFilters(card, params) ? row.id : null;
+        return !isExcluded(card) && cardMatchesFilters(card, params) ? row.id : null;
       })
       .filter((id): id is string => id !== null);
   }

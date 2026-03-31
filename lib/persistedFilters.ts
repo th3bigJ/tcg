@@ -15,6 +15,7 @@ export type PersistedFilters = {
   rarity?: string;
   energy?: string;
   excludeCommonUncommon?: boolean;
+  excludeCollected?: boolean;
   category?: string;
   missingOnly?: boolean;
   sort?: SortOrder;
@@ -43,6 +44,7 @@ export function buildPokedexDetailHref(dexNumber: number): string {
   if (f.energy) p.set("energy", f.energy);
   if (f.rarity) p.set("rarity", f.rarity);
   if (f.excludeCommonUncommon) p.set("exclude_cu", "1");
+  if (f.excludeCollected) p.set("exclude_owned", "1");
   if (f.category) p.set("category", f.category);
   const s = p.toString();
   return s ? `/pokedex/${dexNumber}?${s}` : `/pokedex/${dexNumber}`;
