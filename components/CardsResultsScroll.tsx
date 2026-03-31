@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
+import { CHROME_SCROLL_EVENT } from "@/lib/chromeVisibility";
 import { SEARCH_NAV_RESELECT_EVENT } from "@/lib/searchNavEvents";
 
 const SCROLL_STORAGE_KEY = "tcg-cards-load-more-scroll-y";
@@ -128,10 +129,17 @@ export function CardsResultsScroll({
 
   const pullProgress = Math.min(1, pullY / PULL_THRESHOLD);
 
+  function handleScroll() {
+    if (scrollsWindow) return;
+    const scrollY = scrollRef.current?.scrollTop ?? 0;
+    window.dispatchEvent(new CustomEvent(CHROME_SCROLL_EVENT, { detail: { scrollY } }));
+  }
+
   return (
     <div
       ref={scrollRef}
       className={scrollsWindow ? "relative min-h-0" : "relative scrollbar-hide min-h-0 flex-1 overflow-y-auto"}
+      onScroll={handleScroll}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CHROME_SCROLL_EVENT } from "@/lib/chromeVisibility";
 
 export function useAutoHideChrome({
   disabled = false,
@@ -34,8 +35,7 @@ export function useAutoHideChrome({
       frameId = window.requestAnimationFrame(() => setForceVisible(false));
     }
 
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+    const updateVisibility = (currentScrollY: number) => {
       const delta = currentScrollY - lastScrollYRef.current;
 
       if (currentScrollY <= topRevealThreshold) {
@@ -55,10 +55,23 @@ export function useAutoHideChrome({
       lastScrollYRef.current = currentScrollY;
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const handleWindowScroll = () => {
+      updateVisibility(window.scrollY);
+    };
+
+    const handleChromeScroll = (event: Event) => {
+      const customEvent = event as CustomEvent<{ scrollY?: number }>;
+      const scrollY = customEvent.detail?.scrollY;
+      if (typeof scrollY !== "number") return;
+      updateVisibility(scrollY);
+    };
+
+    window.addEventListener("scroll", handleWindowScroll, { passive: true });
+    window.addEventListener(CHROME_SCROLL_EVENT, handleChromeScroll as EventListener);
     return () => {
       if (frameId !== null) window.cancelAnimationFrame(frameId);
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", handleWindowScroll);
+      window.removeEventListener(CHROME_SCROLL_EVENT, handleChromeScroll as EventListener);
     };
   }, [disabled, forceVisible, hideAfter, minDelta, topRevealThreshold]);
 

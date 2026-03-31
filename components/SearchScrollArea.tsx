@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 
+import { CHROME_SCROLL_EVENT } from "@/lib/chromeVisibility";
 import { SEARCH_NAV_RESELECT_EVENT } from "@/lib/searchNavEvents";
 
 export function SearchScrollArea({
@@ -23,7 +24,14 @@ export function SearchScrollArea({
   }, []);
 
   return (
-    <div ref={scrollRef} className={className}>
+    <div
+      ref={scrollRef}
+      className={className}
+      onScroll={() => {
+        const scrollY = scrollRef.current?.scrollTop ?? 0;
+        window.dispatchEvent(new CustomEvent(CHROME_SCROLL_EVENT, { detail: { scrollY } }));
+      }}
+    >
       {children}
     </div>
   );
