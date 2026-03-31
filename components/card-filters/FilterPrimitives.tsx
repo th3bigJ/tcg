@@ -93,14 +93,24 @@ export function FilterChipSelect({
   widthClass = "w-auto",
 }: FilterChipSelectProps) {
   const active = defaultValue !== undefined ? value !== defaultValue : Boolean(value);
+  const selectedLabel =
+    options.find((option) => option.value === value)?.label ??
+    options[0]?.label ??
+    "";
+
   return (
-    <div className="relative shrink-0">
+    <div className={`relative inline-grid shrink-0 ${widthClass}`}>
+      <span
+        className="pointer-events-none invisible col-start-1 row-start-1 whitespace-nowrap px-3 pr-7 text-xs font-medium"
+        aria-hidden="true"
+      >
+        {selectedLabel}
+      </span>
       <select
         value={value}
         onChange={(e) => onChange(e.currentTarget.value)}
         aria-label={ariaLabel}
-        style={{ width: "auto" }}
-        className={`h-8 rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
+        className={`col-start-1 row-start-1 h-8 w-full rounded-full border py-0 pl-3 pr-7 text-xs font-medium transition [appearance:none] [-webkit-appearance:none] [background-image:none] outline-none ${
           active
             ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
             : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/75 hover:border-[var(--foreground)]/30 hover:bg-[var(--foreground)]/12"

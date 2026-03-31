@@ -204,7 +204,7 @@ export function SharedCollectionsHubClient({ outgoing: initialOutgoing, incoming
             setSharedWithSheetOpen(false);
             setShareSheetOpen(true);
           }}
-          className="rounded-lg border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium transition hover:bg-[var(--foreground)]/18"
+          className="inline-flex items-center justify-center rounded-full border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-center text-sm font-medium leading-none transition hover:bg-[var(--foreground)]/18"
           aria-haspopup="dialog"
           aria-expanded={shareSheetOpen}
           aria-controls="shared-collections-invite-sheet"
@@ -285,7 +285,7 @@ export function SharedCollectionsHubClient({ outgoing: initialOutgoing, incoming
                   setShareSheetOpen(false);
                   setSharedWithSheetOpen(true);
                 }}
-                className="w-fit max-w-full rounded-lg border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--foreground)]/18"
+                className="inline-flex w-fit max-w-full items-center justify-center rounded-full border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-center text-sm font-medium leading-none text-[var(--foreground)] transition hover:bg-[var(--foreground)]/18"
                 aria-haspopup="dialog"
                 aria-expanded={sharedWithSheetOpen}
                 aria-controls="shared-collections-shared-with-sheet"
@@ -306,7 +306,7 @@ export function SharedCollectionsHubClient({ outgoing: initialOutgoing, incoming
                       <button
                         type="button"
                         onClick={() => void openTradeNotification(n)}
-                        className="flex w-full cursor-pointer touch-manipulation items-center justify-between gap-4 rounded-lg border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-3 py-3 text-left transition hover:bg-[var(--foreground)]/10 active:bg-[var(--foreground)]/12"
+                        className="flex w-full cursor-pointer touch-manipulation items-center justify-between gap-4 rounded-full border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-5 py-3 text-left transition hover:bg-[var(--foreground)]/10 active:bg-[var(--foreground)]/12"
                       >
                         <span className="min-w-0 flex-1">
                           <span className="line-clamp-3 text-sm font-medium">{n.body}</span>
@@ -314,7 +314,7 @@ export function SharedCollectionsHubClient({ outgoing: initialOutgoing, incoming
                             <span className="mt-1 block text-xs text-[var(--foreground)]/50">{timeLabel}</span>
                           ) : null}
                         </span>
-                        <span className="shrink-0 pl-1 text-lg leading-none text-[var(--foreground)]/45" aria-hidden>
+                        <span className="shrink-0 pr-1 text-lg leading-none text-[var(--foreground)]/45" aria-hidden>
                           ›
                         </span>
                       </button>
@@ -336,11 +336,16 @@ export function SharedCollectionsHubClient({ outgoing: initialOutgoing, incoming
                       <Link
                         href={`/collect/shared/${row.id}`}
                         aria-label={`View ${friendName}'s shared collection`}
-                        className="flex cursor-pointer touch-manipulation items-center justify-between gap-4 rounded-lg border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-3 py-3 transition hover:bg-[var(--foreground)]/10 active:bg-[var(--foreground)]/12"
+                        className="flex w-full cursor-pointer touch-manipulation items-center rounded-full border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 py-3 transition hover:bg-[var(--foreground)]/10 active:bg-[var(--foreground)]/12"
                       >
-                        <span className="min-w-0 truncate text-sm font-medium">{friendName}</span>
-                        <span className="shrink-0 pl-1 text-lg leading-none text-[var(--foreground)]/45" aria-hidden>
-                          ›
+                        <span
+                          className="flex w-full items-center justify-between"
+                          style={{ paddingLeft: "2rem", paddingRight: "2rem" }}
+                        >
+                          <span className="min-w-0 truncate text-sm font-medium leading-none">{friendName}</span>
+                          <span className="shrink-0 text-lg leading-none text-[var(--foreground)]/45" aria-hidden>
+                            ›
+                          </span>
                         </span>
                       </Link>
                     </li>

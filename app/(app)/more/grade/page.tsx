@@ -82,6 +82,7 @@ async function buildGradeOpportunities(customerId: string): Promise<GradeOpportu
           masterCardId: e.masterCardId ?? "",
           cardName: e.cardName ?? "",
           setName: e.setName,
+          setCode: e.set,
           printing: e.printing,
           lowSrc: e.lowSrc,
           highSrc: e.highSrc,

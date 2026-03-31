@@ -14,7 +14,7 @@ import {
   type TransitionEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import {
@@ -709,44 +709,105 @@ function cardEntryIdentity(card: CardEntry | null): string | null {
 
 /** Keep in sync with `globals.css` `.card-viewer-overlay` `--card-viewer-carousel-gap` (used in transform math). */
 const MODAL_CAROUSEL_GAP_PX = 32;
+const CARD_MODAL_RETURN_STATE_KEY = "tcg:card-modal-return";
+
+function persistCardModalReturnState(card: CardEntry, currentUrl: string) {
+  if (typeof window === "undefined") return;
+  const identity = cardEntryIdentity(card);
+  if (!identity) return;
+  try {
+    window.sessionStorage.setItem(
+      CARD_MODAL_RETURN_STATE_KEY,
+      JSON.stringify({ currentUrl, cardIdentity: identity, savedAt: Date.now() }),
+    );
+  } catch {
+    // Ignore storage failures.
+  }
+}
 
 
 function ModalCardHeadline({
   card,
+  primaryDexId,
+  onOpenPokedex,
+  onOpenSet,
   setLogosByCode,
   setSymbolsByCode,
 }: {
   card: CardEntry;
+  primaryDexId?: number;
+  onOpenPokedex?: (dexId: number) => void;
+  onOpenSet?: () => void;
   setLogosByCode?: Record<string, string>;
   setSymbolsByCode?: Record<string, string>;
 }) {
   const modalSetLogoSrc = card.setLogoSrc || setLogosByCode?.[card.set] || "";
   const modalSetLabel = card.setName || card.set;
   const modalSetSymbolSrc = card.setSymbolSrc || setSymbolsByCode?.[card.set] || "";
+  const canOpenPokedex = typeof primaryDexId === "number" && primaryDexId > 0 && Boolean(onOpenPokedex);
+  const canOpenSet = Boolean(card.set?.trim() && onOpenSet);
 
   return (
     <div className="w-full px-1 py-4 text-center text-white md:px-0 md:py-0 md:text-left">
       <div className="flex items-center justify-center gap-2 md:justify-center">
-        <h3 className="text-balance break-words text-xl font-bold leading-tight md:text-xl">
-          {card.cardName || "Unknown card"}
-        </h3>
+        {canOpenPokedex && onOpenPokedex ? (
+          <button
+            type="button"
+            onClick={() => onOpenPokedex(primaryDexId)}
+            className="text-balance break-words text-xl font-bold leading-tight underline decoration-white/30 underline-offset-2 transition hover:decoration-white/70 md:text-xl"
+          >
+            {card.cardName || "Unknown card"}
+          </button>
+        ) : (
+          <h3 className="text-balance break-words text-xl font-bold leading-tight md:text-xl">
+            {card.cardName || "Unknown card"}
+          </h3>
+        )}
       </div>
       <p className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm leading-snug text-white/75 md:mt-1.5 md:justify-center">
-        {modalSetLogoSrc ? (
-          <img
-            src={modalSetLogoSrc}
-            alt={`${modalSetLabel} set logo`}
-            className="h-7 max-h-8 w-auto max-w-[140px] object-contain"
-          />
-        ) : null}
-        <span className="min-w-0 font-medium text-white/85">{modalSetLabel}</span>
-        {modalSetSymbolSrc ? (
-          <img
-            src={modalSetSymbolSrc}
-            alt={`${modalSetLabel} symbol`}
-            className="h-8 w-auto max-w-[36px] shrink-0 object-contain opacity-80"
-          />
-        ) : null}
+        {canOpenSet ? (
+          <button
+            type="button"
+            onClick={onOpenSet}
+            className="inline-flex flex-wrap items-center justify-center gap-2 rounded-full px-1 py-0.5 text-sm leading-snug text-white/75 transition hover:text-white"
+          >
+            {modalSetLogoSrc ? (
+              <img
+                src={modalSetLogoSrc}
+                alt={`${modalSetLabel} set logo`}
+                className="h-7 max-h-8 w-auto max-w-[140px] object-contain"
+              />
+            ) : null}
+            <span className="min-w-0 font-medium text-white/85 underline decoration-white/30 underline-offset-2">
+              {modalSetLabel}
+            </span>
+            {modalSetSymbolSrc ? (
+              <img
+                src={modalSetSymbolSrc}
+                alt={`${modalSetLabel} symbol`}
+                className="h-8 w-auto max-w-[36px] shrink-0 object-contain opacity-80"
+              />
+            ) : null}
+          </button>
+        ) : (
+          <>
+            {modalSetLogoSrc ? (
+              <img
+                src={modalSetLogoSrc}
+                alt={`${modalSetLabel} set logo`}
+                className="h-7 max-h-8 w-auto max-w-[140px] object-contain"
+              />
+            ) : null}
+            <span className="min-w-0 font-medium text-white/85">{modalSetLabel}</span>
+            {modalSetSymbolSrc ? (
+              <img
+                src={modalSetSymbolSrc}
+                alt={`${modalSetLabel} symbol`}
+                className="h-8 w-auto max-w-[36px] shrink-0 object-contain opacity-80"
+              />
+            ) : null}
+          </>
+        )}
       </p>
     </div>
   );
@@ -756,12 +817,18 @@ function ModalCarouselSlide({
   card,
   slotWidth,
   showMeta,
+  primaryDexId,
+  onOpenPokedex,
+  onOpenSet,
   setLogosByCode,
   setSymbolsByCode,
 }: {
   card: CardEntry | null;
   slotWidth: number;
   showMeta: boolean;
+  primaryDexId?: number;
+  onOpenPokedex?: (dexId: number) => void;
+  onOpenSet?: () => void;
   setLogosByCode?: Record<string, string>;
   setSymbolsByCode?: Record<string, string>;
 }) {
@@ -788,7 +855,14 @@ function ModalCarouselSlide({
       </div>
       {showMeta && card ? (
         <div className="w-full min-w-0 max-w-full md:hidden">
-          <ModalCardHeadline card={card} setLogosByCode={setLogosByCode} setSymbolsByCode={setSymbolsByCode} />
+          <ModalCardHeadline
+            card={card}
+            primaryDexId={primaryDexId}
+            onOpenPokedex={onOpenPokedex}
+            onOpenSet={onOpenSet}
+            setLogosByCode={setLogosByCode}
+            setSymbolsByCode={setSymbolsByCode}
+          />
         </div>
       ) : null}
     </div>
@@ -802,6 +876,7 @@ function ModalDexOtherCardsSection({
   nationalDexStripError,
   selectedCard,
   normalizedCards,
+  onOpenCard,
   setSelectedIndex,
   setSelectedCardIdentity,
   setStandaloneModalCard,
@@ -812,6 +887,7 @@ function ModalDexOtherCardsSection({
   nationalDexStripError: boolean;
   selectedCard: CardEntry;
   normalizedCards: CardEntry[];
+  onOpenCard?: () => void;
   setSelectedIndex: (index: number | null) => void;
   setSelectedCardIdentity: (identity: string | null) => void;
   setStandaloneModalCard: (card: CardEntry | null) => void;
@@ -858,6 +934,7 @@ function ModalDexOtherCardsSection({
           type="button"
           onClick={() => {
             if (isCurrent) return;
+            onOpenCard?.();
             const gi = normalizedCards.findIndex((c) => sameCardEntry(c, card));
             if (gi >= 0) {
               setStandaloneModalCard(null);
@@ -1216,7 +1293,7 @@ const CardGridItem = memo(function CardGridItem({
           <img
             src={gradedImageSrc ?? card.lowSrc}
             alt={`${card.set} ${card.filename}`}
-            className={`h-full w-full ${gradedImageSrc ? "object-contain object-center" : "object-cover object-center"}`}
+            className="h-full w-full object-contain object-center"
             loading={index < 12 ? "eager" : "lazy"}
             decoding="async"
             fetchPriority={index < 6 ? "high" : "auto"}
@@ -1300,7 +1377,7 @@ const CardGridItem = memo(function CardGridItem({
             ×{variant === "collection" ? card.quantity : tileOwnedQuantity}
           </span>
         ) : null}
-        <div className="min-w-0 px-7 text-center">
+        <div className="min-w-0 w-full px-1 text-center">
           {firstRowText ? (
             <span
               className={`block line-clamp-1 text-[10px] font-medium ${
@@ -1396,6 +1473,8 @@ export function CardGrid({
   onModalClose?: () => void;
 }) {
   const router = useRouter();
+  const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams();
   const allowMutations = Boolean(customerLoggedIn && !readOnly);
   const [localWishlistMap, setLocalWishlistMap] = useState(wishlistEntryIdsByMasterCardId);
   const [addSheetOpen, setAddSheetOpen] = useState(false);
@@ -1540,6 +1619,7 @@ export function CardGrid({
         .filter((card) => card.lowSrc),
     [cards],
   );
+  const currentUrl = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [selectedCardIdentity, setSelectedCardIdentity] = useState<string | null>(null);
@@ -1682,6 +1762,57 @@ export function CardGrid({
     setNationalDexStripError(false);
     onModalClose?.();
   }, [onModalClose]);
+
+  const scrollModalToTop = useCallback(() => {
+    modalScrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    if (selectedIndex !== null || standaloneModalCard !== null) return;
+    if (normalizedCards.length === 0) return;
+
+    let rawState: string | null = null;
+    try {
+      rawState = window.sessionStorage.getItem(CARD_MODAL_RETURN_STATE_KEY);
+    } catch {
+      rawState = null;
+    }
+    if (!rawState) return;
+
+    let parsed: { currentUrl?: string; cardIdentity?: string } | null = null;
+    try {
+      parsed = JSON.parse(rawState) as { currentUrl?: string; cardIdentity?: string };
+    } catch {
+      parsed = null;
+    }
+
+    try {
+      window.sessionStorage.removeItem(CARD_MODAL_RETURN_STATE_KEY);
+    } catch {
+      // Ignore storage cleanup failures.
+    }
+
+    if (!parsed?.currentUrl || !parsed.cardIdentity) return;
+    if (parsed.currentUrl !== currentUrl) return;
+
+    const restoredIndex = normalizedCards.findIndex(
+      (card) => cardEntryIdentity(card) === parsed?.cardIdentity,
+    );
+    if (restoredIndex === -1) return;
+    openModal(restoredIndex);
+  }, [currentUrl, normalizedCards, openModal, selectedIndex, standaloneModalCard]);
+
+  const openPokedexForSelectedCard = useCallback((dexId: number) => {
+    if (!selectedCard) return;
+    persistCardModalReturnState(selectedCard, currentUrl);
+    router.push(`/pokedex/${encodeURIComponent(String(dexId))}`);
+  }, [currentUrl, router, selectedCard]);
+
+  const openSetForSelectedCard = useCallback(() => {
+    if (!selectedCard?.set) return;
+    persistCardModalReturnState(selectedCard, currentUrl);
+    router.push(`/expansions/${encodeURIComponent(selectedCard.set)}`);
+  }, [currentUrl, router, selectedCard]);
 
   const goLogin = useCallback(() => {
     router.push("/login");
@@ -2584,6 +2715,9 @@ export function CardGrid({
                   card={selectedCard}
                   slotWidth={carouselSlideWidth}
                   showMeta
+                  primaryDexId={modalNationalDexIds?.[0]}
+                  onOpenPokedex={openPokedexForSelectedCard}
+                  onOpenSet={openSetForSelectedCard}
                   setLogosByCode={setLogosByCode}
                   setSymbolsByCode={setSymbolsByCode}
                 />
@@ -2604,6 +2738,7 @@ export function CardGrid({
                 nationalDexStripError={nationalDexStripError}
                 selectedCard={selectedCard}
                 normalizedCards={normalizedCards}
+                onOpenCard={scrollModalToTop}
                 setSelectedIndex={setSelectedIndex}
                 setSelectedCardIdentity={setSelectedCardIdentity}
                 setStandaloneModalCard={setStandaloneModalCard}
@@ -2616,6 +2751,9 @@ export function CardGrid({
               <div className="hidden md:block">
                 <ModalCardHeadline
                   card={selectedCard}
+                  primaryDexId={modalNationalDexIds?.[0]}
+                  onOpenPokedex={openPokedexForSelectedCard}
+                  onOpenSet={openSetForSelectedCard}
                   setLogosByCode={setLogosByCode}
                   setSymbolsByCode={setSymbolsByCode}
                 />
@@ -2781,6 +2919,7 @@ export function CardGrid({
                   nationalDexStripError={nationalDexStripError}
                   selectedCard={selectedCard}
                   normalizedCards={normalizedCards}
+                  onOpenCard={scrollModalToTop}
                   setSelectedIndex={setSelectedIndex}
                   setSelectedCardIdentity={setSelectedCardIdentity}
                   setStandaloneModalCard={setStandaloneModalCard}

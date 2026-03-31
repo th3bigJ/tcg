@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
+import { SEARCH_NAV_RESELECT_EVENT } from "@/lib/searchNavEvents";
+
 const SCROLL_STORAGE_KEY = "tcg-cards-load-more-scroll-y";
 const PULL_THRESHOLD = 112;
 
@@ -26,17 +28,13 @@ export function CardsResultsScroll({
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const prevScrollRestoreKeyRef = useRef<string | null>(null);
+  const [loadingMoreForKey, setLoadingMoreForKey] = useState<string | null>(null);
   const [isRefreshing, startRefreshTransition] = useTransition();
   const [pullY, setPullY] = useState(0);
   const touchStartYRef = useRef<number | null>(null);
+  const isLoadingMore = loadingMoreForKey === scrollRestoreKey;
 
   useLayoutEffect(() => {
-    if (prevScrollRestoreKeyRef.current !== scrollRestoreKey) {
-      prevScrollRestoreKeyRef.current = scrollRestoreKey;
-      setIsLoadingMore(false);
-    }
     const raw = sessionStorage.getItem(SCROLL_STORAGE_KEY);
     if (raw === null) return;
     sessionStorage.removeItem(SCROLL_STORAGE_KEY);
@@ -75,6 +73,20 @@ export function CardsResultsScroll({
     };
   }, [canLoadMore, loadMoreHref, scrollRestoreKey]);
 
+  useEffect(() => {
+    const handleSearchNavReselect = () => {
+      if (scrollsWindow) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.addEventListener(SEARCH_NAV_RESELECT_EVENT, handleSearchNavReselect);
+    return () => window.removeEventListener(SEARCH_NAV_RESELECT_EVENT, handleSearchNavReselect);
+  }, [scrollsWindow]);
+
   function handleTouchStart(e: React.TouchEvent) {
     const scrollTop = scrollsWindow ? window.scrollY : (scrollRef.current?.scrollTop ?? 0);
     if (scrollTop > 0) return;
@@ -106,7 +118,7 @@ export function CardsResultsScroll({
 
   function handleLoadMore() {
     if (isLoadingMore) return;
-    setIsLoadingMore(true);
+    setLoadingMoreForKey(scrollRestoreKey);
     const scrollY = scrollsWindow ? window.scrollY : (scrollRef.current?.scrollTop ?? 0);
     try { sessionStorage.setItem(SCROLL_STORAGE_KEY, String(scrollY)); } catch { /* ignore */ }
     startTransition(() => {

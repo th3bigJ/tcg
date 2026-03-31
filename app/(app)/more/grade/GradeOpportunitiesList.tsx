@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 export type GradeOpportunity = {
   masterCardId: string;
   cardName: string;
   setName?: string;
+  setCode?: string;
   printing?: string;
   lowSrc: string;
   highSrc: string;
@@ -16,6 +18,14 @@ export type GradeOpportunity = {
 };
 
 type Grader = "psa" | "ace";
+
+function buildCardHref(opp: GradeOpportunity): string {
+  const params = new URLSearchParams();
+  if (opp.setCode?.trim()) params.set("set", opp.setCode.trim());
+  if (opp.cardName.trim()) params.set("search", opp.cardName.trim());
+  const qs = params.toString();
+  return qs ? `/cards?${qs}` : "/cards";
+}
 
 function fmt(n: number): string {
   return new Intl.NumberFormat("en-GB", {
@@ -81,9 +91,11 @@ export function GradeOpportunitiesList({
       ) : (
         <div className="mt-4 flex flex-col gap-3">
           {filtered.map((opp) => (
-            <div
+            <Link
               key={`${opp.masterCardId}::${opp.printing ?? ""}`}
-              className="flex gap-4 rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/[0.03] p-3"
+              href={buildCardHref(opp)}
+              prefetch={false}
+              className="flex gap-4 rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/[0.03] p-3 transition hover:bg-[var(--foreground)]/[0.06]"
             >
               <div className="w-[60px] shrink-0">
                 <Image
@@ -121,7 +133,7 @@ export function GradeOpportunitiesList({
                   </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

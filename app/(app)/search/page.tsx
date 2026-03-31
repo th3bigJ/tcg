@@ -5,6 +5,7 @@ import { SearchBrowseTabs } from "@/components/SearchBrowseTabs";
 import { SearchCardsTabGrid } from "@/components/SearchCardsTabGrid";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCurrentCustomer } from "@/lib/auth";
+import { SearchScrollArea } from "@/components/SearchScrollArea";
 import {
   CARDS_LOAD_MORE_STEP,
   fetchMasterCardsPage,
@@ -90,9 +91,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <div className={searchShellClass}>
         <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-[var(--mobile-page-top-offset)] lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
           <SearchBrowseTabs activeTab="sets" cardsHref="/search?tab=cards" />
-          <div className="min-h-0 flex-1 overflow-y-auto pb-4">
+          <SearchScrollArea className="min-h-0 flex-1 overflow-y-auto pb-4">
             <ExpansionsList groups={groups} uniqueOwnedBySetCode={uniqueOwnedBySetCode} />
-          </div>
+          </SearchScrollArea>
         </main>
       </div>
     );
@@ -121,7 +122,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <div className={searchShellClass}>
         <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-[var(--mobile-page-top-offset)] lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
           <SearchBrowseTabs activeTab="pokedex" cardsHref="/search?tab=cards" />
-          <div className="min-h-0 flex-1 overflow-y-auto pb-[max(1.5rem,var(--bottom-nav-offset))]">
+          <SearchScrollArea className="min-h-0 flex-1 overflow-y-auto pb-[max(1.5rem,var(--bottom-nav-offset))]">
             <h1 className="text-xl font-semibold tracking-tight">Pokédex</h1>
             {customer ? (
               <p className="mb-4 mt-1 text-sm text-[var(--foreground)]/70">
@@ -130,12 +131,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             ) : (
               <div className="mb-4" aria-hidden />
             )}
-            <PokedexList
-              pokemon={pokemon}
-              collectedDexIds={collectedDexIds}
-              customerLoggedIn={Boolean(customer)}
-            />
-          </div>
+              <PokedexList
+                pokemon={pokemon}
+                collectedDexIds={collectedDexIds}
+                customerLoggedIn={Boolean(customer)}
+              />
+          </SearchScrollArea>
         </main>
       </div>
     );

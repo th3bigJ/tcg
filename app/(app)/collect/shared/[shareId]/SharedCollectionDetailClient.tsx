@@ -92,18 +92,20 @@ export function SharedCollectionDetailClient({
         <div
           role="tablist"
           aria-label="View"
-          className="mt-6 flex gap-1 rounded-lg border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 p-1"
+          className="mt-6 flex gap-1 border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 p-1"
+          style={{ borderRadius: "999px" }}
         >
           <button
             type="button"
             role="tab"
             aria-selected={tab === "collection"}
             onClick={() => setTab("collection")}
-            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
+            className={`flex-1 px-3 py-2 text-sm font-medium transition ${
               tab === "collection"
                 ? "bg-[var(--foreground)]/15 text-[var(--foreground)]"
                 : "text-[var(--foreground)]/55 hover:text-[var(--foreground)]/85"
             }`}
+            style={{ borderRadius: "999px" }}
           >
             Collection
           </button>
@@ -112,11 +114,12 @@ export function SharedCollectionDetailClient({
             role="tab"
             aria-selected={tab === "wishlist"}
             onClick={() => setTab("wishlist")}
-            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
+            className={`flex-1 px-3 py-2 text-sm font-medium transition ${
               tab === "wishlist"
                 ? "bg-[var(--foreground)]/15 text-[var(--foreground)]"
                 : "text-[var(--foreground)]/55 hover:text-[var(--foreground)]/85"
             }`}
+            style={{ borderRadius: "999px" }}
           >
             Wishlist
           </button>
@@ -125,11 +128,12 @@ export function SharedCollectionDetailClient({
             role="tab"
             aria-selected={tab === "trade"}
             onClick={() => setTab("trade")}
-            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition ${
+            className={`flex-1 px-3 py-2 text-sm font-medium transition ${
               tab === "trade"
                 ? "bg-[var(--foreground)]/15 text-[var(--foreground)]"
                 : "text-[var(--foreground)]/55 hover:text-[var(--foreground)]/85"
             }`}
+            style={{ borderRadius: "999px" }}
           >
             Trade
           </button>

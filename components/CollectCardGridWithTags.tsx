@@ -17,6 +17,39 @@ const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
   { value: "added-desc", label: "Added date" },
 ];
 
+function normalizeFilterOptionLabel(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function preferredFilterOptionLabel(labels: string[]) {
+  return [...labels].sort((a, b) => {
+    const aHasUppercase = /[A-Z]/.test(a);
+    const bHasUppercase = /[A-Z]/.test(b);
+    if (aHasUppercase !== bHasUppercase) return aHasUppercase ? -1 : 1;
+    return a.localeCompare(b);
+  })[0] ?? "";
+}
+
+function buildDistinctFilterOptions(values: Array<string | null | undefined>) {
+  const grouped = new Map<string, string[]>();
+
+  for (const rawValue of values) {
+    const label = normalizeFilterOptionLabel(String(rawValue ?? ""));
+    if (!label) continue;
+    const key = label.toLocaleLowerCase();
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.push(label);
+    } else {
+      grouped.set(key, [label]);
+    }
+  }
+
+  return [...grouped.values()]
+    .map((labels) => preferredFilterOptionLabel(labels))
+    .sort((a, b) => a.localeCompare(b));
+}
+
 type CollectCardGridWithTagsProps = {
   cards: (CardEntry & Pick<StorefrontCardExtras, "addedAt">)[];
   setLogosByCode: Record<string, string>;
@@ -80,26 +113,15 @@ export function CollectCardGridWithTags({
   }, [cards]);
 
   const rarityOptions = useMemo(() => {
-    const seen = new Set<string>();
-    for (const card of cards) if (card.rarity) seen.add(card.rarity);
-    return Array.from(seen).sort();
+    return buildDistinctFilterOptions(cards.map((card) => card.rarity));
   }, [cards]);
 
   const energyOptions = useMemo(() => {
-    const seen = new Set<string>();
-    for (const card of cards) {
-      for (const t of card.elementTypes ?? []) {
-        const s = String(t ?? "").trim();
-        if (s) seen.add(s);
-      }
-    }
-    return Array.from(seen).sort((a, b) => a.localeCompare(b));
+    return buildDistinctFilterOptions(cards.flatMap((card) => card.elementTypes ?? []));
   }, [cards]);
 
   const categoryOptions = useMemo(() => {
-    const seen = new Set<string>();
-    for (const card of cards) if (card.category) seen.add(card.category);
-    return Array.from(seen).sort();
+    return buildDistinctFilterOptions(cards.map((card) => card.category));
   }, [cards]);
 
   const filteredCards = useMemo(() => {

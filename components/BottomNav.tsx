@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { SEARCH_NAV_RESELECT_EVENT } from "@/lib/searchNavEvents";
 import { TRADE_NOTIFICATIONS_UPDATED_EVENT } from "@/lib/tradeNotificationsConstants";
 
 type NavItem = {
@@ -191,7 +192,12 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
     {
       href: "/more",
       label: "More",
-      match: (p) => p === "/more" || p.startsWith("/account") || p === "/login" || p === "/register",
+      match: (p) =>
+        p === "/more" ||
+        p.startsWith("/more/") ||
+        p.startsWith("/account") ||
+        p === "/login" ||
+        p === "/register",
     },
   ];
 
@@ -200,7 +206,7 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
         {
           href: "/more/grade",
           label: "Grade opportunities",
-          description: "Find the best cards in your collection to profit from grading.",
+          description: "Find the best card to grade.",
         },
         {
           href: "/account",
@@ -286,6 +292,12 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
                 prefetch={
                   item.href === "/search" || item.href === "/collect" || item.href === "/collect/shared"
                 }
+                onClick={(event) => {
+                  if (item.href === "/search" && pathname === "/search") {
+                    event.preventDefault();
+                    window.dispatchEvent(new CustomEvent(SEARCH_NAV_RESELECT_EVENT));
+                  }
+                }}
                 className={itemClass}
                 style={itemStyle}
                 aria-current={active ? "page" : undefined}
@@ -311,13 +323,21 @@ export function BottomNav({ isLoggedIn }: { isLoggedIn: boolean }) {
       {moreOpen && typeof document !== "undefined"
         ? createPortal(
             <div
-              className="fixed inset-0 z-[10001] flex flex-col justify-end bg-black/60"
+              className="fixed inset-0 z-[10001] flex items-end justify-center bg-black/55"
               onClick={() => setMoreOpen(false)}
               role="presentation"
             >
               <div
                 id="bottom-nav-more-sheet"
-                className="max-h-[85dvh] overflow-y-auto rounded-t-2xl border border-[var(--foreground)]/15 bg-[var(--background)] p-4 text-[var(--foreground)] shadow-xl"
+                className="pointer-events-auto overflow-y-auto border border-[var(--foreground)]/15 bg-[var(--background)] p-4 text-[var(--foreground)] shadow-xl"
+                style={{
+                  borderRadius: "28px",
+                  width: "calc(100vw - 2.5srem)",
+                  maxWidth: "34rem",
+                  maxHeight: "min(22rem, 48dvh)",
+                  marginBottom:
+                    "calc(0.5rem + max(0.25rem, calc(env(safe-area-inset-bottom, 0px) - 1rem)) + 4.5rem + 0.35rem)",
+                }}
                 onClick={(event) => event.stopPropagation()}
                 role="dialog"
                 aria-modal="true"
