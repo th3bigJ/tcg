@@ -117,15 +117,12 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
 
   return (
     <div className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
-      <div className="flex shrink-0 items-center px-4 pt-[var(--mobile-page-top-offset)]">
-        <h1 className="text-xl font-semibold">My collection</h1>
-      </div>
       {collectionCountLabel ? (
-        <p className="mt-2 shrink-0 px-4 text-sm text-[var(--foreground)]/65">{collectionCountLabel}</p>
+        <p className="mt-4 shrink-0 px-4 text-sm text-[var(--foreground)]/65">{collectionCountLabel}</p>
       ) : null}
       {valueFormatted ? (
         <p className="mt-1 shrink-0 px-4 text-base font-semibold tabular-nums text-[var(--foreground)]">
-          {valueFormatted}
+          {valueFormatted} <span className="text-sm font-normal text-[var(--foreground)]/55">Market value</span>
         </p>
       ) : null}
       {allCardsForGrid.length === 0 ? (

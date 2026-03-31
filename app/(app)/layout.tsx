@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { DevRuntimeGuards } from "@/app/(app)/DevRuntimeGuards";
 import { BottomNav } from "@/components/BottomNav";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { UniversalSearch } from "@/components/UniversalSearch";
 import { getCurrentCustomer } from "@/lib/auth";
 
 import "./globals.css";
@@ -57,7 +58,8 @@ export default async function RootLayout({
       <body className="flex min-h-[100dvh] flex-col bg-[var(--background)] text-[var(--foreground)]">
         <DevRuntimeGuards />
         <PullToRefresh />
-        <div className="relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)]">
+        <UniversalSearch isLoggedIn={Boolean(customer)} />
+        <div className="relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)] pt-[var(--top-search-offset)]">
           {children}
         </div>
         <BottomNav isLoggedIn={Boolean(customer)} />

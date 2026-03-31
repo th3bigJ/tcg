@@ -45,6 +45,7 @@ type SearchPageProps = {
     energy?: string;
     tab?: string;
     seed?: string;
+    missing_only?: string;
   }>;
 };
 
@@ -89,7 +90,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
     return (
       <div className={searchShellClass}>
-        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-[var(--mobile-page-top-offset)] lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-2 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
           <SearchBrowseTabs activeTab="sets" cardsHref="/search?tab=cards" />
           <SearchScrollArea className="min-h-0 flex-1 overflow-y-auto pb-4">
             <ExpansionsList groups={groups} uniqueOwnedBySetCode={uniqueOwnedBySetCode} />
@@ -100,6 +101,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   if (browseTab === "pokedex") {
+    const missingOnly = resolvedSearchParams.missing_only === "1";
     const [pokemon, collectionEntries] = await Promise.all([
       getCachedPokemonFilterOptions(),
       customer ? fetchCollectionCardEntries(customer.id) : Promise.resolve([]),
@@ -120,21 +122,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
     return (
       <div className={searchShellClass}>
-        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-[var(--mobile-page-top-offset)] lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-2 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
           <SearchBrowseTabs activeTab="pokedex" cardsHref="/search?tab=cards" />
           <SearchScrollArea className="min-h-0 flex-1 overflow-y-auto pb-[max(1.5rem,var(--bottom-nav-offset))]">
-            <h1 className="text-xl font-semibold tracking-tight">Pokédex</h1>
             {customer ? (
-              <p className="mb-4 mt-1 text-sm text-[var(--foreground)]/70">
-                {collectedPokemonCount} of {TOTAL_POKEMON_COUNT} Pokemon collected
-              </p>
-            ) : (
-              <div className="mb-4" aria-hidden />
-            )}
+              <h1 className="mb-4 text-center text-base font-semibold text-[var(--foreground)]/70">
+                {collectedPokemonCount} of {TOTAL_POKEMON_COUNT} Pokémon collected
+              </h1>
+            ) : null}
               <PokedexList
                 pokemon={pokemon}
                 collectedDexIds={collectedDexIds}
                 customerLoggedIn={Boolean(customer)}
+                missingOnly={missingOnly}
               />
           </SearchScrollArea>
         </main>
@@ -265,7 +265,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className={searchShellClass}>
-      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-[var(--mobile-page-top-offset)] lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-2 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
         <SearchBrowseTabs activeTab="cards" cardsHref={cardsTabHref} />
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <section className="flex min-h-0 flex-1 flex-col overflow-hidden lg:pr-1">

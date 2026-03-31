@@ -11,6 +11,7 @@ import {
   fetchMasterCardsPage,
   fetchCardsMarketValue,
   getCachedFilterFacets,
+  resolveCardsCategoryFilter,
 } from "@/lib/cardsPageQueries";
 import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 import { getCurrentCustomer } from "@/lib/auth";
@@ -37,8 +38,16 @@ export default async function PokedexPokemonCardsPage({
   const facets = (await getCachedFilterFacets()) ?? {};
   const availableSetCodes = facets.setCodes ?? [];
   const energyOptions = facets.energyTypeDisplayValues ?? [];
+  const rarityOptions = facets.rarityDisplayValues ?? [];
+  const categoryOptions = facets.categoryDisplayValues ?? [];
+  const categoryMatchGroups = facets.categoryMatchGroups ?? {};
   const selectedEnergy = (resolvedSearchParams.energy ?? "").trim();
   const activeEnergy = energyOptions.includes(selectedEnergy) ? selectedEnergy : "";
+  const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();
+  const activeRarity = rarityOptions.includes(selectedRarity) ? selectedRarity : "";
+  const excludeCommonUncommon = resolvedSearchParams.exclude_cu === "1";
+  const selectedCategory = (resolvedSearchParams.category ?? "").trim();
+  const { queryVariants: categoryQueryVariants } = resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
   const setFilterOptions = await getCachedSetFilterOptions(availableSetCodes);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
@@ -52,12 +61,12 @@ export default async function PokedexPokemonCardsPage({
       activeSet: "",
       activePokemonDex: dexNum,
       activePokemonName: pokemonMeta.name,
-      activeRarity: "",
+      activeRarity,
       activeEnergy,
       activeSearch: "",
       activeArtist: "",
-      excludeCommonUncommon: false,
-      categoryQueryVariants: [],
+      excludeCommonUncommon,
+      categoryQueryVariants,
       page: 1,
       perPage: CARDS_TAKE_MAX,
     }),
@@ -73,14 +82,14 @@ export default async function PokedexPokemonCardsPage({
   const marketValue = await fetchCardsMarketValue(cardsForGrid, customer ? ownedMasterCardIds : undefined);
   const missingCount = marketValue?.missingCount ?? (filteredCount - ownedCount);
 
-  const scrollRestoreKey = [String(dexNum), "pokedex-pokemon", activeEnergy].join("|");
+  const scrollRestoreKey = [String(dexNum), "pokedex-pokemon", activeEnergy, activeRarity, excludeCommonUncommon ? "1" : ""].join("|");
   const pokedexFilterBasePath = `/pokedex/${encodeURIComponent(String(dexNum))}`;
 
   const imageSrc = normalizePokemonImageSrc(pokemonMeta.imageUrl);
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pt-[var(--mobile-page-top-offset)]">
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pt-2">
         <div className="flex min-h-0 flex-1 flex-col">
           <header className="mb-0 flex shrink-0 items-center gap-2 border-b border-[var(--foreground)]/10 pb-2">
             <Link
@@ -129,7 +138,7 @@ export default async function PokedexPokemonCardsPage({
             </div>
           </header>
 
-          <div className="mt-4 min-h-0 flex-1">
+          <div className="mt-2 min-h-0 flex-1">
             <CardsResultsScroll
               canLoadMore={false}
               loadMoreHref=""

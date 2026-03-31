@@ -39,16 +39,6 @@ export function ExpansionsList({
 
   return (
     <div className="flex flex-col gap-4 pb-2">
-      <div>
-        <input
-          type="search"
-          placeholder="Search sets…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search sets"
-          className="min-h-11 w-full rounded-xl border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 px-3 py-2 text-base leading-normal text-[var(--foreground)] placeholder:text-[var(--foreground)]/40 focus:border-[var(--foreground)]/30 focus:outline-none md:text-sm"
-        />
-      </div>
 
       {filteredGroups.length === 0 ? (
         <p className="mt-6 text-center text-sm text-[var(--foreground)]/50">No sets match "{search}"</p>

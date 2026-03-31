@@ -1,20 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
-import { CardTagFilterRow } from "@/components/CardTagFilterRow";
 import { cardMatchesEnergyTypeSelection } from "@/lib/cardEnergyFilter";
+import { readPersistedFilters } from "@/lib/persistedFilters";
 import type { CollectionLineSummary, StorefrontCardExtras } from "@/lib/storefrontCardMaps";
 
 const COMMON_UNCOMMON = new Set(["Common", "Uncommon"]);
 
-type SortOrder = "" | "price-desc" | "release-desc" | "added-desc";
+type SortOrder = "price-desc" | "price-asc" | "release-desc" | "release-asc" | "number-desc" | "number-asc" | "added-desc";
 
 const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
-  { value: "", label: "Sort" },
-  { value: "price-desc", label: "Price" },
-  { value: "release-desc", label: "Release date" },
-  { value: "added-desc", label: "Added date" },
+  { value: "price-desc", label: "Price: high to low" },
+  { value: "price-asc", label: "Price: low to high" },
+  { value: "release-desc", label: "Release date: newest first" },
+  { value: "release-asc", label: "Release date: oldest first" },
+  { value: "number-desc", label: "Card number: high to low" },
+  { value: "number-asc", label: "Card number: low to high" },
+  { value: "added-desc", label: "Added date: newest first" },
 ];
 
 function normalizeFilterOptionLabel(value: string) {
@@ -94,12 +97,16 @@ export function CollectCardGridWithTags({
 }: CollectCardGridWithTagsProps) {
   const [groupBySet, setGroupBySet] = useState(false);
   const [search, setSearch] = useState("");
-  const [rarity, setRarity] = useState("");
-  const [energy, setEnergy] = useState("");
-  const [category, setCategory] = useState("");
-  const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(false);
+  const [rarity, setRarity] = useState(() => readPersistedFilters().rarity ?? "");
+  const [energy, setEnergy] = useState(() => readPersistedFilters().energy ?? "");
+  const [category, setCategory] = useState(() => readPersistedFilters().category ?? "");
+  const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(() => readPersistedFilters().excludeCommonUncommon ?? false);
   const [duplicatesOnly, setDuplicatesOnly] = useState(false);
-  const [sortOrder, setSortOrder] = useState<SortOrder>("price-desc");
+  const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
+    const s = readPersistedFilters().sort;
+    if (s === "price-asc" || s === "price-desc" || s === "release-desc" || s === "release-asc") return s as SortOrder;
+    return "price-desc";
+  });
   const [ownedFilterOnly, setOwnedFilterOnly] = useState(false);
 
   // Count unique cards per set from the full unfiltered list
@@ -150,22 +157,24 @@ export function CollectCardGridWithTags({
       return true;
     });
 
+    const getPrice = (card: typeof result[0]) => {
+      const k = card.collectionGroupKey ?? card.masterCardId ?? "";
+      return (k ? cardPricesByMasterCardId[k] : undefined) ?? 0;
+    };
     if (sortOrder === "price-desc") {
-      result = [...result].sort((a, b) => {
-        const ka = a.collectionGroupKey ?? a.masterCardId ?? "";
-        const kb = b.collectionGroupKey ?? b.masterCardId ?? "";
-        const pa = (ka ? cardPricesByMasterCardId[ka] : undefined) ?? 0;
-        const pb = (kb ? cardPricesByMasterCardId[kb] : undefined) ?? 0;
-        return pb - pa;
-      });
+      result = [...result].sort((a, b) => getPrice(b) - getPrice(a));
+    } else if (sortOrder === "price-asc") {
+      result = [...result].sort((a, b) => getPrice(a) - getPrice(b));
     } else if (sortOrder === "release-desc") {
-      result = [...result].sort((a, b) =>
-        (b.setReleaseDate ?? "").localeCompare(a.setReleaseDate ?? ""),
-      );
+      result = [...result].sort((a, b) => (b.setReleaseDate ?? "").localeCompare(a.setReleaseDate ?? ""));
+    } else if (sortOrder === "release-asc") {
+      result = [...result].sort((a, b) => (a.setReleaseDate ?? "").localeCompare(b.setReleaseDate ?? ""));
+    } else if (sortOrder === "number-desc") {
+      result = [...result].sort((a, b) => (b.cardNumber ?? "").localeCompare(a.cardNumber ?? "", undefined, { numeric: true }));
+    } else if (sortOrder === "number-asc") {
+      result = [...result].sort((a, b) => (a.cardNumber ?? "").localeCompare(b.cardNumber ?? "", undefined, { numeric: true }));
     } else if (sortOrder === "added-desc") {
-      result = [...result].sort((a, b) =>
-        (b.addedAt ?? "").localeCompare(a.addedAt ?? ""),
-      );
+      result = [...result].sort((a, b) => (b.addedAt ?? "").localeCompare(a.addedAt ?? ""));
     }
 
     return result;
@@ -195,35 +204,6 @@ export function CollectCardGridWithTags({
 
   return (
     <div className="px-4">
-      <div className="mb-6">
-        <CardTagFilterRow
-          groupBySet={groupBySet}
-          onGroupBySetChange={setGroupBySet}
-          localSearch={{ value: search, onChange: setSearch }}
-          localFilters={{
-            rarity,
-            onRarityChange: setRarity,
-            rarityOptions,
-            energy,
-            onEnergyChange: setEnergy,
-            energyOptions,
-            category,
-            onCategoryChange: setCategory,
-            categoryOptions,
-            excludeCommonUncommon,
-            onExcludeCommonUncommonChange: setExcludeCommonUncommon,
-            duplicatesOnly: variant === "collection" ? duplicatesOnly : undefined,
-            onDuplicatesOnlyChange: variant === "collection" ? setDuplicatesOnly : undefined,
-          }}
-          sortControl={{
-            value: sortOrder,
-            onChange: (v) => setSortOrder(v as SortOrder),
-            options: SORT_OPTIONS,
-            defaultValue: "price-desc",
-          }}
-          ownedFilterTag={ownedFilterTag}
-        />
-      </div>
       <CardGrid
         cards={filteredCards}
         setLogosByCode={setLogosByCode}
