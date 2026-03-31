@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getCurrentCustomer } from "@/lib/auth";
+import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 import { getPricingForSet, getPricingForCard } from "@/lib/r2Pricing";
 import { GradeOpportunitiesList, type GradeOpportunity } from "./GradeOpportunitiesList";
@@ -86,6 +87,33 @@ async function buildGradeOpportunities(customerId: string): Promise<GradeOpportu
           printing: e.printing,
           lowSrc: e.lowSrc,
           highSrc: e.highSrc,
+          card: {
+            masterCardId: e.masterCardId,
+            externalId: e.externalId,
+            legacyExternalId: e.legacyExternalId,
+            set: e.set,
+            setSlug: e.setSlug,
+            setName: e.setName,
+            setTcgdexId: e.setTcgdexId,
+            setCardCountOfficial: e.setCardCountOfficial,
+            setLogoSrc: e.setLogoSrc,
+            setSymbolSrc: e.setSymbolSrc,
+            setReleaseDate: e.setReleaseDate,
+            cardNumber: e.cardNumber,
+            filename: e.filename,
+            src: e.src,
+            lowSrc: e.lowSrc,
+            highSrc: e.highSrc,
+            rarity: e.rarity,
+            cardName: e.cardName,
+            category: e.category,
+            stage: e.stage,
+            hp: e.hp,
+            elementTypes: e.elementTypes,
+            dexIds: e.dexIds,
+            artist: e.artist,
+            regulationMark: e.regulationMark,
+          } satisfies CardsPageCardEntry,
           rawGbp,
           psa10Gbp,
           ace10Gbp,

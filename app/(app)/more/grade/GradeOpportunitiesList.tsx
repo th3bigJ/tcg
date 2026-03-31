@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
+
+import { CardGrid } from "@/components/CardGrid";
+import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 
 export type GradeOpportunity = {
   masterCardId: string;
@@ -12,20 +14,13 @@ export type GradeOpportunity = {
   printing?: string;
   lowSrc: string;
   highSrc: string;
+  card: CardsPageCardEntry;
   rawGbp: number;
   psa10Gbp: number | null;
   ace10Gbp: number | null;
 };
 
 type Grader = "psa" | "ace";
-
-function buildCardHref(opp: GradeOpportunity): string {
-  const params = new URLSearchParams();
-  if (opp.setCode?.trim()) params.set("set", opp.setCode.trim());
-  if (opp.cardName.trim()) params.set("search", opp.cardName.trim());
-  const qs = params.toString();
-  return qs ? `/cards?${qs}` : "/cards";
-}
 
 function fmt(n: number): string {
   return new Intl.NumberFormat("en-GB", {
@@ -41,6 +36,7 @@ export function GradeOpportunitiesList({
   opportunities: GradeOpportunity[];
 }) {
   const [grader, setGrader] = useState<Grader>("psa");
+  const [selectedOpportunity, setSelectedOpportunity] = useState<GradeOpportunity | null>(null);
 
   const gradedKey = grader === "psa" ? "psa10Gbp" : "ace10Gbp";
 
@@ -91,11 +87,11 @@ export function GradeOpportunitiesList({
       ) : (
         <div className="mt-4 flex flex-col gap-3">
           {filtered.map((opp) => (
-            <Link
+            <button
+              type="button"
               key={`${opp.masterCardId}::${opp.printing ?? ""}`}
-              href={buildCardHref(opp)}
-              prefetch={false}
-              className="flex gap-4 rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/[0.03] p-3 transition hover:bg-[var(--foreground)]/[0.06]"
+              onClick={() => setSelectedOpportunity(opp)}
+              className="flex w-full gap-4 rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/[0.03] p-3 text-left transition hover:bg-[var(--foreground)]/[0.06]"
             >
               <div className="w-[60px] shrink-0">
                 <Image
@@ -133,10 +129,18 @@ export function GradeOpportunitiesList({
                   </span>
                 </div>
               </div>
-            </Link>
+            </button>
           ))}
         </div>
       )}
+      {selectedOpportunity ? (
+        <CardGrid
+          cards={[selectedOpportunity.card]}
+          hideGrid
+          readOnly
+          onModalClose={() => setSelectedOpportunity(null)}
+        />
+      ) : null}
     </div>
   );
 }
