@@ -57,7 +57,7 @@ function LayoutChromeFallback() {
         <div
           className="mx-auto"
           style={{
-            height: "3.25rem",
+            height: "4.5rem",
             maxWidth: "34rem",
             borderRadius: "999px",
             border: "1px solid rgba(255,255,255,0.12)",

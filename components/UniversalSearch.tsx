@@ -563,7 +563,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         <div
           className="pointer-events-auto mx-auto flex items-center gap-2"
           style={{
-            height: "3.25rem",
+            height: "4.5rem",
             maxWidth: "34rem",
             borderRadius: "999px",
             border: "1px solid rgba(255,255,255,0.12)",
@@ -585,7 +585,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                 onChange={(e) => handleQueryChange(e.target.value)}
                 onFocus={() => { if (modalMode !== "search") setModalMode("search"); }}
                 placeholder="Search cards, sets, Pokémon…"
-                className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder-white/35 outline-none"
+                className="min-w-0 flex-1 bg-transparent text-base text-white placeholder-white/35 outline-none"
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}
@@ -594,7 +594,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
               <button
                 type="button"
                 onClick={openSearch}
-                className="min-w-0 flex-1 truncate text-left text-sm text-white/45"
+                className="min-w-0 flex-1 truncate text-left text-base text-white/45"
                 aria-label="Open search"
               >
                 {query || "Search cards, sets, Pokémon…"}
@@ -615,7 +615,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           {/* Camera button */}
           <Link
             href="/scan"
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
+            className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
             aria-label="Scan card"
           >
             <IconCamera />
@@ -625,7 +625,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           <button
             type="button"
             onClick={openFilters}
-            className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
+            className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
             aria-label="Open filters"
           >
             <IconFilter />
@@ -643,7 +643,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         ? createPortal(
             <div
               className="fixed inset-0 z-[1001] flex flex-col bg-black"
-              style={{ paddingTop: "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 3.25rem + 0.75rem)" }}
+              style={{ paddingTop: "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 4.5rem + 0.75rem)" }}
               onTouchStart={handleModalTouchStart}
               onTouchEnd={handleModalTouchEnd}
               onTouchCancel={resetModalSwipe}

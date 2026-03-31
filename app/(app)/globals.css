@@ -7,7 +7,7 @@
   /* Fixed bottom nav: floating pill shell + safe area (matches BottomNav). */
   --bottom-nav-offset: calc(6.5rem + env(safe-area-inset-bottom, 0px));
   /* Fixed top search bar: safe area + bar height + padding. */
-  --top-search-offset: calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 3.25rem + 0.5rem);
+  --top-search-offset: calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 4.5rem + 0.5rem);
 }
 
 @theme inline {
