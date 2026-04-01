@@ -379,6 +379,16 @@ function compareCardsForOtherStrip(a: CardEntry, b: CardEntry): number {
   return (a.cardNumber || "").localeCompare(b.cardNumber || "", undefined, { numeric: true });
 }
 
+function normalizeCardNameForSimilarity(value: string | undefined): string {
+  return (value ?? "")
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 function sameCardEntry(a: CardEntry | null, b: CardEntry | null): boolean {
   if (!a || !b) return false;
   if (a.masterCardId && b.masterCardId) {
@@ -565,6 +575,7 @@ function ModalCarouselSlide({
 
 function ModalDexOtherCardsSection({
   variant,
+  matchMode,
   nationalDexStrip,
   nationalDexStripLoading,
   nationalDexStripError,
@@ -576,6 +587,7 @@ function ModalDexOtherCardsSection({
   setStandaloneModalCard,
 }: {
   variant: "mobile" | "desktop";
+  matchMode: "dex" | "name";
   nationalDexStrip: CardEntry[];
   nationalDexStripLoading: boolean;
   nationalDexStripError: boolean;
@@ -681,9 +693,15 @@ function ModalDexOtherCardsSection({
       {nationalDexStripError ? (
         <p className={hintClass}>Could not load matching cards. Try again later.</p>
       ) : nationalDexStripLoading ? (
-        <p className={hintClass}>Loading other printings…</p>
+        <p className={hintClass}>
+          {matchMode === "dex" ? "Loading other printings…" : "Loading similar cards…"}
+        </p>
       ) : nationalDexStrip.length <= 1 ? (
-        <p className={hintClass}>Only this printing is catalogued for this Dex ID.</p>
+        <p className={hintClass}>
+          {matchMode === "dex"
+            ? "Only this printing is catalogued for this Dex ID."
+            : "No similar-named cards are catalogued yet."}
+        </p>
       ) : null}
       <div className={scrollOuterClass}>
         <div className={scrollInnerClass}>{stripItems}</div>
@@ -1474,10 +1492,15 @@ export function CardGrid({
     onModalClose?.();
   }, [onModalClose]);
 
-  const scrollModalToTop = useCallback(() => {
-    modalScrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    modalDetailsScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  const scrollModalToTop = useCallback((behavior: ScrollBehavior = "auto") => {
+    modalScrollContainerRef.current?.scrollTo({ top: 0, behavior });
+    modalDetailsScrollRef.current?.scrollTo({ top: 0, behavior });
   }, []);
+
+  useEffect(() => {
+    if (!selectedCard) return;
+    scrollModalToTop();
+  }, [scrollModalToTop, selectedCard?.masterCardId, selectedCard?.set, selectedCard?.filename]);
 
   useEffect(() => {
     if (selectedIndex !== null || standaloneModalCard !== null) return;
@@ -2283,13 +2306,19 @@ export function CardGrid({
   }, [isModalOpen]);
 
   const modalNationalDexIds = selectedCard ? normalizedNationalDexIds(selectedCard) : undefined;
-  const nationalDexFetchKey =
+  const otherCardsMatchMode: "dex" | "name" =
+    modalNationalDexIds && modalNationalDexIds.length > 0 ? "dex" : "name";
+  const similarNameFetchKey =
+    selectedCard && otherCardsMatchMode === "name"
+      ? normalizeCardNameForSimilarity(selectedCard.cardName)
+      : "";
+  const otherCardsFetchKey =
     modalNationalDexIds && modalNationalDexIds.length > 0
       ? [...modalNationalDexIds].sort((a, b) => a - b).join(",")
-      : "";
+      : similarNameFetchKey;
 
   useEffect(() => {
-    if (!nationalDexFetchKey) {
+    if (!otherCardsFetchKey) {
       setNationalDexStrip([]);
       setNationalDexStripLoading(false);
       setNationalDexStripError(false);
@@ -2303,7 +2332,9 @@ export function CardGrid({
     const loadDexStrip = async () => {
       try {
         const res = await fetch(
-          `/api/cards/by-national-dex?ids=${encodeURIComponent(nationalDexFetchKey)}`,
+          otherCardsMatchMode === "dex"
+            ? `/api/cards/by-national-dex?ids=${encodeURIComponent(otherCardsFetchKey)}`
+            : `/api/cards/by-name?name=${encodeURIComponent(selectedCard?.cardName ?? "")}`,
         );
         if (cancelled) return;
         if (!res.ok) throw new Error("request failed");
@@ -2322,7 +2353,13 @@ export function CardGrid({
             const dexIds = normalizedNationalDexIds(card);
             return { ...card, lowSrc, highSrc, ...(dexIds ? { dexIds } : {}) };
           })
-          .filter((card) => card.lowSrc);
+          .filter((card) => {
+            if (!card.lowSrc) return false;
+            if (otherCardsMatchMode === "name") {
+              return normalizeCardNameForSimilarity(card.cardName) === similarNameFetchKey;
+            }
+            return true;
+          });
         normalized.sort((a, b) => compareCardsForOtherStrip(a, b));
         setNationalDexStrip(normalized);
       } catch {
@@ -2340,7 +2377,7 @@ export function CardGrid({
     return () => {
       cancelled = true;
     };
-  }, [nationalDexFetchKey]);
+  }, [otherCardsFetchKey, otherCardsMatchMode, selectedCard?.cardName, similarNameFetchKey]);
 
   const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 400;
   const fallbackCarouselWidth = Math.max(280, viewportWidth - 32);
@@ -2475,6 +2512,21 @@ export function CardGrid({
             {modalNationalDexIds && modalNationalDexIds.length > 0 ? (
               <ModalDexOtherCardsSection
                 variant="desktop"
+                matchMode={otherCardsMatchMode}
+                nationalDexStrip={nationalDexStrip}
+                nationalDexStripLoading={nationalDexStripLoading}
+                nationalDexStripError={nationalDexStripError}
+                selectedCard={selectedCard}
+                normalizedCards={normalizedCards}
+                onOpenCard={scrollModalToTop}
+                setSelectedIndex={setSelectedIndex}
+                setSelectedCardIdentity={setSelectedCardIdentity}
+                setStandaloneModalCard={setStandaloneModalCard}
+              />
+            ) : selectedCard?.cardName ? (
+              <ModalDexOtherCardsSection
+                variant="desktop"
+                matchMode={otherCardsMatchMode}
                 nationalDexStrip={nationalDexStrip}
                 nationalDexStripLoading={nationalDexStripLoading}
                 nationalDexStripError={nationalDexStripError}
@@ -2579,11 +2631,33 @@ export function CardGrid({
                     label="Release date"
                     value={formatSetReleaseDate(selectedCard.setReleaseDate)}
                   />
-                  <ModalAttributeRow
-                    icon={<AttributeIconStar />}
-                    label="Rarity"
-                    value={selectedCard.rarity ?? ""}
-                  />
+                  {selectedCard.rarity ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeModal();
+                        router.push(`/search?tab=cards&rarity=${encodeURIComponent(selectedCard.rarity ?? "")}`);
+                      }}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 transition hover:bg-white/[0.10] md:gap-2 md:px-2.5 md:py-2">
+                        <AttributeIconStar />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Rarity</div>
+                          <div className="mt-0.5 text-sm font-medium leading-snug text-white underline decoration-white/30 underline-offset-2 md:text-xs">
+                            {selectedCard.rarity}
+                          </div>
+                        </div>
+                        <span className="shrink-0 text-white/40">›</span>
+                      </div>
+                    </button>
+                  ) : (
+                    <ModalAttributeRow
+                      icon={<AttributeIconStar />}
+                      label="Rarity"
+                      value=""
+                    />
+                  )}
                   <ModalAttributeRow
                     icon={<AttributeIconHash />}
                     label="National Dex ID"
@@ -2594,40 +2668,58 @@ export function CardGrid({
                     }
                   />
                   {/* Energy type with symbols */}
-                  <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 md:gap-2 md:px-2.5 md:py-2">
-                    <AttributeIconBolt />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Energy type</div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                        {selectedCard.elementTypes && selectedCard.elementTypes.length > 0 ? (
-                          selectedCard.elementTypes.map((type: string) => {
-                            const elementTypeImageMap: Record<string, string> = {
-                              Colorless: "/media/images/40px-Colorless-attack.png",
-                              Darkness: "/media/images/40px-Darkness-attack.png",
-                              Dragon: "/media/images/dragon_type_symbol_tcg_by_jormxdos_dfgddc1-fullview.png",
-                              Fairy: "/media/images/Pokémon_Fairy_Type_Icon.svg.png",
-                              Fighting: "/media/images/40px-Fighting-attack.png",
-                              Fire: "/media/images/40px-Fire-attack.png",
-                              Grass: "/media/images/40px-Grass-attack.png",
-                              Lightning: "/media/images/40px-Lightning-attack.png",
-                              Metal: "/media/images/40px-Metal-attack.png",
-                              Psychic: "/media/images/40px-Psychic-attack.png",
-                              Water: "/media/images/40px-Water-attack.png",
-                            };
-                            const src = elementTypeImageMap[type];
-                            return (
-                              <span key={type} className="flex items-center gap-1 text-sm font-medium leading-snug text-white md:text-xs">
-                                {src && <img src={src} alt={type} className="h-4 w-4 object-contain" />}
-                                {type}
-                              </span>
-                            );
-                          })
-                        ) : (
+                  {selectedCard.elementTypes && selectedCard.elementTypes.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        closeModal();
+                        router.push(`/search?tab=cards&energy=${encodeURIComponent(selectedCard.elementTypes?.[0] ?? "")}`);
+                      }}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 transition hover:bg-white/[0.10] md:gap-2 md:px-2.5 md:py-2">
+                        <AttributeIconBolt />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Energy type</div>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                            {selectedCard.elementTypes.map((type: string) => {
+                              const elementTypeImageMap: Record<string, string> = {
+                                Colorless: "/media/images/40px-Colorless-attack.png",
+                                Darkness: "/media/images/40px-Darkness-attack.png",
+                                Dragon: "/media/images/dragon_type_symbol_tcg_by_jormxdos_dfgddc1-fullview.png",
+                                Fairy: "/media/images/Pokémon_Fairy_Type_Icon.svg.png",
+                                Fighting: "/media/images/40px-Fighting-attack.png",
+                                Fire: "/media/images/40px-Fire-attack.png",
+                                Grass: "/media/images/40px-Grass-attack.png",
+                                Lightning: "/media/images/40px-Lightning-attack.png",
+                                Metal: "/media/images/40px-Metal-attack.png",
+                                Psychic: "/media/images/40px-Psychic-attack.png",
+                                Water: "/media/images/40px-Water-attack.png",
+                              };
+                              const src = elementTypeImageMap[type];
+                              return (
+                                <span key={type} className="flex items-center gap-1 text-sm font-medium leading-snug text-white underline decoration-white/30 underline-offset-2 md:text-xs">
+                                  {src && <img src={src} alt={type} className="h-4 w-4 object-contain" />}
+                                  {type}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <span className="shrink-0 text-white/40">›</span>
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 md:gap-2 md:px-2.5 md:py-2">
+                      <AttributeIconBolt />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Energy type</div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                           <span className="text-sm font-medium leading-snug text-white md:text-xs">—</span>
-                        )}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                   <ModalAttributeRow
                     icon={<AttributeIconBadge />}
                     label="Regulation mark"
@@ -2660,6 +2752,21 @@ export function CardGrid({
               {modalNationalDexIds && modalNationalDexIds.length > 0 ? (
                 <ModalDexOtherCardsSection
                   variant="mobile"
+                  matchMode={otherCardsMatchMode}
+                  nationalDexStrip={nationalDexStrip}
+                  nationalDexStripLoading={nationalDexStripLoading}
+                  nationalDexStripError={nationalDexStripError}
+                  selectedCard={selectedCard}
+                  normalizedCards={normalizedCards}
+                  onOpenCard={scrollModalToTop}
+                  setSelectedIndex={setSelectedIndex}
+                  setSelectedCardIdentity={setSelectedCardIdentity}
+                  setStandaloneModalCard={setStandaloneModalCard}
+                />
+              ) : selectedCard?.cardName ? (
+                <ModalDexOtherCardsSection
+                  variant="mobile"
+                  matchMode={otherCardsMatchMode}
                   nationalDexStrip={nationalDexStrip}
                   nationalDexStripLoading={nationalDexStripLoading}
                   nationalDexStripError={nationalDexStripError}
@@ -2672,7 +2779,7 @@ export function CardGrid({
                 />
               ) : (
                 <p className="text-sm text-white/55">
-                  No National Dex ID is stored for this card, so other printings cannot be matched here.
+                  No National Dex ID or card name is stored for this card, so similar matches cannot be shown here.
                 </p>
               )}
             </div>

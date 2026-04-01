@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { TOP_CHROME_HIDDEN_TRANSFORM, TOP_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
 import { useAutoHideChrome } from "@/lib/useAutoHideChrome";
 
@@ -14,14 +16,24 @@ type Props = {
 
 export function SearchBrowseTabs({ activeTab, cardsHref = "/search" }: Props) {
   const chromeVisible = useAutoHideChrome();
+  const router = useRouter();
+
+  useEffect(() => {
+    router.prefetch(cardsHref);
+    router.prefetch("/search?tab=sets");
+    router.prefetch("/search?tab=pokedex");
+  }, [router, cardsHref]);
 
   const btn = (tab: SearchBrowseTab, label: string, href: string) => {
     const isActive = activeTab === tab;
     return (
       <Link
         href={href}
+        prefetch
         role="tab"
         aria-selected={isActive}
+        onMouseEnter={() => router.prefetch(href)}
+        onTouchStart={() => router.prefetch(href)}
         style={{ borderRadius: "999px" }}
         className={`flex-1 px-2 py-2 text-center text-xs font-medium transition sm:text-sm ${
           isActive

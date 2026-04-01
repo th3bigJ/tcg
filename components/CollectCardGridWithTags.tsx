@@ -3,10 +3,13 @@
 import { useMemo, useState, useEffect } from "react";
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import { cardMatchesEnergyTypeSelection } from "@/lib/cardEnergyFilter";
-import { readPersistedFilters } from "@/lib/persistedFilters";
-import type { CollectionLineSummary, StorefrontCardExtras } from "@/lib/storefrontCardMaps";
-
-const COMMON_UNCOMMON = new Set(["Common", "Uncommon"]);
+import { isBasicRarity } from "@/lib/cardRarityFilter";
+import {
+  PERSISTED_FILTERS_UPDATED_EVENT,
+  readPersistedFilters,
+  type PersistedFilterScope,
+} from "@/lib/persistedFilters";
+import { collectionGroupKeyFromLine, type CollectionLineSummary, type StorefrontCardExtras } from "@/lib/storefrontCardMaps";
 
 type SortOrder = "price-desc" | "price-asc" | "release-desc" | "release-asc" | "number-desc" | "number-asc" | "added-desc";
 
@@ -58,6 +61,8 @@ type CollectCardGridWithTagsProps = {
   setLogosByCode: Record<string, string>;
   setSymbolsByCode: Record<string, string>;
   variant: "collection" | "wishlist";
+  routeGroupBySet?: boolean;
+  filterScope?: PersistedFilterScope;
   itemConditions: { id: string; name: string }[];
   wishlistEntryIdsByMasterCardId: Record<string, { id: string; printing?: string }>;
   collectionLinesByMasterCardId: Record<string, CollectionLineSummary[]>;
@@ -81,6 +86,8 @@ export function CollectCardGridWithTags({
   setLogosByCode,
   setSymbolsByCode,
   variant,
+  routeGroupBySet,
+  filterScope,
   itemConditions,
   wishlistEntryIdsByMasterCardId,
   collectionLinesByMasterCardId,
@@ -95,19 +102,55 @@ export function CollectCardGridWithTags({
   tradeSelectedQtyByEntryId,
   onTradePickEntry,
 }: CollectCardGridWithTagsProps) {
+  const readLocalSortOrder = (): SortOrder => {
+    const s = readPersistedFilters(filterScope).sort;
+    if (
+      s === "price-asc" ||
+      s === "price-desc" ||
+      s === "release-desc" ||
+      s === "release-asc" ||
+      s === "number-desc" ||
+      s === "number-asc"
+    ) {
+      return s as SortOrder;
+    }
+    return readOnly ? "price-asc" : "price-desc";
+  };
   const [groupBySet, setGroupBySet] = useState(false);
   const [search, setSearch] = useState("");
-  const [rarity, setRarity] = useState(() => readPersistedFilters().rarity ?? "");
-  const [energy, setEnergy] = useState(() => readPersistedFilters().energy ?? "");
-  const [category, setCategory] = useState(() => readPersistedFilters().category ?? "");
-  const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(() => readPersistedFilters().excludeCommonUncommon ?? false);
+  const [rarity, setRarity] = useState(() => readPersistedFilters(filterScope).rarity ?? "");
+  const [energy, setEnergy] = useState(() => readPersistedFilters(filterScope).energy ?? "");
+  const [category, setCategory] = useState(() => readPersistedFilters(filterScope).category ?? "");
+  const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(() => readPersistedFilters(filterScope).excludeCommonUncommon ?? false);
+  const [excludeCollected, setExcludeCollected] = useState(() => readPersistedFilters(filterScope).excludeCollected ?? false);
   const [duplicatesOnly, setDuplicatesOnly] = useState(false);
-  const [sortOrder, setSortOrder] = useState<SortOrder>(() => {
-    const s = readPersistedFilters().sort;
-    if (s === "price-asc" || s === "price-desc" || s === "release-desc" || s === "release-asc") return s as SortOrder;
-    return "price-desc";
-  });
+  const [sortOrder, setSortOrder] = useState<SortOrder>(readLocalSortOrder);
   const [ownedFilterOnly, setOwnedFilterOnly] = useState(false);
+
+  useEffect(() => {
+    const syncPersistedFilters = () => {
+      const persisted = readPersistedFilters(filterScope);
+      setGroupBySet(persisted.groupBySet ?? false);
+      setRarity(persisted.rarity ?? "");
+      setEnergy(persisted.energy ?? "");
+      setCategory(persisted.category ?? "");
+      setExcludeCommonUncommon(persisted.excludeCommonUncommon ?? false);
+      setExcludeCollected(persisted.excludeCollected ?? false);
+      setOwnedFilterOnly(persisted.showOwnedOnly ?? false);
+      setSortOrder(readLocalSortOrder());
+    };
+
+    syncPersistedFilters();
+    window.addEventListener("storage", syncPersistedFilters);
+    window.addEventListener("focus", syncPersistedFilters);
+    window.addEventListener(PERSISTED_FILTERS_UPDATED_EVENT, syncPersistedFilters);
+    return () => {
+      window.removeEventListener("storage", syncPersistedFilters);
+      window.removeEventListener("focus", syncPersistedFilters);
+      window.removeEventListener(PERSISTED_FILTERS_UPDATED_EVENT, syncPersistedFilters);
+    };
+  }, [filterScope, readOnly]);
+  const effectiveGroupBySet = routeGroupBySet ?? groupBySet;
 
   // Count unique cards per set from the full unfiltered list
   const collectedCountBySetCode = useMemo(() => {
@@ -131,17 +174,37 @@ export function CollectCardGridWithTags({
     return buildDistinctFilterOptions(cards.map((card) => card.category));
   }, [cards]);
 
+  const effectiveCollectionPriceRangeByMasterCardId = useMemo(() => {
+    const out: Record<string, { low: number; high: number }> = {};
+    for (const [mid, lines] of Object.entries(collectionLinesByMasterCardId)) {
+      if (mid.includes("|")) continue;
+      let lowest: number | null = null;
+      let highest: number | null = null;
+      for (const line of lines) {
+        if ((line.gradingCompany?.trim() ?? "") && (line.gradeValue?.trim() ?? "")) continue;
+        if ((line.conditionId?.trim() ?? "").toLowerCase() === "graded") continue;
+        if ((line.conditionLabel?.trim() ?? "").toLowerCase() === "graded") continue;
+        const groupKey = collectionGroupKeyFromLine(mid, line);
+        const price = cardPricesByMasterCardId[groupKey];
+        if (typeof price !== "number" || !Number.isFinite(price)) continue;
+        lowest = lowest === null ? price : Math.min(lowest, price);
+        highest = highest === null ? price : Math.max(highest, price);
+      }
+      if (lowest !== null && highest !== null) out[mid] = { low: lowest, high: highest };
+    }
+    return out;
+  }, [cardPricesByMasterCardId, collectionLinesByMasterCardId]);
+
   const filteredCards = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const viewerOwnsCard = (masterCardId: string | null | undefined) => {
+      if (!masterCardId) return false;
+      if (viewerOwnedMasterCardIds) return viewerOwnedMasterCardIds.has(masterCardId);
+      return (collectionLinesByMasterCardId[masterCardId]?.length ?? 0) > 0;
+    };
     let result = cards.filter((card) => {
-      if (
-        sharedWishlistOwnedFilter &&
-        variant === "wishlist" &&
-        ownedFilterOnly &&
-        viewerOwnedMasterCardIds &&
-        card.masterCardId
-      ) {
-        if (!viewerOwnedMasterCardIds.has(card.masterCardId)) return false;
+      if (ownedFilterOnly && card.masterCardId) {
+        if (!viewerOwnsCard(card.masterCardId)) return false;
       }
       if (q) {
         const name = (card.cardName ?? "").toLowerCase();
@@ -152,14 +215,27 @@ export function CollectCardGridWithTags({
       if (rarity && card.rarity !== rarity) return false;
       if (energy && !cardMatchesEnergyTypeSelection(card.elementTypes, energy)) return false;
       if (category && card.category !== category) return false;
-      if (excludeCommonUncommon && COMMON_UNCOMMON.has(card.rarity)) return false;
+      if (excludeCommonUncommon && isBasicRarity(card.rarity)) return false;
+      if (
+        excludeCollected &&
+        card.masterCardId &&
+        (variant === "wishlist" || (readOnly && viewerOwnedMasterCardIds))
+      ) {
+        if (viewerOwnsCard(card.masterCardId)) return false;
+      }
       if (duplicatesOnly && (card.quantity ?? 1) <= 1) return false;
       return true;
     });
 
     const getPrice = (card: typeof result[0]) => {
       const k = card.collectionGroupKey ?? card.masterCardId ?? "";
-      return (k ? cardPricesByMasterCardId[k] : undefined) ?? 0;
+      if (k && cardPricesByMasterCardId[k] !== undefined) return cardPricesByMasterCardId[k] ?? 0;
+      if (variant === "collection" && card.masterCardId) {
+        const range = effectiveCollectionPriceRangeByMasterCardId[card.masterCardId];
+        if (!range) return 0;
+        return sortOrder === "price-asc" ? range.low : range.high;
+      }
+      return 0;
     };
     if (sortOrder === "price-desc") {
       result = [...result].sort((a, b) => getPrice(b) - getPrice(a));
@@ -185,17 +261,23 @@ export function CollectCardGridWithTags({
     energy,
     category,
     excludeCommonUncommon,
+    excludeCollected,
     duplicatesOnly,
     sortOrder,
     cardPricesByMasterCardId,
+    effectiveCollectionPriceRangeByMasterCardId,
     sharedWishlistOwnedFilter,
     variant,
     ownedFilterOnly,
+    collectionLinesByMasterCardId,
     viewerOwnedMasterCardIds,
+    readOnly,
   ]);
 
   const ownedFilterTag =
-    sharedWishlistOwnedFilter && variant === "wishlist" && viewerOwnedMasterCardIds
+    (variant === "collection" ||
+      variant === "wishlist" ||
+      viewerOwnedMasterCardIds)
       ? {
           active: ownedFilterOnly,
           onToggle: () => setOwnedFilterOnly((v) => !v),
@@ -219,8 +301,8 @@ export function CollectCardGridWithTags({
         cardPricesByMasterCardId={cardPricesByMasterCardId}
         manualPriceMasterCardIds={manualPriceMasterCardIds}
         gradingByMasterCardId={gradingByMasterCardId}
-        groupBySet={groupBySet}
-        collectedCountBySetCode={groupBySet ? collectedCountBySetCode : undefined}
+        groupBySet={effectiveGroupBySet}
+        collectedCountBySetCode={effectiveGroupBySet ? collectedCountBySetCode : undefined}
         tradePickMode={tradePickMode}
         tradeSelectedQtyByEntryId={tradeSelectedQtyByEntryId}
         onTradePickEntry={onTradePickEntry}

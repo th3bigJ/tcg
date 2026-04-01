@@ -179,6 +179,27 @@ export async function loadSharedCollectionData(
   ];
 
   const collectionCardPricesByMasterCardId: Record<string, number> = { ...cPricesResult.prices };
+  for (const [mid, lines] of Object.entries(collectionLinesByMasterCardId)) {
+    if (mid.includes("|")) continue;
+    let highest: number | null = null;
+    for (const line of lines) {
+      if ((line.gradingCompany?.trim() ?? "") && (line.gradeValue?.trim() ?? "")) continue;
+      if ((line.conditionId?.trim() ?? "").toLowerCase() === "graded") continue;
+      if ((line.conditionLabel?.trim() ?? "").toLowerCase() === "graded") continue;
+      const groupKey = collectionGroupKeyFromEntry({
+        masterCardId: mid,
+        conditionLabel: line.conditionLabel,
+        printing: line.printing,
+        language: line.language,
+        gradingCompany: line.gradingCompany,
+        gradeValue: line.gradeValue,
+      });
+      const price = collectionCardPricesByMasterCardId[groupKey];
+      if (typeof price !== "number" || !Number.isFinite(price)) continue;
+      highest = highest === null ? price : Math.max(highest, price);
+    }
+    if (highest !== null) collectionCardPricesByMasterCardId[mid] = highest;
+  }
 
   return {
     shareId,

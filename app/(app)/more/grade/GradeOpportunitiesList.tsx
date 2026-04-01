@@ -100,7 +100,7 @@ export function GradeOpportunitiesList({
                   width={60}
                   height={84}
                   className="rounded-md object-contain"
-                  style={{ height: "auto" }}
+                  style={{ width: "60px", height: "auto" }}
                 />
               </div>
               <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">

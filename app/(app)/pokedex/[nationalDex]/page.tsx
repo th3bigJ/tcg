@@ -48,6 +48,7 @@ export default async function PokedexPokemonCardsPage({
   const activeRarity = rarityOptions.includes(selectedRarity) ? selectedRarity : "";
   const excludeCommonUncommon = resolvedSearchParams.exclude_cu === "1";
   const excludeOwned = resolvedSearchParams.exclude_owned === "1";
+  const groupBySet = resolvedSearchParams.group_by_set === "1";
   const selectedCategory = (resolvedSearchParams.category ?? "").trim();
   const { queryVariants: categoryQueryVariants } = resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
   const setFilterOptions = await getCachedSetFilterOptions(availableSetCodes);
@@ -152,6 +153,7 @@ export default async function PokedexPokemonCardsPage({
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 customerLoggedIn={Boolean(customer)}
+                routeGroupBySet={groupBySet}
                 formAction={pokedexFilterBasePath}
                 activeEnergy={activeEnergy}
                 energyOptions={energyOptions}

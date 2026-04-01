@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TOP_CHROME_HIDDEN_TRANSFORM, TOP_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
-import { buildPokedexDetailHref, type SortOrder, DEFAULT_SORT, persistFilters } from "@/lib/persistedFilters";
+import {
+  buildPokedexDetailHref,
+  type SortOrder,
+  DEFAULT_SORT,
+  persistFilters,
+  readPersistedFilters,
+  type PersistedFilterScope,
+} from "@/lib/persistedFilters";
 import { useAutoHideChrome } from "@/lib/useAutoHideChrome";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -47,6 +54,8 @@ type Filters = {
   excludeCollected: boolean;
   category: string;
   missingOnly: boolean;
+  groupBySet: boolean;
+  showOwnedOnly: boolean;
   sort: SortOrder;
 };
 
@@ -174,7 +183,7 @@ function FilterSelect({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full rounded-md border border-white/20 bg-black px-2 py-1.5 pr-7 text-xs text-white outline-none transition focus:border-white/40 [appearance:none] [-webkit-appearance:none]"
+          className="min-h-11 w-full rounded-lg border border-white/14 bg-white/[0.06] px-3 py-2.5 pr-10 text-sm text-white outline-none transition focus:border-white/35 focus:bg-white/[0.09] [appearance:none] [-webkit-appearance:none]"
         >
           <option value="">{placeholder}</option>
           {options.map((o) => (
@@ -186,6 +195,53 @@ function FilterSelect({
         <IconChevronDown />
       </div>
     </div>
+  );
+}
+
+function FilterSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border border-white/10 bg-white/[0.035] p-3">
+      <div className="mb-2">
+        <h3 className="text-sm font-semibold text-white/90">{title}</h3>
+        {description ? <p className="mt-0.5 text-[11px] leading-4 text-white/42">{description}</p> : null}
+      </div>
+      <div className="flex flex-col gap-2.5">{children}</div>
+    </section>
+  );
+}
+
+function FilterToggle({
+  checked,
+  label,
+  description,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  description?: string;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex min-h-12 cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/[0.05]">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-4 w-4 shrink-0 rounded border-white/30"
+      />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm leading-5 text-white/92">{label}</span>
+        {description ? <span className="mt-0.5 block text-[11px] leading-4 text-white/42">{description}</span> : null}
+      </span>
+    </label>
   );
 }
 
@@ -253,6 +309,26 @@ function getSectionPriority(pathname: string): SectionKey {
 export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams();
+  const searchTab = searchParams?.get("tab") ?? "cards";
+  const filterScope: PersistedFilterScope | undefined =
+    pathname.startsWith("/collect/shared")
+      ? "friends"
+      : /^\/expansions\/[^/]+/.test(pathname)
+        ? "expansions"
+        : /^\/pokedex\/[^/]+/.test(pathname)
+          ? "pokedex"
+          : pathname.startsWith("/search")
+            ? searchTab === "pokedex"
+              ? "pokedex"
+              : searchTab === "sets"
+                ? "expansions"
+                : "search"
+      : pathname === "/collect"
+        ? "collect"
+        : pathname === "/wishlist"
+          ? "wishlist"
+          : undefined;
   const inputRef = useRef<HTMLInputElement>(null);
   const modalTouchStartRef = useRef<{ x: number; y: number } | null>(null);
   const modalSwipeEligibleRef = useRef(false);
@@ -265,21 +341,182 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     energyOptions: [],
     categoryOptions: [],
   });
-  const [filters, setFilters] = useState<Filters>(() => {
-    try {
-      const saved = typeof window !== "undefined" ? localStorage.getItem("tcg-filters") : null;
-      if (saved) return { rarity: "", energy: "", excludeCommonUncommon: false, excludeCollected: false, category: "", missingOnly: false, sort: DEFAULT_SORT, ...JSON.parse(saved) };
-    } catch {}
-    return { rarity: "", energy: "", excludeCommonUncommon: false, excludeCollected: false, category: "", missingOnly: false, sort: DEFAULT_SORT };
+  const [filters, setFilters] = useState<Filters>({
+    rarity: "",
+    energy: "",
+    excludeCommonUncommon: false,
+    excludeCollected: false,
+    category: "",
+    missingOnly: false,
+    groupBySet: false,
+    showOwnedOnly: false,
+    sort: DEFAULT_SORT,
   });
 
   const setFiltersAndPersist = (next: Filters) => {
     setFilters(next);
-    persistFilters(next);
+    persistFilters(next, filterScope);
   };
 
   const filtersRef = useRef(filters);
   useEffect(() => { filtersRef.current = filters; }, [filters]);
+
+  useEffect(() => {
+    const syncPersistedFilters = () => {
+      const persisted = readPersistedFilters(filterScope);
+      const nextFilters: Filters = {
+        rarity: persisted.rarity ?? "",
+        energy: persisted.energy ?? "",
+        excludeCommonUncommon: persisted.excludeCommonUncommon ?? false,
+        excludeCollected: persisted.excludeCollected ?? false,
+        category: persisted.category ?? "",
+        missingOnly: persisted.missingOnly ?? false,
+        groupBySet: persisted.groupBySet ?? false,
+        showOwnedOnly: persisted.showOwnedOnly ?? false,
+        sort: persisted.sort ?? DEFAULT_SORT,
+      };
+
+      if (/^\/expansions\/[^/]+/.test(pathname) || /^\/pokedex\/[^/]+/.test(pathname)) {
+        nextFilters.rarity = searchParams?.get("rarity") ?? "";
+        nextFilters.energy = searchParams?.get("energy") ?? "";
+        nextFilters.category = searchParams?.get("category") ?? "";
+        nextFilters.excludeCommonUncommon = searchParams?.get("exclude_cu") === "1";
+        nextFilters.excludeCollected = searchParams?.get("exclude_owned") === "1";
+        nextFilters.groupBySet = searchParams?.get("group_by_set") === "1";
+      } else if (pathname.startsWith("/search")) {
+        const tab = searchParams?.get("tab") ?? "cards";
+        if (tab === "cards") {
+          nextFilters.rarity = searchParams?.get("rarity") ?? "";
+          nextFilters.energy = searchParams?.get("energy") ?? "";
+          nextFilters.category = searchParams?.get("category") ?? "";
+          nextFilters.excludeCommonUncommon = searchParams?.get("exclude_cu") === "1";
+          nextFilters.excludeCollected = searchParams?.get("exclude_owned") === "1";
+          nextFilters.missingOnly = false;
+        } else if (tab === "pokedex") {
+          nextFilters.missingOnly = searchParams?.get("missing_only") === "1";
+          nextFilters.rarity = "";
+          nextFilters.energy = "";
+          nextFilters.category = "";
+          nextFilters.excludeCommonUncommon = false;
+          nextFilters.excludeCollected = false;
+        }
+      } else if (pathname === "/collect" || pathname === "/wishlist") {
+        if (searchParams?.has("group_by_set")) {
+          nextFilters.groupBySet = searchParams.get("group_by_set") === "1";
+        }
+      }
+
+      setFilters(nextFilters);
+    };
+
+    syncPersistedFilters();
+    window.addEventListener("storage", syncPersistedFilters);
+    return () => {
+      window.removeEventListener("storage", syncPersistedFilters);
+    };
+  }, [filterScope, pathname, searchParams]);
+
+  useEffect(() => {
+    if (!filterScope) return;
+
+    const persisted = readPersistedFilters(filterScope);
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    const activeSearchTab = params.get("tab") ?? "cards";
+    let changed = false;
+
+    if (pathname === "/collect" || pathname === "/wishlist") {
+      if (!params.has("group_by_set") && persisted.groupBySet) {
+        params.delete("take");
+        params.delete("set_take");
+        params.set("group_by_set", "1");
+        changed = true;
+      }
+    } else if (/^\/expansions\/[^/]+/.test(pathname)) {
+      if (!params.has("rarity") && persisted.rarity) {
+        params.set("rarity", persisted.rarity);
+        changed = true;
+      }
+      if (!params.has("energy") && persisted.energy) {
+        params.set("energy", persisted.energy);
+        changed = true;
+      }
+      if (!params.has("category") && persisted.category) {
+        params.set("category", persisted.category);
+        changed = true;
+      }
+      if (!params.has("exclude_cu") && persisted.excludeCommonUncommon) {
+        params.set("exclude_cu", "1");
+        changed = true;
+      }
+      if (!params.has("exclude_owned") && persisted.excludeCollected) {
+        params.set("exclude_owned", "1");
+        changed = true;
+      }
+    } else if (/^\/pokedex\/[^/]+/.test(pathname)) {
+      if (!params.has("rarity") && persisted.rarity) {
+        params.set("rarity", persisted.rarity);
+        changed = true;
+      }
+      if (!params.has("energy") && persisted.energy) {
+        params.set("energy", persisted.energy);
+        changed = true;
+      }
+      if (!params.has("category") && persisted.category) {
+        params.set("category", persisted.category);
+        changed = true;
+      }
+      if (!params.has("exclude_cu") && persisted.excludeCommonUncommon) {
+        params.set("exclude_cu", "1");
+        changed = true;
+      }
+      if (!params.has("exclude_owned") && persisted.excludeCollected) {
+        params.set("exclude_owned", "1");
+        changed = true;
+      }
+      if (!params.has("group_by_set") && persisted.groupBySet) {
+        params.set("group_by_set", "1");
+        changed = true;
+      }
+    } else if (pathname.startsWith("/search")) {
+      if (!params.has("tab")) {
+        params.set("tab", activeSearchTab);
+        changed = true;
+      }
+      if (activeSearchTab === "cards") {
+        if (!params.has("rarity") && persisted.rarity) {
+          params.set("rarity", persisted.rarity);
+          changed = true;
+        }
+        if (!params.has("energy") && persisted.energy) {
+          params.set("energy", persisted.energy);
+          changed = true;
+        }
+        if (!params.has("category") && persisted.category) {
+          params.set("category", persisted.category);
+          changed = true;
+        }
+        if (!params.has("exclude_cu") && persisted.excludeCommonUncommon) {
+          params.set("exclude_cu", "1");
+          changed = true;
+        }
+        if (!params.has("exclude_owned") && persisted.excludeCollected) {
+          params.set("exclude_owned", "1");
+          changed = true;
+        }
+      } else if (activeSearchTab === "pokedex") {
+        if (!params.has("missing_only") && persisted.missingOnly) {
+          params.set("missing_only", "1");
+          changed = true;
+        }
+      }
+    }
+
+    if (!changed) return;
+
+    const nextSearch = params.toString();
+    const href = nextSearch ? `${pathname}?${nextSearch}` : pathname;
+    router.replace(href, { scroll: false });
+  }, [filterScope, pathname, router, searchParams]);
 
   // Intercept all link clicks and inject active filters into filterable page URLs
   useEffect(() => {
@@ -416,6 +653,23 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     close();
   };
 
+  const applyFilters = () => {
+    persistFilters(filters, filterScope);
+    if (isFilterablePage) {
+      if (pathname === "/collect" || pathname === "/wishlist") {
+        const href = buildCurrentPageHref();
+        if (href) {
+          router.replace(href, { scroll: false });
+          close();
+          return;
+        }
+      }
+      applyAndClose();
+      return;
+    }
+    close();
+  };
+
   const handleNavigate = () => {
     close();
   };
@@ -444,6 +698,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       if (filters.excludeCommonUncommon) p.set("exclude_cu", "1");
       if (filters.excludeCollected) p.set("exclude_owned", "1");
       if (filters.category) p.set("category", filters.category);
+      if (filters.groupBySet) p.set("group_by_set", "1");
       const s = p.toString();
       return s ? `/pokedex/${pokedexDetailMatch[1]}?${s}` : `/pokedex/${pokedexDetailMatch[1]}`;
     }
@@ -467,6 +722,16 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         if (filters.missingOnly) p.set("missing_only", "1");
       }
       return `/search?${p.toString()}`;
+    }
+
+    if (pathname === "/collect" || pathname === "/wishlist") {
+      const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+      p.delete("take");
+      p.delete("set_take");
+      if (filters.groupBySet) p.set("group_by_set", "1");
+      else p.delete("group_by_set");
+      const s = p.toString();
+      return s ? `${pathname}?${s}` : pathname;
     }
 
     return null;
@@ -503,8 +768,9 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const isFilterablePage =
     /^\/expansions\/[^/]+/.test(pathname) ||
     /^\/pokedex\/[^/]+/.test(pathname) ||
-    pathname.startsWith("/search");
-
+    pathname.startsWith("/search") ||
+    pathname === "/collect" ||
+    pathname === "/wishlist";
   const hasResults =
     results &&
     (results.cards.length > 0 ||
@@ -519,7 +785,9 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     (filters.excludeCommonUncommon ? 1 : 0) +
     (filters.excludeCollected ? 1 : 0) +
     (filters.category ? 1 : 0) +
-    (filters.missingOnly ? 1 : 0);
+    (filters.missingOnly ? 1 : 0) +
+    (filters.groupBySet ? 1 : 0) +
+    (filters.showOwnedOnly ? 1 : 0);
 
   const isOpen = modalMode !== "closed";
   const chromeVisible = useAutoHideChrome({ disabled: isOpen });
@@ -527,7 +795,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const handleModalTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     const touch = e.touches[0];
     modalTouchStartRef.current = { x: touch.clientX, y: touch.clientY };
-    modalSwipeEligibleRef.current = touch.clientY >= window.innerHeight / 2;
+    modalSwipeEligibleRef.current = touch.clientY >= window.innerHeight * 0.9;
   }, []);
 
   const resetModalSwipe = useCallback(() => {
@@ -594,7 +862,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                 onFocus={() => { if (modalMode !== "search") setModalMode("search"); }}
                 placeholder="Search cards, sets, Pokémon…"
                 className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder-white/35 outline-none"
-                autoFocus
+                autoFocus={modalMode === "search"}
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}
@@ -695,7 +963,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
               </div>
 
               {/* Bottom action bar */}
-              <ModalBottomBar mode={modalMode} activeFilterCount={activeFilterCount} onClose={close} onApply={isFilterablePage ? applyAndClose : undefined} />
+              <ModalBottomBar mode={modalMode} activeFilterCount={activeFilterCount} onClose={close} onApply={applyFilters} />
             </div>,
             document.body,
           )
@@ -718,7 +986,14 @@ function FiltersPanel({
   onChange: (f: Filters) => void;
 }) {
   const hasActive =
-    filters.rarity || filters.energy || filters.excludeCommonUncommon || filters.excludeCollected || filters.category || filters.missingOnly;
+    filters.rarity ||
+    filters.energy ||
+    filters.excludeCommonUncommon ||
+    filters.excludeCollected ||
+    filters.category ||
+    filters.missingOnly ||
+    filters.groupBySet ||
+    filters.showOwnedOnly;
 
   const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
     { value: "price-desc", label: "Price: high to low" },
@@ -730,96 +1005,132 @@ function FiltersPanel({
   ];
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-3 px-4 pb-4 pt-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-white/65">Filter options</span>
+        <div>
+          <span className="text-sm font-semibold text-white/90">Filter options</span>
+          <p className="mt-0.5 text-[11px] text-white/42">Refine what shows up in this view.</p>
+        </div>
         {hasActive ? (
           <button
             type="button"
             onClick={() =>
-              onChange({ rarity: "", energy: "", excludeCommonUncommon: false, excludeCollected: false, category: "", missingOnly: false, sort: filters.sort })
+              onChange({
+                rarity: "",
+                energy: "",
+                excludeCommonUncommon: false,
+                excludeCollected: false,
+                category: "",
+                missingOnly: false,
+                groupBySet: false,
+                showOwnedOnly: false,
+                sort: filters.sort,
+              })
             }
-            className="text-[11px] text-red-400 hover:text-red-300"
+            className="inline-flex min-h-10 items-center rounded-full border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/15 hover:text-red-200"
           >
             Clear all
           </button>
         ) : null}
       </div>
 
-      <div>
-        <label className="mb-1.5 block text-[11px] font-medium text-white/65">Sort by</label>
-        <div className="relative">
-          <select
-            value={filters.sort}
-            onChange={(e) => onChange({ ...filters, sort: e.target.value as SortOrder })}
-            className="w-full rounded-md border border-white/20 bg-black px-2 py-1.5 pr-7 text-xs text-white outline-none transition focus:border-white/40 [appearance:none] [-webkit-appearance:none]"
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-          <IconChevronDown />
+      <FilterSection
+        title="Sort"
+        description="Choose the order cards appear in."
+      >
+        <div>
+          <label className="mb-1.5 block text-[11px] font-medium text-white/65">Sort by</label>
+          <div className="relative">
+            <select
+              value={filters.sort}
+              onChange={(e) => onChange({ ...filters, sort: e.target.value as SortOrder })}
+            className="min-h-11 w-full rounded-lg border border-white/14 bg-black/30 px-3 py-2.5 pr-10 text-sm text-white outline-none transition focus:border-white/35 focus:bg-white/[0.05] [appearance:none] [-webkit-appearance:none]"
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <IconChevronDown />
+          </div>
         </div>
-      </div>
+      </FilterSection>
 
-      <FilterSelect
-        label="Rarity"
-        value={filters.rarity}
-        onChange={(v) => onChange({ ...filters, rarity: v })}
-        options={facets.rarityOptions}
-        placeholder="All rarities"
-      />
-
-      <FilterSelect
-        label="Energy type"
-        value={filters.energy}
-        onChange={(v) => onChange({ ...filters, energy: v })}
-        options={facets.energyOptions}
-        placeholder="All energy types"
-      />
-
-      <FilterSelect
-        label="Card type"
-        value={filters.category}
-        onChange={(v) => onChange({ ...filters, category: v })}
-        options={facets.categoryOptions}
-        placeholder="All card types"
-      />
-
-      <label className="flex cursor-pointer items-start gap-2 rounded-md border border-white/12 bg-white/5 px-3 py-2 text-xs text-white/90">
-        <input
-          type="checkbox"
-          checked={filters.excludeCommonUncommon}
-          onChange={(e) =>
-            onChange({ ...filters, excludeCommonUncommon: e.target.checked })
-          }
-          className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-white/30"
+      <FilterSection
+        title="Card details"
+          description="Filter by printed attributes."
+      >
+        <FilterSelect
+          label="Rarity"
+          value={filters.rarity}
+          onChange={(v) => onChange({ ...filters, rarity: v })}
+          options={facets.rarityOptions}
+          placeholder="All rarities"
         />
-        <span>Rare+ only (exclude Common &amp; Uncommon)</span>
-      </label>
+
+        <FilterSelect
+          label="Energy type"
+          value={filters.energy}
+          onChange={(v) => onChange({ ...filters, energy: v })}
+          options={facets.energyOptions}
+          placeholder="All energy types"
+        />
+
+        <FilterSelect
+          label="Card type"
+          value={filters.category}
+          onChange={(v) => onChange({ ...filters, category: v })}
+          options={facets.categoryOptions}
+          placeholder="All card types"
+        />
+
+        <FilterToggle
+          checked={filters.excludeCommonUncommon}
+          onChange={(checked) => onChange({ ...filters, excludeCommonUncommon: checked })}
+          label="Rare+ only"
+          description="Exclude Common and Uncommon cards."
+        />
+      </FilterSection>
 
       {isLoggedIn ? (
-        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-white/12 bg-white/5 px-3 py-2 text-xs text-white/90">
-          <input
-            type="checkbox"
+        <FilterSection
+          title="Collection view"
+          description="Control how collection pages are shown."
+        >
+          <FilterToggle
             checked={filters.excludeCollected}
-            onChange={(e) => onChange({ ...filters, excludeCollected: e.target.checked })}
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-white/30"
+            onChange={(checked) => onChange({ ...filters, excludeCollected: checked })}
+            label="Hide cards I own"
+            description="Useful for wishlists and missing-card browsing."
           />
-          <span>Hide cards I own</span>
-        </label>
+
+          <FilterToggle
+            checked={filters.groupBySet}
+            onChange={(checked) => onChange({ ...filters, groupBySet: checked })}
+            label="Group by set"
+            description="Show cards in set sections."
+          />
+
+          <FilterToggle
+            checked={filters.showOwnedOnly}
+            onChange={(checked) => onChange({ ...filters, showOwnedOnly: checked })}
+            label="Show cards I own"
+            description="Only show cards already in your collection."
+          />
+        </FilterSection>
       ) : null}
 
       {isLoggedIn ? (
-        <label className="flex cursor-pointer items-start gap-2 rounded-md border border-white/12 bg-white/5 px-3 py-2 text-xs text-white/90">
-          <input
-            type="checkbox"
+        <FilterSection
+          title="Pokédex"
+          description="Extra options for the Pokédex tab."
+        >
+          <FilterToggle
             checked={filters.missingOnly}
-            onChange={(e) => onChange({ ...filters, missingOnly: e.target.checked })}
-            className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-white/30"
+            onChange={(checked) => onChange({ ...filters, missingOnly: checked })}
+            label="Missing only"
+            description="Hide Pokémon you’ve already collected."
           />
-          <span>Pokédex: Missing only</span>
-        </label>
+        </FilterSection>
       ) : null}
     </div>
   );
@@ -1016,24 +1327,22 @@ function ModalBottomBar({
   return (
     <div
       className="shrink-0 bg-black"
-      style={{ paddingBottom: "max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))", paddingTop: "0.5rem" }}
+      style={{ paddingBottom: "max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))", paddingTop: "0.125rem" }}
     >
-      <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center gap-1">
         <button
           type="button"
-          onClick={mode === "filters" && onApply ? onApply : onClose}
-          className="rounded-full border border-white/25 px-8 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 active:scale-95"
+          onClick={mode === "filters" ? (onApply ?? onClose) : onClose}
+          className="min-h-10 rounded-full border border-white/25 bg-white/[0.04] px-7 py-2 text-sm font-semibold text-white transition hover:bg-white/10 active:scale-95"
         >
-          {mode === "filters" && onApply
+          {mode === "filters"
             ? `Apply${activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}`
-            : mode === "filters"
-              ? `Filters${activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}`
-              : "Search"}
+            : "Search"}
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="text-xs text-white/35 hover:text-white/60"
+          className="pb-0.5 text-[11px] text-white/35 hover:text-white/60"
         >
           Slide up to close
         </button>

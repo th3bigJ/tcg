@@ -1,4 +1,5 @@
 import { cardMatchesEnergyTypeSelection } from "@/lib/cardEnergyFilter";
+import { isBasicRarity } from "@/lib/cardRarityFilter";
 import type { CardJsonEntry } from "@/lib/staticCards";
 import { getCardsBySet, getAllSets } from "@/lib/staticCards";
 import {
@@ -74,6 +75,39 @@ function shuffleRowsWithSeed<T>(rows: readonly T[], seed: string): T[] {
     [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
   }
   return shuffled;
+}
+
+/** Index of each card id in `getDefaultCardOrder()` — used for stable sorts (e.g. Pokédex detail). */
+function buildDefaultBrowseOrderIndex(
+  orderedRows: ReturnType<typeof getDefaultCardOrder>,
+): Map<string, number> {
+  const map = new Map<string, number>();
+  for (let i = 0; i < orderedRows.length; i++) {
+    map.set(orderedRows[i]!.id, i);
+  }
+  return map;
+}
+
+/** Tie-break two master card ids using default browse order (module-level to avoid bundler closure bugs). */
+function compareMasterCardIdsByDefaultOrder(
+  rankMap: Map<string, number>,
+  aId: string,
+  bId: string,
+): number {
+  const ra = rankMap.get(aId);
+  const rb = rankMap.get(bId);
+  if (ra !== undefined && rb !== undefined && ra !== rb) return ra - rb;
+  if (ra === undefined && rb !== undefined) return 1;
+  if (rb === undefined && ra !== undefined) return -1;
+  return aId.localeCompare(bId);
+}
+
+function compareDexIndexEntriesByDefaultOrder(
+  rankMap: Map<string, number>,
+  a: { id: string },
+  b: { id: string },
+): number {
+  return compareMasterCardIdsByDefaultOrder(rankMap, a.id, b.id);
 }
 
 /**
@@ -193,8 +227,6 @@ function categoryFacetKey(value: string): string {
     .toLocaleLowerCase();
 }
 
-const EXCLUDED_BASIC_RARITIES = new Set(["common", "uncommon"]);
-
 function normalizeCardNumberSearchValue(value: string): string {
   return value
     .trim()
@@ -246,8 +278,7 @@ function cardMatchesFilters(
   if (!cardMatchesEnergyTypeSelection(card.elementTypes, params.activeEnergy)) return false;
 
   if (params.excludeCommonUncommon) {
-    const lr = (card.rarity ?? "").trim().toLocaleLowerCase();
-    if (EXCLUDED_BASIC_RARITIES.has(lr)) return false;
+    if (isBasicRarity(card.rarity)) return false;
   }
 
   if (params.categoryQueryVariants.length > 0) {
@@ -513,8 +544,7 @@ export async function fetchMasterCardsPage(params: {
   }
 
   const orderedRows = getDefaultCardOrder();
-  const orderRank = new Map<string, number>();
-  orderedRows.forEach((row, index) => orderRank.set(row.id, index));
+  const defaultBrowseOrderIndex = buildDefaultBrowseOrderIndex(orderedRows);
 
   // ── Pokemon dex filter path ────────────────────────────────────────────────
   if (params.activePokemonDex !== null) {
@@ -536,8 +566,7 @@ export async function fetchMasterCardsPage(params: {
       if (params.activeRarity && entry.rarity !== params.activeRarity) return false;
       if (searchQuery && !entry.cardNameLower.includes(searchQuery)) return false;
       if (params.excludeCommonUncommon) {
-        const lr = entry.rarity.trim().toLocaleLowerCase();
-        if (EXCLUDED_BASIC_RARITIES.has(lr)) return false;
+        if (isBasicRarity(entry.rarity)) return false;
       }
       if (categoryFilterKey && entry.categoryKey !== categoryFilterKey) return false;
       if (params.activeEnergy.trim()) {
@@ -548,14 +577,7 @@ export async function fetchMasterCardsPage(params: {
       return true;
     });
 
-    filteredCandidates.sort((a, b) => {
-      const ra = orderRank.get(a.id);
-      const rb = orderRank.get(b.id);
-      if (ra !== undefined && rb !== undefined && ra !== rb) return ra - rb;
-      if (ra === undefined && rb !== undefined) return 1;
-      if (rb === undefined && ra !== undefined) return -1;
-      return a.id.localeCompare(b.id);
-    });
+    filteredCandidates.sort(compareDexIndexEntriesByDefaultOrder.bind(null, defaultBrowseOrderIndex));
 
     const totalDocs = filteredCandidates.length;
     const startIndex = (params.page - 1) * pageSize;
@@ -663,12 +685,7 @@ export async function fetchMasterCardsPage(params: {
         const releaseB = cardB ? setMetaMap.get(cardB.setCode)?.releaseDate ?? "" : "";
         const releaseCompare = releaseB.localeCompare(releaseA);
         if (releaseCompare !== 0) return releaseCompare;
-        const rankA = orderRank.get(a);
-        const rankB = orderRank.get(b);
-        if (rankA !== undefined && rankB !== undefined && rankA !== rankB) return rankA - rankB;
-        if (rankA === undefined && rankB !== undefined) return 1;
-        if (rankB === undefined && rankA !== undefined) return -1;
-        return a.localeCompare(b);
+        return compareMasterCardIdsByDefaultOrder(defaultBrowseOrderIndex, a, b);
       })
     : filteredIds;
 
@@ -694,6 +711,17 @@ export async function fetchMasterCardsPage(params: {
 // ─── National dex lookup ──────────────────────────────────────────────────────
 
 const BY_NATIONAL_DEX_MAX_CARDS = 500;
+const BY_SIMILAR_NAME_MAX_CARDS = 200;
+
+function normalizeCardNameForSimilarity(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLocaleLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
 
 export async function fetchMasterCardsByNationalDexIds(
   dexIds: number[],
@@ -719,23 +747,58 @@ export async function fetchMasterCardsByNationalDexIds(
   if (idSet.size === 0) return [];
 
   const orderedRows = getDefaultCardOrder();
-  const orderRank = new Map<string, number>();
-  orderedRows.forEach((row, index) => orderRank.set(row.id, index));
+  const defaultBrowseOrderIndex = buildDefaultBrowseOrderIndex(orderedRows);
 
-  const allIds = [...idSet].sort((a, b) => {
-    const ra = orderRank.get(a);
-    const rb = orderRank.get(b);
-    if (ra !== undefined && rb !== undefined && ra !== rb) return ra - rb;
-    if (ra === undefined && rb !== undefined) return 1;
-    if (rb === undefined && ra !== undefined) return -1;
-    return a.localeCompare(b);
-  });
+  const allIds = [...idSet].sort(
+    compareMasterCardIdsByDefaultOrder.bind(null, defaultBrowseOrderIndex),
+  );
 
   const pageIds = allIds.slice(0, limitCap);
   const cardMap = getCardMapById();
   const setMetaMap = getSetMetaMap();
 
   return pageIds
+    .map((id) => cardMap.get(id))
+    .filter((c): c is CardJsonEntry => Boolean(c))
+    .map((c) => cardJsonEntryToCardsPageEntry(c, setMetaMap.get(c.setCode)))
+    .filter((e): e is CardsPageCardEntry => e !== null);
+}
+
+export async function fetchMasterCardsBySimilarName(
+  cardName: string,
+  options?: { limit?: number },
+): Promise<CardsPageCardEntry[]> {
+  const normalizedQuery = normalizeCardNameForSimilarity(cardName);
+  if (!normalizedQuery) return [];
+
+  const limitCap = Math.min(
+    typeof options?.limit === "number" && options.limit > 0
+      ? options.limit
+      : BY_SIMILAR_NAME_MAX_CARDS,
+    BY_SIMILAR_NAME_MAX_CARDS,
+  );
+
+  const orderedRows = getDefaultCardOrder();
+
+  const cardMap = getCardMapById();
+  const setMetaMap = getSetMetaMap();
+
+  const matchingIds = orderedRows
+    .map((row) => row.id)
+    .filter((id) => {
+      const card = cardMap.get(id);
+      if (!card?.imageLowSrc) return false;
+      const normalizedName = normalizeCardNameForSimilarity(card.cardName ?? "");
+      if (!normalizedName) return false;
+      return (
+        normalizedName === normalizedQuery ||
+        normalizedName.includes(normalizedQuery) ||
+        normalizedQuery.includes(normalizedName)
+      );
+    })
+    .slice(0, limitCap);
+
+  return matchingIds
     .map((id) => cardMap.get(id))
     .filter((c): c is CardJsonEntry => Boolean(c))
     .map((c) => cardJsonEntryToCardsPageEntry(c, setMetaMap.get(c.setCode)))

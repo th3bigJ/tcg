@@ -11,6 +11,7 @@ type Props = {
   setLogosByCode?: Record<string, string>;
   setSymbolsByCode?: Record<string, string>;
   customerLoggedIn: boolean;
+  routeGroupBySet?: boolean;
   formAction: string;
   activeEnergy: string;
   energyOptions: string[];
@@ -22,9 +23,11 @@ export function PokedexCardGrid({
   setLogosByCode,
   setSymbolsByCode,
   customerLoggedIn,
+  routeGroupBySet,
   initialSearchCardData,
 }: Props) {
-  const [sort, setSort] = useState(() => readPersistedFilters().sort ?? DEFAULT_SORT);
+  const [sort, setSort] = useState(() => readPersistedFilters("pokedex").sort ?? DEFAULT_SORT);
+  const [groupBySet, setGroupBySet] = useState(() => readPersistedFilters("pokedex").groupBySet ?? false);
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
   const cardData = customerLoggedIn ? initialSearchCardData ?? null : null;
 
@@ -48,7 +51,11 @@ export function PokedexCardGrid({
 
   // Re-sync sort if persisted filters change (e.g. user applies from another tab)
   useEffect(() => {
-    const handler = () => setSort(readPersistedFilters().sort ?? DEFAULT_SORT);
+    const handler = () => {
+      const persisted = readPersistedFilters("pokedex");
+      setSort(persisted.sort ?? DEFAULT_SORT);
+      setGroupBySet(persisted.groupBySet ?? false);
+    };
     window.addEventListener("storage", handler);
     window.addEventListener(PERSISTED_FILTERS_UPDATED_EVENT, handler);
     return () => {
@@ -61,6 +68,8 @@ export function PokedexCardGrid({
     return sortCards(cards, sort, (c) => cardPrices?.[c.masterCardId ?? ""] ?? 0);
   }, [cards, sort, cardPrices]);
 
+  const effectiveGroupBySet = routeGroupBySet ?? groupBySet;
+
   return (
     <CardGrid
       cards={sortedCards}
@@ -70,6 +79,7 @@ export function PokedexCardGrid({
       itemConditions={cardData?.itemConditions}
       wishlistEntryIdsByMasterCardId={cardData?.wishlistMap}
       collectionLinesByMasterCardId={cardData?.collectionLines}
+      groupBySet={effectiveGroupBySet}
     />
   );
 }

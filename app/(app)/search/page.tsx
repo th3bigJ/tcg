@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Suspense } from "react";
+import { AppLoadingScreen } from "@/app/(app)/AppLoadingScreen";
 import { ExpansionsList } from "@/components/ExpansionsList";
 import { PokedexList } from "@/components/PokedexList";
 import { SearchBrowseTabs } from "@/components/SearchBrowseTabs";
@@ -23,7 +24,7 @@ import {
   groupExpansionSetsBySeries,
 } from "@/lib/expansionsPageQueries";
 import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
-import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
+import { fetchCollectionCardEntries, fetchWishlistCardEntries } from "@/lib/storefrontCardMapsServer";
 
 const TOTAL_POKEMON_COUNT = 1025;
 const SEARCH_CARDS_INITIAL_TAKE = 105;
@@ -58,7 +59,9 @@ const searchShellClass =
 function SearchPageFallback() {
   return (
     <div className={searchShellClass}>
-      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-2 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col" />
+      <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-2 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <AppLoadingScreen label="Loading search" />
+      </main>
     </div>
   );
 }
@@ -79,15 +82,19 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
 
   if (browseTab === "sets") {
     const customer = await customerPromise;
-    const [rows, collectionEntries] = await Promise.all([
+    const [rows, collectionEntries, wishlistEntries] = await Promise.all([
       getCachedExpansionSetRows(),
       customer ? fetchCollectionCardEntries(customer.id) : Promise.resolve([]),
+      customer ? fetchWishlistCardEntries(customer.id) : Promise.resolve([]),
     ]);
     let uniqueOwnedBySetCode: Record<string, number> | null = null;
+    let uniqueWishlistedBySetCode: Record<string, number> | null = null;
     const seenBySetCode = new Map<string, Set<string>>();
+    const wishlistedSeenBySetCode = new Map<string, Set<string>>();
 
     if (customer) {
       uniqueOwnedBySetCode = {};
+      uniqueWishlistedBySetCode = {};
       for (const entry of collectionEntries) {
         const setCode = typeof entry.set === "string" ? entry.set.trim() : "";
         if (!setCode || setCode === "unknown") continue;
@@ -100,8 +107,23 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
         seenBySetCode.set(setCode, seen);
       }
 
+      for (const entry of wishlistEntries) {
+        const setCode = typeof entry.set === "string" ? entry.set.trim() : "";
+        if (!setCode || setCode === "unknown") continue;
+        const uniqueCardKey =
+          entry.masterCardId ??
+          [entry.set, entry.cardNumber, entry.filename].filter((v) => Boolean(v)).join("|");
+        if (!uniqueCardKey) continue;
+        const seen = wishlistedSeenBySetCode.get(setCode) ?? new Set<string>();
+        seen.add(uniqueCardKey);
+        wishlistedSeenBySetCode.set(setCode, seen);
+      }
+
       for (const [setCode, seen] of seenBySetCode.entries()) {
         uniqueOwnedBySetCode[setCode] = seen.size;
+      }
+      for (const [setCode, seen] of wishlistedSeenBySetCode.entries()) {
+        uniqueWishlistedBySetCode[setCode] = seen.size;
       }
     }
 
@@ -112,7 +134,11 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
         <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-2 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
           <SearchBrowseTabs activeTab="sets" cardsHref="/search?tab=cards" />
           <SearchScrollArea className="min-h-0 flex-1 overflow-y-auto pb-4">
-            <ExpansionsList groups={groups} uniqueOwnedBySetCode={uniqueOwnedBySetCode} />
+            <ExpansionsList
+              groups={groups}
+              uniqueOwnedBySetCode={uniqueOwnedBySetCode}
+              uniqueWishlistedBySetCode={uniqueWishlistedBySetCode}
+            />
           </SearchScrollArea>
         </main>
       </div>

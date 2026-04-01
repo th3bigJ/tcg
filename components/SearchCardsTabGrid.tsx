@@ -8,6 +8,7 @@ import {
   readPersistedFilters,
   sortCards,
   DEFAULT_SORT,
+  type SortOrder,
 } from "@/lib/persistedFilters";
 import type { SearchCardDataPayload } from "@/lib/searchCardDataServer";
 
@@ -40,7 +41,10 @@ export function SearchCardsTabGrid({
   customerLoggedIn,
   initialSearchCardData,
 }: Props) {
-  const [sort, setSort] = useState(() => readPersistedFilters().sort ?? DEFAULT_SORT);
+  // Defaults must match SSR (no localStorage); hydrate persisted prefs after mount to avoid mismatch.
+  const [sort, setSort] = useState<SortOrder>(DEFAULT_SORT);
+  const [groupBySet, setGroupBySet] = useState(false);
+  const [showOwnedOnly, setShowOwnedOnly] = useState(false);
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
   const cardData = customerLoggedIn ? initialSearchCardData ?? null : null;
 
@@ -64,18 +68,32 @@ export function SearchCardsTabGrid({
   }, [sort, cards, cardPrices]);
 
   useEffect(() => {
-    const handler = () => setSort(readPersistedFilters().sort ?? DEFAULT_SORT);
-    window.addEventListener("storage", handler);
-    window.addEventListener(PERSISTED_FILTERS_UPDATED_EVENT, handler);
+    const applyPersisted = () => {
+      const persisted = readPersistedFilters("search");
+      setSort(persisted.sort ?? DEFAULT_SORT);
+      setGroupBySet(persisted.groupBySet ?? false);
+      setShowOwnedOnly(persisted.showOwnedOnly ?? false);
+    };
+    applyPersisted();
+    window.addEventListener("storage", applyPersisted);
+    window.addEventListener(PERSISTED_FILTERS_UPDATED_EVENT, applyPersisted);
     return () => {
-      window.removeEventListener("storage", handler);
-      window.removeEventListener(PERSISTED_FILTERS_UPDATED_EVENT, handler);
+      window.removeEventListener("storage", applyPersisted);
+      window.removeEventListener(PERSISTED_FILTERS_UPDATED_EVENT, applyPersisted);
     };
   }, []);
 
   const sortedCards = useMemo(() => {
-    return sortCards(cards, sort, (c) => cardPrices?.[c.masterCardId ?? ""] ?? 0);
-  }, [cards, sort, cardPrices]);
+    const visibleCards =
+      showOwnedOnly && cardData?.collectionLines
+        ? cards.filter((card) => {
+            const masterCardId = card.masterCardId ?? "";
+            return (cardData.collectionLines[masterCardId]?.length ?? 0) > 0;
+          })
+        : cards;
+
+    return sortCards(visibleCards, sort, (c) => cardPrices?.[c.masterCardId ?? ""] ?? 0);
+  }, [cards, sort, cardPrices, showOwnedOnly, cardData]);
 
   return (
     <CardGrid
@@ -86,7 +104,7 @@ export function SearchCardsTabGrid({
       itemConditions={cardData?.itemConditions}
       wishlistEntryIdsByMasterCardId={cardData?.wishlistMap}
       collectionLinesByMasterCardId={cardData?.collectionLines}
-      groupBySet={false}
+      groupBySet={groupBySet}
     />
   );
 }

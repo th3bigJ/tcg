@@ -30,7 +30,7 @@ export function ExpansionSetCardGrid({
   customerLoggedIn,
   initialSearchCardData,
 }: Props) {
-  const [sort, setSort] = useState(() => readPersistedFilters().sort ?? DEFAULT_SORT);
+  const [sort, setSort] = useState(() => readPersistedFilters("expansions").sort ?? DEFAULT_SORT);
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
   const cardData = customerLoggedIn ? initialSearchCardData ?? null : null;
 
@@ -52,7 +52,7 @@ export function ExpansionSetCardGrid({
   }, [sort, cards, cardPrices]);
 
   useEffect(() => {
-    const handler = () => setSort(readPersistedFilters().sort ?? DEFAULT_SORT);
+    const handler = () => setSort(readPersistedFilters("expansions").sort ?? DEFAULT_SORT);
     window.addEventListener("storage", handler);
     window.addEventListener(PERSISTED_FILTERS_UPDATED_EVENT, handler);
     return () => {

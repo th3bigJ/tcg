@@ -21,15 +21,20 @@ function parseDexIds(raw: string | null): number[] | null {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const parsed = parseDexIds(searchParams.get("ids"));
-  if (parsed === null) {
-    return NextResponse.json({ error: "Invalid ids parameter" }, { status: 400 });
-  }
-  if (parsed.length === 0) {
-    return NextResponse.json({ cards: [] });
-  }
+  try {
+    const { searchParams } = new URL(request.url);
+    const parsed = parseDexIds(searchParams.get("ids"));
+    if (parsed === null) {
+      return NextResponse.json({ error: "Invalid ids parameter" }, { status: 400 });
+    }
+    if (parsed.length === 0) {
+      return NextResponse.json({ cards: [] });
+    }
 
-  const cards = await fetchMasterCardsByNationalDexIds(parsed);
-  return NextResponse.json({ cards });
+    const cards = await fetchMasterCardsByNationalDexIds(parsed);
+    return NextResponse.json({ cards });
+  } catch (error) {
+    console.error("[api/cards/by-national-dex]", error);
+    return NextResponse.json({ cards: [], error: "Failed to load cards" }, { status: 500 });
+  }
 }

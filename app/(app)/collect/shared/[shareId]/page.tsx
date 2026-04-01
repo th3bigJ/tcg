@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { AppLoadingScreen } from "@/app/(app)/AppLoadingScreen";
 import { SharedCollectionDetailClient } from "@/app/(app)/collect/shared/[shareId]/SharedCollectionDetailClient";
 import { loadSharedCollectionData } from "@/app/(app)/collect/shared/[shareId]/loadSharedCollectionData";
 import { getCurrentCustomer } from "@/lib/auth";
@@ -15,7 +16,7 @@ export default async function SharedCollectionDetailPage({ params }: PageProps) 
 
   if (!customer) {
     return (
-      <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-6 pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
+      <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-6 pt-2 text-[var(--foreground)]">
         <h1 className="text-xl font-semibold">Shared collection</h1>
         <p className="mt-2 max-w-md text-sm text-[var(--foreground)]/70">Sign in to view shared collections.</p>
         <Link
@@ -33,8 +34,8 @@ export default async function SharedCollectionDetailPage({ params }: PageProps) 
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-full flex-col bg-[var(--background)] px-4 py-8 text-sm text-[var(--foreground)]/60">
-          Loading…
+        <div className="flex min-h-full flex-col bg-[var(--background)]">
+          <AppLoadingScreen label="Loading friends" />
         </div>
       }
     >

@@ -22,7 +22,8 @@ const extraAllowedDevOrigins =
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  allowedDevOrigins: ["127.0.0.1", ...extraAllowedDevOrigins],
+  // Allow both hostnames — dev blocks cross-origin fetches; localhost ≠ 127.0.0.1 as an origin.
+  allowedDevOrigins: ["127.0.0.1", "localhost", ...extraAllowedDevOrigins],
   transpilePackages: ["@supabase/ssr", "@supabase/supabase-js"],
   images: r2Hostname
     ? {

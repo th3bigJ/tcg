@@ -395,7 +395,7 @@ export function NewTradeWizardClient({
 
   return (
     <div className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
-      <div className="shrink-0 border-b border-[var(--foreground)]/10 px-4 pb-4 pt-[var(--mobile-page-top-offset)]">
+      <div className="shrink-0 border-b border-[var(--foreground)]/10 px-4 pb-4 pt-2">
         <Link
           href={backHref}
           className="text-sm font-medium text-[var(--foreground)]/65 transition hover:text-[var(--foreground)]"

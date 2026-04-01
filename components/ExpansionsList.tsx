@@ -8,9 +8,11 @@ import type { ExpansionSeriesGroup } from "@/lib/expansionsPageQueries";
 export function ExpansionsList({
   groups,
   uniqueOwnedBySetCode = null,
+  uniqueWishlistedBySetCode = null,
 }: {
   groups: ExpansionSeriesGroup[];
   uniqueOwnedBySetCode?: Record<string, number> | null;
+  uniqueWishlistedBySetCode?: Record<string, number> | null;
 }) {
   const [search, setSearch] = useState("");
 
@@ -61,6 +63,11 @@ export function ExpansionsList({
                 0,
                 totalCards > 0 ? Math.min(totalCards, ownedCountRaw) : ownedCountRaw,
               );
+              const wishlistedCountRaw = uniqueWishlistedBySetCode?.[set.code] ?? 0;
+              const wishlistedCount = Math.max(
+                0,
+                totalCards > 0 ? Math.min(totalCards, wishlistedCountRaw) : wishlistedCountRaw,
+              );
               const progressPct =
                 totalCards > 0 ? Math.max(0, Math.min(100, (ownedCount / totalCards) * 100)) : 0;
 
@@ -86,15 +93,22 @@ export function ExpansionsList({
                       </span>
                       {showProgress ? (
                         <>
-                          <span className="mt-1.5 block text-left text-sm text-[var(--foreground)]/60">
-                            {ownedCount} of {totalCards > 0 ? totalCards : "?"} collected
+                          <span className="mt-1.5 flex items-baseline justify-between gap-3 text-left text-sm text-[var(--foreground)]/60">
+                            <span>
+                              {ownedCount} of {totalCards > 0 ? totalCards : "?"} collected
+                            </span>
+                            {wishlistedCount > 0 ? (
+                              <span className="shrink-0 text-right">
+                                {wishlistedCount} wishlisted
+                              </span>
+                            ) : null}
                           </span>
                           <span
                             className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-[var(--foreground)]/15"
                             aria-hidden
                           >
                             <span
-                              className="block h-full rounded-full bg-[var(--accent)]"
+                              className="block h-full rounded-full bg-[var(--foreground)]/75 transition-[width]"
                               style={{ width: `${progressPct}%` }}
                             />
                           </span>

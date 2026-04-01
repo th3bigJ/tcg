@@ -222,7 +222,7 @@ export function ModalCardPricing({
                       <button
                         type="button"
                         onClick={() => onAdd(key)}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold text-white transition hover:bg-white/20"
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-[1.25rem] font-semibold text-white transition hover:bg-white/20"
                         aria-label={`Add ${variantLabel(key)} to collection`}
                       >
                         +
@@ -232,12 +232,12 @@ export function ModalCardPricing({
                       <button
                         type="button"
                         onClick={() => onWishlist(key)}
-                        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${isFilled ? "" : "text-white"}`}
+                        className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${isFilled ? "" : "text-white"}`}
                         aria-label={isFilled ? "Remove from wishlist" : `Add ${variantLabel(key)} to wishlist`}
                       >
                         <svg
-                          width="16"
-                          height="16"
+                          width="18"
+                          height="18"
                           viewBox="0 0 24 24"
                           fill={isFilled ? "currentColor" : "none"}
                           stroke={isFilled ? "none" : "currentColor"}
@@ -288,7 +288,7 @@ export function ModalCardPricing({
               <button
                 type="button"
                 onClick={() => onAdd("Unlisted")}
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold text-white transition hover:bg-white/20"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-[1.25rem] font-semibold text-white transition hover:bg-white/20"
                 aria-label="Add unlisted variant to collection"
               >
                 +
@@ -298,12 +298,12 @@ export function ModalCardPricing({
               <button
                 type="button"
                 onClick={() => onWishlist("Unlisted")}
-                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${unlistedWishlisted ? "" : "text-white"}`}
+                className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${unlistedWishlisted ? "" : "text-white"}`}
                 aria-label={unlistedWishlisted ? "Remove from wishlist" : "Add unlisted variant to wishlist"}
               >
                 <svg
-                  width="16"
-                  height="16"
+                  width="18"
+                  height="18"
                   viewBox="0 0 24 24"
                   fill={unlistedWishlisted ? "currentColor" : "none"}
                   stroke={unlistedWishlisted ? "none" : "currentColor"}

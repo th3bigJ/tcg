@@ -1,4 +1,5 @@
 import { DevRuntimeGuards } from "@/app/(app)/DevRuntimeGuards";
+import { AppLoadingScreen } from "@/app/(app)/AppLoadingScreen";
 import { CardGridPreferencesProvider } from "@/components/CardGridPreferencesProvider";
 import { PullToRefresh } from "@/components/PullToRefresh";
 
@@ -51,7 +52,8 @@ export function AppLayoutBodyFallback({ children }: { children: React.ReactNode 
       <PullToRefresh />
       <LayoutChromeSkeleton />
       <div className="relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)] pt-[var(--top-search-offset)]">
-        {children}
+        <AppLoadingScreen />
+        <div className="hidden">{children}</div>
       </div>
     </CardGridPreferencesProvider>
   );
