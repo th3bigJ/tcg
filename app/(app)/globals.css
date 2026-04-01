@@ -59,6 +59,18 @@ input[type="search"]::-webkit-search-results-decoration {
   contain-intrinsic-size: 140px 187px;
 }
 
+/* Dynamic column counts from CardGridPreferencesProvider (--card-grid-cols-* set inline).
+   Fallbacks match lib/gridPreferences.ts defaults when vars are unset: mobile 3, desktop 7. */
+.card-grid-columns-dynamic {
+  grid-template-columns: repeat(var(--card-grid-cols-mobile, 3), minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .card-grid-columns-dynamic {
+    grid-template-columns: repeat(var(--card-grid-cols-desktop, 7), minmax(0, 1fr));
+  }
+}
+
 .card-viewer-overlay {
   background-color: rgba(0, 0, 0, 0.92);
   --card-viewer-image-radius: 1.25rem;

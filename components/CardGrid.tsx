@@ -17,6 +17,7 @@ import {
 import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { useCardGridPreferences } from "@/components/CardGridPreferencesProvider";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import { collectionGroupKeyFromLine, type CollectionLineSummary } from "@/lib/storefrontCardMaps";
 import { getItemConditionName } from "@/lib/referenceData";
@@ -1168,6 +1169,15 @@ export function CardGrid({
   const router = useRouter();
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
+  const { preferences: gridPreferences } = useCardGridPreferences();
+  const gridColumnStyle = useMemo(
+    () =>
+      ({
+        ["--card-grid-cols-mobile" as string]: String(gridPreferences.gridColumnsMobile),
+        ["--card-grid-cols-desktop" as string]: String(gridPreferences.gridColumnsDesktop),
+      }) as CSSProperties,
+    [gridPreferences.gridColumnsDesktop, gridPreferences.gridColumnsMobile],
+  );
   const allowMutations = Boolean(customerLoggedIn && !readOnly);
   const [localWishlistMap, setLocalWishlistMap] = useState(wishlistEntryIdsByMasterCardId);
   const [addSheetOpen, setAddSheetOpen] = useState(false);
@@ -3528,7 +3538,7 @@ export function CardGrid({
     if (hideGrid) return null;
     if (!groupBySet) {
       return (
-        <ul className="grid grid-cols-3 gap-2 md:grid-cols-5 md:gap-3 lg:grid-cols-7">
+        <ul className="card-grid-columns-dynamic grid gap-2 md:gap-3" style={gridColumnStyle}>
           {normalizedCards.map((card, index) => {
             const mapKey = cardCollectionMapKey(card);
             const showPrice = mapKey !== "" && cardPricesByMasterCardId[mapKey] !== undefined;
@@ -3663,7 +3673,7 @@ export function CardGrid({
                   </span>
                 ) : null}
               </div>
-              <ul className="grid grid-cols-3 gap-2 md:grid-cols-5 md:gap-3 lg:grid-cols-7">
+              <ul className="card-grid-columns-dynamic grid gap-2 md:gap-3" style={gridColumnStyle}>
                 {groupEntries.map(({ card, globalIndex }) => {
                   const mapKey = cardCollectionMapKey(card);
                   const showPrice = mapKey !== "" && cardPricesByMasterCardId[mapKey] !== undefined;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AccountGridDensity } from "@/components/AccountGridDensity";
 import { AccountSignOut } from "@/components/AccountSignOut";
 import { getCurrentCustomer } from "@/lib/auth";
 
@@ -25,6 +26,7 @@ export default async function AccountPage() {
         <br />
         <span className="font-medium">{customer.email}</span>
       </p>
+      <AccountGridDensity />
       <div className="mt-8 flex flex-col gap-3 text-sm font-medium">
         <Link
           href="/"
