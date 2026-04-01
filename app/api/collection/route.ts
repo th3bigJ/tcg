@@ -127,6 +127,18 @@ export async function POST(request: NextRequest) {
     return jsonResponseWithAuthCookies({ error: error.message }, authCookieResponse, { status: 422 });
   }
 
+  let removedWishlist = false;
+  try {
+    const { error: wishlistDeleteError } = await supabase
+      .from("customer_wishlists")
+      .delete()
+      .eq("customer_id", customer.id)
+      .eq("master_card_id", masterCardId);
+    removedWishlist = !wishlistDeleteError;
+  } catch {
+    removedWishlist = false;
+  }
+
   // Auto-create a purchase transaction when a card is bought with a price
   if (purchaseType === "bought" && pricePaid !== null) {
     try {
@@ -151,7 +163,7 @@ export async function POST(request: NextRequest) {
 
   const docs = createdRows ?? [];
   const doc = docs[0] ?? null;
-  return jsonResponseWithAuthCookies({ doc, docs }, authCookieResponse);
+  return jsonResponseWithAuthCookies({ doc, docs, removedWishlist }, authCookieResponse);
 }
 
 export async function DELETE(request: NextRequest) {

@@ -398,7 +398,6 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   const openSearch = () => {
     setModalMode("search");
-    setTimeout(() => inputRef.current?.focus(), 30);
   };
 
   const openFilters = () => {
@@ -595,6 +594,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                 onFocus={() => { if (modalMode !== "search") setModalMode("search"); }}
                 placeholder="Search cards, sets, Pokémon…"
                 className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder-white/35 outline-none"
+                autoFocus
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}

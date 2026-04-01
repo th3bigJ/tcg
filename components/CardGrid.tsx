@@ -1288,23 +1288,29 @@ export function CardGrid({
     const out: Record<string, { label: string | null; hasManual: boolean }> = {};
     for (const [mid, lines] of Object.entries(localCollectionLinesByMasterCardId)) {
       if (mid.includes("|")) continue;
-      const variantPrices = new Map<string, number>();
+      const seenPrices = new Set<number>();
+      let lowest: number | null = null;
+      let highest: number | null = null;
       let hasManual = false;
       for (const line of lines) {
+        if ((line.gradingCompany?.trim() ?? "") && (line.gradeValue?.trim() ?? "")) continue;
+        if ((line.conditionId?.trim() ?? "").toLowerCase() === "graded") continue;
+        if ((line.conditionLabel?.trim() ?? "").toLowerCase() === "graded") continue;
         const groupKey = collectionGroupKeyFromLine(mid, line);
         const unit = cardPricesByMasterCardId[groupKey];
         if (unit === undefined) continue;
-        const variantName = line.printing?.trim() || "Standard";
-        if (!variantPrices.has(variantName)) {
-          variantPrices.set(variantName, unit);
+        if (!seenPrices.has(unit)) {
+          seenPrices.add(unit);
+          lowest = lowest === null ? unit : Math.min(lowest, unit);
+          highest = highest === null ? unit : Math.max(highest, unit);
         }
         if (manualPriceMasterCardIds?.has(groupKey)) hasManual = true;
       }
       const label =
-        variantPrices.size > 1
-          ? [...variantPrices.values()]
-              .map((v) => formatMoneyGbp(v))
-              .join(" / ")
+        lowest !== null && highest !== null
+          ? lowest === highest
+            ? formatMoneyGbp(highest)
+            : `${formatMoneyGbp(lowest)} - ${formatMoneyGbp(highest)}`
           : null;
       out[mid] = { label, hasManual };
     }
@@ -1629,8 +1635,8 @@ export function CardGrid({
           gradedSerial: gradedSerial.trim() || undefined,
         }),
       });
-      let j: { doc?: { id?: string | number }; error?: string };
-      try { j = (await res.json()) as { doc?: { id?: string | number }; error?: string }; } catch { return; }
+      let j: { doc?: { id?: string | number }; error?: string; removedWishlist?: boolean };
+      try { j = (await res.json()) as { doc?: { id?: string | number }; error?: string; removedWishlist?: boolean }; } catch { return; }
       if (!res.ok) {
         console.error("[graded add]", res.status, j.error);
         return;
@@ -1659,6 +1665,14 @@ export function CardGrid({
         setLocalCollectionLinesByMasterCardId((prev) =>
           mergeCollectionLine(mergeCollectionLine(prev, gk, line), mid, line),
         );
+      }
+      if (j.removedWishlist && mid) {
+        setLocalWishlistMap((prev) => {
+          if (!(mid in prev)) return prev;
+          const next = { ...prev };
+          delete next[mid];
+          return next;
+        });
       }
       setAddSheetOpen(false);
       if (variant !== "browse") router.refresh();
@@ -1698,9 +1712,9 @@ export function CardGrid({
           unlistedPrice: addPrinting === "Unlisted" && addUnlistedPrice !== "" ? parseFloat(addUnlistedPrice) : undefined,
         }),
       });
-      let j: { doc?: { id?: string | number }; docs?: { id?: string | number }[]; error?: string };
+      let j: { doc?: { id?: string | number }; docs?: { id?: string | number }[]; error?: string; removedWishlist?: boolean };
       try {
-        j = (await res.json()) as { doc?: { id?: string | number }; docs?: { id?: string | number }[]; error?: string };
+        j = (await res.json()) as { doc?: { id?: string | number }; docs?: { id?: string | number }[]; error?: string; removedWishlist?: boolean };
       } catch {
         return;
       }
@@ -1732,6 +1746,14 @@ export function CardGrid({
             const gk = collectionGroupKeyFromLine(mid, line);
             next = mergeCollectionLine(mergeCollectionLine(next, gk, line), mid, line);
           }
+          return next;
+        });
+      }
+      if (j.removedWishlist && mid) {
+        setLocalWishlistMap((prev) => {
+          if (!(mid in prev)) return prev;
+          const next = { ...prev };
+          delete next[mid];
           return next;
         });
       }
@@ -2509,6 +2531,7 @@ export function CardGrid({
                 onVariantsLoaded={setPricingVariants}
                 onAdd={allowMutations && selectedCard.masterCardId ? (v) => onOpenAddSheet(v) : undefined}
                 onWishlist={allowMutations && selectedCard.masterCardId ? (v) => void toggleWishlist(v) : undefined}
+                wishlisted={selectedCard.masterCardId ? Boolean(localWishlistMap[selectedCard.masterCardId]) : false}
                 wishlistedVariant={selectedCard.masterCardId ? (localWishlistMap[selectedCard.masterCardId]?.printing ?? null) : null}
                 ebayCardContext={{
                   setName: selectedCard.setName,

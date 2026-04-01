@@ -74,6 +74,7 @@ export function ModalCardPricing({
   onVariantsLoaded,
   onAdd,
   onWishlist,
+  wishlisted,
   wishlistedVariant,
 }: {
   masterCardId?: string;
@@ -83,6 +84,7 @@ export function ModalCardPricing({
   onVariantsLoaded?: (variants: string[]) => void;
   onAdd?: (variant: string) => void;
   onWishlist?: (variant: string) => void;
+  wishlisted?: boolean;
   wishlistedVariant?: string | null;
 }) {
   const mid = masterCardId?.trim() ?? "";
@@ -167,6 +169,9 @@ export function ModalCardPricing({
   }, [tpObj]);
 
   const showUnlistedRow = pricingLoaded && variantRows.length === 0 && (onAdd ?? onWishlist);
+  const unlistedWishlisted = Boolean(
+    showUnlistedRow && wishlisted && (!wishlistedVariant || wishlistedVariant === "Unlisted"),
+  );
   const pricingResolved = !showDexRows || pricingLoaded;
 
   if (!pricingResolved) {
@@ -293,19 +298,19 @@ export function ModalCardPricing({
               <button
                 type="button"
                 onClick={() => onWishlist("Unlisted")}
-                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${wishlistedVariant === "Unlisted" ? "" : "text-white"}`}
-                aria-label={wishlistedVariant === "Unlisted" ? "Remove from wishlist" : "Add unlisted variant to wishlist"}
+                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 transition hover:bg-white/20 ${unlistedWishlisted ? "" : "text-white"}`}
+                aria-label={unlistedWishlisted ? "Remove from wishlist" : "Add unlisted variant to wishlist"}
               >
                 <svg
                   width="16"
                   height="16"
                   viewBox="0 0 24 24"
-                  fill={wishlistedVariant === "Unlisted" ? "currentColor" : "none"}
-                  stroke={wishlistedVariant === "Unlisted" ? "none" : "currentColor"}
-                  strokeWidth={wishlistedVariant === "Unlisted" ? undefined : 2}
+                  fill={unlistedWishlisted ? "currentColor" : "none"}
+                  stroke={unlistedWishlisted ? "none" : "currentColor"}
+                  strokeWidth={unlistedWishlisted ? undefined : 2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className={wishlistedVariant === "Unlisted" ? "text-red-500" : "text-white"}
+                  className={unlistedWishlisted ? "text-red-500" : "text-white"}
                   aria-hidden
                 >
                   <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />

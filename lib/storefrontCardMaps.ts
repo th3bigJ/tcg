@@ -209,6 +209,14 @@ export function collectionGroupKeyFromLine(
   return `${mid}|${printing}|${conditionLabel}|${language}|${gc}|${gv}`;
 }
 
+function isGradedCollectionEntry(
+  entry: Pick<StorefrontCardEntry, "gradingCompany" | "gradeValue" | "conditionId" | "conditionLabel">,
+): boolean {
+  if ((entry.gradingCompany?.trim() ?? "") && (entry.gradeValue?.trim() ?? "")) return true;
+  if ((entry.conditionId?.trim() ?? "").toLowerCase() === "graded") return true;
+  return (entry.conditionLabel?.trim() ?? "").toLowerCase() === "graded";
+}
+
 export function groupCollectionLinesByMasterCardId(
   entries: StorefrontCardEntry[],
 ): Record<string, CollectionLineSummary[]> {
@@ -288,9 +296,9 @@ export function groupCollectionLinesByGroupKey(
 }
 
 /**
- * One tile per catalog variant in collection grids: same printing/condition/language/grade bucket merges
- * (qty sums). Graded lines are never merged with raw/ungraded lines for the same master card.
- * Preserves first-seen order of group keys (newest first).
+ * Collection grid tiles group raw copies by catalog card while keeping graded copies separate.
+ * Detailed per-variant / per-condition lines remain available via {@link groupCollectionLinesByMasterCardId}.
+ * Preserves first-seen order of tile keys (newest first).
  */
 export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): StorefrontCardEntry[] {
   const keyOrder: string[] = [];
@@ -302,14 +310,14 @@ export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): S
     if (!mid) {
       continue;
     }
-    const gk = collectionGroupKeyFromEntry(e);
-    if (!seenKey.has(gk)) {
-      seenKey.add(gk);
-      keyOrder.push(gk);
+    const tileKey = isGradedCollectionEntry(e) ? collectionGroupKeyFromEntry(e) : mid;
+    if (!seenKey.has(tileKey)) {
+      seenKey.add(tileKey);
+      keyOrder.push(tileKey);
     }
-    const list = byKey.get(gk) ?? [];
+    const list = byKey.get(tileKey) ?? [];
     list.push(e);
-    byKey.set(gk, list);
+    byKey.set(tileKey, list);
   }
 
   const out: StorefrontCardEntry[] = [];
@@ -324,7 +332,7 @@ export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): S
     out.push({
       ...first,
       quantity: total,
-      collectionGroupKey: key,
+      collectionGroupKey: isGradedCollectionEntry(first) ? key : undefined,
       collectionEntryId: group.length === 1 ? first.collectionEntryId : undefined,
     });
   }

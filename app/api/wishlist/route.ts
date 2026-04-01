@@ -78,9 +78,10 @@ export async function POST(request: NextRequest) {
     typeof body.targetConditionId === "string" && body.targetConditionId.trim()
       ? body.targetConditionId.trim()
       : null;
+  const targetPrintingRaw = typeof body.targetPrinting === "string" ? body.targetPrinting.trim() : "";
   const targetPrinting =
-    typeof body.targetPrinting === "string" && body.targetPrinting.trim()
-      ? body.targetPrinting.trim()
+    targetPrintingRaw && targetPrintingRaw !== "Unlisted"
+      ? targetPrintingRaw
       : null;
   const maxPrice =
     typeof body.maxPrice === "number" && Number.isFinite(body.maxPrice) && body.maxPrice >= 0
