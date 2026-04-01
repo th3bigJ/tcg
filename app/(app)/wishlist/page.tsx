@@ -95,9 +95,7 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     allCardsForGrid.length > 0
       ? sortCollectGridRowsByPriceDesc(allCardsForGrid, cardPricesByMasterCardId)
       : allCardsForGrid;
-  const groupedPage = groupBySet
-    ? paginateRowsByFullSets(allCardsSortedByPrice, setTake)
-    : null;
+  const groupedPage = paginateRowsByFullSets(allCardsSortedByPrice, setTake);
   const cardsForClient = groupBySet
     ? groupedPage.rowsForPage
     : allCardsSortedByPrice.slice(0, take);
@@ -112,7 +110,7 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
 
   const showingCount = cardsForClient.length;
   const nextTake = Math.min(totalCards, showingCount + LOAD_MORE_STEP);
-  const nextSetTake = groupBySet ? groupedPage.showingSetCount + 1 : setTake;
+  const nextSetTake = groupedPage.showingSetCount + 1;
   const canLoadMore = groupBySet
     ? groupedPage.hasMoreSets
     : showingCount > 0 && showingCount < totalCards;
