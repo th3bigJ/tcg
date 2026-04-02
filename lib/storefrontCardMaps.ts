@@ -46,6 +46,13 @@ export type CollectionLineSummary = {
   gradedSerial?: string;
 };
 
+export type WishlistEntrySummary = {
+  id: string;
+  printing?: string;
+};
+
+export type WishlistEntriesByMasterCardId = Record<string, WishlistEntrySummary[]>;
+
 export type StorefrontCardEntry = CardsPageCardEntry & StorefrontCardExtras;
 
 /** Whole-copy count for a collection row or merged tile (matches grid ×N and merge totals). */

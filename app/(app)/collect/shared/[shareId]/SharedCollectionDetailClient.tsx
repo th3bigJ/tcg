@@ -7,7 +7,12 @@ import { useMemo } from "react";
 import { SharedCollectionTradesClient } from "@/app/(app)/collect/shared/[shareId]/SharedCollectionTradesClient";
 import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
 import type { CardEntry } from "@/components/CardGrid";
-import type { CollectionLineSummary, StorefrontCardEntry, StorefrontCardExtras } from "@/lib/storefrontCardMaps";
+import type {
+  CollectionLineSummary,
+  StorefrontCardEntry,
+  StorefrontCardExtras,
+  WishlistEntriesByMasterCardId,
+} from "@/lib/storefrontCardMaps";
 
 type Tab = "collection" | "wishlist" | "trade";
 
@@ -24,7 +29,7 @@ type Props = {
   setLogosByCode: Record<string, string>;
   setSymbolsByCode: Record<string, string>;
   itemConditions: { id: string; name: string }[];
-  wishlistEntryIdsByMasterCardId: Record<string, { id: string; printing?: string }>;
+  wishlistEntryIdsByMasterCardId: WishlistEntriesByMasterCardId;
   collectionLinesByMasterCardId: Record<string, CollectionLineSummary[]>;
   collectionCardPricesByMasterCardId: Record<string, number>;
   wishlistCardPricesByMasterCardId: Record<string, number>;

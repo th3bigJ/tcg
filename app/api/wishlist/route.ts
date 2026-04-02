@@ -1,9 +1,16 @@
 import { type NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
 import { variantStorageCandidates } from "@/lib/cardVariantLabels";
 import { createSupabaseRouteHandlerClient, jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
 import { getItemConditionName } from "@/lib/referenceData";
+
+function revalidateWishlistSurfaces() {
+  revalidatePath("/wishlist");
+  revalidatePath("/search");
+  revalidatePath("/expansions");
+}
 
 export async function GET(request: NextRequest) {
   const { customer, authCookieResponse } = await getCurrentCustomerForApiRoute(request);
@@ -71,7 +78,11 @@ export async function POST(request: NextRequest) {
     typeof body.maxPrice === "number" && Number.isFinite(body.maxPrice) && body.maxPrice >= 0
       ? body.maxPrice
       : null;
-  const targetPrintingCandidates = variantStorageCandidates(body.targetPrinting);
+  const rawTargetPrinting =
+    typeof body.targetPrinting === "string" && body.targetPrinting.trim() ? body.targetPrinting.trim() : null;
+  const targetPrintingCandidates = variantStorageCandidates(body.targetPrinting).filter((candidate) =>
+    rawTargetPrinting ? candidate !== null : true,
+  );
 
   // Keep a single wishlist row per card, but allow the desired variant/details to change.
   const { data: existing } = await supabase
@@ -108,9 +119,20 @@ export async function POST(request: NextRequest) {
     }
 
     if (!updatedDoc) {
-      return jsonResponseWithAuthCookies({ error: lastError?.message ?? "Unable to update wishlist variant" }, authCookieResponse, { status: 422 });
+      return jsonResponseWithAuthCookies(
+        {
+          error:
+            lastError?.message ??
+            (rawTargetPrinting
+              ? `Unable to save wishlist variant "${rawTargetPrinting}"`
+              : "Unable to update wishlist variant"),
+        },
+        authCookieResponse,
+        { status: 422 },
+      );
     }
 
+    revalidateWishlistSurfaces();
     return jsonResponseWithAuthCookies({ doc: updatedDoc, existing: true }, authCookieResponse);
   }
 
@@ -140,9 +162,20 @@ export async function POST(request: NextRequest) {
   }
 
   if (!createdDoc) {
-    return jsonResponseWithAuthCookies({ error: lastError?.message ?? "Unable to create wishlist entry" }, authCookieResponse, { status: 422 });
+    return jsonResponseWithAuthCookies(
+      {
+        error:
+          lastError?.message ??
+          (rawTargetPrinting
+            ? `Unable to save wishlist variant "${rawTargetPrinting}"`
+            : "Unable to create wishlist entry"),
+      },
+      authCookieResponse,
+      { status: 422 },
+    );
   }
 
+  revalidateWishlistSurfaces();
   return jsonResponseWithAuthCookies({ doc: createdDoc, existing: false }, authCookieResponse);
 }
 
@@ -169,5 +202,6 @@ export async function DELETE(request: NextRequest) {
     return jsonResponseWithAuthCookies({ error: error.message }, authCookieResponse, { status: 422 });
   }
 
+  revalidateWishlistSurfaces();
   return jsonResponseWithAuthCookies({ ok: true }, authCookieResponse);
 }

@@ -1,14 +1,17 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getItemConditionName } from "@/lib/referenceData";
 import {
   mapCustomerCollectionRow,
   mapCustomerWishlistRow,
   type StorefrontCardEntry,
+  type WishlistEntriesByMasterCardId,
 } from "@/lib/storefrontCardMaps";
 
 const PAGE_SIZE = 1000;
 
 export async function fetchCollectionCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {
+  noStore();
   const supabase = await createSupabaseServerClient();
   const allRows: Record<string, unknown>[] = [];
   let from = 0;
@@ -36,6 +39,7 @@ export async function fetchCollectionCardEntries(customerId: string): Promise<St
 }
 
 export async function fetchWishlistCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {
+  noStore();
   const supabase = await createSupabaseServerClient();
   const allRows: Record<string, unknown>[] = [];
   let from = 0;
@@ -64,9 +68,10 @@ export async function fetchWishlistCardEntries(customerId: string): Promise<Stor
 
 export async function fetchWishlistIdsByMasterCard(
   customerId: string,
-): Promise<Record<string, { id: string; printing?: string }>> {
+): Promise<WishlistEntriesByMasterCardId> {
+  noStore();
   const supabase = await createSupabaseServerClient();
-  const map: Record<string, { id: string; printing?: string }> = {};
+  const map: WishlistEntriesByMasterCardId = {};
   let from = 0;
 
   while (true) {
@@ -80,11 +85,13 @@ export async function fetchWishlistIdsByMasterCard(
     for (const row of data) {
       const mid = row.master_card_id as string;
       const wid = row.id as string;
-      if (mid && wid && map[mid] === undefined) {
-        map[mid] = {
+      if (mid && wid) {
+        const entries = map[mid] ?? [];
+        entries.push({
           id: wid,
           printing: typeof row.target_printing === "string" ? row.target_printing : undefined,
-        };
+        });
+        map[mid] = entries;
       }
     }
     if (data.length < PAGE_SIZE) break;

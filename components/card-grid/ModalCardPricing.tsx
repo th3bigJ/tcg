@@ -69,7 +69,7 @@ export function ModalCardPricing({
   onAdd,
   onWishlist,
   wishlisted,
-  wishlistedVariant,
+  wishlistedVariants,
 }: {
   masterCardId?: string;
   externalId?: string;
@@ -79,7 +79,7 @@ export function ModalCardPricing({
   onAdd?: (variant: string) => void;
   onWishlist?: (variant: string) => void;
   wishlisted?: boolean;
-  wishlistedVariant?: string | null;
+  wishlistedVariants?: string[] | null;
 }) {
   const mid = masterCardId?.trim() ?? "";
   const ext = externalId?.trim() ?? "";
@@ -164,7 +164,9 @@ export function ModalCardPricing({
 
   const showUnlistedRow = pricingLoaded && variantRows.length === 0 && (onAdd ?? onWishlist);
   const unlistedWishlisted = Boolean(
-    showUnlistedRow && wishlisted && (!wishlistedVariant || wishlistedVariant === "Unlisted"),
+    showUnlistedRow &&
+      wishlisted &&
+      (wishlistedVariants ?? []).some((variant) => (normalizeVariantForStorage(variant) ?? "Unlisted") === "Unlisted"),
   );
   const pricingResolved = !showDexRows || pricingLoaded;
 
@@ -204,7 +206,7 @@ export function ModalCardPricing({
       <div className="flex flex-col gap-2">
         {showDexRows
           ? variantRows.map(({ key, raw, psa10, ace10 }) => {
-              const isFilled = variantMatches(wishlistedVariant, key);
+              const isFilled = (wishlistedVariants ?? []).some((variant) => variantMatches(variant, key));
               return (
                 <div
                   key={key}

@@ -9,7 +9,12 @@ import {
   readPersistedFilters,
   type PersistedFilterScope,
 } from "@/lib/persistedFilters";
-import { collectionGroupKeyFromLine, type CollectionLineSummary, type StorefrontCardExtras } from "@/lib/storefrontCardMaps";
+import {
+  collectionGroupKeyFromLine,
+  type CollectionLineSummary,
+  type StorefrontCardExtras,
+  type WishlistEntriesByMasterCardId,
+} from "@/lib/storefrontCardMaps";
 
 type SortOrder = "price-desc" | "price-asc" | "release-desc" | "release-asc" | "number-desc" | "number-asc" | "added-desc";
 
@@ -36,7 +41,7 @@ type CollectCardGridWithTagsProps = {
   routeGroupBySet?: boolean;
   filterScope?: PersistedFilterScope;
   itemConditions: { id: string; name: string }[];
-  wishlistEntryIdsByMasterCardId: Record<string, { id: string; printing?: string }>;
+  wishlistEntryIdsByMasterCardId: WishlistEntriesByMasterCardId;
   collectionLinesByMasterCardId: Record<string, CollectionLineSummary[]>;
   cardPricesByMasterCardId: Record<string, number>;
   manualPriceMasterCardIds?: Set<string>;
@@ -279,7 +284,7 @@ type VisibleCollectCardGridProps = {
   viewerOwnedMasterCardIds?: Set<string>;
   collectionSectionTitle?: string;
   itemConditions: { id: string; name: string }[];
-  wishlistEntryIdsByMasterCardId: Record<string, { id: string; printing?: string }>;
+  wishlistEntryIdsByMasterCardId: WishlistEntriesByMasterCardId;
   collectionLinesByMasterCardId: Record<string, CollectionLineSummary[]>;
   cardPricesByMasterCardId: Record<string, number>;
   manualPriceMasterCardIds?: Set<string>;

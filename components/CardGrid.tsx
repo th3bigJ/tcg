@@ -20,7 +20,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCardGridPreferences } from "@/components/CardGridPreferencesProvider";
 import { normalizeVariantForStorage, variantLabel } from "@/lib/cardVariantLabels";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
-import { collectionGroupKeyFromLine, type CollectionLineSummary } from "@/lib/storefrontCardMaps";
+import {
+  collectionGroupKeyFromLine,
+  type CollectionLineSummary,
+  type WishlistEntriesByMasterCardId,
+  type WishlistEntrySummary,
+} from "@/lib/storefrontCardMaps";
 import { getItemConditionName } from "@/lib/referenceData";
 
 export type CardEntry = CardsPageCardEntry & {
@@ -96,6 +101,58 @@ function wishlistVariantMatches(current: string | undefined, target: string | un
   const normalize = (value: string | undefined): string => normalizeVariantForStorage(value) ?? "Unlisted";
 
   return normalize(current) === normalize(target);
+}
+
+function findMatchingWishlistEntry(
+  entries: WishlistEntrySummary[] | undefined,
+  targetVariant: string | undefined,
+): WishlistEntrySummary | null {
+  if (!entries?.length) return null;
+  if (targetVariant !== undefined) {
+    return entries.find((entry) => wishlistVariantMatches(entry.printing, targetVariant)) ?? null;
+  }
+  return entries[0] ?? null;
+}
+
+function hasWishlistEntry(entries: WishlistEntrySummary[] | undefined): boolean {
+  return (entries?.length ?? 0) > 0;
+}
+
+function collectWishlistedVariants(
+  explicitVariant: string | undefined,
+  entries: WishlistEntrySummary[] | undefined,
+): string[] {
+  const out = new Set<string>();
+  const normalizedExplicit = normalizeVariantForStorage(explicitVariant);
+  if (normalizedExplicit) out.add(normalizedExplicit);
+  for (const entry of entries ?? []) {
+    const normalized = normalizeVariantForStorage(entry.printing);
+    if (normalized) out.add(normalized);
+    else if (!entry.printing) out.add("Unlisted");
+  }
+  return [...out];
+}
+
+function normalizeWishlistEntriesByMasterCardId(
+  input: WishlistEntriesByMasterCardId | Record<string, WishlistEntrySummary | WishlistEntrySummary[]> | undefined,
+): WishlistEntriesByMasterCardId {
+  if (!input) return {};
+
+  const out: WishlistEntriesByMasterCardId = {};
+  for (const [masterCardId, value] of Object.entries(input)) {
+    if (Array.isArray(value)) {
+      out[masterCardId] = value.filter(
+        (entry): entry is WishlistEntrySummary => Boolean(entry && typeof entry.id === "string"),
+      );
+      continue;
+    }
+
+    if (value && typeof value === "object" && typeof value.id === "string") {
+      out[masterCardId] = [value];
+    }
+  }
+
+  return out;
 }
 
 function formatMoneyGbp(n: number): string {
@@ -383,6 +440,8 @@ function normalizeCardNameForSimilarity(value: string | undefined): string {
 
 function sameCardEntry(a: CardEntry | null, b: CardEntry | null): boolean {
   if (!a || !b) return false;
+  if (a.wishlistEntryId && b.wishlistEntryId) return a.wishlistEntryId === b.wishlistEntryId;
+  if (a.collectionEntryId && b.collectionEntryId) return a.collectionEntryId === b.collectionEntryId;
   if (a.masterCardId && b.masterCardId) {
     if (a.masterCardId !== b.masterCardId) return false;
     const ga = a.collectionGroupKey ?? "";
@@ -395,6 +454,8 @@ function sameCardEntry(a: CardEntry | null, b: CardEntry | null): boolean {
 
 function cardEntryIdentity(card: CardEntry | null): string | null {
   if (!card) return null;
+  if (card.wishlistEntryId) return `wishlist:${card.wishlistEntryId}`;
+  if (card.collectionEntryId) return `collection:${card.collectionEntryId}`;
   if (card.masterCardId) {
     const gk = card.collectionGroupKey?.trim();
     if (gk) return `master:${card.masterCardId}|gk:${gk}`;
@@ -1117,7 +1178,7 @@ const CardGridItem = memo(function CardGridItem({
 });
 
 const EMPTY_ARRAY: { id: string; name: string }[] = [];
-const EMPTY_WISHLIST: Record<string, { id: string; printing?: string }> = {};
+const EMPTY_WISHLIST: WishlistEntriesByMasterCardId = {};
 const EMPTY_COLLECTION: Record<string, CollectionLineSummary[]> = {};
 const EMPTY_PRICES: Record<string, number> = {};
 const EMPTY_TRADE_QTY: Record<string, number> = {};
@@ -1161,7 +1222,7 @@ export function CardGrid({
   viewerOwnedMasterCardIds?: Set<string>;
   collectionSectionTitle?: string;
   itemConditions?: { id: string; name: string }[];
-  wishlistEntryIdsByMasterCardId?: Record<string, { id: string; printing?: string }>;
+  wishlistEntryIdsByMasterCardId?: WishlistEntriesByMasterCardId;
   collectionLinesByMasterCardId?: Record<string, CollectionLineSummary[]>;
   cardPricesByMasterCardId?: Record<string, number>;
   manualPriceMasterCardIds?: Set<string>;
@@ -1192,7 +1253,11 @@ export function CardGrid({
     [gridPreferences.gridColumnsDesktop, gridPreferences.gridColumnsMobile],
   );
   const allowMutations = Boolean(customerLoggedIn && !readOnly);
-  const [localWishlistMap, setLocalWishlistMap] = useState(wishlistEntryIdsByMasterCardId);
+  const normalizedWishlistEntryIdsByMasterCardId = useMemo(
+    () => normalizeWishlistEntriesByMasterCardId(wishlistEntryIdsByMasterCardId),
+    [wishlistEntryIdsByMasterCardId],
+  );
+  const [localWishlistMap, setLocalWishlistMap] = useState<WishlistEntriesByMasterCardId | null>(null);
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [addIsGraded, setAddIsGraded] = useState(false);
   const [addConditionId, setAddConditionId] = useState("");
@@ -1257,17 +1322,20 @@ export function CardGrid({
   const [removalTradeItems, setRemovalTradeItems] = useState<TradeItem[]>([]);
   const [removalPending, setRemovalPending] = useState(false);
 
-  const prevWishlistRef = useRef(wishlistEntryIdsByMasterCardId);
+  const effectiveWishlistMap = localWishlistMap ?? normalizedWishlistEntryIdsByMasterCardId;
+
+  const prevWishlistRef = useRef(normalizedWishlistEntryIdsByMasterCardId);
   useEffect(() => {
-    if (wishlistEntryIdsByMasterCardId !== prevWishlistRef.current) {
-      prevWishlistRef.current = wishlistEntryIdsByMasterCardId;
-      setLocalWishlistMap(wishlistEntryIdsByMasterCardId);
+    if (normalizedWishlistEntryIdsByMasterCardId !== prevWishlistRef.current) {
+      prevWishlistRef.current = normalizedWishlistEntryIdsByMasterCardId;
+      setLocalWishlistMap(normalizedWishlistEntryIdsByMasterCardId);
     }
-  }, [wishlistEntryIdsByMasterCardId]);
+  }, [normalizedWishlistEntryIdsByMasterCardId]);
 
   const [localCollectionLinesByMasterCardId, setLocalCollectionLinesByMasterCardId] = useState<
-    Record<string, CollectionLineSummary[]>
-  >(collectionLinesByMasterCardId);
+    Record<string, CollectionLineSummary[]> | null
+  >(null);
+  const effectiveCollectionLinesByMasterCardId = localCollectionLinesByMasterCardId ?? collectionLinesByMasterCardId;
   const prevCollectionRef = useRef(collectionLinesByMasterCardId);
   useEffect(() => {
     if (collectionLinesByMasterCardId !== prevCollectionRef.current) {
@@ -1279,15 +1347,15 @@ export function CardGrid({
   // Precompute owned/quantity maps so each tile doesn't call cardHasOwnedLines/ownedCopyCount inline
   const ownedByMapKey = useMemo(() => {
     const out: Record<string, boolean> = {};
-    for (const key of Object.keys(localCollectionLinesByMasterCardId)) {
-      out[key] = (localCollectionLinesByMasterCardId[key]?.length ?? 0) > 0;
+    for (const key of Object.keys(effectiveCollectionLinesByMasterCardId)) {
+      out[key] = (effectiveCollectionLinesByMasterCardId[key]?.length ?? 0) > 0;
     }
     return out;
-  }, [localCollectionLinesByMasterCardId]);
+  }, [effectiveCollectionLinesByMasterCardId]);
 
   const ownedQuantityByMapKey = useMemo(() => {
     const out: Record<string, number> = {};
-    for (const [key, lines] of Object.entries(localCollectionLinesByMasterCardId)) {
+    for (const [key, lines] of Object.entries(effectiveCollectionLinesByMasterCardId)) {
       let total = 0;
       for (const line of lines) {
         total += typeof line.quantity === "number" && Number.isFinite(line.quantity) && line.quantity > 0
@@ -1297,11 +1365,11 @@ export function CardGrid({
       out[key] = total;
     }
     return out;
-  }, [localCollectionLinesByMasterCardId]);
+  }, [effectiveCollectionLinesByMasterCardId]);
 
   const collectionPriceMetaByMasterCardId = useMemo(() => {
     const out: Record<string, { label: string | null; hasManual: boolean }> = {};
-    for (const [mid, lines] of Object.entries(localCollectionLinesByMasterCardId)) {
+    for (const [mid, lines] of Object.entries(effectiveCollectionLinesByMasterCardId)) {
       if (mid.includes("|")) continue;
       const seenPrices = new Set<number>();
       let lowest: number | null = null;
@@ -1330,7 +1398,7 @@ export function CardGrid({
       out[mid] = { label, hasManual };
     }
     return out;
-  }, [cardPricesByMasterCardId, localCollectionLinesByMasterCardId, manualPriceMasterCardIds]);
+  }, [cardPricesByMasterCardId, effectiveCollectionLinesByMasterCardId, manualPriceMasterCardIds]);
 
   const normalizedCards = useMemo(
     () =>
@@ -1426,8 +1494,8 @@ export function CardGrid({
   }, [normalizedCards, selectedIndex, standaloneModalCard]);
 
   const collectionLinesForSelected = useMemo(() => {
-    return selectedCollectionLines(selectedCard, localCollectionLinesByMasterCardId);
-  }, [localCollectionLinesByMasterCardId, selectedCard]);
+    return selectedCollectionLines(selectedCard, effectiveCollectionLinesByMasterCardId);
+  }, [effectiveCollectionLinesByMasterCardId, selectedCard]);
 
   const [carouselSlotWidth, setCarouselSlotWidth] = useState(0);
   const carouselSlotWidthRef = useRef(360);
@@ -1699,13 +1767,14 @@ export function CardGrid({
         };
         const gk = collectionGroupKeyFromLine(mid, line);
         setLocalCollectionLinesByMasterCardId((prev) =>
-          mergeCollectionLine(mergeCollectionLine(prev, gk, line), mid, line),
+          mergeCollectionLine(mergeCollectionLine(prev ?? effectiveCollectionLinesByMasterCardId, gk, line), mid, line),
         );
       }
       if (j.removedWishlist && mid) {
         setLocalWishlistMap((prev) => {
-          if (!(mid in prev)) return prev;
-          const next = { ...prev };
+          const current = prev ?? effectiveWishlistMap;
+          if (!(mid in current)) return current;
+          const next = { ...current };
           delete next[mid];
           return next;
         });
@@ -1771,7 +1840,7 @@ export function CardGrid({
           : "—";
         const resolvedPrinting = addPrinting === "Unlisted" ? "Standard" : addPrinting;
         setLocalCollectionLinesByMasterCardId((prev) => {
-          let next = prev;
+          let next = prev ?? effectiveCollectionLinesByMasterCardId;
           for (const id of createdIds) {
             const line: CollectionLineSummary = {
               entryId: String(id),
@@ -1788,8 +1857,9 @@ export function CardGrid({
       }
       if (j.removedWishlist && mid) {
         setLocalWishlistMap((prev) => {
-          if (!(mid in prev)) return prev;
-          const next = { ...prev };
+          const current = prev ?? effectiveWishlistMap;
+          if (!(mid in current)) return current;
+          const next = { ...current };
           delete next[mid];
           return next;
         });
@@ -1819,7 +1889,7 @@ export function CardGrid({
       const mid = selectedCard?.masterCardId;
       if (!mid || !allowMutations) return;
       const mapKey = cardCollectionMapKey(selectedCard);
-      const lines = localCollectionLinesByMasterCardId[mapKey];
+      const lines = effectiveCollectionLinesByMasterCardId[mapKey];
       const line = lines?.find((l) => l.entryId === entryId);
       if (!line) return;
       const nextQty = line.quantity + delta;
@@ -1847,7 +1917,7 @@ export function CardGrid({
         });
         if (res.ok) {
           setLocalCollectionLinesByMasterCardId((prev) =>
-            replaceCollectionLineQuantity(prev, mapKey, entryId, nextQty),
+            replaceCollectionLineQuantity(prev ?? effectiveCollectionLinesByMasterCardId, mapKey, entryId, nextQty),
           );
           if (variant !== "browse") router.refresh();
         }
@@ -1857,7 +1927,7 @@ export function CardGrid({
         setAdjustingCollectionEntryId(null);
       }
     },
-    [allowMutations, localCollectionLinesByMasterCardId, router, selectedCard, selectedCard?.cardName, selectedCard?.masterCardId],
+    [allowMutations, effectiveCollectionLinesByMasterCardId, router, selectedCard, selectedCard?.cardName, selectedCard?.masterCardId],
   );
 
   const populateEditFormFromLine = useCallback((line: CollectionLineSummary) => {
@@ -1992,7 +2062,7 @@ export function CardGrid({
       // Update local state
       if (pendingRemovalLinesMapKey) {
         setLocalCollectionLinesByMasterCardId((prev) =>
-          replaceCollectionLineQuantity(prev, pendingRemovalLinesMapKey, pendingRemovalEntryId, 0),
+          replaceCollectionLineQuantity(prev ?? effectiveCollectionLinesByMasterCardId, pendingRemovalLinesMapKey, pendingRemovalEntryId, 0),
         );
       }
       if (variant !== "browse") router.refresh();
@@ -2060,7 +2130,7 @@ export function CardGrid({
       return;
     }
     const mid = selectedCard.masterCardId;
-    const existing = localWishlistMap[mid];
+    const existing = findMatchingWishlistEntry(effectiveWishlistMap[mid], targetVariant);
     if (existing && wishlistVariantMatches(existing.printing, targetVariant)) {
       // Already wishlisted — remove immediately
       setWishPending(true);
@@ -2070,8 +2140,11 @@ export function CardGrid({
         });
         if (res.ok) {
           setLocalWishlistMap((m) => {
-            const next = { ...m };
-            delete next[mid];
+            const current = m ?? effectiveWishlistMap;
+            const next = { ...current };
+            const remaining = (next[mid] ?? []).filter((entry) => entry.id !== existing.id);
+            if (remaining.length > 0) next[mid] = remaining;
+            else delete next[mid];
             return next;
           });
           if (variant !== "browse") router.refresh();
@@ -2098,8 +2171,11 @@ export function CardGrid({
           if (wid !== undefined) {
             const storedPrinting = normalizeVariantForStorage(targetVariant) ?? undefined;
             setLocalWishlistMap((m) => ({
-              ...m,
-              [mid]: { id: String(wid), printing: storedPrinting },
+              ...(m ?? effectiveWishlistMap),
+              [mid]: [
+                ...((m ?? effectiveWishlistMap)[mid] ?? []).filter((entry) => !wishlistVariantMatches(entry.printing, storedPrinting)),
+                { id: String(wid), printing: storedPrinting },
+              ],
             }));
           }
           if (variant !== "browse") router.refresh();
@@ -2114,7 +2190,7 @@ export function CardGrid({
       setWishVariant(pricingVariants[0] ?? "");
       setWishSheetOpen(true);
     }
-  }, [allowMutations, customerLoggedIn, goLogin, localWishlistMap, pricingVariants, readOnly, router, selectedCard?.masterCardId]);
+  }, [allowMutations, customerLoggedIn, effectiveWishlistMap, goLogin, pricingVariants, readOnly, router, selectedCard?.masterCardId]);
 
   const submitAddWishlist = useCallback(async () => {
     if (!selectedCard?.masterCardId) return;
@@ -2139,7 +2215,13 @@ export function CardGrid({
         const wid = j.doc?.id;
         if (wid !== undefined) {
           const storedPrinting = normalizeVariantForStorage(wishVariant) ?? undefined;
-          setLocalWishlistMap((m) => ({ ...m, [mid]: { id: String(wid), printing: storedPrinting } }));
+          setLocalWishlistMap((m) => ({
+            ...(m ?? effectiveWishlistMap),
+            [mid]: [
+              ...((m ?? effectiveWishlistMap)[mid] ?? []).filter((entry) => !wishlistVariantMatches(entry.printing, storedPrinting)),
+              { id: String(wid), printing: storedPrinting },
+            ],
+          }));
         }
         if (variant !== "browse") router.refresh();
       }
@@ -2634,8 +2716,30 @@ export function CardGrid({
                 onVariantsLoaded={setPricingVariants}
                 onAdd={allowMutations && selectedCard.masterCardId ? (v) => onOpenAddSheet(v) : undefined}
                 onWishlist={allowMutations && selectedCard.masterCardId ? (v) => void toggleWishlist(v) : undefined}
-                wishlisted={selectedCard.masterCardId ? Boolean(localWishlistMap[selectedCard.masterCardId]) : false}
-                wishlistedVariant={selectedCard.masterCardId ? (localWishlistMap[selectedCard.masterCardId]?.printing ?? null) : null}
+                wishlisted={
+                  variant === "wishlist"
+                    ? Boolean(selectedCard.wishlistEntryId) ||
+                      (selectedCard.masterCardId
+                        ? hasWishlistEntry(effectiveWishlistMap[selectedCard.masterCardId])
+                        : false)
+                    : selectedCard.masterCardId
+                      ? hasWishlistEntry(effectiveWishlistMap[selectedCard.masterCardId])
+                      : false
+                }
+                wishlistedVariants={
+                  variant === "wishlist"
+                    ? collectWishlistedVariants(
+                        selectedCard.targetPrinting ?? selectedCard.printing,
+                        selectedCard.masterCardId
+                          ? effectiveWishlistMap[selectedCard.masterCardId]
+                          : undefined,
+                      )
+                    : selectedCard.masterCardId
+                      ? (effectiveWishlistMap[selectedCard.masterCardId] ?? []).map(
+                          (entry) => entry.printing ?? "Unlisted",
+                        )
+                      : []
+                }
                 ebayCardContext={{
                   setName: selectedCard.setName,
                   setSlug: selectedCard.setSlug,
@@ -3811,10 +3915,15 @@ export function CardGrid({
               variant === "wishlist" && viewerOwnedMasterCardIds && mid
                 ? viewerOwnedMasterCardIds.has(mid)
                 : false;
-            const wishlisted = mid ? Boolean(localWishlistMap[mid]) : false;
+            const wishlisted =
+              variant === "wishlist"
+                ? Boolean(card.wishlistEntryId) || (mid ? hasWishlistEntry(effectiveWishlistMap[mid]) : false)
+                : mid
+                  ? hasWishlistEntry(effectiveWishlistMap[mid])
+                  : false;
             return (
               <CardGridItem
-                key={card.collectionEntryId ?? card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
+                key={card.wishlistEntryId ?? card.collectionEntryId ?? card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
                 card={card}
                 index={index}
                 variant={variant}
@@ -3946,10 +4055,15 @@ export function CardGrid({
                     variant === "wishlist" && viewerOwnedMasterCardIds && mid
                       ? viewerOwnedMasterCardIds.has(mid)
                       : false;
-                  const wishlisted = mid ? Boolean(localWishlistMap[mid]) : false;
+                  const wishlisted =
+                    variant === "wishlist"
+                      ? Boolean(card.wishlistEntryId) || (mid ? hasWishlistEntry(effectiveWishlistMap[mid]) : false)
+                      : mid
+                        ? hasWishlistEntry(effectiveWishlistMap[mid])
+                        : false;
                   return (
                     <CardGridItem
-                      key={card.collectionEntryId ?? card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${globalIndex}`}
+                      key={card.wishlistEntryId ?? card.collectionEntryId ?? card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${globalIndex}`}
                       card={card}
                       index={globalIndex}
                       variant={variant}

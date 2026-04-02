@@ -30,7 +30,7 @@ export function ExpansionSetCardGrid({
   customerLoggedIn,
   initialSearchCardData,
 }: Props) {
-  const [sort, setSort] = useState(() => readPersistedFilters("expansions").sort ?? DEFAULT_SORT);
+  const [sort, setSort] = useState(DEFAULT_SORT);
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
   const cardData = customerLoggedIn ? initialSearchCardData ?? null : null;
 

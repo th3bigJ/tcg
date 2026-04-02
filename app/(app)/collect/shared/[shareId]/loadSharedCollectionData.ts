@@ -14,6 +14,7 @@ import {
   mergeCollectionEntriesForGrid,
   storefrontEntriesToTradeGridCards,
   type StorefrontCardEntry,
+  type WishlistEntriesByMasterCardId,
 } from "@/lib/storefrontCardMaps";
 import {
   fetchCollectionCardEntries,
@@ -50,7 +51,7 @@ export type SharedCollectionLoaderResult = {
   setLogosByCode: Record<string, string>;
   setSymbolsByCode: Record<string, string>;
   itemConditions: Awaited<ReturnType<typeof fetchItemConditionOptions>>;
-  wishlistEntryIdsByMasterCardId: Record<string, { id: string; printing?: string }>;
+  wishlistEntryIdsByMasterCardId: WishlistEntriesByMasterCardId;
   collectionLinesByMasterCardId: Record<string, import("@/lib/storefrontCardMaps").CollectionLineSummary[]>;
   collectionCardPricesByMasterCardId: Record<string, number>;
   wishlistCardPricesByMasterCardId: Record<string, number>;

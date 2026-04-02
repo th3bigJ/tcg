@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
+import { WishlistGridClient } from "@/components/WishlistGridClient";
 import { getCurrentCustomer } from "@/lib/auth";
 import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
@@ -116,7 +116,7 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
             scrollsWindow
           >
             <div className="pb-4">
-              <CollectCardGridWithTags
+              <WishlistGridClient
                 cards={allCardsForGrid}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}

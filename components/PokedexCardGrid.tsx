@@ -26,8 +26,8 @@ export function PokedexCardGrid({
   routeGroupBySet,
   initialSearchCardData,
 }: Props) {
-  const [sort, setSort] = useState(() => readPersistedFilters("pokedex").sort ?? DEFAULT_SORT);
-  const [groupBySet, setGroupBySet] = useState(() => readPersistedFilters("pokedex").groupBySet ?? false);
+  const [sort, setSort] = useState(DEFAULT_SORT);
+  const [groupBySet, setGroupBySet] = useState(false);
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
   const cardData = customerLoggedIn ? initialSearchCardData ?? null : null;
 
