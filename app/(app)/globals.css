@@ -37,6 +37,36 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+.app-menu-push-target {
+  transition: transform 300ms ease-out;
+  will-change: transform;
+}
+
+.app-menu-push-fixed {
+  transition: transform 300ms ease-out;
+  will-change: transform;
+}
+
+body.app-menu-open .app-menu-push-target,
+body.app-menu-open .app-menu-push-fixed {
+  transform: translateX(min(82vw, 22rem));
+}
+
+@keyframes app-menu-drawer-slide-in {
+  from {
+    transform: translateX(calc(-1 * min(82vw, 22rem)));
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+.app-menu-drawer {
+  animation: app-menu-drawer-slide-in 300ms ease-out;
+  will-change: transform;
+}
+
 /* Safari / iOS: native `type="search"` styling can squash icons and offset placeholder text. */
 input[type="search"] {
   appearance: none;

@@ -76,12 +76,12 @@ export function CollectCardGridWithTags({
   loadMoreStep = 42,
 }: CollectCardGridWithTagsProps) {
   const [groupBySet, setGroupBySet] = useState(false);
-  const [rarity, setRarity] = useState(() => readPersistedFilters(filterScope).rarity ?? "");
-  const [energy, setEnergy] = useState(() => readPersistedFilters(filterScope).energy ?? "");
-  const [category, setCategory] = useState(() => readPersistedFilters(filterScope).category ?? "");
-  const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(() => readPersistedFilters(filterScope).excludeCommonUncommon ?? false);
-  const [excludeCollected, setExcludeCollected] = useState(() => readPersistedFilters(filterScope).excludeCollected ?? false);
-  const [sortOrder, setSortOrder] = useState<SortOrder>(() => readSortOrderForScope(filterScope, readOnly));
+  const [rarity, setRarity] = useState("");
+  const [energy, setEnergy] = useState("");
+  const [category, setCategory] = useState("");
+  const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(false);
+  const [excludeCollected, setExcludeCollected] = useState(false);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(readOnly ? "price-asc" : "price-desc");
   const [ownedFilterOnly, setOwnedFilterOnly] = useState(false);
 
   useEffect(() => {

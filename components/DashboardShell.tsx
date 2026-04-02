@@ -10,6 +10,9 @@ import { DASHBOARD_MENU_TOGGLE_EVENT } from "@/lib/dashboardMenuEvents";
 type DashboardShellProps = {
   isLoggedIn: boolean;
   displayName: string;
+  collectionValueLabel: string;
+  cardsOwnedCount: number;
+  wishlistCount: number;
 };
 
 function DrawerIconArrow() {
@@ -20,7 +23,13 @@ function DrawerIconArrow() {
   );
 }
 
-export function DashboardShell({ isLoggedIn, displayName }: DashboardShellProps) {
+export function DashboardShell({
+  isLoggedIn,
+  displayName,
+  collectionValueLabel,
+  cardsOwnedCount,
+  wishlistCount,
+}: DashboardShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -48,16 +57,15 @@ export function DashboardShell({ isLoggedIn, displayName }: DashboardShellProps)
     };
   }, [drawerOpen]);
 
-  const favorites = [
-    { href: "/search?sort=price_desc", label: "High-value cards", tone: "text-rose-200" },
-    { href: "/more/grade", label: "Grade watchlist", tone: "text-violet-200" },
-    { href: "/search?view=sets", label: "Set explorer", tone: "text-amber-200" },
-  ];
+  useEffect(() => {
+    document.body.classList.toggle("app-menu-open", drawerOpen);
+    return () => document.body.classList.remove("app-menu-open");
+  }, [drawerOpen]);
 
   const quickStats = [
-    { label: "Collection value", value: "£2,840", detail: "Mock total for layout" },
-    { label: "Wishlist targets", value: "18", detail: "Cards you are chasing" },
-    { label: "Trade replies", value: "4", detail: "Unread shared collection updates" },
+    { label: "Collection value", value: collectionValueLabel, detail: "Based on current market pricing" },
+    { label: "Cards owned", value: cardsOwnedCount.toLocaleString("en-GB"), detail: "Across your collection" },
+    { label: "Wishlist targets", value: wishlistCount.toLocaleString("en-GB"), detail: "Cards you are chasing" },
   ];
 
   return (
@@ -70,17 +78,12 @@ export function DashboardShell({ isLoggedIn, displayName }: DashboardShellProps)
           </div>
 
           <div className="mt-6 rounded-[2rem] border border-white/8 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.18),transparent_35%),linear-gradient(160deg,#111318_0%,#0c0d10_65%,#090a0c_100%)] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm text-white/56">Today’s snapshot</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight">Your collection is trending up</h2>
-                <p className="mt-2 max-w-xs text-sm leading-6 text-white/60">
-                  This mocked dashboard highlights value, watchlist movement, and trade activity in one place.
-                </p>
-              </div>
-              <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-sm font-medium text-emerald-200">
-                +6.4%
-              </span>
+            <div>
+              <p className="text-sm text-white/56">Today’s snapshot</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Your collection at a glance</h2>
+              <p className="mt-2 max-w-xs text-sm leading-6 text-white/60">
+                A quick summary of your collection value, owned cards, and wishlist progress.
+              </p>
             </div>
 
             <div className="mt-5 grid gap-3">
@@ -100,14 +103,13 @@ export function DashboardShell({ isLoggedIn, displayName }: DashboardShellProps)
           <section className="mt-6">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Quick actions</h2>
-              <span className="text-sm text-white/40">Jump back in</span>
+              <span className="text-sm text-white/40">Browse</span>
             </div>
             <div className="grid gap-3">
               {[
                 { href: "/search", label: "Browse cards", description: "Search singles and sets" },
-                { href: "/collect", label: "Collection", description: "Track what you own" },
-                { href: "/wishlist", label: "Wishlist", description: "Keep tabs on your targets" },
-                { href: "/collect/shared", label: "Trading circle", description: "Shared collections and trades" },
+                { href: "/expansions", label: "Browse sets", description: "Explore expansions and set lists" },
+                { href: "/pokedex", label: "Browse Pokemon", description: "Jump by national dex and species" },
               ].map((item) => (
                 <Link
                   key={item.href}
@@ -123,30 +125,6 @@ export function DashboardShell({ isLoggedIn, displayName }: DashboardShellProps)
               ))}
             </div>
           </section>
-
-          <section className="mt-6">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Pinned views</h2>
-              <span className="text-sm text-white/40">Favorites</span>
-            </div>
-            <div className="grid gap-3">
-              {favorites.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-[1.6rem] border border-white/8 bg-[#0e1014] px-4 py-4 transition hover:border-white/14 hover:bg-[#13161c]"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-base font-semibold">{item.label}</div>
-                      <p className={`mt-1 text-sm ${item.tone}`}>Mock shortcut for a commonly used workflow.</p>
-                    </div>
-                    <DrawerIconArrow />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
         </div>
       </div>
 
@@ -158,7 +136,7 @@ export function DashboardShell({ isLoggedIn, displayName }: DashboardShellProps)
               role="presentation"
             >
               <aside
-                className="pointer-events-auto h-full w-[min(82vw,22rem)]"
+                className="app-menu-drawer pointer-events-auto h-full w-[min(82vw,22rem)]"
                 onClick={(event) => event.stopPropagation()}
                 role="dialog"
                 aria-modal="true"

@@ -7,6 +7,14 @@ import { getCurrentCustomer } from "@/lib/auth";
 import { fetchCustomerGridPreferences } from "@/lib/customerPreferencesServer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { countUnreadTradeNotifications } from "@/lib/tradeNotificationsServer";
+import type { GridPreferences } from "@/lib/gridPreferences";
+
+type AppLayoutChromeProps = {
+  children: React.ReactNode;
+  initialGridPreferences: GridPreferences | null;
+  isLoggedIn: boolean;
+  initialFriendsUnreadCount: number;
+};
 
 export async function AppLayoutBody({ children }: { children: React.ReactNode }) {
   const customer = await getCurrentCustomer();
@@ -21,16 +29,33 @@ export async function AppLayoutBody({ children }: { children: React.ReactNode })
   ]);
 
   return (
-    <CardGridPreferencesProvider initial={initialGridPreferences} isLoggedIn={Boolean(customer)}>
+    <AppLayoutChrome
+      initialGridPreferences={initialGridPreferences}
+      isLoggedIn={Boolean(customer)}
+      initialFriendsUnreadCount={initialFriendsUnreadCount}
+    >
+      {children}
+    </AppLayoutChrome>
+  );
+}
+
+export function AppLayoutChrome({
+  children,
+  initialGridPreferences,
+  isLoggedIn,
+  initialFriendsUnreadCount,
+}: AppLayoutChromeProps) {
+  return (
+    <CardGridPreferencesProvider initial={initialGridPreferences} isLoggedIn={isLoggedIn}>
       <DevRuntimeGuards />
       <PullToRefresh />
-      <UniversalSearch isLoggedIn={Boolean(customer)} />
+      <UniversalSearch isLoggedIn={isLoggedIn} />
       <BottomNav
-        key={`${customer?.id ?? "guest"}:${initialFriendsUnreadCount}`}
-        isLoggedIn={Boolean(customer)}
+        key={`${isLoggedIn ? "member" : "guest"}:${initialFriendsUnreadCount}`}
+        isLoggedIn={isLoggedIn}
         initialFriendsUnreadCount={initialFriendsUnreadCount}
       />
-      <div className="relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)] pt-[var(--top-search-offset)]">
+      <div className="app-menu-push-target relative z-0 flex min-h-0 flex-1 flex-col pb-[var(--bottom-nav-offset)] pt-[var(--top-search-offset)]">
         {children}
       </div>
     </CardGridPreferencesProvider>

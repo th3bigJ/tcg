@@ -5,7 +5,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AppDrawerMenu } from "@/components/AppDrawerMenu";
-import { TOP_CHROME_HIDDEN_TRANSFORM, TOP_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
 import { DASHBOARD_MENU_TOGGLE_EVENT } from "@/lib/dashboardMenuEvents";
 import {
   type SortOrder,
@@ -1160,15 +1159,20 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     }
   }, [isOpen, menuOpen, filterSheet]);
 
+  useEffect(() => {
+    document.body.classList.toggle("app-menu-open", menuOpen);
+    return () => document.body.classList.remove("app-menu-open");
+  }, [menuOpen]);
+
   return (
     <>
       <style>{`:root{--top-search-offset:${contentTopOffset};}`}</style>
       {/* Search chrome */}
       <div
-        className="pointer-events-none fixed inset-x-0 top-0 z-[1002] isolate bg-black transition-transform duration-200 ease-out"
+        className="app-menu-push-fixed pointer-events-none fixed inset-x-0 top-0 z-[1002] isolate bg-black transition-transform duration-200 ease-out"
         style={{
           padding: topChromePadding,
-          transform: chromeVisible ? TOP_CHROME_VISIBLE_TRANSFORM : TOP_CHROME_HIDDEN_TRANSFORM,
+          transform: chromeVisible ? "translate3d(0, 0, 0)" : "translate3d(0, -120%, 0)",
         }}
         onClickCapture={handleScopedLinkClickCapture}
       >
@@ -1430,7 +1434,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
               role="presentation"
             >
               <aside
-                className="pointer-events-auto h-full w-[min(82vw,22rem)]"
+                className="app-menu-drawer pointer-events-auto h-full w-[min(82vw,22rem)]"
                 onClick={(event) => event.stopPropagation()}
                 role="dialog"
                 aria-modal="true"

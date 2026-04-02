@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
-import { BOTTOM_CHROME_HIDDEN_TRANSFORM, BOTTOM_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
 import { SEARCH_NAV_RESELECT_EVENT } from "@/lib/searchNavEvents";
 import { TRADE_NOTIFICATIONS_UPDATED_EVENT } from "@/lib/tradeNotificationsConstants";
 import { useAutoHideChrome } from "@/lib/useAutoHideChrome";
@@ -208,10 +207,10 @@ export function BottomNav({
   return (
     <>
       <nav
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-[1000] isolate transition-transform duration-200 ease-out"
+        className="app-menu-push-fixed pointer-events-none fixed inset-x-0 bottom-0 z-[1000] isolate transition-transform duration-200 ease-out"
         style={{
           padding: "0.5rem 1.25rem max(0.25rem, calc(env(safe-area-inset-bottom, 0px) - 1rem))",
-          transform: chromeVisible ? BOTTOM_CHROME_VISIBLE_TRANSFORM : BOTTOM_CHROME_HIDDEN_TRANSFORM,
+          transform: chromeVisible ? "translate3d(0, 0, 0)" : "translate3d(0, 120%, 0)",
         }}
         aria-label="Main navigation"
       >
@@ -230,7 +229,7 @@ export function BottomNav({
           {navItems.map((item, i) => {
             const active = item.match(pathname);
             const Icon = icons[i];
-            const itemClass = `flex min-w-0 basis-0 flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium leading-tight transition-all sm:text-[11px]`;
+            const itemClass = `flex min-w-0 basis-0 flex-1 flex-col items-center justify-center gap-1 text-[9px] font-medium leading-tight transition-all sm:text-[10px]`;
             const itemStyle: React.CSSProperties = {
               borderRadius: "28px",
               padding: "0.375rem 0.75rem",

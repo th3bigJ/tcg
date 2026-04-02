@@ -45,7 +45,6 @@ export function SharedCollectionsHubClient({
 }: Props) {
   const router = useRouter();
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
-  const [sharedWithSheetOpen, setSharedWithSheetOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -191,8 +190,6 @@ export function SharedCollectionsHubClient({
   const hasUnreadTradeNotifs = tradeNotifs.length > 0;
   const showMainStack = hasPending || hasActive || hasUnreadTradeNotifs;
 
-  const closeSharedWithSheet = () => setSharedWithSheetOpen(false);
-
   return (
     <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-[var(--bottom-nav-offset)] pt-2 text-[var(--foreground)]">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -201,7 +198,6 @@ export function SharedCollectionsHubClient({
           type="button"
           onClick={() => {
             setInviteError(null);
-            setSharedWithSheetOpen(false);
             setShareSheetOpen(true);
           }}
           className="inline-flex items-center justify-center rounded-full border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-center text-sm font-medium leading-none transition hover:bg-[var(--foreground)]/18"
@@ -209,7 +205,7 @@ export function SharedCollectionsHubClient({
           aria-expanded={shareSheetOpen}
           aria-controls="shared-collections-invite-sheet"
         >
-          Share with friends
+          Share
         </button>
       </div>
 
@@ -277,24 +273,6 @@ export function SharedCollectionsHubClient({
             </section>
           ) : null}
 
-          {hasActiveOutgoing ? (
-            <div className="flex flex-col items-start">
-              <button
-                type="button"
-                onClick={() => {
-                  setShareSheetOpen(false);
-                  setSharedWithSheetOpen(true);
-                }}
-                className="inline-flex w-fit max-w-full items-center justify-center rounded-full border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-center text-sm font-medium leading-none text-[var(--foreground)] transition hover:bg-[var(--foreground)]/18"
-                aria-haspopup="dialog"
-                aria-expanded={sharedWithSheetOpen}
-                aria-controls="shared-collections-shared-with-sheet"
-              >
-                {`Shared with ${activeOutgoing.length} ${activeOutgoing.length === 1 ? "person" : "people"}`}
-              </button>
-            </div>
-          ) : null}
-
           {hasUnreadTradeNotifs ? (
             <section aria-label="Unread trade notifications">
               <h2 className="text-base font-semibold">Notifications</h2>
@@ -357,60 +335,6 @@ export function SharedCollectionsHubClient({
         </div>
       ) : null}
 
-      {sharedWithSheetOpen && typeof document !== "undefined"
-        ? createPortal(
-            <div
-              className="fixed inset-0 z-[10001] flex flex-col justify-end bg-black/60"
-              onClick={closeSharedWithSheet}
-              role="presentation"
-            >
-              <div
-                id="shared-collections-shared-with-sheet"
-                className="max-h-[85dvh] overflow-y-auto rounded-t-2xl border border-[var(--foreground)]/15 bg-[var(--background)] p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] text-[var(--foreground)] shadow-xl"
-                onClick={(event) => event.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-                aria-label="People you have shared with"
-              >
-                <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[var(--foreground)]/18" />
-                <h2 className="text-lg font-semibold">People you’ve shared with</h2>
-                <p className="mt-1 text-sm text-[var(--foreground)]/65">
-                  They can see your collection and wishlist. Revoke to remove access.
-                </p>
-                <ul className="mt-4 flex flex-col gap-2">
-                  {activeOutgoing.map((row) => (
-                    <li
-                      key={`sheet-active-out-${row.id}`}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-3 py-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium uppercase tracking-wide text-[var(--foreground)]/50">You invited</p>
-                        <p className="truncate text-sm font-medium">{row.recipientEmail}</p>
-                        <p className="text-xs text-[var(--foreground)]/55">Active</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => void revoke(row.id)}
-                        className="shrink-0 text-xs font-medium text-red-400/90 transition hover:text-red-300"
-                      >
-                        Revoke
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  onClick={closeSharedWithSheet}
-                  className="mt-4 w-full rounded-md border border-[var(--foreground)]/25 px-4 py-2 text-sm font-medium"
-                >
-                  Close
-                </button>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
-
       {shareSheetOpen && typeof document !== "undefined"
         ? createPortal(
             <div
@@ -424,13 +348,45 @@ export function SharedCollectionsHubClient({
                 onClick={(event) => event.stopPropagation()}
                 role="dialog"
                 aria-modal="true"
-                aria-label="Share with friends"
+                aria-label="Share"
               >
                 <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-[var(--foreground)]/18" />
                 <h2 className="text-lg font-semibold">Share your collection</h2>
                 <p className="mt-1 text-sm text-[var(--foreground)]/65">
                   Enter their email. They can accept and see your collection and wishlist.
                 </p>
+
+                {hasActiveOutgoing ? (
+                  <section className="mt-4">
+                    <h3 className="text-sm font-semibold">
+                      {`Shared with ${activeOutgoing.length} ${activeOutgoing.length === 1 ? "person" : "people"}`}
+                    </h3>
+                    <p className="mt-1 text-sm text-[var(--foreground)]/65">
+                      They can see your collection and wishlist. Revoke to remove access.
+                    </p>
+                    <ul className="mt-3 flex flex-col gap-2">
+                      {activeOutgoing.map((row) => (
+                        <li
+                          key={`sheet-active-out-${row.id}`}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-3 py-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium uppercase tracking-wide text-[var(--foreground)]/50">You invited</p>
+                            <p className="truncate text-sm font-medium">{row.recipientEmail}</p>
+                            <p className="text-xs text-[var(--foreground)]/55">Active</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => void revoke(row.id)}
+                            className="shrink-0 text-xs font-medium text-red-400/90 transition hover:text-red-300"
+                          >
+                            Revoke
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
 
                 {inviteError ? (
                   <p
