@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 
 import type { ExpansionSeriesGroup } from "@/lib/expansionsPageQueries";
+import { useProgressiveRender } from "@/lib/useProgressiveRender";
 
 export function ExpansionsList({
   groups,
@@ -14,7 +15,7 @@ export function ExpansionsList({
   uniqueOwnedBySetCode?: Record<string, number> | null;
   uniqueWishlistedBySetCode?: Record<string, number> | null;
 }) {
-  const [search, setSearch] = useState("");
+  const search = "";
 
   const filteredGroups = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -30,6 +31,10 @@ export function ExpansionsList({
       }))
       .filter((group) => group.sets.length > 0);
   }, [groups, search]);
+  const { hasMore, sentinelRef, visibleItems: visibleGroups } = useProgressiveRender(filteredGroups, {
+    initialCount: 6,
+    step: 6,
+  });
 
   if (groups.length === 0) {
     return (
@@ -43,10 +48,10 @@ export function ExpansionsList({
     <div className="flex flex-col gap-4 pb-2">
 
       {filteredGroups.length === 0 ? (
-        <p className="mt-6 text-center text-sm text-[var(--foreground)]/50">No sets match "{search}"</p>
+        <p className="mt-6 text-center text-sm text-[var(--foreground)]/50">No sets match &ldquo;{search}&rdquo;</p>
       ) : (
         <div className="flex flex-col gap-8">
-      {filteredGroups.map((group) => (
+      {visibleGroups.map((group) => (
         <section key={group.seriesName} aria-labelledby={`series-${slugifyHeadingId(group.seriesName)}`}>
           <h2
             id={`series-${slugifyHeadingId(group.seriesName)}`}
@@ -122,6 +127,7 @@ export function ExpansionsList({
           </ul>
         </section>
       ))}
+      {hasMore ? <div ref={sentinelRef} aria-hidden className="h-8 w-full" /> : null}
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { TOP_CHROME_HIDDEN_TRANSFORM, TOP_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
 import {
@@ -270,12 +270,10 @@ function CardThumb({ card, onClick }: { card: CardResult; onClick: () => void })
 
 function SectionHeader({
   title,
-  query,
   href,
   onNavigate,
 }: {
   title: string;
-  query: string;
   href: string;
   onNavigate: () => void;
 }) {
@@ -359,6 +357,9 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   };
 
   const filtersRef = useRef(filters);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
+  const searchRequestIdRef = useRef(0);
   useEffect(() => { filtersRef.current = filters; }, [filters]);
 
   useEffect(() => {
@@ -518,9 +519,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     router.replace(href, { scroll: false });
   }, [filterScope, pathname, router, searchParams]);
 
-  // Intercept all link clicks and inject active filters into filterable page URLs
-  useEffect(() => {
-    function injectFilters(rawHref: string): string | null {
+  const injectFilters = useCallback((rawHref: string): string | null => {
       let url: URL;
       try { url = new URL(rawHref, window.location.origin); } catch { return null; }
       if (url.origin !== window.location.origin) return null;
@@ -563,38 +562,60 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       }
 
       return null;
+    }, []);
+
+  const handleScopedLinkClickCapture = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
     }
 
-    function handleClick(e: MouseEvent) {
-      const anchor = (e.target as Element).closest("a");
-      if (!anchor || !anchor.href || anchor.target === "_blank") return;
-      const rewritten = injectFilters(anchor.href);
-      if (!rewritten) return;
-      // Only intercept if the URL actually changed
-      const current = anchor.pathname + anchor.search;
-      if (rewritten === current) return;
-      e.preventDefault();
-      router.push(rewritten);
-    }
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const anchor = target.closest("a");
+    if (!anchor || !anchor.href || anchor.target === "_blank" || anchor.hasAttribute("download")) return;
 
-    document.addEventListener("click", handleClick);
-    return () => document.removeEventListener("click", handleClick);
-  }, [router]);
+    const rewritten = injectFilters(anchor.href);
+    if (!rewritten) return;
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const current = anchor.pathname + anchor.search;
+    if (rewritten === current) return;
+
+    event.preventDefault();
+    router.push(rewritten);
+  }, [injectFilters, router]);
 
   // Load facets once on mount
   useEffect(() => {
+    const controller = new AbortController();
     void (async () => {
       try {
-        const res = await fetch("/api/universal-search?facets=1", { credentials: "include" });
+        const res = await fetch("/api/universal-search?facets=1", {
+          credentials: "include",
+          signal: controller.signal,
+        });
         if (!res.ok) return;
         const data = (await res.json()) as FacetOptions;
         setFacets(data);
-      } catch {
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
         // silently ignore
       }
     })();
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      searchAbortRef.current?.abort();
+    };
   }, []);
 
   // Run search with debounce
@@ -602,24 +623,37 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     (q: string) => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       if (q.trim().length < 2) {
+        searchAbortRef.current?.abort();
         setResults(null);
         setLoading(false);
         return;
       }
       setLoading(true);
       debounceRef.current = setTimeout(() => {
+        searchAbortRef.current?.abort();
+        const controller = new AbortController();
+        searchAbortRef.current = controller;
+        const requestId = searchRequestIdRef.current + 1;
+        searchRequestIdRef.current = requestId;
         void (async () => {
           try {
             const res = await fetch(`/api/universal-search?q=${encodeURIComponent(q)}`, {
               credentials: "include",
+              signal: controller.signal,
             });
             if (!res.ok) return;
             const data = (await res.json()) as SearchResults;
-            setResults(data);
-          } catch {
+            if (requestId !== searchRequestIdRef.current) return;
+            startTransition(() => {
+              setResults(data);
+            });
+          } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") return;
             // silently ignore
           } finally {
-            setLoading(false);
+            if (requestId === searchRequestIdRef.current) {
+              setLoading(false);
+            }
           }
         })();
       }, 300);
@@ -642,7 +676,10 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   };
 
   const close = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    searchAbortRef.current?.abort();
     setModalMode("closed");
+    setLoading(false);
     setQuery("");
     setResults(null);
   }, []);
@@ -835,6 +872,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           padding: "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1.25rem 0.5rem",
           transform: chromeVisible ? TOP_CHROME_VISIBLE_TRANSFORM : TOP_CHROME_HIDDEN_TRANSFORM,
         }}
+        onClickCapture={handleScopedLinkClickCapture}
       >
         <div
           className="pointer-events-auto mx-auto flex items-center gap-2"
@@ -881,6 +919,11 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
               <button
                 type="button"
                 onClick={() => { setQuery(""); setResults(null); inputRef.current?.focus(); }}
+                onClickCapture={() => {
+                  if (debounceRef.current) clearTimeout(debounceRef.current);
+                  searchAbortRef.current?.abort();
+                  setLoading(false);
+                }}
                 className="text-white/45 hover:text-white"
                 aria-label="Clear search"
               >
@@ -921,6 +964,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
             <div
               className="fixed inset-0 z-[1001] flex flex-col bg-black"
               style={{ paddingTop: "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 3.25rem + 0.75rem)" }}
+              onClickCapture={handleScopedLinkClickCapture}
               onTouchStart={handleModalTouchStart}
               onTouchEnd={handleModalTouchEnd}
               onTouchCancel={resetModalSwipe}
@@ -1197,7 +1241,7 @@ function SearchResultsPanel({
 
   const sectionCards = results && results.cards.length > 0 ? (
     <section key="cards">
-      <SectionHeader title="Cards" query={query} href={cardsHref} onNavigate={onNavigate} />
+      <SectionHeader title="Cards" href={cardsHref} onNavigate={onNavigate} />
       <div className="mt-2 grid grid-cols-3 gap-2">
         {results.cards.map((card) => (
           <CardThumb key={card.masterCardId} card={card} onClick={() => onCardClick(card)} />
@@ -1208,7 +1252,7 @@ function SearchResultsPanel({
 
   const sectionSets = results && results.sets.length > 0 ? (
     <section key="sets">
-      <SectionHeader title="Sets" query={query} href={setsHref} onNavigate={onNavigate} />
+      <SectionHeader title="Sets" href={setsHref} onNavigate={onNavigate} />
       <div className="mt-2 flex flex-col gap-2">
         {results.sets.map((set) => (
           <button key={set.code} type="button" onClick={() => onSetClick(set)}
@@ -1227,7 +1271,7 @@ function SearchResultsPanel({
 
   const sectionPokedex = results && results.pokemon.length > 0 ? (
     <section key="pokedex">
-      <SectionHeader title="Pokédex" query={query} href={pokedexHref} onNavigate={onNavigate} />
+      <SectionHeader title="Pokédex" href={pokedexHref} onNavigate={onNavigate} />
       <div className="mt-2 flex flex-col gap-2">
         {results.pokemon.map((p) => (
           <button key={p.nationalDexNumber} type="button" onClick={() => onPokemonClick(p)}
@@ -1247,7 +1291,7 @@ function SearchResultsPanel({
   const sectionCollection = isLoggedIn ? (
     results && results.collection.length > 0 ? (
       <section key="collection">
-        <SectionHeader title="My Collection" query={query} href="/collect" onNavigate={onNavigate} />
+        <SectionHeader title="My Collection" href="/collect" onNavigate={onNavigate} />
         <div className="mt-2 grid grid-cols-3 gap-2">
           {results.collection.map((card) => (
             <CardThumb key={card.masterCardId} card={card} onClick={() => onCardClick(card)} />
@@ -1270,7 +1314,7 @@ function SearchResultsPanel({
   const sectionWishlist = isLoggedIn ? (
     results && results.wishlist.length > 0 ? (
       <section key="wishlist">
-        <SectionHeader title="Wishlist" query={query} href="/wishlist" onNavigate={onNavigate} />
+        <SectionHeader title="Wishlist" href="/wishlist" onNavigate={onNavigate} />
         <div className="mt-2 grid grid-cols-3 gap-2">
           {results.wishlist.map((card) => (
             <CardThumb key={card.masterCardId} card={card} onClick={() => onCardClick(card)} />

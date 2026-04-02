@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { TOP_CHROME_HIDDEN_TRANSFORM, TOP_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
 import { useAutoHideChrome } from "@/lib/useAutoHideChrome";
@@ -17,6 +17,7 @@ type Props = {
 export function SearchBrowseTabs({ activeTab, cardsHref = "/search" }: Props) {
   const chromeVisible = useAutoHideChrome();
   const router = useRouter();
+  const [selectedTab, setSelectedTab] = useState<SearchBrowseTab>(activeTab);
 
   useEffect(() => {
     router.prefetch(cardsHref);
@@ -24,14 +25,31 @@ export function SearchBrowseTabs({ activeTab, cardsHref = "/search" }: Props) {
     router.prefetch("/search?tab=pokedex");
   }, [router, cardsHref]);
 
+  useEffect(() => {
+    setSelectedTab(activeTab);
+  }, [activeTab]);
+
   const btn = (tab: SearchBrowseTab, label: string, href: string) => {
-    const isActive = activeTab === tab;
+    const isActive = selectedTab === tab;
     return (
       <Link
         href={href}
         prefetch
         role="tab"
         aria-selected={isActive}
+        onClick={(event) => {
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) {
+            return;
+          }
+          setSelectedTab(tab);
+        }}
         onMouseEnter={() => router.prefetch(href)}
         onTouchStart={() => router.prefetch(href)}
         style={{ borderRadius: "999px" }}

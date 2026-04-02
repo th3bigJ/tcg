@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import { CardTagFilterRow } from "@/components/CardTagFilterRow";
@@ -181,6 +181,7 @@ export function SearchCardGrid({
     }
     return cards;
   }, [cards, sortOrder, sortCardsBatch, priceAppendOnlyKey]);
+  const deferredSortedCards = useDeferredValue(sortedCards);
 
   useEffect(() => {
     if (!priceAppendOnlyKey) return;
@@ -236,7 +237,7 @@ export function SearchCardGrid({
         />
       </div>
       <CardGrid
-        cards={sortedCards}
+        cards={deferredSortedCards}
         setLogosByCode={setLogosByCode}
         setSymbolsByCode={setSymbolsByCode}
         customerLoggedIn={customerLoggedIn}

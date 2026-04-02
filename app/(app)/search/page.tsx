@@ -197,17 +197,19 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
   const selectedCategory = (resolvedSearchParams.category ?? "").trim();
   const selectedArtist = (resolvedSearchParams.artist ?? "").trim();
   const customer = await customerPromise;
-  const collectionEntries = customer && excludeOwned ? await fetchCollectionCardEntries(customer.id) : [];
+  const [collectionEntries, facets] = await Promise.all([
+    customer && excludeOwned ? fetchCollectionCardEntries(customer.id) : Promise.resolve([]),
+    getCachedFilterFacets(),
+  ]);
   const excludedMasterCardIds = new Set(
     collectionEntries.map((entry) => entry.masterCardId?.trim() ?? "").filter((value) => value.length > 0),
   );
-
-  const facets = (await getCachedFilterFacets()) ?? {};
-  const availableSetCodes = facets.setCodes ?? [];
-  const rarityOptions = facets.rarityDisplayValues ?? [];
-  const energyOptions = facets.energyTypeDisplayValues ?? [];
-  const categoryOptions = facets.categoryDisplayValues ?? [];
-  const categoryMatchGroups = facets.categoryMatchGroups ?? {};
+  const resolvedFacets = facets ?? {};
+  const availableSetCodes = resolvedFacets.setCodes ?? [];
+  const rarityOptions = resolvedFacets.rarityDisplayValues ?? [];
+  const energyOptions = resolvedFacets.energyTypeDisplayValues ?? [];
+  const categoryOptions = resolvedFacets.categoryDisplayValues ?? [];
+  const categoryMatchGroups = resolvedFacets.categoryMatchGroups ?? {};
   const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
     resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
 
@@ -252,22 +254,24 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
         )
       : SEARCH_CARDS_INITIAL_TAKE;
 
-  const { entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
-    activeSet,
-    activePokemonDex,
-    activePokemonName,
-    activeRarity,
-    activeEnergy,
-    activeSearch,
-    activeArtist,
-    excludeCommonUncommon,
-    excludedMasterCardIds,
-    categoryQueryVariants,
-    page: 1,
-    perPage: requestedTake,
-    randomSeed,
-  });
-  const initialSearchCardData = customer ? await getSearchCardDataForCustomer(customer.id) : null;
+  const [{ entries: cardsForGrid, totalDocs: filteredCount }, initialSearchCardData] = await Promise.all([
+    fetchMasterCardsPage({
+      activeSet,
+      activePokemonDex,
+      activePokemonName,
+      activeRarity,
+      activeEnergy,
+      activeSearch,
+      activeArtist,
+      excludeCommonUncommon,
+      excludedMasterCardIds,
+      categoryQueryVariants,
+      page: 1,
+      perPage: requestedTake,
+      randomSeed,
+    }),
+    customer ? getSearchCardDataForCustomer(customer.id) : Promise.resolve(null),
+  ]);
 
   const showingCount = cardsForGrid.length;
   const nextTake = Math.min(filteredCount, showingCount + CARDS_LOAD_MORE_STEP);
