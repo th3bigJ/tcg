@@ -1,6 +1,7 @@
 import { type NextRequest } from "next/server";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
+import { variantStorageCandidates } from "@/lib/cardVariantLabels";
 import { createSupabaseRouteHandlerClient, jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
 import { getItemConditionName } from "@/lib/referenceData";
 
@@ -58,18 +59,6 @@ export async function POST(request: NextRequest) {
 
   const { supabase } = createSupabaseRouteHandlerClient(request);
 
-  // Deduplication check
-  const { data: existing } = await supabase
-    .from("customer_wishlists")
-    .select("id, master_card_id, priority, target_printing")
-    .eq("customer_id", customer.id)
-    .eq("master_card_id", masterCardId)
-    .single();
-
-  if (existing) {
-    return jsonResponseWithAuthCookies({ doc: existing, existing: true }, authCookieResponse);
-  }
-
   const priority =
     body.priority === "low" || body.priority === "high" || body.priority === "medium"
       ? body.priority
@@ -78,34 +67,83 @@ export async function POST(request: NextRequest) {
     typeof body.targetConditionId === "string" && body.targetConditionId.trim()
       ? body.targetConditionId.trim()
       : null;
-  const targetPrintingRaw = typeof body.targetPrinting === "string" ? body.targetPrinting.trim() : "";
-  const targetPrinting =
-    targetPrintingRaw && targetPrintingRaw !== "Unlisted"
-      ? targetPrintingRaw
-      : null;
   const maxPrice =
     typeof body.maxPrice === "number" && Number.isFinite(body.maxPrice) && body.maxPrice >= 0
       ? body.maxPrice
       : null;
+  const targetPrintingCandidates = variantStorageCandidates(body.targetPrinting);
 
-  const { data: created, error } = await supabase
+  // Keep a single wishlist row per card, but allow the desired variant/details to change.
+  const { data: existing } = await supabase
     .from("customer_wishlists")
-    .insert({
-      customer_id: customer.id,
-      master_card_id: masterCardId,
-      priority,
-      target_condition_id: targetConditionId,
-      target_printing: targetPrinting,
-      max_price: maxPrice,
-    })
-    .select()
-    .single();
+    .select("id, master_card_id, priority, target_printing")
+    .eq("customer_id", customer.id)
+    .eq("master_card_id", masterCardId)
+    .maybeSingle();
 
-  if (error) {
-    return jsonResponseWithAuthCookies({ error: error.message }, authCookieResponse, { status: 422 });
+  if (existing) {
+    let updatedDoc: Record<string, unknown> | null = null;
+    let lastError: { message?: string } | null = null;
+
+    for (const candidate of targetPrintingCandidates) {
+      const { data: updated, error } = await supabase
+        .from("customer_wishlists")
+        .update({
+          priority,
+          target_condition_id: targetConditionId,
+          target_printing: candidate,
+          max_price: maxPrice,
+        })
+        .eq("id", existing.id)
+        .eq("customer_id", customer.id)
+        .select()
+        .single();
+
+      if (!error && updated) {
+        updatedDoc = updated as Record<string, unknown>;
+        break;
+      }
+
+      lastError = error;
+    }
+
+    if (!updatedDoc) {
+      return jsonResponseWithAuthCookies({ error: lastError?.message ?? "Unable to update wishlist variant" }, authCookieResponse, { status: 422 });
+    }
+
+    return jsonResponseWithAuthCookies({ doc: updatedDoc, existing: true }, authCookieResponse);
   }
 
-  return jsonResponseWithAuthCookies({ doc: created, existing: false }, authCookieResponse);
+  let createdDoc: Record<string, unknown> | null = null;
+  let lastError: { message?: string } | null = null;
+
+  for (const candidate of targetPrintingCandidates) {
+    const { data: created, error } = await supabase
+      .from("customer_wishlists")
+      .insert({
+        customer_id: customer.id,
+        master_card_id: masterCardId,
+        priority,
+        target_condition_id: targetConditionId,
+        target_printing: candidate,
+        max_price: maxPrice,
+      })
+      .select()
+      .single();
+
+    if (!error && created) {
+      createdDoc = created as Record<string, unknown>;
+      break;
+    }
+
+    lastError = error;
+  }
+
+  if (!createdDoc) {
+    return jsonResponseWithAuthCookies({ error: lastError?.message ?? "Unable to create wishlist entry" }, authCookieResponse, { status: 422 });
+  }
+
+  return jsonResponseWithAuthCookies({ doc: createdDoc, existing: false }, authCookieResponse);
 }
 
 export async function DELETE(request: NextRequest) {

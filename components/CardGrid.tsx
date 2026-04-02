@@ -18,6 +18,7 @@ import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useCardGridPreferences } from "@/components/CardGridPreferencesProvider";
+import { normalizeVariantForStorage, variantLabel } from "@/lib/cardVariantLabels";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import { collectionGroupKeyFromLine, type CollectionLineSummary } from "@/lib/storefrontCardMaps";
 import { getItemConditionName } from "@/lib/referenceData";
@@ -91,19 +92,10 @@ function readUsdLowHigh(block: unknown): { low: number | null; high: number | nu
 
 const gbpFormatter = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" });
 
-function variantLabel(key: string): string {
-  switch (key) {
-    case "normal":
-      return "Normal";
-    case "holofoil":
-      return "Holofoil";
-    case "reverseHolofoil":
-      return "Reverse Holo";
-    case "staffStamp":
-      return "Staff Stamp";
-    default:
-      return key;
-  }
+function wishlistVariantMatches(current: string | undefined, target: string | undefined): boolean {
+  const normalize = (value: string | undefined): string => normalizeVariantForStorage(value) ?? "Unlisted";
+
+  return normalize(current) === normalize(target);
 }
 
 function formatMoneyGbp(n: number): string {
@@ -2012,7 +2004,7 @@ export function CardGrid({
     }
     const mid = selectedCard.masterCardId;
     const existing = localWishlistMap[mid];
-    if (existing) {
+    if (existing && wishlistVariantMatches(existing.printing, targetVariant)) {
       // Already wishlisted — remove immediately
       setWishPending(true);
       try {
@@ -2033,7 +2025,7 @@ export function CardGrid({
         setWishPending(false);
       }
     } else if (targetVariant) {
-      // Variant specified directly — add immediately without sheet
+      // Variant specified directly — add or switch immediately without sheet
       setWishVariant(targetVariant);
       setWishPending(true);
       try {
@@ -2047,9 +2039,10 @@ export function CardGrid({
           try { j = (await res.json()) as { doc?: { id?: string | number } }; } catch { j = {}; }
           const wid = j.doc?.id;
           if (wid !== undefined) {
+            const storedPrinting = normalizeVariantForStorage(targetVariant) ?? undefined;
             setLocalWishlistMap((m) => ({
               ...m,
-              [mid]: { id: String(wid), printing: targetVariant },
+              [mid]: { id: String(wid), printing: storedPrinting },
             }));
           }
           if (variant !== "browse") router.refresh();
@@ -2088,7 +2081,8 @@ export function CardGrid({
         }
         const wid = j.doc?.id;
         if (wid !== undefined) {
-          setLocalWishlistMap((m) => ({ ...m, [mid]: { id: String(wid), printing: wishVariant || undefined } }));
+          const storedPrinting = normalizeVariantForStorage(wishVariant) ?? undefined;
+          setLocalWishlistMap((m) => ({ ...m, [mid]: { id: String(wid), printing: storedPrinting } }));
         }
         if (variant !== "browse") router.refresh();
       }

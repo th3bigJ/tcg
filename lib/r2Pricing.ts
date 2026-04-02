@@ -9,6 +9,43 @@ import type { CardPricingEntry, SetPricingMap } from "@/lib/staticDataTypes";
 
 export type { CardPricingEntry, SetPricingMap };
 
+const TCGDEX_SET_PREFIX_NORMALIZATION: Record<string, string> = {
+  me1: "me01",
+  me2: "me02",
+  me2pt5: "me02.5",
+  me3: "me03",
+};
+
+function buildPricingLookupIds(externalId: string): string[] {
+  const id = externalId.trim();
+  if (!id) return [];
+
+  const ids = new Set<string>([id, id.toLowerCase()]);
+  const dashIndex = id.indexOf("-");
+  if (dashIndex <= 0) return Array.from(ids);
+
+  const setPrefix = id.slice(0, dashIndex);
+  const suffix = id.slice(dashIndex + 1);
+  const normalizedPrefix = TCGDEX_SET_PREFIX_NORMALIZATION[setPrefix];
+
+  if (normalizedPrefix && suffix) {
+    ids.add(`${normalizedPrefix}-${suffix}`);
+    ids.add(`${normalizedPrefix}-${suffix.toLowerCase()}`);
+  }
+
+  if (/^\d+$/u.test(suffix)) {
+    const n = Number.parseInt(suffix, 10);
+    if (Number.isFinite(n)) {
+      ids.add(`${setPrefix}-${n}`);
+      if (normalizedPrefix) {
+        ids.add(`${normalizedPrefix}-${n}`);
+      }
+    }
+  }
+
+  return Array.from(ids);
+}
+
 function getPricingBaseUrl(): string {
   const base =
     process.env.R2_PUBLIC_BASE_URL ??
@@ -49,13 +86,17 @@ export function getPricingForCard(
   externalId: string,
   fallbackIds?: string[],
 ): CardPricingEntry | null {
-  const direct = pricingMap[externalId];
-  if (direct) return direct;
+  for (const id of buildPricingLookupIds(externalId)) {
+    const match = pricingMap[id];
+    if (match) return match;
+  }
 
   if (fallbackIds) {
-    for (const id of fallbackIds) {
-      const match = pricingMap[id];
-      if (match) return match;
+    for (const fallbackId of fallbackIds) {
+      for (const id of buildPricingLookupIds(fallbackId)) {
+        const match = pricingMap[id];
+        if (match) return match;
+      }
     }
   }
 

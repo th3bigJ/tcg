@@ -7,6 +7,7 @@ import {
   buildPokemonEbaySoldSearchQuery,
   type EbayPokemonCardSearchParts,
 } from "@/lib/ebaySoldSearchUrl";
+import { normalizeVariantForStorage, variantLabel } from "@/lib/cardVariantLabels";
 
 const gbpFormatter = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" });
 
@@ -35,15 +36,8 @@ function readAce10(block: unknown): number | null {
   return typeof o.ace10 === "number" && Number.isFinite(o.ace10) ? o.ace10 : null;
 }
 
-const VARIANT_LABELS: Record<string, string> = {
-  normal: "Normal",
-  holofoil: "Holofoil",
-  reverseHolofoil: "Reverse Holo",
-  staffStamp: "Staff Stamp",
-};
-
-function variantLabel(key: string): string {
-  return VARIANT_LABELS[key] ?? key;
+function variantMatches(current: string | null | undefined, target: string): boolean {
+  return (normalizeVariantForStorage(current) ?? "Unlisted") === (normalizeVariantForStorage(target) ?? "Unlisted");
 }
 
 function formatMoneyGbp(n: number): string {
@@ -210,7 +204,7 @@ export function ModalCardPricing({
       <div className="flex flex-col gap-2">
         {showDexRows
           ? variantRows.map(({ key, raw, psa10, ace10 }) => {
-              const isFilled = wishlistedVariant === key;
+              const isFilled = variantMatches(wishlistedVariant, key);
               return (
                 <div
                   key={key}
