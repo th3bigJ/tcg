@@ -76,6 +76,7 @@ export type CardTagFilterRowProps = {
     activeCategory: string;
     excludeCommonUncommon: boolean;
     excludeOwned?: boolean;
+    duplicatesOnly?: boolean;
     rarityOptions: string[];
     energyOptions: string[];
     categoryOptions: string[];
@@ -106,7 +107,14 @@ export function CardTagFilterRow({
       }
     : undefined;
   const hasActiveFilters = sf
-    ? Boolean(sf.activeRarity || sf.activeEnergy || sf.activeCategory || sf.excludeCommonUncommon || sf.excludeOwned)
+    ? Boolean(
+        sf.activeRarity ||
+        sf.activeEnergy ||
+        sf.activeCategory ||
+        sf.excludeCommonUncommon ||
+        sf.excludeOwned ||
+        sf.duplicatesOnly,
+      )
     : localFilters
       ? Boolean(
           localFilters.rarity ||
@@ -350,6 +358,7 @@ export function CardTagFilterRow({
                 if (val) params.set("rarity", val);
                 if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
                 if (sf.excludeOwned) params.set("exclude_owned", "1");
+                if (sf.duplicatesOnly) params.set("duplicates_only", "1");
                 if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
                 if (sf.activeCategory) params.set("category", sf.activeCategory);
                 router.push(`${sf.formAction}?${params.toString()}`);
@@ -372,6 +381,7 @@ export function CardTagFilterRow({
                 if (sf.activeRarity) params.set("rarity", sf.activeRarity);
                 if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
                 if (sf.excludeOwned) params.set("exclude_owned", "1");
+                if (sf.duplicatesOnly) params.set("duplicates_only", "1");
                 if (val) params.set("energy", val);
                 if (sf.activeCategory) params.set("category", sf.activeCategory);
                 router.push(`${sf.formAction}?${params.toString()}`);
@@ -394,6 +404,7 @@ export function CardTagFilterRow({
                 if (sf.activeRarity) params.set("rarity", sf.activeRarity);
                 if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
                 if (sf.excludeOwned) params.set("exclude_owned", "1");
+                if (sf.duplicatesOnly) params.set("duplicates_only", "1");
                 if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
                 if (val) params.set("category", val);
                 router.push(`${sf.formAction}?${params.toString()}`);
@@ -418,8 +429,30 @@ export function CardTagFilterRow({
                 if (sf.activeRarity) params.set("rarity", sf.activeRarity);
                 if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
                 if (sf.activeCategory) params.set("category", sf.activeCategory);
+                if (sf.duplicatesOnly) params.set("duplicates_only", "1");
                 if (sf.excludeOwned) params.set("exclude_owned", "1");
                 if (!sf.excludeCommonUncommon) params.set("exclude_cu", "1");
+                router.push(`${sf.formAction}?${params.toString()}`);
+              }}
+            />
+
+            <FilterChipButton
+              label="Duplicates"
+              active={sf.duplicatesOnly ?? false}
+              onClick={() => {
+                const params = new URLSearchParams();
+                if (sf.extraHiddenFields) {
+                  for (const [k, v] of Object.entries(sf.extraHiddenFields)) params.set(k, v);
+                }
+                if (sf.activeSearch) params.set("search", sf.activeSearch);
+                if (sf.activeSet) params.set("set", sf.activeSet);
+                if (sf.activePokemon) params.set("pokemon", sf.activePokemon);
+                if (sf.activeRarity) params.set("rarity", sf.activeRarity);
+                if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
+                if (sf.activeCategory) params.set("category", sf.activeCategory);
+                if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
+                if (sf.excludeOwned) params.set("exclude_owned", "1");
+                if (!sf.duplicatesOnly) params.set("duplicates_only", "1");
                 router.push(`${sf.formAction}?${params.toString()}`);
               }}
             />
@@ -439,6 +472,7 @@ export function CardTagFilterRow({
                 if (sf.activeEnergy) params.set("energy", sf.activeEnergy);
                 if (sf.activeCategory) params.set("category", sf.activeCategory);
                 if (sf.excludeCommonUncommon) params.set("exclude_cu", "1");
+                if (sf.duplicatesOnly) params.set("duplicates_only", "1");
                 if (!sf.excludeOwned) params.set("exclude_owned", "1");
                 router.push(`${sf.formAction}?${params.toString()}`);
               }}

@@ -1147,6 +1147,8 @@ export function CardGrid({
   hideGrid = false,
   /** Called after the card viewer modal is dismissed (backdrop, close, swipe). */
   onModalClose,
+  /** Opens a matching card modal once after mount/update when provided. */
+  initialOpenCardMasterCardId,
 }: {
   cards: CardEntry[];
   setLogosByCode?: Record<string, string>;
@@ -1175,6 +1177,7 @@ export function CardGrid({
   onTradePickEntry?: (entryId: string, card: CardEntry, maxQty: number) => void;
   hideGrid?: boolean;
   onModalClose?: () => void;
+  initialOpenCardMasterCardId?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
@@ -1216,6 +1219,7 @@ export function CardGrid({
   const [gradedImagePreview, setGradedImagePreview] = useState<string>("");
   const [gradedPurchaseDate, setGradedPurchaseDate] = useState<string>("");
   const [gradedPricePaid, setGradedPricePaid] = useState<string>("");
+  const [gradedPurchaseType, setGradedPurchaseType] = useState<"packed" | "bought" | "traded">("packed");
 
   // ── Edit collection line sheet ─────────────────────────────────────────────
   const [editSheetOpen, setEditSheetOpen] = useState(false);
@@ -1228,7 +1232,8 @@ export function CardGrid({
   const [editPurchaseDate, setEditPurchaseDate] = useState<string>("");
   const [editGradingCompany, setEditGradingCompany] = useState<string>("");
   const [editGradeValue, setEditGradeValue] = useState<string>("");
-  const [editGradedMarketPrice, setEditGradedMarketPrice] = useState<string>("");
+  const [editPurchaseType, setEditPurchaseType] = useState<"packed" | "bought" | "traded">("packed");
+  const [editPricePaid, setEditPricePaid] = useState<string>("");
   const [editUnlistedPrice, setEditUnlistedPrice] = useState<string>("");
   const [editGradedSerial, setEditGradedSerial] = useState<string>("");
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
@@ -1529,6 +1534,18 @@ export function CardGrid({
     openModal(restoredIndex);
   }, [currentUrl, normalizedCards, openModal, selectedIndex, standaloneModalCard]);
 
+  const initialOpenCardMasterCardIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const targetMasterCardId = initialOpenCardMasterCardId?.trim() ?? "";
+    if (!targetMasterCardId) return;
+    if (initialOpenCardMasterCardIdRef.current === targetMasterCardId) return;
+    if (selectedIndex !== null || standaloneModalCard !== null) return;
+    const matchIndex = normalizedCards.findIndex((card) => card.masterCardId === targetMasterCardId);
+    if (matchIndex === -1) return;
+    initialOpenCardMasterCardIdRef.current = targetMasterCardId;
+    openModal(matchIndex);
+  }, [initialOpenCardMasterCardId, normalizedCards, openModal, selectedIndex, standaloneModalCard]);
+
   const openPokedexForSelectedCard = useCallback((dexId: number) => {
     if (!selectedCard) return;
     persistCardModalReturnState(selectedCard, currentUrl);
@@ -1567,6 +1584,7 @@ export function CardGrid({
     setGradedImagePreview("");
     setGradedPricePaid("");
     setGradedPurchaseDate(new Date().toISOString().slice(0, 10));
+    setGradedPurchaseType("packed");
     setAddSheetOpen(true);
   }, [allowMutations, customerLoggedIn, goLogin, itemConditions, pricingVariants, readOnly, selectedCard?.masterCardId]);
 
@@ -1594,6 +1612,7 @@ export function CardGrid({
       setGradedImagePreview("");
       setGradedPricePaid("");
       setGradedPurchaseDate(new Date().toISOString().slice(0, 10));
+      setGradedPurchaseType("packed");
       setAddSheetOpen(true);
       return;
     }
@@ -1618,6 +1637,7 @@ export function CardGrid({
     setGradedImagePreview("");
     setGradedPricePaid("");
     setGradedPurchaseDate(new Date().toISOString().slice(0, 10));
+    setGradedPurchaseType("packed");
     setAddSheetOpen(true);
   }, [
     allowMutations,
@@ -1642,9 +1662,10 @@ export function CardGrid({
           quantity: 1,
           printing: addPrinting,
           language: "English",
-          purchaseType: gradedPricePaid !== "" ? "bought" : undefined,
-          pricePaid: gradedPricePaid !== "" ? parseFloat(gradedPricePaid) : undefined,
-          purchaseDate: gradedPurchaseDate || undefined,
+          purchaseType: gradedPurchaseType,
+          pricePaid:
+            gradedPurchaseType === "bought" && gradedPricePaid !== "" ? parseFloat(gradedPricePaid) : undefined,
+          purchaseDate: gradedPurchaseType === "bought" && gradedPurchaseDate ? gradedPurchaseDate : undefined,
           gradingCompany: gradedCompany,
           gradeValue: gradedValue,
           gradedSerial: gradedSerial.trim() || undefined,
@@ -1702,6 +1723,7 @@ export function CardGrid({
     gradedImageFile,
     gradedPricePaid,
     gradedPurchaseDate,
+    gradedPurchaseType,
     gradedSerial,
     gradedValue,
     router,
@@ -1838,7 +1860,7 @@ export function CardGrid({
     [allowMutations, localCollectionLinesByMasterCardId, router, selectedCard, selectedCard?.cardName, selectedCard?.masterCardId],
   );
 
-  const openEditSheet = useCallback((line: CollectionLineSummary) => {
+  const populateEditFormFromLine = useCallback((line: CollectionLineSummary) => {
     setEditLine(line);
     setEditEntryId(line.entryId);
     setEditCardName(selectedCard?.cardName ?? "");
@@ -1848,13 +1870,33 @@ export function CardGrid({
     setEditPurchaseDate(line.addedAt ? line.addedAt.slice(0, 10) : "");
     setEditGradingCompany(line.gradingCompany ?? "");
     setEditGradeValue(line.gradeValue ?? "");
-    setEditGradedMarketPrice(line.gradedMarketPrice !== undefined ? String(line.gradedMarketPrice) : "");
+    setEditPurchaseType(line.purchaseType ?? "packed");
+    setEditPricePaid(line.pricePaid !== undefined ? String(line.pricePaid) : "");
     setEditUnlistedPrice(line.unlistedPrice !== undefined ? String(line.unlistedPrice) : "");
     setEditGradedSerial(line.gradedSerial ?? "");
     setEditImageFile(null);
     setEditImagePreview(line.gradedImageUrl ?? "");
-    setEditSheetOpen(true);
   }, [selectedCard?.cardName]);
+
+  const openEditSheet = useCallback(
+    (line: CollectionLineSummary) => {
+      populateEditFormFromLine(line);
+      setEditSheetOpen(true);
+    },
+    [populateEditFormFromLine],
+  );
+
+  const goToAdjacentEditLine = useCallback(
+    (delta: -1 | 1) => {
+      const list = collectionLinesForSelected;
+      const idx = list.findIndex((l) => l.entryId === editEntryId);
+      if (idx < 0) return;
+      const next = idx + delta;
+      if (next < 0 || next >= list.length) return;
+      populateEditFormFromLine(list[next]!);
+    },
+    [collectionLinesForSelected, editEntryId, populateEditFormFromLine],
+  );
 
   const submitEditCollection = useCallback(async () => {
     if (!editEntryId) return;
@@ -1878,16 +1920,11 @@ export function CardGrid({
       patchBody.purchaseDate = editPurchaseDate.trim() || null;
       if (editGradingCompany !== "") patchBody.gradingCompany = editGradingCompany;
       if (editGradeValue !== "") patchBody.gradeValue = editGradeValue;
-      if (editGradedMarketPrice !== "") {
-        patchBody.gradedMarketPrice = parseFloat(editGradedMarketPrice);
-      } else {
-        patchBody.gradedMarketPrice = null;
-      }
-      if (editUnlistedPrice !== "") {
-        patchBody.unlistedPrice = parseFloat(editUnlistedPrice);
-      } else {
-        patchBody.unlistedPrice = null;
-      }
+      patchBody.purchaseType = editPurchaseType;
+      patchBody.pricePaid =
+        editPurchaseType === "bought" && editPricePaid !== "" ? parseFloat(editPricePaid) : null;
+      patchBody.unlistedPrice =
+        editPrinting === "Unlisted" && editUnlistedPrice !== "" ? parseFloat(editUnlistedPrice) : null;
       patchBody.gradedSerial = editGradedSerial.trim() || null;
 
       const res = await fetch("/api/collection", {
@@ -1907,7 +1944,22 @@ export function CardGrid({
     } finally {
       setEditPending(false);
     }
-  }, [editEntryId, editQuantity, editConditionId, editPrinting, editPurchaseDate, editGradingCompany, editGradeValue, editGradedMarketPrice, editUnlistedPrice, editGradedSerial, editImageFile, router, variant]);
+  }, [
+    editEntryId,
+    editQuantity,
+    editConditionId,
+    editPrinting,
+    editPurchaseDate,
+    editGradingCompany,
+    editGradeValue,
+    editPurchaseType,
+    editPricePaid,
+    editUnlistedPrice,
+    editGradedSerial,
+    editImageFile,
+    router,
+    variant,
+  ]);
 
   const editPrintingOptions = useMemo(() => {
     const options = pricingVariants.length > 0
@@ -1920,6 +1972,11 @@ export function CardGrid({
 
     return options;
   }, [editPrinting, pricingVariants]);
+
+  const editLineNavIndex = useMemo(() => {
+    if (!editSheetOpen) return -1;
+    return collectionLinesForSelected.findIndex((l) => l.entryId === editEntryId);
+  }, [editSheetOpen, collectionLinesForSelected, editEntryId]);
 
   const submitRemoval = useCallback(async () => {
     if (!pendingRemovalEntryId || !removalReason) return;
@@ -3032,26 +3089,49 @@ export function CardGrid({
                   </div>
                 </div>
                 <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Price paid (£)</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={0.01}
-                    placeholder="0.00"
-                    value={gradedPricePaid}
-                    onChange={(e) => setGradedPricePaid(e.target.value)}
-                    className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-                  />
+                  <span className="font-medium">How obtained</span>
+                  <div className="flex gap-2">
+                    {(["packed", "bought", "traded"] as const).map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setGradedPurchaseType(val)}
+                        className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition ${
+                          gradedPurchaseType === val
+                            ? "border-[var(--foreground)]/50 bg-[var(--foreground)]/15"
+                            : "border-[var(--foreground)]/20 bg-transparent opacity-60"
+                        }`}
+                      >
+                        {val.charAt(0).toUpperCase() + val.slice(1)}
+                      </button>
+                    ))}
+                  </div>
                 </label>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Purchase date</span>
-                  <input
-                    type="date"
-                    value={gradedPurchaseDate}
-                    onChange={(e) => setGradedPurchaseDate(e.target.value)}
-                    className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-                  />
-                </label>
+                {gradedPurchaseType === "bought" && (
+                  <>
+                    <label className="flex flex-col gap-1 text-sm">
+                      <span className="font-medium">Price paid (£)</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        placeholder="0.00"
+                        value={gradedPricePaid}
+                        onChange={(e) => setGradedPricePaid(e.target.value)}
+                        className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm">
+                      <span className="font-medium">Purchase date</span>
+                      <input
+                        type="date"
+                        value={gradedPurchaseDate}
+                        onChange={(e) => setGradedPurchaseDate(e.target.value)}
+                        className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
+                      />
+                    </label>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -3142,6 +3222,32 @@ export function CardGrid({
             </label>
           </div>
 
+          {collectionLinesForSelected.length > 1 && editLineNavIndex >= 0 ? (
+            <div className="mt-3 flex items-center justify-between gap-2 border-b border-[var(--foreground)]/10 pb-3">
+              <button
+                type="button"
+                disabled={editLineNavIndex <= 0}
+                onClick={() => goToAdjacentEditLine(-1)}
+                className="rounded-md border border-[var(--foreground)]/20 bg-[var(--foreground)]/5 px-3 py-1.5 text-sm font-medium transition hover:bg-[var(--foreground)]/10 disabled:pointer-events-none disabled:opacity-35"
+                aria-label="Edit previous copy"
+              >
+                Previous
+              </button>
+              <span className="text-xs tabular-nums text-[var(--foreground)]/50">
+                {editLineNavIndex + 1} of {collectionLinesForSelected.length}
+              </span>
+              <button
+                type="button"
+                disabled={editLineNavIndex >= collectionLinesForSelected.length - 1}
+                onClick={() => goToAdjacentEditLine(1)}
+                className="rounded-md border border-[var(--foreground)]/20 bg-[var(--foreground)]/5 px-3 py-1.5 text-sm font-medium transition hover:bg-[var(--foreground)]/10 disabled:pointer-events-none disabled:opacity-35"
+                aria-label="Edit next copy"
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
+
           <div className="mt-4 flex flex-col gap-3">
             {/* Version / condition / date — always shown */}
             <div className="grid grid-cols-2 gap-3">
@@ -3222,20 +3328,40 @@ export function CardGrid({
               />
             </label>
 
-            {/* Prices */}
-            <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium">How obtained</span>
+              <div className="flex gap-2">
+                {(["packed", "bought", "traded"] as const).map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setEditPurchaseType(val)}
+                    className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition ${
+                      editPurchaseType === val
+                        ? "border-[var(--foreground)]/50 bg-[var(--foreground)]/15"
+                        : "border-[var(--foreground)]/20 bg-transparent opacity-60"
+                    }`}
+                  >
+                    {val.charAt(0).toUpperCase() + val.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </label>
+            {editPurchaseType === "bought" && (
               <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium">Manual price (£)</span>
+                <span className="font-medium">Price paid (£)</span>
                 <input
                   type="number"
                   min={0}
                   step={0.01}
                   placeholder="0.00"
-                  value={editGradedMarketPrice}
-                  onChange={(e) => setEditGradedMarketPrice(e.target.value)}
+                  value={editPricePaid}
+                  onChange={(e) => setEditPricePaid(e.target.value)}
                   className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
                 />
               </label>
+            )}
+            {editPrinting === "Unlisted" && (
               <label className="flex flex-col gap-1 text-sm">
                 <span className="font-medium">Unlisted price (£)</span>
                 <input
@@ -3248,7 +3374,7 @@ export function CardGrid({
                   className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
                 />
               </label>
-            </div>
+            )}
 
             {/* Grading — only shown for graded entries */}
             {(editLine?.gradingCompany || editLine?.gradeValue) ? (

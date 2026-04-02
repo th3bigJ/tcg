@@ -53,6 +53,24 @@ function productTypeId(pt: TransactionDoc["productType"]): string {
   return String(pt);
 }
 
+const PRODUCT_TYPE_CHIP_KEYS = new Set([
+  "single-card",
+  "booster-pack",
+  "elite-trainer-box",
+  "booster-box",
+  "collection-box",
+  "tin",
+  "premium-collection",
+  "other",
+]);
+
+/** Maps to `txn-product-type--*` classes in `globals.css`. */
+function productTypeChipClass(pt: TransactionDoc["productType"]): string {
+  const raw = productTypeId(pt);
+  const key = raw && PRODUCT_TYPE_CHIP_KEYS.has(raw) ? raw : "other";
+  return `txn-product-type txn-product-type--${key}`;
+}
+
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "numeric",
@@ -416,10 +434,10 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-full flex-col px-4 pb-6 pt-2">
+    <div className="flex min-h-full flex-col px-4 pb-[var(--bottom-nav-offset)] pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
       {/* Header */}
-      <div className="mb-4 flex items-center gap-3">
-        <h1 className="flex-1 text-xl font-semibold">Transactions</h1>
+      <div className="mb-5 flex items-center gap-3">
+        <h1 className="flex-1 text-xl font-semibold tracking-tight">Transactions</h1>
         <button
           type="button"
           onClick={() => {
@@ -427,23 +445,23 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
             setNewForm(blankForm());
             setEditingId(null);
           }}
-          className="rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-3 py-1.5 text-sm font-medium transition hover:bg-[var(--foreground)]/18"
+          className="rounded-full border border-[var(--foreground)]/22 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium transition hover:bg-[var(--foreground)]/16"
         >
           + New
         </button>
       </div>
 
       {/* Period filter */}
-      <div className="mb-4 flex gap-2">
+      <div className="mb-5 flex flex-wrap gap-2">
         {(["all", "year", "month"] as Period[]).map((p) => (
           <button
             key={p}
             type="button"
             onClick={() => setPeriod(p)}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+            className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
               period === p
-                ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-                : "border-[var(--foreground)]/20 bg-[var(--foreground)]/8 text-[var(--foreground)]/70 hover:bg-[var(--foreground)]/14"
+                ? "border-[var(--foreground)]/45 bg-[var(--foreground)] text-[var(--background)] shadow-sm"
+                : "border-[var(--foreground)]/18 bg-[var(--foreground)]/[0.06] text-[var(--foreground)]/72 hover:bg-[var(--foreground)]/12"
             }`}
           >
             {p === "all" ? "All time" : p === "year" ? "This year" : "This month"}
@@ -452,38 +470,38 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
       </div>
 
       {/* Summary */}
-      <div className="mb-6 grid grid-cols-2 gap-2">
-        <div className="flex flex-col rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-3">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--foreground)]/50">Spent</span>
-          <span className="mt-1 text-sm font-semibold tabular-nums text-red-400">{fmt(totalSpent)}</span>
+      <div className="mb-6 grid grid-cols-2 gap-3">
+        <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">Spent</span>
+          <span className="mt-2 text-lg font-bold tabular-nums leading-none text-red-400">{fmt(totalSpent)}</span>
         </div>
-        <div className="flex flex-col rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-3">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--foreground)]/50">Sold</span>
-          <span className="mt-1 text-sm font-semibold tabular-nums text-green-400">{fmt(totalSold)}</span>
+        <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">Sold</span>
+          <span className="mt-2 text-lg font-bold tabular-nums leading-none text-green-400">{fmt(totalSold)}</span>
         </div>
-        <div className="flex flex-col rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-3">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--foreground)]/50">Collection value</span>
-          <span className="mt-1 text-sm font-semibold tabular-nums text-[var(--foreground)]/80">
+        <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">Collection</span>
+          <span className="mt-2 text-lg font-bold tabular-nums leading-none text-[var(--foreground)]/90">
             {collectionValueLoading ? "…" : fmt(collectionValue ?? 0)}
           </span>
         </div>
-        <div className="flex flex-col rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-3">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--foreground)]/50">P&amp;L</span>
+        <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">P&amp;L</span>
           <span
-            className={`mt-1 text-sm font-semibold tabular-nums ${
+            className={`mt-2 text-lg font-bold tabular-nums leading-none ${
               netPnl >= 0 ? "text-green-400" : "text-red-400"
             }`}
           >
             {collectionValueLoading ? "…" : `${netPnl >= 0 ? "+" : ""}${fmt(netPnl)}`}
           </span>
-          <span className="mt-0.5 text-[9px] text-[var(--foreground)]/35">sold + collection − spent</span>
+          <span className="mt-1.5 text-[10px] leading-tight text-[var(--foreground)]/38">Sold + collection − spent</span>
         </div>
       </div>
 
       {/* New transaction form */}
       {showNew && (
-        <div className="mb-6 rounded-xl border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 p-4">
-          <h2 className="mb-3 text-sm font-semibold">New transaction</h2>
+        <div className="mb-6 rounded-2xl border border-[var(--foreground)]/14 bg-[var(--foreground)]/[0.05] p-4 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
+          <h2 className="mb-3 text-sm font-semibold tracking-tight">New transaction</h2>
           <TransactionForm
             form={newForm}
             setForm={setNewForm}
@@ -498,28 +516,29 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
 
       {/* Transaction list */}
       {loading ? (
-        <p className="py-8 text-center text-sm text-[var(--foreground)]/50">Loading…</p>
+        <p className="py-12 text-center text-sm text-[var(--foreground)]/50">Loading…</p>
       ) : filtered.length === 0 ? (
-        <p className="py-8 text-center text-sm text-[var(--foreground)]/50">
+        <p className="py-12 text-center text-sm text-[var(--foreground)]/50">
           No transactions yet.
         </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-3">
           {filtered.map((doc) => {
             const id = String(doc.id);
             const total = doc.unitPrice * doc.quantity;
             const isEditing = editingId === id;
             const isDeleting = deletingId === id;
+            const directionLabel = doc.direction === "sale" ? "Sale" : "Purchase";
 
             return (
               <li
                 key={id}
-                className="rounded-xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-3"
+                className="overflow-hidden rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.04] shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_6%,transparent)]"
               >
                 {isEditing ? (
-                  <>
-                    <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]/50">
-                      Editing
+                  <div className="p-4">
+                    <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground)]/45">
+                      Edit transaction
                     </h3>
                     <TransactionForm
                       form={editForm}
@@ -530,96 +549,117 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
                       pending={editPending}
                       submitLabel="Save"
                     />
-                  </>
+                  </div>
                 ) : (
-                  <>
-                    <div className="flex items-start gap-2">
-                      {/* Direction badge */}
-                      <span
-                        className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-                          doc.direction === "sale"
-                            ? "bg-green-500/15 text-green-400"
-                            : "bg-blue-500/15 text-blue-400"
-                        }`}
-                      >
-                        {doc.direction}
-                      </span>
-
-                      {/* Main info */}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{doc.description}</p>
-                        <p className="mt-0.5 text-xs text-[var(--foreground)]/55">
-                          {productTypeName(doc.productType)}
-                          {" · "}
-                          {doc.quantity > 1 ? `${doc.quantity} × ` : ""}
-                          {fmt(doc.unitPrice)}
-                          {doc.quantity > 1 ? ` = ${fmt(total)}` : ""}
+                  <div className="flex flex-col">
+                    <div className="flex gap-3 p-4 pb-3">
+                      <div className="min-w-0 flex-1 space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`txn-direction ${
+                              doc.direction === "sale" ? "txn-direction--sale" : "txn-direction--purchase"
+                            }`}
+                          >
+                            {directionLabel}
+                          </span>
+                          <span className={productTypeChipClass(doc.productType)} title="Product type">
+                            {productTypeName(doc.productType)}
+                          </span>
+                        </div>
+                        <p className="text-[15px] font-semibold leading-snug tracking-tight text-[var(--foreground)]">
+                          {doc.description}
                         </p>
-                        <p className="mt-0.5 text-xs text-[var(--foreground)]/40">
-                          {fmtDate(doc.transactionDate)}
-                        </p>
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm text-[var(--foreground)]/65">
+                          {doc.quantity > 1 ? (
+                            <>
+                              <span className="tabular-nums">
+                                <span className="text-[var(--foreground)]/40">Qty</span> {doc.quantity}
+                              </span>
+                              <span className="text-[var(--foreground)]/25" aria-hidden>
+                                ·
+                              </span>
+                              <span className="tabular-nums">
+                                <span className="text-[var(--foreground)]/40">Each</span> {fmt(doc.unitPrice)}
+                              </span>
+                              <span className="text-[var(--foreground)]/25" aria-hidden>
+                                ·
+                              </span>
+                              <span className="font-medium tabular-nums text-[var(--foreground)]/85">
+                                Total {fmt(total)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="tabular-nums">
+                              <span className="text-[var(--foreground)]/40">Price</span>{" "}
+                              <span className="font-medium text-[var(--foreground)]/88">{fmt(doc.unitPrice)}</span>
+                            </span>
+                          )}
+                        </div>
                         {doc.notes ? (
-                          <p className="mt-1 text-xs italic text-[var(--foreground)]/45">
-                            {doc.notes}
-                          </p>
+                          <p className="text-xs italic leading-relaxed text-[var(--foreground)]/48">{doc.notes}</p>
                         ) : null}
                       </div>
-
-                      {/* Total */}
-                      <span
-                        className={`shrink-0 text-sm font-semibold tabular-nums ${
-                          doc.direction === "sale" ? "text-green-400" : "text-[var(--foreground)]/80"
-                        }`}
-                      >
-                        {doc.direction === "sale" ? "+" : "−"}
-                        {fmt(total)}
-                      </span>
+                      <div className="flex shrink-0 flex-col items-end justify-start pt-0.5">
+                        <span
+                          className={`text-lg font-bold tabular-nums leading-none ${
+                            doc.direction === "sale" ? "text-green-400" : "text-[var(--foreground)]/88"
+                          }`}
+                        >
+                          {doc.direction === "sale" ? "+" : "−"}
+                          {fmt(total)}
+                        </span>
+                      </div>
                     </div>
 
-                    {/* Actions */}
-                    {isDeleting ? (
-                      <div className="mt-3 flex items-center gap-2 border-t border-[var(--foreground)]/10 pt-3">
-                        <span className="flex-1 text-xs text-[var(--foreground)]/60">
-                          Delete this transaction?
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingId(null)}
-                          className="rounded-md border border-[var(--foreground)]/20 px-3 py-1 text-xs font-medium"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          disabled={deletePending}
-                          onClick={() => void handleDelete(id)}
-                          className="rounded-md border border-red-400/50 bg-red-500/15 px-3 py-1 text-xs font-medium text-red-400 disabled:opacity-50"
-                        >
-                          {deletePending ? "Deleting…" : "Delete"}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="mt-2.5 flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => startEdit(doc)}
-                          className="rounded-md border border-[var(--foreground)]/18 bg-[var(--foreground)]/6 px-3 py-1 text-xs font-medium transition hover:bg-[var(--foreground)]/12"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDeletingId(id);
-                            setEditingId(null);
-                          }}
-                          className="rounded-md border border-red-400/30 bg-red-500/8 px-3 py-1 text-xs font-medium text-red-400 transition hover:bg-red-500/15"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </>
+                    <div className="flex items-center justify-between gap-3 border-t border-[var(--foreground)]/10 bg-[var(--foreground)]/[0.03] px-4 py-3">
+                      <time
+                        className="text-xs font-medium text-[var(--foreground)]/45"
+                        dateTime={doc.transactionDate}
+                      >
+                        {fmtDate(doc.transactionDate)}
+                      </time>
+                      {isDeleting ? (
+                        <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+                          <span className="text-xs text-[var(--foreground)]/55">Delete?</span>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingId(null)}
+                            className="rounded-full border border-[var(--foreground)]/20 px-3 py-1.5 text-xs font-semibold transition hover:bg-[var(--foreground)]/10"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            disabled={deletePending}
+                            onClick={() => void handleDelete(id)}
+                            className="rounded-full border border-red-400/45 bg-red-500/12 px-3 py-1.5 text-xs font-semibold text-red-400 disabled:opacity-50"
+                          >
+                            {deletePending ? "Deleting…" : "Delete"}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(doc)}
+                            className="rounded-full border border-[var(--foreground)]/18 bg-[var(--foreground)]/8 px-3.5 py-1.5 text-xs font-semibold transition hover:bg-[var(--foreground)]/14"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeletingId(id);
+                              setEditingId(null);
+                            }}
+                            className="rounded-full border border-red-400/35 bg-red-500/10 px-3.5 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/16"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </li>
             );

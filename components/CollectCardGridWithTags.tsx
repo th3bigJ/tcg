@@ -81,6 +81,7 @@ export function CollectCardGridWithTags({
   const [category, setCategory] = useState("");
   const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(false);
   const [excludeCollected, setExcludeCollected] = useState(false);
+  const [duplicatesOnly, setDuplicatesOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>(readOnly ? "price-asc" : "price-desc");
   const [ownedFilterOnly, setOwnedFilterOnly] = useState(false);
 
@@ -93,6 +94,7 @@ export function CollectCardGridWithTags({
       setCategory(persisted.category ?? "");
       setExcludeCommonUncommon(persisted.excludeCommonUncommon ?? false);
       setExcludeCollected(persisted.excludeCollected ?? false);
+      setDuplicatesOnly(persisted.duplicatesOnly ?? false);
       setOwnedFilterOnly(persisted.showOwnedOnly ?? false);
       setSortOrder(readSortOrderForScope(filterScope, readOnly));
     };
@@ -146,9 +148,25 @@ export function CollectCardGridWithTags({
       if (viewerOwnedMasterCardIds) return viewerOwnedMasterCardIds.has(masterCardId);
       return (collectionLinesByMasterCardId[masterCardId]?.length ?? 0) > 0;
     };
+    const hasDuplicateCopies = (masterCardId: string | null | undefined) => {
+      if (!masterCardId) return false;
+      const lines = collectionLinesByMasterCardId[masterCardId] ?? [];
+      let total = 0;
+      for (const line of lines) {
+        total +=
+          typeof line.quantity === "number" && Number.isFinite(line.quantity) && line.quantity > 0
+            ? Math.floor(line.quantity)
+            : 1;
+        if (total > 1) return true;
+      }
+      return false;
+    };
     let result = cards.filter((card) => {
       if (ownedFilterOnly && card.masterCardId) {
         if (!viewerOwnsCard(card.masterCardId)) return false;
+      }
+      if (duplicatesOnly && card.masterCardId) {
+        if (!hasDuplicateCopies(card.masterCardId)) return false;
       }
       if (rarity && card.rarity !== rarity) return false;
       if (energy && !cardMatchesEnergyTypeSelection(card.elementTypes, energy)) return false;
@@ -198,6 +216,7 @@ export function CollectCardGridWithTags({
     category,
     excludeCommonUncommon,
     excludeCollected,
+    duplicatesOnly,
     sortOrder,
     cardPricesByMasterCardId,
     effectiveCollectionPriceRangeByMasterCardId,
@@ -215,6 +234,7 @@ export function CollectCardGridWithTags({
     category,
     excludeCommonUncommon ? "1" : "0",
     excludeCollected ? "1" : "0",
+    duplicatesOnly ? "1" : "0",
     ownedFilterOnly ? "1" : "0",
     sortOrder,
     variant,

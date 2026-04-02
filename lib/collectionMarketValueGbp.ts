@@ -88,7 +88,7 @@ function estimateUnitGbpFromPricing(
 
 /**
  * Returns a map of {@link collectionGroupKeyFromEntry} → unit price in GBP for display under each card,
- * plus a set of those keys whose price came from a manual entry (graded/unlisted).
+ * plus a set of those keys whose price came from a manual unlisted entry.
  */
 export async function estimateCardUnitPricesGbp(
   entries: StorefrontCardEntry[],
@@ -119,12 +119,7 @@ export async function estimateCardUnitPricesGbp(
         const ext = e.externalId?.trim();
         const gk = collectionGroupKeyFromEntry(e);
         if (!mid || !ext) continue;
-        // Graded/unlisted manual prices always take priority over scraped pricing
-        if (e.gradedMarketPrice !== undefined) {
-          out[gk] = e.gradedMarketPrice;
-          manualPriceIds.add(gk);
-          continue;
-        }
+        // Unlisted manual price takes priority over scraped pricing
         if (e.unlistedPrice !== undefined) {
           out[gk] = e.unlistedPrice;
           manualPriceIds.add(gk);
@@ -180,7 +175,7 @@ export async function estimateCollectionMarketValueGbp(
     }
     const printing = e.printing?.trim() || e.targetPrinting?.trim() || undefined;
     const legacyExternalId = e.legacyExternalId?.trim() || undefined;
-    const manualPrice = e.gradedMarketPrice ?? e.unlistedPrice;
+    const manualPrice = e.unlistedPrice;
     const gradingCompany = e.gradingCompany?.trim() || undefined;
     const gradeValue = e.gradeValue?.trim() || undefined;
     const key: RowKey = `${ext}::${printing ?? ""}::${gradingCompany ?? ""}::${gradeValue ?? ""}`;
@@ -215,7 +210,7 @@ export async function estimateCollectionMarketValueGbp(
           unitByKey.set(key, row.manualPrice ?? null);
           continue;
         }
-        // Graded/unlisted manual prices always take priority over scraped pricing
+        // Unlisted manual price takes priority over scraped pricing
         if (row.manualPrice !== undefined) {
           unitByKey.set(key, row.manualPrice);
           continue;

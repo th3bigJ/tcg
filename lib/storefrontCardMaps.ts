@@ -18,7 +18,10 @@ export type StorefrontCardExtras = {
   targetPrinting?: string;
   addedAt?: string;
   conditionId?: string;
-  gradedMarketPrice?: number;
+  /** How the copy was obtained (DB `purchase_type`). */
+  purchaseType?: "packed" | "bought" | "traded";
+  /** GBP paid when `purchaseType` is `bought` (DB `price_paid`). */
+  pricePaid?: number;
   unlistedPrice?: number;
   gradingCompany?: string;
   gradeValue?: string;
@@ -36,7 +39,8 @@ export type CollectionLineSummary = {
   addedAt?: string;
   gradingCompany?: string;
   gradeValue?: string;
-  gradedMarketPrice?: number;
+  purchaseType?: "packed" | "bought" | "traded";
+  pricePaid?: number;
   unlistedPrice?: number;
   gradedImageUrl?: string;
   gradedSerial?: string;
@@ -54,6 +58,34 @@ export function collectionLineQuantity(e: Pick<StorefrontCardEntry, "quantity">)
 /** Sum of whole-copy counts from raw DB rows (before merge). */
 export function collectionCopyTotalFromEntries(entries: StorefrontCardEntry[]): number {
   return entries.reduce((sum, e) => sum + collectionLineQuantity(e), 0);
+}
+
+export function getMasterCardCopyTotals(
+  entries: Pick<StorefrontCardEntry, "masterCardId" | "quantity">[],
+): Record<string, number> {
+  const totals: Record<string, number> = {};
+  for (const entry of entries) {
+    const masterCardId = entry.masterCardId?.trim() ?? "";
+    if (!masterCardId) continue;
+    totals[masterCardId] = (totals[masterCardId] ?? 0) + collectionLineQuantity(entry);
+  }
+  return totals;
+}
+
+export function getMasterCardIdsWithMinCopies(
+  entries: Pick<StorefrontCardEntry, "masterCardId" | "quantity">[],
+  minCopies = 2,
+): Set<string> {
+  if (!Number.isFinite(minCopies) || minCopies <= 1) {
+    return new Set(Object.keys(getMasterCardCopyTotals(entries)));
+  }
+
+  const totals = getMasterCardCopyTotals(entries);
+  return new Set(
+    Object.entries(totals)
+      .filter(([, total]) => total >= minCopies)
+      .map(([masterCardId]) => masterCardId),
+  );
 }
 
 /** Sum of {@link collectionLineQuantity} on merged grid rows — matches sum of copy counts shown on tiles (×N). */
@@ -154,7 +186,13 @@ export function mapCustomerCollectionRow(row: Record<string, unknown>, condition
   const printing = typeof row.printing === "string" && row.printing.trim() ? row.printing.trim() : undefined;
   const language = typeof row.language === "string" && row.language.trim() ? row.language.trim() : undefined;
   const addedAt = typeof row.added_at === "string" && row.added_at ? row.added_at : undefined;
-  const gradedMarketPrice = typeof row.graded_market_price === "number" && Number.isFinite(row.graded_market_price) ? row.graded_market_price : undefined;
+  const ptRaw = row.purchase_type;
+  const purchaseType =
+    ptRaw === "packed" || ptRaw === "bought" || ptRaw === "traded" ? ptRaw : undefined;
+  const pricePaid =
+    typeof row.price_paid === "number" && Number.isFinite(row.price_paid) && row.price_paid >= 0
+      ? row.price_paid
+      : undefined;
   const unlistedPrice = typeof row.unlisted_price === "number" && Number.isFinite(row.unlisted_price) ? row.unlisted_price : undefined;
   const gradingCompany = typeof row.grading_company === "string" && row.grading_company && row.grading_company !== "none" ? row.grading_company : undefined;
   const gradeValue = typeof row.grade_value === "string" && row.grade_value ? row.grade_value : undefined;
@@ -170,7 +208,8 @@ export function mapCustomerCollectionRow(row: Record<string, unknown>, condition
     ...(printing ? { printing } : {}),
     ...(language ? { language } : {}),
     ...(addedAt ? { addedAt } : {}),
-    ...(gradedMarketPrice !== undefined ? { gradedMarketPrice } : {}),
+    ...(purchaseType !== undefined ? { purchaseType } : {}),
+    ...(pricePaid !== undefined ? { pricePaid } : {}),
     ...(unlistedPrice !== undefined ? { unlistedPrice } : {}),
     ...(gradingCompany !== undefined ? { gradingCompany } : {}),
     ...(gradeValue !== undefined ? { gradeValue } : {}),
@@ -235,7 +274,8 @@ export function groupCollectionLinesByMasterCardId(
       ...(e.addedAt ? { addedAt: e.addedAt } : {}),
       ...(e.gradingCompany ? { gradingCompany: e.gradingCompany } : {}),
       ...(e.gradeValue ? { gradeValue: e.gradeValue } : {}),
-      ...(e.gradedMarketPrice !== undefined ? { gradedMarketPrice: e.gradedMarketPrice } : {}),
+      ...(e.purchaseType ? { purchaseType: e.purchaseType } : {}),
+      ...(e.pricePaid !== undefined ? { pricePaid: e.pricePaid } : {}),
       ...(e.unlistedPrice !== undefined ? { unlistedPrice: e.unlistedPrice } : {}),
       ...(e.gradedImageUrl ? { gradedImageUrl: e.gradedImageUrl } : {}),
       ...(e.gradedSerial ? { gradedSerial: e.gradedSerial } : {}),
@@ -275,7 +315,8 @@ export function groupCollectionLinesByGroupKey(
       ...(e.addedAt ? { addedAt: e.addedAt } : {}),
       ...(e.gradingCompany ? { gradingCompany: e.gradingCompany } : {}),
       ...(e.gradeValue ? { gradeValue: e.gradeValue } : {}),
-      ...(e.gradedMarketPrice !== undefined ? { gradedMarketPrice: e.gradedMarketPrice } : {}),
+      ...(e.purchaseType ? { purchaseType: e.purchaseType } : {}),
+      ...(e.pricePaid !== undefined ? { pricePaid: e.pricePaid } : {}),
       ...(e.unlistedPrice !== undefined ? { unlistedPrice: e.unlistedPrice } : {}),
       ...(e.gradedImageUrl ? { gradedImageUrl: e.gradedImageUrl } : {}),
       ...(e.gradedSerial ? { gradedSerial: e.gradedSerial } : {}),

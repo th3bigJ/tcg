@@ -21,6 +21,7 @@ import {
 } from "@/lib/cardsPageQueries";
 import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
+import { getMasterCardIdsWithMinCopies } from "@/lib/storefrontCardMaps";
 import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 import { type SortOrder, DEFAULT_SORT, SEARCH_DEFAULT_SORT } from "@/lib/persistedFilters";
 
@@ -64,6 +65,8 @@ type SearchPageProps = {
     energy?: string;
     seed?: string;
     missing_only?: string;
+    duplicates_only?: string;
+    open_card?: string;
   }>;
 };
 
@@ -99,10 +102,12 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
   const excludeCommonUncommon = parseExcludeCommonUncommon(resolvedSearchParams.exclude_cu);
   const excludeOwned = resolvedSearchParams.exclude_owned === "1";
   const ownedOnly = resolvedSearchParams.owned_only === "1";
+  const duplicatesOnly = resolvedSearchParams.duplicates_only === "1";
   const selectedCategory = (resolvedSearchParams.category ?? "").trim();
   const selectedArtist = (resolvedSearchParams.artist ?? "").trim();
   const selectedEnergy = (resolvedSearchParams.energy ?? "").trim();
   const incomingSeed = (resolvedSearchParams.seed ?? "").trim();
+  const initialOpenCardMasterCardId = (resolvedSearchParams.open_card ?? "").trim();
 
   const isDefaultBrowseRequest =
     activeTab === "cards" &&
@@ -113,6 +118,7 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
     !excludeCommonUncommon &&
     !excludeOwned &&
     !ownedOnly &&
+    !duplicatesOnly &&
     !selectedCategory &&
     !selectedArtist &&
     !selectedEnergy;
@@ -190,6 +196,7 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
       .map((entry) => entry.masterCardId?.trim() ?? "")
       .filter((value) => value.length > 0),
   );
+  const duplicateOwnedMasterCardIds = getMasterCardIdsWithMinCopies(collectionEntries, 2);
 
   const [{ entries: cardsForGrid, totalDocs: filteredCount }, initialSearchCardData, fullSetCardsForSummary] = await Promise.all([
     fetchMasterCardsPage({
@@ -202,7 +209,11 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
       activeArtist,
       excludeCommonUncommon,
       excludedMasterCardIds: excludeOwned ? excludedMasterCardIds : undefined,
-      includedMasterCardIds: ownedOnly ? ownedMasterCardIds : undefined,
+      includedMasterCardIds: duplicatesOnly
+        ? duplicateOwnedMasterCardIds
+        : ownedOnly
+          ? ownedMasterCardIds
+          : undefined,
       categoryQueryVariants,
       page: 1,
       perPage: requestedTake,
@@ -266,6 +277,7 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
     if (excludeCommonUncommon) params.set("exclude_cu", "1");
     if (excludeOwned) params.set("exclude_owned", "1");
     if (ownedOnly) params.set("owned_only", "1");
+    if (duplicatesOnly) params.set("duplicates_only", "1");
     if (activeCategory) params.set("category", activeCategory);
     const qs = params.toString();
     return `/search${qs ? `?${qs}` : ""}`;
@@ -283,6 +295,7 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
     excludeCommonUncommon ? "1" : "",
     excludeOwned ? "1" : "",
     ownedOnly ? "1" : "",
+    duplicatesOnly ? "1" : "",
     activeCategory,
   ].join("|");
 
@@ -359,10 +372,12 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
                 activeCategory={activeCategory}
                 excludeCommonUncommon={excludeCommonUncommon}
                 excludeOwned={excludeOwned}
+                duplicatesOnly={duplicatesOnly}
                 rarityOptions={rarityOptions}
                 energyOptions={energyOptions}
                 categoryOptions={categoryOptions}
                 resetHref={clearTagFiltersHref}
+                initialOpenCardMasterCardId={initialOpenCardMasterCardId}
               />
             </CardsResultsScroll>
           </section>

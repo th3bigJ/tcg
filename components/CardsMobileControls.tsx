@@ -29,6 +29,7 @@ type CardsMobileControlsProps = {
   categoryOptions: string[];
   excludeCommonUncommon: boolean;
   excludeOwned: boolean;
+  duplicatesOnly?: boolean;
   activeCategory: string;
   resetFiltersHref: string;
   setFilterOptions: SetFilterOption[];
@@ -49,6 +50,7 @@ export function CardsMobileControls({
   categoryOptions,
   excludeCommonUncommon,
   excludeOwned,
+  duplicatesOnly = false,
   activeCategory,
   resetFiltersHref,
   setFilterOptions,
@@ -79,6 +81,7 @@ export function CardsMobileControls({
           {activeEnergy ? <input type="hidden" name="energy" value={activeEnergy} /> : null}
           {excludeCommonUncommon ? <input type="hidden" name="exclude_cu" value="1" /> : null}
           {excludeOwned ? <input type="hidden" name="exclude_owned" value="1" /> : null}
+          {duplicatesOnly ? <input type="hidden" name="duplicates_only" value="1" /> : null}
           {activeCategory ? <input type="hidden" name="category" value={activeCategory} /> : null}
           <input
             type="search"

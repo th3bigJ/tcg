@@ -43,7 +43,6 @@ type CollectionPostBody = {
   purchaseDate?: string | null;
   gradingCompany?: string | null;
   gradeValue?: string | null;
-  gradedMarketPrice?: number | null;
   unlistedPrice?: number | null;
 };
 
@@ -90,10 +89,6 @@ export async function POST(request: NextRequest) {
     typeof body.gradingCompany === "string" && body.gradingCompany.trim() ? body.gradingCompany.trim() : null;
   const gradeValue =
     typeof body.gradeValue === "string" && body.gradeValue.trim() ? body.gradeValue.trim() : null;
-  const gradedMarketPrice =
-    typeof body.gradedMarketPrice === "number" && Number.isFinite(body.gradedMarketPrice) && body.gradedMarketPrice >= 0
-      ? body.gradedMarketPrice
-      : null;
   const unlistedPrice =
     typeof body.unlistedPrice === "number" && Number.isFinite(body.unlistedPrice) && body.unlistedPrice >= 0
       ? body.unlistedPrice
@@ -114,7 +109,6 @@ export async function POST(request: NextRequest) {
     grading_company: gradingCompany ?? "none",
     grade_value: gradeValue,
   };
-  if (gradedMarketPrice !== null) baseRow.graded_market_price = gradedMarketPrice;
   if (unlistedPrice !== null) baseRow.unlisted_price = unlistedPrice;
 
   const insertRows = Array.from({ length: quantity }, () => ({ ...baseRow }));
@@ -202,8 +196,9 @@ type CollectionPatchBody = {
   purchaseDate?: string | null;
   gradingCompany?: string | null;
   gradeValue?: string | null;
-  gradedMarketPrice?: number | null;
   unlistedPrice?: number | null;
+  purchaseType?: "packed" | "bought" | "traded" | null;
+  pricePaid?: number | null;
   gradedImage?: string | null;
   gradedSerial?: string | null;
 };
@@ -248,10 +243,16 @@ export async function PATCH(request: NextRequest) {
   }
   if ("gradingCompany" in body) updates.grading_company = body.gradingCompany?.trim() || "none";
   if ("gradeValue" in body) updates.grade_value = body.gradeValue?.trim() || null;
-  if ("gradedMarketPrice" in body) {
-    updates.graded_market_price =
-      typeof body.gradedMarketPrice === "number" && Number.isFinite(body.gradedMarketPrice) && body.gradedMarketPrice >= 0
-        ? body.gradedMarketPrice
+  if ("purchaseType" in body) {
+    updates.purchase_type =
+      body.purchaseType === "packed" || body.purchaseType === "bought" || body.purchaseType === "traded"
+        ? body.purchaseType
+        : null;
+  }
+  if ("pricePaid" in body) {
+    updates.price_paid =
+      typeof body.pricePaid === "number" && Number.isFinite(body.pricePaid) && body.pricePaid >= 0
+        ? body.pricePaid
         : null;
   }
   if ("unlistedPrice" in body) {

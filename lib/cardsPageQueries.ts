@@ -676,7 +676,7 @@ export async function fetchMasterCardsPage(params: {
   if (params.activeSet) {
     const setCards = getCardsBySet(params.activeSet);
     const matched = setCards.filter((c) =>
-      !isExcluded(c) && cardMatchesFilters(c, params)
+      !isExcluded(c) && isIncluded(c) && cardMatchesFilters(c, params)
     );
     filteredIds = matched.map((c) => c.masterCardId);
   } else {

@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AppDrawerMenu } from "@/components/AppDrawerMenu";
+import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import { DASHBOARD_MENU_TOGGLE_EVENT } from "@/lib/dashboardMenuEvents";
 import {
   type SortOrder,
@@ -14,6 +15,8 @@ import {
   readPersistedFilters,
   type PersistedFilterScope,
 } from "@/lib/persistedFilters";
+import type { SearchCardDataPayload } from "@/lib/searchCardDataServer";
+import { pushRecentSearch, readRecentSearches } from "@/lib/recentSearches";
 import { useAutoHideChrome } from "@/lib/useAutoHideChrome";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -53,6 +56,7 @@ type Filters = {
   energy: string;
   excludeCommonUncommon: boolean;
   excludeCollected: boolean;
+  duplicatesOnly: boolean;
   category: string;
   missingOnly: boolean;
   groupBySet: boolean;
@@ -79,6 +83,7 @@ function getDefaultSortForContext(params: {
   selectedCategory: string;
   excludeCommonUncommon: boolean;
   excludeCollected: boolean;
+  duplicatesOnly: boolean;
   missingOnly: boolean;
 }): SortOrder {
   const isPlainSearchBrowse =
@@ -92,6 +97,7 @@ function getDefaultSortForContext(params: {
     !params.selectedCategory &&
     !params.excludeCommonUncommon &&
     !params.excludeCollected &&
+    !params.duplicatesOnly &&
     !params.missingOnly;
 
   return isPlainSearchBrowse ? SEARCH_DEFAULT_SORT : DEFAULT_SORT;
@@ -448,6 +454,11 @@ function getSectionPriority(pathname: string): SectionKey {
   return "cards";
 }
 
+type QuickViewState = {
+  card: CardEntry;
+  searchCardData: SearchCardDataPayload | null;
+};
+
 export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
@@ -462,6 +473,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const selectedCategoryParam = searchParams?.get("category") ?? "";
   const excludeCommonUncommonParam = searchParams?.get("exclude_cu") === "1";
   const excludeCollectedParam = searchParams?.get("exclude_owned") === "1";
+  const duplicatesOnlyParam = searchParams?.get("duplicates_only") === "1";
   const missingOnlyParam = searchParams?.get("missing_only") === "1";
   const defaultSortForPage = getDefaultSortForContext({
     pathname,
@@ -474,6 +486,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     selectedCategory: selectedCategoryParam,
     excludeCommonUncommon: excludeCommonUncommonParam,
     excludeCollected: excludeCollectedParam,
+    duplicatesOnly: duplicatesOnlyParam,
     missingOnly: missingOnlyParam,
   });
   const isFriendsCardsPage = /^\/collect\/shared\/[^/]+$/.test(pathname) && (friendsTab === "collection" || friendsTab === "wishlist");
@@ -510,12 +523,15 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const modalTouchStartRef = useRef<{ x: number; y: number } | null>(null);
   const modalSwipeEligibleRef = useRef(false);
   const [query, setQuery] = useState("");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [modalMode, setModalMode] = useState<"closed" | "search">("closed");
   const [menuOpen, setMenuOpen] = useState(false);
   const [filterSheet, setFilterSheet] = useState<FilterSheetKey | null>(null);
   const [hasMounted, setHasMounted] = useState(false);
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(false);
+  const [quickView, setQuickView] = useState<QuickViewState | null>(null);
+  const [quickViewLoading, setQuickViewLoading] = useState(false);
   const [facets, setFacets] = useState<FacetOptions>({
     rarityOptions: [],
     energyOptions: [],
@@ -526,6 +542,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     energy: "",
     excludeCommonUncommon: false,
     excludeCollected: false,
+    duplicatesOnly: false,
     category: "",
     missingOnly: false,
     groupBySet: false,
@@ -556,6 +573,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         energy: persisted.energy ?? "",
         excludeCommonUncommon: persisted.excludeCommonUncommon ?? false,
         excludeCollected: persisted.excludeCollected ?? false,
+        duplicatesOnly: persisted.duplicatesOnly ?? false,
         category: persisted.category ?? "",
         missingOnly: persisted.missingOnly ?? false,
         groupBySet: persisted.groupBySet ?? false,
@@ -569,6 +587,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         nextFilters.category = searchParams?.get("category") ?? "";
         nextFilters.excludeCommonUncommon = searchParams?.get("exclude_cu") === "1";
         nextFilters.excludeCollected = searchParams?.get("exclude_owned") === "1";
+        nextFilters.duplicatesOnly = searchParams?.get("duplicates_only") === "1";
         nextFilters.groupBySet = searchParams?.get("group_by_set") === "1";
       } else if (pathname.startsWith("/search")) {
         const tab = searchParams?.get("tab") ?? "cards";
@@ -578,6 +597,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           nextFilters.category = searchParams?.get("category") ?? "";
           nextFilters.excludeCommonUncommon = searchParams?.get("exclude_cu") === "1";
           nextFilters.excludeCollected = searchParams?.get("exclude_owned") === "1";
+          nextFilters.duplicatesOnly = searchParams?.get("duplicates_only") === "1";
           nextFilters.showOwnedOnly = searchParams?.get("owned_only") === "1";
           nextFilters.sort = (searchParams?.get("sort") as SortOrder | null) ?? defaultSortForPage;
           nextFilters.missingOnly = false;
@@ -588,6 +608,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           nextFilters.category = "";
           nextFilters.excludeCommonUncommon = false;
           nextFilters.excludeCollected = false;
+          nextFilters.duplicatesOnly = false;
           nextFilters.showOwnedOnly = false;
         }
       } else if (pathname === "/collect" || pathname === "/wishlist" || isFriendsCardsPage) {
@@ -642,6 +663,10 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         params.set("exclude_owned", "1");
         changed = true;
       }
+      if (!params.has("duplicates_only") && persisted.duplicatesOnly) {
+        params.set("duplicates_only", "1");
+        changed = true;
+      }
     } else if (/^\/pokedex\/[^/]+/.test(pathname)) {
       if (!params.has("rarity") && persisted.rarity) {
         params.set("rarity", persisted.rarity);
@@ -661,6 +686,10 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       }
       if (!params.has("exclude_owned") && persisted.excludeCollected) {
         params.set("exclude_owned", "1");
+        changed = true;
+      }
+      if (!params.has("duplicates_only") && persisted.duplicatesOnly) {
+        params.set("duplicates_only", "1");
         changed = true;
       }
       if (!params.has("group_by_set") && persisted.groupBySet) {
@@ -693,6 +722,10 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           params.set("exclude_owned", "1");
           changed = true;
         }
+        if (!params.has("duplicates_only") && persisted.duplicatesOnly) {
+          params.set("duplicates_only", "1");
+          changed = true;
+        }
         if (!params.has("owned_only") && persisted.showOwnedOnly) {
           params.set("owned_only", "1");
           changed = true;
@@ -722,13 +755,15 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       if (url.origin !== window.location.origin) return null;
       const path = url.pathname;
       const f = filtersRef.current;
-      const hasFilters = f.rarity || f.energy || f.excludeCommonUncommon || f.excludeCollected || f.category;
+      const hasFilters =
+        f.rarity || f.energy || f.excludeCommonUncommon || f.excludeCollected || f.duplicatesOnly || f.category;
 
       if (/^\/expansions\/[^/]+/.test(path)) {
         if (f.rarity) url.searchParams.set("rarity", f.rarity); else url.searchParams.delete("rarity");
         if (f.energy) url.searchParams.set("energy", f.energy); else url.searchParams.delete("energy");
         if (f.excludeCommonUncommon) url.searchParams.set("exclude_cu", "1"); else url.searchParams.delete("exclude_cu");
         if (f.excludeCollected) url.searchParams.set("exclude_owned", "1"); else url.searchParams.delete("exclude_owned");
+        if (f.duplicatesOnly) url.searchParams.set("duplicates_only", "1"); else url.searchParams.delete("duplicates_only");
         if (f.category) url.searchParams.set("category", f.category); else url.searchParams.delete("category");
         return url.pathname + (url.search || "");
       }
@@ -738,6 +773,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         if (f.rarity) url.searchParams.set("rarity", f.rarity); else url.searchParams.delete("rarity");
         if (f.excludeCommonUncommon) url.searchParams.set("exclude_cu", "1"); else url.searchParams.delete("exclude_cu");
         if (f.excludeCollected) url.searchParams.set("exclude_owned", "1"); else url.searchParams.delete("exclude_owned");
+        if (f.duplicatesOnly) url.searchParams.set("duplicates_only", "1"); else url.searchParams.delete("duplicates_only");
         if (f.category) url.searchParams.set("category", f.category); else url.searchParams.delete("category");
         return url.pathname + (url.search || "");
       }
@@ -749,6 +785,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           if (f.energy) url.searchParams.set("energy", f.energy); else url.searchParams.delete("energy");
           if (f.excludeCommonUncommon) url.searchParams.set("exclude_cu", "1"); else url.searchParams.delete("exclude_cu");
           if (f.excludeCollected) url.searchParams.set("exclude_owned", "1"); else url.searchParams.delete("exclude_owned");
+          if (f.duplicatesOnly) url.searchParams.set("duplicates_only", "1"); else url.searchParams.delete("duplicates_only");
           if (f.category) url.searchParams.set("category", f.category); else url.searchParams.delete("category");
           return url.pathname + (url.search || "");
         }
@@ -864,6 +901,10 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     runSearch(value);
   };
 
+  const handleRecentPick = (value: string) => {
+    handleQueryChange(value);
+  };
+
   const openSearch = () => {
     setModalMode("search");
   };
@@ -871,11 +912,16 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const close = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     searchAbortRef.current?.abort();
+    const q = query;
     setModalMode("closed");
     setLoading(false);
     setQuery("");
     setResults(null);
-  }, []);
+    if (q.trim().length >= 2) {
+      pushRecentSearch(q.trim());
+      setRecentSearches(readRecentSearches());
+    }
+  }, [query]);
 
   const handleNavigate = () => {
     close();
@@ -893,6 +939,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       if (nextFilters.energy) p.set("energy", nextFilters.energy);
       if (nextFilters.excludeCommonUncommon) p.set("exclude_cu", "1");
       if (nextFilters.excludeCollected) p.set("exclude_owned", "1");
+      if (nextFilters.duplicatesOnly) p.set("duplicates_only", "1");
       if (nextFilters.category) p.set("category", nextFilters.category);
       const s = p.toString();
       return s ? `/expansions/${expansionMatch[1]}?${s}` : `/expansions/${expansionMatch[1]}`;
@@ -904,6 +951,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       if (nextFilters.rarity) p.set("rarity", nextFilters.rarity);
       if (nextFilters.excludeCommonUncommon) p.set("exclude_cu", "1");
       if (nextFilters.excludeCollected) p.set("exclude_owned", "1");
+      if (nextFilters.duplicatesOnly) p.set("duplicates_only", "1");
       if (nextFilters.category) p.set("category", nextFilters.category);
       if (nextFilters.groupBySet) p.set("group_by_set", "1");
       const s = p.toString();
@@ -927,6 +975,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           if (nextFilters.energy) p.set("energy", nextFilters.energy);
           if (nextFilters.excludeCommonUncommon) p.set("exclude_cu", "1");
           if (nextFilters.excludeCollected) p.set("exclude_owned", "1");
+          if (nextFilters.duplicatesOnly) p.set("duplicates_only", "1");
           if (nextFilters.showOwnedOnly) p.set("owned_only", "1");
           if (nextFilters.category) p.set("category", nextFilters.category);
         } else if (tab === "pokedex") {
@@ -967,6 +1016,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       energy: "",
       excludeCommonUncommon: false,
       excludeCollected: false,
+      duplicatesOnly: false,
       category: "",
       missingOnly: false,
       groupBySet: false,
@@ -981,6 +1031,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     params.delete("energy");
     params.delete("exclude_cu");
     params.delete("exclude_owned");
+    params.delete("duplicates_only");
     params.delete("owned_only");
     params.delete("sort");
     params.delete("category");
@@ -1014,6 +1065,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     if (filters.energy) p.set("energy", filters.energy);
     if (filters.excludeCommonUncommon) p.set("exclude_cu", "1");
     if (filters.excludeCollected) p.set("exclude_owned", "1");
+    if (filters.duplicatesOnly) p.set("duplicates_only", "1");
     if (filters.category) p.set("category", filters.category);
     const s = p.toString();
     return s ? `/search?${s}` : "/search";
@@ -1108,6 +1160,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     Boolean(filters.category) ||
     filters.excludeCommonUncommon ||
     filters.excludeCollected ||
+    filters.duplicatesOnly ||
     filters.missingOnly ||
     filters.groupBySet ||
     filters.showOwnedOnly ||
@@ -1122,8 +1175,8 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const activeRarePlusTag = prioritizeActiveFilterTags && filters.excludeCommonUncommon;
   const activeGroupBySetTag = prioritizeActiveFilterTags && filters.groupBySet;
   const activeHideOwnedTag = prioritizeActiveFilterTags && filters.excludeCollected;
+  const activeDuplicatesTag = prioritizeActiveFilterTags && filters.duplicatesOnly;
   const activeOwnedOnlyTag = prioritizeActiveFilterTags && filters.showOwnedOnly;
-  const activeMissingOnlyTag = prioritizeActiveFilterTags && filters.missingOnly;
 
   const handleModalTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     const touch = e.touches[0];
@@ -1163,6 +1216,11 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     document.body.classList.toggle("app-menu-open", menuOpen);
     return () => document.body.classList.remove("app-menu-open");
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setRecentSearches(readRecentSearches());
+  }, [isOpen]);
 
   return (
     <>
@@ -1389,6 +1447,17 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                 </TagSlot>
               ) : null}
 
+              {hasMounted && isLoggedIn && isFilterablePage ? (
+                <TagSlot active={activeDuplicatesTag}>
+                  <TopChromeChipButton
+                    label="Duplicates"
+                    active={activeDuplicatesTag}
+                    clearable
+                    onClick={() => applyTopChromeFilters({ ...filters, duplicatesOnly: !filters.duplicatesOnly })}
+                  />
+                </TagSlot>
+              ) : null}
+
               {isLoggedIn && isFilterablePage ? (
                 <TagSlot active={activeHideOwnedTag}>
                   <TopChromeChipButton
@@ -1411,16 +1480,6 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                 </TagSlot>
               ) : null}
 
-              {isFilterablePage ? (
-                <TagSlot active={activeMissingOnlyTag}>
-                  <TopChromeChipButton
-                    label="Missing only"
-                    active={activeMissingOnlyTag}
-                    clearable
-                    onClick={() => applyTopChromeFilters({ ...filters, missingOnly: !filters.missingOnly })}
-                  />
-                </TagSlot>
-              ) : null}
             </div>
           ) : null}
         </div>
@@ -1482,6 +1541,8 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
               <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto">
                 <SearchResultsPanel
                   query={query}
+                  recentSearches={recentSearches}
+                  onRecentPick={handleRecentPick}
                   results={results}
                   loading={loading}
                   hasResults={Boolean(hasResults)}
@@ -1492,8 +1553,25 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                   pokedexHref={buildPokedexHref()}
                   onNavigate={handleNavigate}
                   onCardClick={(card) => {
-                    close();
-                    router.push(`/search?search=${encodeURIComponent(card.cardName)}`);
+                    setQuickViewLoading(true);
+                    void (async () => {
+                      try {
+                        const res = await fetch(`/api/card-viewer/${encodeURIComponent(card.masterCardId)}`, {
+                          credentials: "include",
+                        });
+                        if (!res.ok) return;
+                        const data = (await res.json()) as {
+                          card?: CardEntry;
+                          searchCardData?: SearchCardDataPayload | null;
+                        };
+                        if (!data.card) return;
+                        setQuickView({ card: data.card, searchCardData: data.searchCardData ?? null });
+                      } catch {
+                        // Ignore quick-view fetch failures.
+                      } finally {
+                        setQuickViewLoading(false);
+                      }
+                    })();
                   }}
                   onSetClick={(set) => {
                     close();
@@ -1512,6 +1590,24 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
             document.body,
           )
         : null}
+
+      {quickViewLoading ? (
+        <div className="fixed inset-0 z-[10005] flex items-center justify-center bg-black/55">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/25 border-t-white/80" />
+        </div>
+      ) : null}
+
+      {quickView ? (
+        <CardGrid
+          cards={[quickView.card]}
+          customerLoggedIn={isLoggedIn}
+          itemConditions={quickView.searchCardData?.itemConditions}
+          wishlistEntryIdsByMasterCardId={quickView.searchCardData?.wishlistMap}
+          collectionLinesByMasterCardId={quickView.searchCardData?.collectionLines}
+          hideGrid
+          onModalClose={() => setQuickView(null)}
+        />
+      ) : null}
     </>
   );
 }
@@ -1520,6 +1616,8 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
 
 function SearchResultsPanel({
   query,
+  recentSearches,
+  onRecentPick,
   results,
   loading,
   hasResults,
@@ -1534,6 +1632,8 @@ function SearchResultsPanel({
   onPokemonClick,
 }: {
   query: string;
+  recentSearches: string[];
+  onRecentPick: (q: string) => void;
   results: SearchResults | null;
   loading: boolean;
   hasResults: boolean;
@@ -1549,12 +1649,35 @@ function SearchResultsPanel({
 }) {
   if (!query || query.trim().length < 2) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-white/20" aria-hidden="true">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-        <p className="text-sm text-white/45">Type to search cards, sets, and Pokémon</p>
+      <div className="flex w-full flex-col gap-5 px-4 py-8">
+        {recentSearches.length > 0 ? (
+          <section aria-label="Recent searches">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-white/45">Recent</p>
+            <ul className="flex flex-col gap-1.5" role="list">
+              {recentSearches.map((term) => (
+                <li key={term}>
+                  <button
+                    type="button"
+                    onClick={() => onRecentPick(term)}
+                    className="flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-left text-sm text-white/85 transition hover:bg-white/10"
+                  >
+                    <span className="text-white/35" aria-hidden="true">
+                      <IconSearch />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">{term}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+        <div className="flex flex-col items-center justify-center gap-2 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-white/20" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <p className="text-sm text-white/45">Type to search cards, sets, and Pokémon</p>
+        </div>
       </div>
     );
   }

@@ -16,7 +16,7 @@ export async function fetchCollectionCardEntries(customerId: string): Promise<St
   while (true) {
     const { data, error } = await supabase
       .from("customer_collections")
-      .select("id, master_card_id, quantity, printing, language, added_at, condition_id, graded_market_price, unlisted_price, grading_company, grade_value, graded_image, graded_serial")
+      .select("id, master_card_id, quantity, printing, language, added_at, condition_id, purchase_type, price_paid, unlisted_price, grading_company, grade_value, graded_image, graded_serial")
       .eq("customer_id", customerId)
       .order("added_at", { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
