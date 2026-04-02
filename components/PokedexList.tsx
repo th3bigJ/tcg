@@ -1,11 +1,10 @@
 "use client";
 
-import { useDeferredValue, useMemo, useSyncExternalStore } from "react";
+import { useDeferredValue, useMemo } from "react";
 import Link from "next/link";
 
 import type { PokemonFilterOption } from "@/lib/cardsFilterOptionsServer";
 import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
-import { buildPokedexDetailHref } from "@/lib/persistedFilters";
 import { useProgressiveRender } from "@/lib/useProgressiveRender";
 
 export function PokedexList({
@@ -13,11 +12,13 @@ export function PokedexList({
   collectedDexIds,
   customerLoggedIn = false,
   missingOnly = false,
+  searchSelectionParams = {},
 }: {
   pokemon: PokemonFilterOption[];
   collectedDexIds: Set<number>;
   customerLoggedIn?: boolean;
   missingOnly?: boolean;
+  searchSelectionParams?: Record<string, string>;
 }) {
   const filtered = useMemo(() => {
     if (missingOnly && customerLoggedIn) {
@@ -30,12 +31,6 @@ export function PokedexList({
     initialCount: 120,
     step: 120,
   });
-
-  const mounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
 
   return (
     <>
@@ -53,7 +48,7 @@ export function PokedexList({
               return (
                 <li key={item.nationalDexNumber}>
                   <Link
-                    href={mounted ? buildPokedexDetailHref(item.nationalDexNumber) : `/pokedex/${item.nationalDexNumber}`}
+                    href={buildSearchHref(searchSelectionParams, item.nationalDexNumber)}
                     prefetch={false}
                     className={`flex flex-col items-center gap-2 rounded-xl border px-2 py-3 text-center shadow-sm transition active:opacity-90 ${
                       collected
@@ -82,4 +77,23 @@ export function PokedexList({
       )}
     </>
   );
+}
+
+function buildSearchHref(searchSelectionParams: Record<string, string>, nationalDexNumber: number) {
+  const params = new URLSearchParams(searchSelectionParams);
+  const returnTo = params.get("return_to");
+  params.delete("return_to");
+  params.set("pokemon", String(nationalDexNumber));
+  params.delete("set");
+  params.delete("take");
+  const qs = params.toString();
+  if (returnTo && returnTo.startsWith("/")) {
+    const url = new URL(returnTo, "http://local");
+    const targetParams = new URLSearchParams(url.search);
+    targetParams.set("pokemon", String(nationalDexNumber));
+    targetParams.delete("set");
+    targetParams.delete("take");
+    return `${url.pathname}${targetParams.toString() ? `?${targetParams.toString()}` : ""}`;
+  }
+  return `/search${qs ? `?${qs}` : ""}`;
 }

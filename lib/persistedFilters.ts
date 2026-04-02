@@ -6,9 +6,12 @@ export type PersistedFilterScope =
   | "expansions"
   | "collect"
   | "wishlist"
-  | "friends";
+  | "friends"
+  | "friends-collection"
+  | "friends-wishlist";
 
 export type SortOrder =
+  | "random"
   | "price-desc"
   | "price-asc"
   | "release-desc"
@@ -17,6 +20,7 @@ export type SortOrder =
   | "number-asc";
 
 export const DEFAULT_SORT: SortOrder = "price-desc";
+export const SEARCH_DEFAULT_SORT: SortOrder = "random";
 
 export type PersistedFilters = {
   rarity?: string;
@@ -74,6 +78,8 @@ export function sortCards<T extends { setReleaseDate?: string | null; cardNumber
 ): T[] {
   const arr = [...cards];
   switch (sort) {
+    case "random":
+      return arr;
     case "price-desc":
       return arr.sort((a, b) => (getPriceFn?.(b) ?? 0) - (getPriceFn?.(a) ?? 0));
     case "price-asc":

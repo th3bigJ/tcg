@@ -5,7 +5,6 @@ import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { getCurrentCustomer } from "@/lib/auth";
 import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
-import { paginateRowsByFullSets, sortCollectGridRowsByPriceDesc } from "@/lib/collectGridSort";
 import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
 import {
   collectionGroupKeyFromEntry,
@@ -17,11 +16,8 @@ import {
 } from "@/lib/storefrontCardMaps";
 import { fetchCollectionCardEntries, fetchWishlistIdsByMasterCard } from "@/lib/storefrontCardMapsServer";
 
-const INITIAL_TAKE = 105;
-const LOAD_MORE_STEP = 42;
-
 type CollectPageProps = {
-  searchParams?: Promise<{ take?: string; set_take?: string; group_by_set?: string }>;
+  searchParams?: Promise<{ group_by_set?: string }>;
 };
 
 export default async function CollectPage({ searchParams }: CollectPageProps) {
@@ -45,10 +41,6 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
   }
 
   const resolvedSearchParams = (await searchParams) ?? {};
-  const rawTake = Number.parseInt(resolvedSearchParams.take ?? "", 10);
-  const rawSetTake = Number.parseInt(resolvedSearchParams.set_take ?? "", 10);
-  const take = Number.isFinite(rawTake) && rawTake > 0 ? rawTake : INITIAL_TAKE;
-  const setTake = Number.isFinite(rawSetTake) && rawSetTake > 0 ? rawSetTake : 1;
   const groupBySet = resolvedSearchParams.group_by_set === "1";
 
   const [entries, itemConditions, wishlistEntryIdsByMasterCardId, facets] = await Promise.all([
@@ -110,16 +102,6 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
   }
   const manualPriceMasterCardIds = pricesResult.manualPriceIds;
 
-  const allCardsSortedByPrice =
-    allCardsForGrid.length > 0
-      ? sortCollectGridRowsByPriceDesc(allCardsForGrid, cardPricesByMasterCardId)
-      : allCardsForGrid;
-  const groupedPage = paginateRowsByFullSets(allCardsSortedByPrice, setTake);
-  const cardsForClient = groupBySet
-    ? groupedPage.rowsForPage
-    : allCardsSortedByPrice.slice(0, take);
-  const totalCards = allCardsForGrid.length;
-
   const valueFormatted =
     collectionValue && collectionValue.totalGbp > 0
       ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(
@@ -136,21 +118,7 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
         ? `${totalCopies} card${totalCopies === 1 ? "" : "s"}`
         : `${totalCopies} card${totalCopies === 1 ? "" : "s"} (${uniqueCatalogCards} Unique)`;
 
-  const showingCount = cardsForClient.length;
-  const nextTake = Math.min(totalCards, showingCount + LOAD_MORE_STEP);
-  const nextSetTake = groupedPage.showingSetCount + 1;
-  const canLoadMore = groupBySet
-    ? groupedPage.hasMoreSets
-    : showingCount > 0 && showingCount < totalCards;
-  const loadMoreParams = new URLSearchParams();
-  if (groupBySet) {
-    loadMoreParams.set("group_by_set", "1");
-    loadMoreParams.set("set_take", String(nextSetTake));
-  } else {
-    loadMoreParams.set("take", String(nextTake));
-  }
-  const loadMoreHref = `/collect?${loadMoreParams.toString()}`;
-  const scrollRestoreKey = [groupBySet ? String(groupedPage.showingSetCount) : String(take), "collect", groupBySet ? "grouped" : "flat"].join("|");
+  const scrollRestoreKey = ["collect", groupBySet ? "grouped" : "flat"].join("|");
 
   return (
     <div className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
@@ -169,15 +137,15 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
       ) : (
         <div className="mt-6">
           <CardsResultsScroll
-            canLoadMore={canLoadMore}
-            loadMoreHref={loadMoreHref}
-            loadMoreStep={groupBySet ? 1 : LOAD_MORE_STEP}
+            canLoadMore={false}
+            loadMoreHref="/collect"
+            loadMoreStep={42}
             scrollRestoreKey={scrollRestoreKey}
             scrollsWindow
           >
             <div className="pb-4">
               <CollectCardGridWithTags
-                cards={cardsForClient}
+                cards={allCardsForGrid}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}
                 variant="collection"

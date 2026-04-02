@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AppDrawerMenu } from "@/components/AppDrawerMenu";
 import { TOP_CHROME_HIDDEN_TRANSFORM, TOP_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
+import { DASHBOARD_MENU_TOGGLE_EVENT } from "@/lib/dashboardMenuEvents";
 import {
-  buildPokedexDetailHref,
   type SortOrder,
   DEFAULT_SORT,
+  SEARCH_DEFAULT_SORT,
   persistFilters,
   readPersistedFilters,
   type PersistedFilterScope,
@@ -65,6 +67,37 @@ type FacetOptions = {
   categoryOptions: string[];
 };
 
+type FilterSheetKey = "sort" | "energy" | "rarity" | "category";
+
+function getDefaultSortForContext(params: {
+  pathname: string;
+  tab: string;
+  selectedSet: string;
+  selectedPokemon: string;
+  selectedSearch: string;
+  selectedRarity: string;
+  selectedEnergy: string;
+  selectedCategory: string;
+  excludeCommonUncommon: boolean;
+  excludeCollected: boolean;
+  missingOnly: boolean;
+}): SortOrder {
+  const isPlainSearchBrowse =
+    params.pathname.startsWith("/search") &&
+    params.tab === "cards" &&
+    !params.selectedSet &&
+    !params.selectedPokemon &&
+    !params.selectedSearch &&
+    !params.selectedRarity &&
+    !params.selectedEnergy &&
+    !params.selectedCategory &&
+    !params.excludeCommonUncommon &&
+    !params.excludeCollected &&
+    !params.missingOnly;
+
+  return isPlainSearchBrowse ? SEARCH_DEFAULT_SORT : DEFAULT_SORT;
+}
+
 // ─── Icons ─────────────────────────────────────────────────────────────────────
 
 function IconSearch() {
@@ -105,7 +138,7 @@ function IconCamera() {
   );
 }
 
-function IconFilter() {
+function IconMenu() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -118,9 +151,33 @@ function IconFilter() {
       className="h-5 w-5"
       aria-hidden="true"
     >
-      <line x1="4" y1="6" x2="20" y2="6" />
-      <line x1="8" y1="12" x2="16" y2="12" />
-      <line x1="11" y1="18" x2="13" y2="18" />
+      <path d="M4 7h16" />
+      <path d="M4 12h16" />
+      <path d="M4 17h16" />
+    </svg>
+  );
+}
+
+function IconSort() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+      aria-hidden="true"
+    >
+      <path d="M11 5h10" />
+      <path d="M11 9h7" />
+      <path d="M11 13h4" />
+      <path d="M4 17V7" />
+      <path d="m1 10 3-3 3 3" />
+      <path d="M20 17v-6" />
+      <path d="m17 14 3 3 3-3" />
     </svg>
   );
 }
@@ -153,7 +210,7 @@ function IconChevronDown() {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/55"
+      className="h-3.5 w-3.5"
       aria-hidden="true"
     >
       <path d="m6 9 6 6 6-6" />
@@ -161,89 +218,177 @@ function IconChevronDown() {
   );
 }
 
-// ─── Filter select ──────────────────────────────────────────────────────────────
-
-function FilterSelect({
+function TopChromeIconButton({
   label,
-  value,
-  onChange,
-  options,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-  placeholder: string;
-}) {
-  return (
-    <div>
-      <label className="mb-1.5 block text-[11px] font-medium text-white/65">{label}</label>
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="min-h-11 w-full rounded-lg border border-white/14 bg-white/[0.06] px-3 py-2.5 pr-10 text-sm text-white outline-none transition focus:border-white/35 focus:bg-white/[0.09] [appearance:none] [-webkit-appearance:none]"
-        >
-          <option value="">{placeholder}</option>
-          {options.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
-        <IconChevronDown />
-      </div>
-    </div>
-  );
-}
-
-function FilterSection({
-  title,
-  description,
+  onClick,
   children,
 }: {
-  title: string;
-  description?: string;
+  label: string;
+  onClick: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-white/10 bg-white/[0.035] p-3">
-      <div className="mb-2">
-        <h3 className="text-sm font-semibold text-white/90">{title}</h3>
-        {description ? <p className="mt-0.5 text-[11px] leading-4 text-white/42">{description}</p> : null}
-      </div>
-      <div className="flex flex-col gap-2.5">{children}</div>
-    </section>
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full border border-white/12 bg-black text-white/78 shadow-[0_8px_32px_rgba(0,0,0,0.6)] transition hover:bg-white/[0.08] hover:text-white"
+      aria-label={label}
+    >
+      {children}
+    </button>
   );
 }
 
-function FilterToggle({
-  checked,
+function TopChromeChipButton({
   label,
-  description,
-  onChange,
+  active = false,
+  clearable = false,
+  onClick,
+  icon,
 }: {
-  checked: boolean;
   label: string;
-  description?: string;
-  onChange: (checked: boolean) => void;
+  active?: boolean;
+  clearable?: boolean;
+  onClick: () => void;
+  icon?: React.ReactNode;
 }) {
   return (
-    <label className="flex min-h-12 cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-left transition hover:border-white/20 hover:bg-white/[0.05]">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 shrink-0 rounded border-white/30"
-      />
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm leading-5 text-white/92">{label}</span>
-        {description ? <span className="mt-0.5 block text-[11px] leading-4 text-white/42">{description}</span> : null}
-      </span>
-    </label>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex h-8 shrink-0 items-center gap-1 rounded-full border px-3 text-[12px] font-medium transition ${
+        active
+          ? "border-2 border-white bg-black text-white"
+          : "border-white/24 bg-black text-white/88 hover:border-white/40 hover:bg-white/[0.06]"
+      }`}
+    >
+      {icon}
+      <span className="whitespace-nowrap">{label}</span>
+      {active && clearable ? <span className="text-[11px] text-white/70">×</span> : null}
+    </button>
   );
 }
+
+function TopChromeChipLink({
+  label,
+  active = false,
+  clearable = false,
+  onClick,
+}: {
+  label: string;
+  active?: boolean;
+  clearable?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-[12px] font-medium transition ${
+        active
+          ? "border-2 border-white bg-black text-white"
+          : "border-white/24 bg-black text-white/88 hover:border-white/40 hover:bg-white/[0.06]"
+      }`}
+    >
+      <span className="whitespace-nowrap">{label}</span>
+      {active && clearable ? <span className="ml-1 text-[11px] text-white/70">×</span> : null}
+    </button>
+  );
+}
+
+function TopChromeChipSelect({
+  label,
+  active = false,
+  clearable = false,
+  count,
+  onClick,
+  icon,
+}: {
+  label: string;
+  active?: boolean;
+  clearable?: boolean;
+  count?: number;
+  onClick: () => void;
+  icon?: React.ReactNode;
+}) {
+  const hasLeadingIcon = Boolean(icon);
+  const displayLabel = count && count > 0 ? `${label} (${count})` : label;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative inline-flex h-8 shrink-0 items-center rounded-full border ${hasLeadingIcon ? "pl-8" : "pl-3"} pr-7 text-[12px] font-medium outline-none transition ${
+        active
+          ? "border-2 border-white bg-black text-white"
+          : "border-white/24 bg-black text-white/88 hover:border-white/40 hover:bg-white/[0.06]"
+      }`}
+    >
+      <span className="whitespace-nowrap opacity-0" aria-hidden="true">
+        {displayLabel}
+      </span>
+      <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 flex items-center whitespace-nowrap">
+        <span className={hasLeadingIcon ? "pl-8 pr-7" : "pl-3 pr-7"}>
+          {displayLabel}
+        </span>
+      </span>
+      {icon ? (
+        <span className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${active ? "text-white" : "text-white/78"}`}>
+          {icon}
+        </span>
+      ) : null}
+      {active && clearable ? (
+        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-white/70">×</span>
+      ) : (
+        <span className={`pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 ${active ? "text-white" : "text-white/60"}`}>
+          <IconChevronDown />
+        </span>
+      )}
+    </button>
+  );
+}
+
+function TopChromeClearButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-red-400/45 bg-red-500/14 px-3 text-[12px] font-medium text-red-300 transition hover:bg-red-500/22"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="10"
+        height="10"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </svg>
+      Clear
+    </button>
+  );
+}
+
+function TagSlot({
+  active,
+  pinnedOrder,
+  children,
+}: {
+  active: boolean;
+  pinnedOrder?: number;
+  children: React.ReactNode;
+}) {
+  const order = pinnedOrder ?? (active ? 2 : 3);
+  return <div className="shrink-0" style={{ order }}>{children}</div>;
+}
+
+// ─── Filter select ──────────────────────────────────────────────────────────────
 
 // ─── Card thumbnail ─────────────────────────────────────────────────────────────
 
@@ -309,8 +454,36 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();
   const searchTab = searchParams?.get("tab") ?? "cards";
+  const friendsTab = searchParams?.get("tab") ?? "collection";
+  const selectedSetParam = searchParams?.get("set") ?? "";
+  const selectedPokemonParam = searchParams?.get("pokemon") ?? "";
+  const selectedSearchParam = searchParams?.get("search") ?? "";
+  const selectedRarityParam = searchParams?.get("rarity") ?? "";
+  const selectedEnergyParam = searchParams?.get("energy") ?? "";
+  const selectedCategoryParam = searchParams?.get("category") ?? "";
+  const excludeCommonUncommonParam = searchParams?.get("exclude_cu") === "1";
+  const excludeCollectedParam = searchParams?.get("exclude_owned") === "1";
+  const missingOnlyParam = searchParams?.get("missing_only") === "1";
+  const defaultSortForPage = getDefaultSortForContext({
+    pathname,
+    tab: searchTab,
+    selectedSet: selectedSetParam,
+    selectedPokemon: selectedPokemonParam,
+    selectedSearch: selectedSearchParam,
+    selectedRarity: selectedRarityParam,
+    selectedEnergy: selectedEnergyParam,
+    selectedCategory: selectedCategoryParam,
+    excludeCommonUncommon: excludeCommonUncommonParam,
+    excludeCollected: excludeCollectedParam,
+    missingOnly: missingOnlyParam,
+  });
+  const isFriendsCardsPage = /^\/collect\/shared\/[^/]+$/.test(pathname) && (friendsTab === "collection" || friendsTab === "wishlist");
   const filterScope: PersistedFilterScope | undefined =
-    pathname.startsWith("/collect/shared")
+    isFriendsCardsPage
+      ? friendsTab === "wishlist"
+        ? "friends-wishlist"
+        : "friends-collection"
+    : pathname.startsWith("/collect/shared")
       ? "friends"
       : /^\/expansions\/[^/]+/.test(pathname)
         ? "expansions"
@@ -324,14 +497,24 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                 : "search"
       : pathname === "/collect"
         ? "collect"
-        : pathname === "/wishlist"
+      : pathname === "/wishlist"
           ? "wishlist"
           : undefined;
+  const isFilterablePage =
+    /^\/expansions\/[^/]+/.test(pathname) ||
+    /^\/pokedex\/[^/]+/.test(pathname) ||
+    pathname.startsWith("/search") ||
+    pathname === "/collect" ||
+    pathname === "/wishlist" ||
+    isFriendsCardsPage;
   const inputRef = useRef<HTMLInputElement>(null);
   const modalTouchStartRef = useRef<{ x: number; y: number } | null>(null);
   const modalSwipeEligibleRef = useRef(false);
   const [query, setQuery] = useState("");
-  const [modalMode, setModalMode] = useState<"closed" | "search" | "filters">("closed");
+  const [modalMode, setModalMode] = useState<"closed" | "search">("closed");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [filterSheet, setFilterSheet] = useState<FilterSheetKey | null>(null);
+  const [hasMounted, setHasMounted] = useState(false);
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [facets, setFacets] = useState<FacetOptions>({
@@ -348,7 +531,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     missingOnly: false,
     groupBySet: false,
     showOwnedOnly: false,
-    sort: DEFAULT_SORT,
+    sort: defaultSortForPage,
   });
 
   const setFiltersAndPersist = (next: Filters) => {
@@ -363,6 +546,10 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   useEffect(() => { filtersRef.current = filters; }, [filters]);
 
   useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
     const syncPersistedFilters = () => {
       const persisted = readPersistedFilters(filterScope);
       const nextFilters: Filters = {
@@ -374,7 +561,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
         missingOnly: persisted.missingOnly ?? false,
         groupBySet: persisted.groupBySet ?? false,
         showOwnedOnly: persisted.showOwnedOnly ?? false,
-        sort: persisted.sort ?? DEFAULT_SORT,
+        sort: persisted.sort ?? defaultSortForPage,
       };
 
       if (/^\/expansions\/[^/]+/.test(pathname) || /^\/pokedex\/[^/]+/.test(pathname)) {
@@ -392,6 +579,8 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           nextFilters.category = searchParams?.get("category") ?? "";
           nextFilters.excludeCommonUncommon = searchParams?.get("exclude_cu") === "1";
           nextFilters.excludeCollected = searchParams?.get("exclude_owned") === "1";
+          nextFilters.showOwnedOnly = searchParams?.get("owned_only") === "1";
+          nextFilters.sort = (searchParams?.get("sort") as SortOrder | null) ?? defaultSortForPage;
           nextFilters.missingOnly = false;
         } else if (tab === "pokedex") {
           nextFilters.missingOnly = searchParams?.get("missing_only") === "1";
@@ -400,8 +589,9 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           nextFilters.category = "";
           nextFilters.excludeCommonUncommon = false;
           nextFilters.excludeCollected = false;
+          nextFilters.showOwnedOnly = false;
         }
-      } else if (pathname === "/collect" || pathname === "/wishlist") {
+      } else if (pathname === "/collect" || pathname === "/wishlist" || isFriendsCardsPage) {
         if (searchParams?.has("group_by_set")) {
           nextFilters.groupBySet = searchParams.get("group_by_set") === "1";
         }
@@ -415,7 +605,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     return () => {
       window.removeEventListener("storage", syncPersistedFilters);
     };
-  }, [filterScope, pathname, searchParams]);
+  }, [defaultSortForPage, filterScope, pathname, searchParams, isFriendsCardsPage]);
 
   useEffect(() => {
     if (!filterScope) return;
@@ -425,7 +615,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     const activeSearchTab = params.get("tab") ?? "cards";
     let changed = false;
 
-    if (pathname === "/collect" || pathname === "/wishlist") {
+    if (pathname === "/collect" || pathname === "/wishlist" || isFriendsCardsPage) {
       if (!params.has("group_by_set") && persisted.groupBySet) {
         params.delete("take");
         params.delete("set_take");
@@ -504,6 +694,14 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
           params.set("exclude_owned", "1");
           changed = true;
         }
+        if (!params.has("owned_only") && persisted.showOwnedOnly) {
+          params.set("owned_only", "1");
+          changed = true;
+        }
+        if (!params.has("sort") && persisted.sort) {
+          params.set("sort", persisted.sort);
+          changed = true;
+        }
       } else if (activeSearchTab === "pokedex") {
         if (!params.has("missing_only") && persisted.missingOnly) {
           params.set("missing_only", "1");
@@ -517,7 +715,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     const nextSearch = params.toString();
     const href = nextSearch ? `${pathname}?${nextSearch}` : pathname;
     router.replace(href, { scroll: false });
-  }, [filterScope, pathname, router, searchParams]);
+  }, [filterScope, pathname, router, searchParams, isFriendsCardsPage]);
 
   const injectFilters = useCallback((rawHref: string): string | null => {
       let url: URL;
@@ -671,10 +869,6 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     setModalMode("search");
   };
 
-  const openFilters = () => {
-    setModalMode("filters");
-  };
-
   const close = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     searchAbortRef.current?.abort();
@@ -684,58 +878,35 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     setResults(null);
   }, []);
 
-  const applyAndClose = () => {
-    const href = buildCurrentPageHref();
-    if (href) router.push(href);
-    close();
-  };
-
-  const applyFilters = () => {
-    persistFilters(filters, filterScope);
-    if (isFilterablePage) {
-      if (pathname === "/collect" || pathname === "/wishlist") {
-        const href = buildCurrentPageHref();
-        if (href) {
-          router.replace(href, { scroll: false });
-          close();
-          return;
-        }
-      }
-      applyAndClose();
-      return;
-    }
-    close();
-  };
-
   const handleNavigate = () => {
     close();
   };
 
   // Build href for the current page with filters applied
-  function buildCurrentPageHref() {
+  function buildCurrentPageHref(nextFilters: Filters = filters, nextQuery: string = query) {
     const expansionMatch = pathname.match(/^\/expansions\/([^/]+)/);
     const pokedexDetailMatch = pathname.match(/^\/pokedex\/([^/]+)/);
 
     if (expansionMatch) {
       const p = new URLSearchParams();
-      if (query) p.set("search", query);
-      if (filters.rarity) p.set("rarity", filters.rarity);
-      if (filters.energy) p.set("energy", filters.energy);
-      if (filters.excludeCommonUncommon) p.set("exclude_cu", "1");
-      if (filters.excludeCollected) p.set("exclude_owned", "1");
-      if (filters.category) p.set("category", filters.category);
+      if (nextQuery) p.set("search", nextQuery);
+      if (nextFilters.rarity) p.set("rarity", nextFilters.rarity);
+      if (nextFilters.energy) p.set("energy", nextFilters.energy);
+      if (nextFilters.excludeCommonUncommon) p.set("exclude_cu", "1");
+      if (nextFilters.excludeCollected) p.set("exclude_owned", "1");
+      if (nextFilters.category) p.set("category", nextFilters.category);
       const s = p.toString();
       return s ? `/expansions/${expansionMatch[1]}?${s}` : `/expansions/${expansionMatch[1]}`;
     }
 
     if (pokedexDetailMatch) {
       const p = new URLSearchParams();
-      if (filters.energy) p.set("energy", filters.energy);
-      if (filters.rarity) p.set("rarity", filters.rarity);
-      if (filters.excludeCommonUncommon) p.set("exclude_cu", "1");
-      if (filters.excludeCollected) p.set("exclude_owned", "1");
-      if (filters.category) p.set("category", filters.category);
-      if (filters.groupBySet) p.set("group_by_set", "1");
+      if (nextFilters.energy) p.set("energy", nextFilters.energy);
+      if (nextFilters.rarity) p.set("rarity", nextFilters.rarity);
+      if (nextFilters.excludeCommonUncommon) p.set("exclude_cu", "1");
+      if (nextFilters.excludeCollected) p.set("exclude_owned", "1");
+      if (nextFilters.category) p.set("category", nextFilters.category);
+      if (nextFilters.groupBySet) p.set("group_by_set", "1");
       const s = p.toString();
       return s ? `/pokedex/${pokedexDetailMatch[1]}?${s}` : `/pokedex/${pokedexDetailMatch[1]}`;
     }
@@ -747,25 +918,29 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       const tab = currentParams.get("tab") ?? "cards";
       const seed = currentParams.get("seed");
       p.set("tab", tab);
-      if (seed) p.set("seed", seed);
-      if (tab === "cards") {
-        if (query) p.set("search", query);
-        if (filters.rarity) p.set("rarity", filters.rarity);
-        if (filters.energy) p.set("energy", filters.energy);
-        if (filters.excludeCommonUncommon) p.set("exclude_cu", "1");
-        if (filters.excludeCollected) p.set("exclude_owned", "1");
-        if (filters.category) p.set("category", filters.category);
-      } else if (tab === "pokedex") {
-        if (filters.missingOnly) p.set("missing_only", "1");
+      if (seed && nextFilters.sort === "random") p.set("seed", seed);
+      if (nextFilters.sort) p.set("sort", nextFilters.sort);
+      if (selectedSetParam) p.set("set", selectedSetParam);
+      if (selectedPokemonParam) p.set("pokemon", selectedPokemonParam);
+        if (tab === "cards") {
+          if (nextQuery) p.set("search", nextQuery);
+          if (nextFilters.rarity) p.set("rarity", nextFilters.rarity);
+          if (nextFilters.energy) p.set("energy", nextFilters.energy);
+          if (nextFilters.excludeCommonUncommon) p.set("exclude_cu", "1");
+          if (nextFilters.excludeCollected) p.set("exclude_owned", "1");
+          if (nextFilters.showOwnedOnly) p.set("owned_only", "1");
+          if (nextFilters.category) p.set("category", nextFilters.category);
+        } else if (tab === "pokedex") {
+        if (nextFilters.missingOnly) p.set("missing_only", "1");
       }
       return `/search?${p.toString()}`;
     }
 
-    if (pathname === "/collect" || pathname === "/wishlist") {
+    if (pathname === "/collect" || pathname === "/wishlist" || isFriendsCardsPage) {
       const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
       p.delete("take");
       p.delete("set_take");
-      if (filters.groupBySet) p.set("group_by_set", "1");
+      if (nextFilters.groupBySet) p.set("group_by_set", "1");
       else p.delete("group_by_set");
       const s = p.toString();
       return s ? `${pathname}?${s}` : pathname;
@@ -773,6 +948,64 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
 
     return null;
   }
+
+  const applyTopChromeFilters = (nextFilters: Filters) => {
+    setFiltersAndPersist(nextFilters);
+    if (!isFilterablePage) return;
+    const href = buildCurrentPageHref(nextFilters);
+    if (!href) return;
+    if (pathname === "/collect" || pathname === "/wishlist" || isFriendsCardsPage) {
+      router.replace(href, { scroll: false });
+      return;
+    }
+    router.replace(href);
+  };
+
+  const clearTopChromeFilters = () => {
+    const resetFilters: Filters = {
+      ...filters,
+      rarity: "",
+      energy: "",
+      excludeCommonUncommon: false,
+      excludeCollected: false,
+      category: "",
+      missingOnly: false,
+      groupBySet: false,
+      showOwnedOnly: false,
+    };
+    setFiltersAndPersist(resetFilters);
+
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    params.delete("set");
+    params.delete("pokemon");
+    params.delete("rarity");
+    params.delete("energy");
+    params.delete("exclude_cu");
+    params.delete("exclude_owned");
+    params.delete("owned_only");
+    params.delete("sort");
+    params.delete("category");
+    params.delete("missing_only");
+    params.delete("group_by_set");
+    params.delete("take");
+
+    const qs = params.toString();
+    const targetPath =
+      pathname === "/expansions" || pathname.startsWith("/expansions/")
+        ? "/expansions"
+        : pathname === "/pokedex" || pathname.startsWith("/pokedex/")
+          ? "/pokedex"
+          : pathname === "/collect" || pathname === "/wishlist" || isFriendsCardsPage
+            ? pathname
+            : "/search";
+    const href = qs ? `${targetPath}?${qs}` : targetPath;
+
+    if (pathname === "/collect" || pathname === "/wishlist" || isFriendsCardsPage) {
+      router.replace(href, { scroll: false });
+      return;
+    }
+    router.replace(href);
+  };
 
   // Build href for "view all" links, carrying query + filters
   function buildCardsHref() {
@@ -784,30 +1017,25 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     if (filters.excludeCollected) p.set("exclude_owned", "1");
     if (filters.category) p.set("category", filters.category);
     const s = p.toString();
-    return s ? `/search?tab=cards&${s}` : "/search?tab=cards";
+    return s ? `/search?${s}` : "/search";
   }
 
   function buildSetsHref() {
-    const p = new URLSearchParams();
-    if (query) p.set("search", query);
+    const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    p.delete("set");
+    p.delete("take");
     const s = p.toString();
-    return s ? `/search?tab=sets&${s}` : "/search?tab=sets";
+    return s ? `/expansions?${s}` : "/expansions";
   }
 
   function buildPokedexHref() {
-    const p = new URLSearchParams();
-    if (query) p.set("search", query);
-    if (filters.missingOnly) p.set("missing_only", "1");
+    const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    p.delete("pokemon");
+    p.delete("take");
     const s = p.toString();
-    return s ? `/search?tab=pokedex&${s}` : "/search?tab=pokedex";
+    return s ? `/pokedex?${s}` : "/pokedex";
   }
 
-  const isFilterablePage =
-    /^\/expansions\/[^/]+/.test(pathname) ||
-    /^\/pokedex\/[^/]+/.test(pathname) ||
-    pathname.startsWith("/search") ||
-    pathname === "/collect" ||
-    pathname === "/wishlist";
   const hasResults =
     results &&
     (results.cards.length > 0 ||
@@ -816,18 +1044,87 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
       results.collection.length > 0 ||
       results.wishlist.length > 0);
 
-  const activeFilterCount =
-    (filters.rarity ? 1 : 0) +
-    (filters.energy ? 1 : 0) +
-    (filters.excludeCommonUncommon ? 1 : 0) +
-    (filters.excludeCollected ? 1 : 0) +
-    (filters.category ? 1 : 0) +
-    (filters.missingOnly ? 1 : 0) +
-    (filters.groupBySet ? 1 : 0) +
-    (filters.showOwnedOnly ? 1 : 0);
-
   const isOpen = modalMode !== "closed";
-  const chromeVisible = useAutoHideChrome({ disabled: isOpen });
+  const chromeVisible = useAutoHideChrome({ disabled: isOpen || menuOpen || filterSheet !== null });
+  const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
+    { value: "random", label: "Random" },
+    { value: "price-desc", label: "Price" },
+    { value: "price-asc", label: "Lowest price" },
+    { value: "release-desc", label: "Newest" },
+    { value: "release-asc", label: "Oldest" },
+    { value: "number-desc", label: "Number desc" },
+    { value: "number-asc", label: "Number asc" },
+  ];
+  const showTagRow = isFilterablePage;
+  const contentTopOffset = showTagRow
+    ? "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 6.5rem)"
+    : "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 3.5rem)";
+  const topChromePadding = showTagRow
+    ? "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1rem 0.75rem"
+    : "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1rem 0.5rem";
+  const sheetConfig: Record<FilterSheetKey, { title: string; value: string; options: { value: string; label: string }[]; onApply: (value: string) => void }> = {
+    sort: {
+      title: "Sort",
+      value: filters.sort,
+      options: SORT_OPTIONS,
+      onApply: (value) => applyTopChromeFilters({ ...filters, sort: value as SortOrder }),
+    },
+    energy: {
+      title: "Energy",
+      value: filters.energy,
+      options: [{ value: "", label: "Any energy" }, ...facets.energyOptions.map((value) => ({ value, label: value }))],
+      onApply: (value) => applyTopChromeFilters({ ...filters, energy: value }),
+    },
+    rarity: {
+      title: "Rarity",
+      value: filters.rarity,
+      options: [{ value: "", label: "Any rarity" }, ...facets.rarityOptions.map((value) => ({ value, label: value }))],
+      onApply: (value) => applyTopChromeFilters({ ...filters, rarity: value }),
+    },
+    category: {
+      title: "Card type",
+      value: filters.category,
+      options: [{ value: "", label: "Any card type" }, ...facets.categoryOptions.map((value) => ({ value, label: value }))],
+      onApply: (value) => applyTopChromeFilters({ ...filters, category: value }),
+    },
+  };
+  const selectorBaseParams = new URLSearchParams(searchParams?.toString() ?? "");
+  selectorBaseParams.delete("take");
+  selectorBaseParams.delete("return_to");
+  const setSelectorParams = new URLSearchParams(selectorBaseParams.toString());
+  setSelectorParams.delete("set");
+  setSelectorParams.delete("pokemon");
+  const pokedexSelectorParams = new URLSearchParams(selectorBaseParams.toString());
+  pokedexSelectorParams.delete("pokemon");
+  pokedexSelectorParams.delete("set");
+  const currentSearch = searchParams?.toString() ?? "";
+  const currentReturnTo = `${pathname}${currentSearch ? `?${currentSearch}` : ""}`;
+  setSelectorParams.set("return_to", currentReturnTo);
+  pokedexSelectorParams.set("return_to", currentReturnTo);
+  const setsHref = `/expansions${setSelectorParams.toString() ? `?${setSelectorParams.toString()}` : ""}`;
+  const pokedexHref = `/pokedex${pokedexSelectorParams.toString() ? `?${pokedexSelectorParams.toString()}` : ""}`;
+  const hasActiveTagFilters =
+    Boolean(filters.rarity) ||
+    Boolean(filters.energy) ||
+    Boolean(filters.category) ||
+    filters.excludeCommonUncommon ||
+    filters.excludeCollected ||
+    filters.missingOnly ||
+    filters.groupBySet ||
+    filters.showOwnedOnly ||
+    Boolean(selectedSetParam) ||
+    Boolean(selectedPokemonParam);
+  const prioritizeActiveFilterTags = hasMounted;
+  const activeSetTag = Boolean(selectedSetParam);
+  const activePokemonTag = Boolean(selectedPokemonParam);
+  const activeEnergyTag = prioritizeActiveFilterTags && Boolean(filters.energy);
+  const activeRarityTag = prioritizeActiveFilterTags && Boolean(filters.rarity);
+  const activeCategoryTag = prioritizeActiveFilterTags && Boolean(filters.category);
+  const activeRarePlusTag = prioritizeActiveFilterTags && filters.excludeCommonUncommon;
+  const activeGroupBySetTag = prioritizeActiveFilterTags && filters.groupBySet;
+  const activeHideOwnedTag = prioritizeActiveFilterTags && filters.excludeCollected;
+  const activeOwnedOnlyTag = prioritizeActiveFilterTags && filters.showOwnedOnly;
+  const activeMissingOnlyTag = prioritizeActiveFilterTags && filters.missingOnly;
 
   const handleModalTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     const touch = e.touches[0];
@@ -856,114 +1153,322 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
 
   // Lock body scroll when modal is open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || menuOpen || filterSheet !== null) {
       const prev = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => { document.body.style.overflow = prev; };
     }
-  }, [isOpen]);
+  }, [isOpen, menuOpen, filterSheet]);
 
   return (
     <>
-      {/* Search bar shell — styled like BottomNav */}
+      <style>{`:root{--top-search-offset:${contentTopOffset};}`}</style>
+      {/* Search chrome */}
       <div
-        className="pointer-events-none fixed inset-x-0 top-0 z-[1002] isolate transition-transform duration-200 ease-out"
+        className="pointer-events-none fixed inset-x-0 top-0 z-[1002] isolate bg-black transition-transform duration-200 ease-out"
         style={{
-          padding: "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1.25rem 0.5rem",
+          padding: topChromePadding,
           transform: chromeVisible ? TOP_CHROME_VISIBLE_TRANSFORM : TOP_CHROME_HIDDEN_TRANSFORM,
         }}
         onClickCapture={handleScopedLinkClickCapture}
       >
-        <div
-          className="pointer-events-auto mx-auto flex items-center gap-2"
-          style={{
-            height: "3.25rem",
-            maxWidth: "34rem",
-            borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "#000",
-            padding: "0 0.625rem",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
-          }}
-        >
-          {/* Search input area — live input when open, tap target when closed */}
-          <div className="flex min-w-0 flex-1 items-center gap-2 px-1">
-            <span className="text-white/45">
-              <IconSearch />
-            </span>
-            {isOpen ? (
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => handleQueryChange(e.target.value)}
-                onFocus={() => { if (modalMode !== "search") setModalMode("search"); }}
-                placeholder="Search cards, sets, Pokémon…"
-                className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder-white/35 outline-none"
-                autoFocus={modalMode === "search"}
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck={false}
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={openSearch}
-                className="min-w-0 flex-1 truncate text-left text-sm text-white/45"
-                aria-label="Open search"
+        <div className="mx-auto flex max-w-[34rem] flex-col gap-2">
+          <div className="pointer-events-auto flex items-center gap-2">
+            <TopChromeIconButton
+              label="Open menu"
+              onClick={() => {
+                if (pathname === "/dashboard") {
+                  window.dispatchEvent(new CustomEvent(DASHBOARD_MENU_TOGGLE_EVENT));
+                  return;
+                }
+                setMenuOpen(true);
+              }}
+            >
+              <IconMenu />
+            </TopChromeIconButton>
+
+            <div
+              className="flex min-w-0 flex-1 items-center gap-2"
+              style={{
+                height: "3.25rem",
+                borderRadius: "999px",
+                border: "1px solid rgba(255,255,255,0.12)",
+                background: "#000",
+                padding: "0 0.625rem",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+              }}
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-2 px-1">
+                <span className="text-white/45">
+                  <IconSearch />
+                </span>
+                {isOpen ? (
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={query}
+                    onChange={(e) => handleQueryChange(e.target.value)}
+                    onFocus={() => { if (modalMode !== "search") setModalMode("search"); }}
+                    placeholder="Search cards, sets, Pokemon..."
+                    className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder-white/35 outline-none"
+                    autoFocus={modalMode === "search"}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={openSearch}
+                    className="min-w-0 flex-1 truncate text-left text-sm text-white/45"
+                    aria-label="Open search"
+                  >
+                    {query || "Search cards, sets, Pokemon..."}
+                  </button>
+                )}
+                {isOpen && query ? (
+                  <button
+                    type="button"
+                    onClick={() => { setQuery(""); setResults(null); inputRef.current?.focus(); }}
+                    onClickCapture={() => {
+                      if (debounceRef.current) clearTimeout(debounceRef.current);
+                      searchAbortRef.current?.abort();
+                      setLoading(false);
+                    }}
+                    className="text-white/45 hover:text-white"
+                    aria-label="Clear search"
+                  >
+                    ×
+                  </button>
+                ) : null}
+              </div>
+
+              <Link
+                href="/scan"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
+                aria-label="Scan card"
               >
-                {query || "Search cards, sets, Pokémon…"}
-              </button>
-            )}
-            {isOpen && query ? (
-              <button
-                type="button"
-                onClick={() => { setQuery(""); setResults(null); inputRef.current?.focus(); }}
-                onClickCapture={() => {
-                  if (debounceRef.current) clearTimeout(debounceRef.current);
-                  searchAbortRef.current?.abort();
-                  setLoading(false);
-                }}
-                className="text-white/45 hover:text-white"
-                aria-label="Clear search"
-              >
-                ×
-              </button>
-            ) : null}
+                <IconCamera />
+              </Link>
+
+            </div>
           </div>
 
-          {/* Camera button */}
-          <Link
-            href="/scan"
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
-            aria-label="Scan card"
-          >
-            <IconCamera />
-          </Link>
+          {showTagRow ? (
+            <div className="pointer-events-auto scrollbar-hide flex items-center gap-2 overflow-x-auto pb-0.5">
+              <TagSlot active={false} pinnedOrder={0}>
+                {hasMounted && hasActiveTagFilters ? (
+                  <TopChromeClearButton onClick={clearTopChromeFilters} />
+                ) : null}
+              </TagSlot>
 
-          {/* Filter button */}
-          <button
-            type="button"
-            onClick={openFilters}
-            className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
-            aria-label="Open filters"
-          >
-            <IconFilter />
-            {activeFilterCount > 0 ? (
-              <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-bold text-black">
-                {activeFilterCount}
-              </span>
-            ) : null}
-          </button>
+              <TagSlot active={false} pinnedOrder={1}>
+                <TopChromeChipSelect
+                  label="Sort"
+                  active
+                  onClick={() => setFilterSheet("sort")}
+                  icon={<IconSort />}
+                />
+              </TagSlot>
+
+              <TagSlot active={activeSetTag}>
+                <TopChromeChipLink
+                  label={selectedSetParam ? "Sets (1)" : "Sets"}
+                  active={activeSetTag}
+                  clearable
+                  onClick={() => {
+                    if (selectedSetParam) {
+                      const params = new URLSearchParams(searchParams?.toString() ?? "");
+                      params.delete("set");
+                      params.delete("take");
+                      const href = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                      router.replace(href, { scroll: false });
+                      return;
+                    }
+                    router.push(setsHref);
+                  }}
+                />
+              </TagSlot>
+
+              <TagSlot active={activePokemonTag}>
+                <TopChromeChipLink
+                  label={selectedPokemonParam ? "Pokedex (1)" : "Pokedex"}
+                  active={activePokemonTag}
+                  clearable
+                  onClick={() => {
+                    if (selectedPokemonParam) {
+                      const params = new URLSearchParams(searchParams?.toString() ?? "");
+                      params.delete("pokemon");
+                      params.delete("take");
+                      const href = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                      router.replace(href, { scroll: false });
+                      return;
+                    }
+                    router.push(pokedexHref);
+                  }}
+                />
+              </TagSlot>
+
+              {isFilterablePage ? (
+                <TagSlot active={activeEnergyTag}>
+                  <TopChromeChipSelect
+                    label="Energy"
+                    active={activeEnergyTag}
+                    clearable
+                    count={activeEnergyTag ? 1 : undefined}
+                    onClick={() => {
+                      if (filters.energy) {
+                        applyTopChromeFilters({ ...filters, energy: "" });
+                        return;
+                      }
+                      setFilterSheet("energy");
+                    }}
+                  />
+                </TagSlot>
+              ) : null}
+
+              {isFilterablePage ? (
+                <TagSlot active={activeRarityTag}>
+                  <TopChromeChipSelect
+                    label="Rarity"
+                    active={activeRarityTag}
+                    clearable
+                    count={activeRarityTag ? 1 : undefined}
+                    onClick={() => {
+                      if (filters.rarity) {
+                        applyTopChromeFilters({ ...filters, rarity: "" });
+                        return;
+                      }
+                      setFilterSheet("rarity");
+                    }}
+                  />
+                </TagSlot>
+              ) : null}
+
+              {isFilterablePage ? (
+                <TagSlot active={activeCategoryTag}>
+                  <TopChromeChipSelect
+                    label="Card type"
+                    active={activeCategoryTag}
+                    clearable
+                    count={activeCategoryTag ? 1 : undefined}
+                    onClick={() => {
+                      if (filters.category) {
+                        applyTopChromeFilters({ ...filters, category: "" });
+                        return;
+                      }
+                      setFilterSheet("category");
+                    }}
+                  />
+                </TagSlot>
+              ) : null}
+
+              {isFilterablePage ? (
+                <TagSlot active={activeRarePlusTag}>
+                  <TopChromeChipButton
+                    label="Rare+ only"
+                    active={activeRarePlusTag}
+                    clearable
+                    onClick={() => applyTopChromeFilters({ ...filters, excludeCommonUncommon: !filters.excludeCommonUncommon })}
+                  />
+                </TagSlot>
+              ) : null}
+
+              {isFilterablePage ? (
+                <TagSlot active={activeGroupBySetTag}>
+                  <TopChromeChipButton
+                    label="Group by set"
+                    active={activeGroupBySetTag}
+                    clearable
+                    onClick={() => applyTopChromeFilters({ ...filters, groupBySet: !filters.groupBySet })}
+                  />
+                </TagSlot>
+              ) : null}
+
+              {isLoggedIn && isFilterablePage ? (
+                <TagSlot active={activeHideOwnedTag}>
+                  <TopChromeChipButton
+                    label="Hide owned"
+                    active={activeHideOwnedTag}
+                    clearable
+                    onClick={() => applyTopChromeFilters({ ...filters, excludeCollected: !filters.excludeCollected })}
+                  />
+                </TagSlot>
+              ) : null}
+
+              {isLoggedIn && isFilterablePage ? (
+                <TagSlot active={activeOwnedOnlyTag}>
+                  <TopChromeChipButton
+                    label="Owned only"
+                    active={activeOwnedOnlyTag}
+                    clearable
+                    onClick={() => applyTopChromeFilters({ ...filters, showOwnedOnly: !filters.showOwnedOnly })}
+                  />
+                </TagSlot>
+              ) : null}
+
+              {isFilterablePage ? (
+                <TagSlot active={activeMissingOnlyTag}>
+                  <TopChromeChipButton
+                    label="Missing only"
+                    active={activeMissingOnlyTag}
+                    clearable
+                    onClick={() => applyTopChromeFilters({ ...filters, missingOnly: !filters.missingOnly })}
+                  />
+                </TagSlot>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
+
+      {menuOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[1003] bg-black/55"
+              onClick={() => setMenuOpen(false)}
+              role="presentation"
+            >
+              <aside
+                className="pointer-events-auto h-full w-[min(82vw,22rem)]"
+                onClick={(event) => event.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Navigation menu"
+              >
+                <AppDrawerMenu isLoggedIn={isLoggedIn} onClose={() => setMenuOpen(false)} />
+              </aside>
+            </div>,
+            document.body,
+          )
+        : null}
+
+      {filterSheet && typeof document !== "undefined"
+        ? createPortal(
+            <FilterSheetModal
+              title={sheetConfig[filterSheet].title}
+              value={sheetConfig[filterSheet].value}
+              options={sheetConfig[filterSheet].options}
+              onClose={() => setFilterSheet(null)}
+              onApply={(value) => {
+                sheetConfig[filterSheet].onApply(value);
+                setFilterSheet(null);
+              }}
+            />,
+            document.body,
+          )
+        : null}
 
       {/* Modal — full screen, above everything */}
       {isOpen && typeof document !== "undefined"
         ? createPortal(
             <div
               className="fixed inset-0 z-[1001] flex flex-col bg-black"
-              style={{ paddingTop: "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 3.25rem + 0.75rem)" }}
+              style={{
+                paddingTop: showTagRow
+                  ? "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 6.5rem)"
+                  : "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 4rem)",
+              }}
               onClickCapture={handleScopedLinkClickCapture}
               onTouchStart={handleModalTouchStart}
               onTouchEnd={handleModalTouchEnd}
@@ -971,212 +1476,39 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
             >
               {/* Scrollable content */}
               <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto">
-                {modalMode === "filters" ? (
-                  <FiltersPanel
-                    filters={filters}
-                    facets={facets}
-                    isLoggedIn={isLoggedIn}
-                    onChange={(next) => setFiltersAndPersist(next)}
-                  />
-                ) : (
-                  <SearchResultsPanel
-                    query={query}
-                    results={results}
-                    loading={loading}
-                    hasResults={Boolean(hasResults)}
-                    isLoggedIn={isLoggedIn}
-                    priority={getSectionPriority(pathname)}
-                    cardsHref={buildCardsHref()}
-                    setsHref={buildSetsHref()}
-                    pokedexHref={buildPokedexHref()}
-                    onNavigate={handleNavigate}
-                    onCardClick={(card) => {
-                      close();
-                      router.push(`/search?tab=cards&search=${encodeURIComponent(card.cardName)}`);
-                    }}
-                    onSetClick={(set) => {
-                      close();
-                      router.push(`/expansions/${encodeURIComponent(set.code)}`);
-                    }}
-                    onPokemonClick={(p) => {
-                      close();
-                      router.push(buildPokedexDetailHref(p.nationalDexNumber));
-                    }}
-                  />
-                )}
+                <SearchResultsPanel
+                  query={query}
+                  results={results}
+                  loading={loading}
+                  hasResults={Boolean(hasResults)}
+                  isLoggedIn={isLoggedIn}
+                  priority={getSectionPriority(pathname)}
+                  cardsHref={buildCardsHref()}
+                  setsHref={buildSetsHref()}
+                  pokedexHref={buildPokedexHref()}
+                  onNavigate={handleNavigate}
+                  onCardClick={(card) => {
+                    close();
+                    router.push(`/search?search=${encodeURIComponent(card.cardName)}`);
+                  }}
+                  onSetClick={(set) => {
+                    close();
+                    router.push(`/search?set=${encodeURIComponent(set.code)}`);
+                  }}
+                  onPokemonClick={(p) => {
+                    close();
+                    router.push(`/search?pokemon=${encodeURIComponent(String(p.nationalDexNumber))}`);
+                  }}
+                />
               </div>
 
               {/* Bottom action bar */}
-              <ModalBottomBar mode={modalMode} activeFilterCount={activeFilterCount} onClose={close} onApply={applyFilters} />
+              <ModalBottomBar onClose={close} />
             </div>,
             document.body,
           )
         : null}
     </>
-  );
-}
-
-// ─── Filters panel ──────────────────────────────────────────────────────────────
-
-function FiltersPanel({
-  filters,
-  facets,
-  isLoggedIn,
-  onChange,
-}: {
-  filters: Filters;
-  facets: FacetOptions;
-  isLoggedIn: boolean;
-  onChange: (f: Filters) => void;
-}) {
-  const hasActive =
-    filters.rarity ||
-    filters.energy ||
-    filters.excludeCommonUncommon ||
-    filters.excludeCollected ||
-    filters.category ||
-    filters.missingOnly ||
-    filters.groupBySet ||
-    filters.showOwnedOnly;
-
-  const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
-    { value: "price-desc", label: "Price: high to low" },
-    { value: "price-asc", label: "Price: low to high" },
-    { value: "release-desc", label: "Release date: newest first" },
-    { value: "release-asc", label: "Release date: oldest first" },
-    { value: "number-desc", label: "Card number: high to low" },
-    { value: "number-asc", label: "Card number: low to high" },
-  ];
-
-  return (
-    <div className="flex flex-col gap-3 px-4 pb-4 pt-2">
-      <div className="flex items-center justify-between">
-        <div>
-          <span className="text-sm font-semibold text-white/90">Filter options</span>
-          <p className="mt-0.5 text-[11px] text-white/42">Refine what shows up in this view.</p>
-        </div>
-        {hasActive ? (
-          <button
-            type="button"
-            onClick={() =>
-              onChange({
-                rarity: "",
-                energy: "",
-                excludeCommonUncommon: false,
-                excludeCollected: false,
-                category: "",
-                missingOnly: false,
-                groupBySet: false,
-                showOwnedOnly: false,
-                sort: filters.sort,
-              })
-            }
-            className="inline-flex min-h-10 items-center rounded-full border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/15 hover:text-red-200"
-          >
-            Clear all
-          </button>
-        ) : null}
-      </div>
-
-      <FilterSection
-        title="Sort"
-        description="Choose the order cards appear in."
-      >
-        <div>
-          <label className="mb-1.5 block text-[11px] font-medium text-white/65">Sort by</label>
-          <div className="relative">
-            <select
-              value={filters.sort}
-              onChange={(e) => onChange({ ...filters, sort: e.target.value as SortOrder })}
-            className="min-h-11 w-full rounded-lg border border-white/14 bg-black/30 px-3 py-2.5 pr-10 text-sm text-white outline-none transition focus:border-white/35 focus:bg-white/[0.05] [appearance:none] [-webkit-appearance:none]"
-            >
-              {SORT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-            <IconChevronDown />
-          </div>
-        </div>
-      </FilterSection>
-
-      <FilterSection
-        title="Card details"
-          description="Filter by printed attributes."
-      >
-        <FilterSelect
-          label="Rarity"
-          value={filters.rarity}
-          onChange={(v) => onChange({ ...filters, rarity: v })}
-          options={facets.rarityOptions}
-          placeholder="All rarities"
-        />
-
-        <FilterSelect
-          label="Energy type"
-          value={filters.energy}
-          onChange={(v) => onChange({ ...filters, energy: v })}
-          options={facets.energyOptions}
-          placeholder="All energy types"
-        />
-
-        <FilterSelect
-          label="Card type"
-          value={filters.category}
-          onChange={(v) => onChange({ ...filters, category: v })}
-          options={facets.categoryOptions}
-          placeholder="All card types"
-        />
-
-        <FilterToggle
-          checked={filters.excludeCommonUncommon}
-          onChange={(checked) => onChange({ ...filters, excludeCommonUncommon: checked })}
-          label="Rare+ only"
-          description="Exclude Common and Uncommon cards."
-        />
-      </FilterSection>
-
-      {isLoggedIn ? (
-        <FilterSection
-          title="Collection view"
-          description="Control how collection pages are shown."
-        >
-          <FilterToggle
-            checked={filters.excludeCollected}
-            onChange={(checked) => onChange({ ...filters, excludeCollected: checked })}
-            label="Hide cards I own"
-            description="Useful for wishlists and missing-card browsing."
-          />
-
-          <FilterToggle
-            checked={filters.groupBySet}
-            onChange={(checked) => onChange({ ...filters, groupBySet: checked })}
-            label="Group by set"
-            description="Show cards in set sections."
-          />
-
-          <FilterToggle
-            checked={filters.showOwnedOnly}
-            onChange={(checked) => onChange({ ...filters, showOwnedOnly: checked })}
-            label="Show cards I own"
-            description="Only show cards already in your collection."
-          />
-        </FilterSection>
-      ) : null}
-
-      {isLoggedIn ? (
-        <FilterSection
-          title="Pokédex"
-          description="Extra options for the Pokédex tab."
-        >
-          <FilterToggle
-            checked={filters.missingOnly}
-            onChange={(checked) => onChange({ ...filters, missingOnly: checked })}
-            label="Missing only"
-            description="Hide Pokémon you’ve already collected."
-          />
-        </FilterSection>
-      ) : null}
-    </div>
   );
 }
 
@@ -1355,18 +1687,108 @@ function SearchResultsPanel({
   );
 }
 
-// ─── Modal bottom bar with swipe-up-to-close ───────────────────────────────────
-
-function ModalBottomBar({
-  mode,
-  activeFilterCount,
+function FilterSheetModal({
+  title,
+  value,
+  options,
   onClose,
   onApply,
 }: {
-  mode: "search" | "filters";
-  activeFilterCount: number;
+  title: string;
+  value: string;
+  options: { value: string; label: string }[];
   onClose: () => void;
-  onApply?: () => void;
+  onApply: (value: string) => void;
+}) {
+  const [draftValue, setDraftValue] = useState(value);
+
+  useEffect(() => {
+    setDraftValue(value);
+  }, [value]);
+
+  const selectedCount = draftValue ? 1 : 0;
+
+  return (
+    <div
+      className="fixed inset-0 z-[1004] flex items-end justify-center bg-[var(--foreground)]/45"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="pointer-events-auto w-full max-w-[34rem] rounded-t-[2rem] border border-[var(--foreground)]/15 bg-[var(--background)] text-[var(--foreground)] shadow-[0_-18px_60px_rgba(0,0,0,0.4)]"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
+        <div className="flex justify-center pt-3">
+          <span className="h-1.5 w-14 rounded-full bg-[var(--foreground)]/20" />
+        </div>
+        <div className="flex items-center justify-between border-b border-[var(--foreground)]/12 px-6 pb-5 pt-4">
+          <h2 className="text-xl font-semibold">
+            {title}
+            {selectedCount > 0 ? ` (${selectedCount})` : ""}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--foreground)]/70 transition hover:bg-[var(--foreground)]/10 hover:text-[var(--foreground)]"
+            aria-label={`Close ${title}`}
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="max-h-[50dvh] overflow-y-auto px-6 py-3">
+          <div className="flex flex-col">
+            {options.map((option) => {
+              const selected = draftValue === option.value;
+              return (
+                <button
+                  key={option.value || "__empty"}
+                  type="button"
+                  onClick={() => setDraftValue(option.value)}
+                  className="flex items-center gap-4 rounded-xl px-1 py-3 text-left transition hover:bg-[var(--foreground)]/6"
+                >
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border ${
+                      selected
+                        ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
+                        : "border-[var(--foreground)]/35 text-transparent"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      <path d="m5 12 5 5L20 7" />
+                    </svg>
+                  </span>
+                  <span className="text-base text-[var(--foreground)]">{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="px-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom,0px)+1rem))] pt-3">
+          <button
+            type="button"
+            onClick={() => onApply(draftValue)}
+            className="w-full rounded-full border border-[var(--foreground)]/20 bg-[var(--foreground)] px-5 py-4 text-lg font-semibold text-[var(--background)] transition hover:opacity-90"
+          >
+            Show results
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal bottom bar with swipe-up-to-close ───────────────────────────────────
+
+function ModalBottomBar({
+  onClose,
+}: {
+  onClose: () => void;
 }) {
   return (
     <div
@@ -1376,12 +1798,10 @@ function ModalBottomBar({
       <div className="flex flex-col items-center gap-1">
         <button
           type="button"
-          onClick={mode === "filters" ? (onApply ?? onClose) : onClose}
+          onClick={onClose}
           className="min-h-10 rounded-full border border-white/25 bg-white/[0.04] px-7 py-2 text-sm font-semibold text-white transition hover:bg-white/10 active:scale-95"
         >
-          {mode === "filters"
-            ? `Apply${activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}`
-            : "Search"}
+          Search
         </button>
         <button
           type="button"

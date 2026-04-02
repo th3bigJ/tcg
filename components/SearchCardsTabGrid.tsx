@@ -1,14 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import {
   PERSISTED_FILTERS_UPDATED_EVENT,
   readPersistedFilters,
-  sortCards,
-  DEFAULT_SORT,
-  type SortOrder,
 } from "@/lib/persistedFilters";
 import type { SearchCardDataPayload } from "@/lib/searchCardDataServer";
 
@@ -17,8 +14,9 @@ type Props = {
   setLogosByCode?: Record<string, string>;
   setSymbolsByCode?: Record<string, string>;
   customerLoggedIn: boolean;
-  formAction: string;
-  extraHiddenFields?: Record<string, string>;
+  initialVisibleCount: number;
+  loadMoreStep: number;
+  revealAll?: boolean;
   activeSearch: string;
   activeSet: string;
   activePokemon: string;
@@ -40,39 +38,28 @@ export function SearchCardsTabGrid({
   setSymbolsByCode,
   customerLoggedIn,
   initialSearchCardData,
+  initialVisibleCount,
+  loadMoreStep,
+  revealAll = false,
 }: Props) {
-  // Defaults must match SSR (no localStorage); hydrate persisted prefs after mount to avoid mismatch.
-  const [sort, setSort] = useState<SortOrder>(DEFAULT_SORT);
+  const initialRenderCards = useMemo(
+    () => (revealAll ? cards : cards.slice(0, Math.min(cards.length, initialVisibleCount))),
+    [cards, initialVisibleCount, revealAll],
+  );
+  const hasMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const [groupBySet, setGroupBySet] = useState(false);
-  const [showOwnedOnly, setShowOwnedOnly] = useState(false);
-  const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
   const cardData = customerLoggedIn ? initialSearchCardData ?? null : null;
-
-  useEffect(() => {
-    if ((sort !== "price-desc" && sort !== "price-asc") || cardPrices) return;
-    const masterCardIds = cards.map((c) => c.masterCardId).filter((id): id is string => Boolean(id));
-    if (!masterCardIds.length) return;
-    const controller = new AbortController();
-    fetch("/api/card-pricing/bulk", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ masterCardIds }),
-      signal: controller.signal,
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: { prices: Record<string, number> } | null) => {
-        if (data?.prices) setCardPrices(data.prices);
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [sort, cards, cardPrices]);
+  const loadMoreRef = useRef<HTMLButtonElement>(null);
+  const [visibleCount, setVisibleCount] = useState(initialRenderCards.length);
 
   useEffect(() => {
     const applyPersisted = () => {
       const persisted = readPersistedFilters("search");
-      setSort(persisted.sort ?? DEFAULT_SORT);
       setGroupBySet(persisted.groupBySet ?? false);
-      setShowOwnedOnly(persisted.showOwnedOnly ?? false);
     };
     applyPersisted();
     window.addEventListener("storage", applyPersisted);
@@ -83,28 +70,57 @@ export function SearchCardsTabGrid({
     };
   }, []);
 
-  const sortedCards = useMemo(() => {
-    const visibleCards =
-      showOwnedOnly && cardData?.collectionLines
-        ? cards.filter((card) => {
-            const masterCardId = card.masterCardId ?? "";
-            return (cardData.collectionLines[masterCardId]?.length ?? 0) > 0;
-          })
-        : cards;
+  useEffect(() => {
+    if (revealAll || visibleCount >= cards.length) return;
+    const button = loadMoreRef.current;
+    if (!button) return;
 
-    return sortCards(visibleCards, sort, (c) => cardPrices?.[c.masterCardId ?? ""] ?? 0);
-  }, [cards, sort, cardPrices, showOwnedOnly, cardData]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((current) => Math.min(cards.length, current + loadMoreStep));
+        }
+      },
+      { rootMargin: "0px 0px 200px 0px", threshold: 0 },
+    );
+
+    observer.observe(button);
+    return () => observer.disconnect();
+  }, [cards.length, loadMoreStep, revealAll, visibleCount]);
+
+  const visibleCards = useMemo(
+    () => (revealAll ? cards : cards.slice(0, visibleCount)),
+    [cards, revealAll, visibleCount],
+  );
+  const canLoadMore = !revealAll && visibleCount < cards.length;
+  const renderedCards = hasMounted ? visibleCards : initialRenderCards;
+  const renderedGroupBySet = hasMounted ? groupBySet : false;
+  const renderedCanLoadMore = hasMounted ? canLoadMore : false;
 
   return (
-    <CardGrid
-      cards={sortedCards}
-      setLogosByCode={setLogosByCode}
-      setSymbolsByCode={setSymbolsByCode}
-      customerLoggedIn={customerLoggedIn}
-      itemConditions={cardData?.itemConditions}
-      wishlistEntryIdsByMasterCardId={cardData?.wishlistMap}
-      collectionLinesByMasterCardId={cardData?.collectionLines}
-      groupBySet={groupBySet}
-    />
+    <>
+      <CardGrid
+        cards={renderedCards}
+        setLogosByCode={setLogosByCode}
+        setSymbolsByCode={setSymbolsByCode}
+        customerLoggedIn={customerLoggedIn}
+        itemConditions={cardData?.itemConditions}
+        wishlistEntryIdsByMasterCardId={cardData?.wishlistMap}
+        collectionLinesByMasterCardId={cardData?.collectionLines}
+        groupBySet={renderedGroupBySet}
+      />
+      {renderedCanLoadMore ? (
+        <div className="flex items-center justify-center pb-[var(--bottom-nav-offset,0px)] pt-6">
+          <button
+            ref={loadMoreRef}
+            type="button"
+            onClick={() => setVisibleCount((current) => Math.min(cards.length, current + loadMoreStep))}
+            className="rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium transition hover:bg-[var(--foreground)]/18"
+          >
+            Load {Math.min(loadMoreStep, cards.length - visibleCount)} more
+          </button>
+        </div>
+      ) : null}
+    </>
   );
 }

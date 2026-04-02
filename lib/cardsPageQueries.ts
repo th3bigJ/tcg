@@ -1,5 +1,7 @@
 import { cardMatchesEnergyTypeSelection } from "@/lib/cardEnergyFilter";
 import { isBasicRarity } from "@/lib/cardRarityFilter";
+import { fetchPricesForMasterCardIds } from "@/lib/cardPricingBulk";
+import type { SortOrder } from "@/lib/persistedFilters";
 import type { CardJsonEntry } from "@/lib/staticCards";
 import { getCardsBySet, getAllSets } from "@/lib/staticCards";
 import {
@@ -390,9 +392,11 @@ export async function fetchSetCompletionValue(
 
       const externalId = card.externalId?.trim() ?? "";
       const uniqueKey = masterCardId || externalId || `${card.set}/${card.filename}`;
-      if (!externalId || seen.has(uniqueKey)) continue;
+      if (seen.has(uniqueKey)) continue;
       seen.add(uniqueKey);
       missingCount++;
+
+      if (!externalId) continue;
 
       const fallback = card.legacyExternalId?.trim() ? [card.legacyExternalId.trim()] : undefined;
       const entry = getPricingForCard(pricing, externalId, fallback);
@@ -527,6 +531,8 @@ export async function fetchMasterCardsPage(params: {
   /** Stable seed for a fully randomized card feed that persists across "load more". */
   randomSeed?: string;
   excludedMasterCardIds?: Set<string>;
+  includedMasterCardIds?: Set<string>;
+  sort?: SortOrder;
 }): Promise<{ entries: CardsPageCardEntry[]; totalDocs: number }> {
   const pageSize = Math.min(CARDS_TAKE_MAX, Math.max(1, Math.floor(params.perPage)));
   const setMetaMap = getSetMetaMap();
@@ -543,8 +549,15 @@ export async function fetchMasterCardsPage(params: {
     );
   }
 
+  function isIncluded(card: CardJsonEntry): boolean {
+    if (!params.includedMasterCardIds) return true;
+    if (!card.masterCardId) return false;
+    return params.includedMasterCardIds.has(card.masterCardId);
+  }
+
   const orderedRows = getDefaultCardOrder();
   const defaultBrowseOrderIndex = buildDefaultBrowseOrderIndex(orderedRows);
+  const activeSort = params.sort ?? "random";
 
   // ── Pokemon dex filter path ────────────────────────────────────────────────
   if (params.activePokemonDex !== null) {
@@ -562,6 +575,7 @@ export async function fetchMasterCardsPage(params: {
       const card = cardMapForDex.get(entry.id);
       if (!card) return false;
       if (isExcluded(card)) return false;
+      if (!isIncluded(card)) return false;
       if (params.activeSet && entry.setCode !== params.activeSet) return false;
       if (params.activeRarity && entry.rarity !== params.activeRarity) return false;
       if (searchQuery && !entry.cardNameLower.includes(searchQuery)) return false;
@@ -594,7 +608,7 @@ export async function fetchMasterCardsPage(params: {
     return { entries, totalDocs };
   }
 
-  // ── Default unfiltered path (interleave one card per set, round-robin) ─────
+  // ── Default unfiltered path ─────────────────────────────────────────────────
   const isDefaultUnfiltered =
     !params.activeSet &&
     !params.activeRarity &&
@@ -603,9 +617,10 @@ export async function fetchMasterCardsPage(params: {
     !params.activeArtist &&
     !params.excludeCommonUncommon &&
     params.categoryQueryVariants.length === 0 &&
-    !params.excludedMasterCardIds?.size;
+    !params.excludedMasterCardIds?.size &&
+    !params.includedMasterCardIds?.size;
 
-  if (isDefaultUnfiltered) {
+  if (isDefaultUnfiltered && activeSort === "random") {
     if (params.randomSeed) {
       const shuffledRows = shuffleRowsWithSeed(orderedRows, params.randomSeed);
       const totalDocs = shuffledRows.length;
@@ -669,15 +684,15 @@ export async function fetchMasterCardsPage(params: {
     const cardMap = getCardMapById();
     filteredIds = orderedRows
       .map((row) => {
-        const card = cardMap.get(row.id);
-        if (!card) return null;
-        return !isExcluded(card) && cardMatchesFilters(card, params) ? row.id : null;
+      const card = cardMap.get(row.id);
+      if (!card) return null;
+        return !isExcluded(card) && isIncluded(card) && cardMatchesFilters(card, params) ? row.id : null;
       })
       .filter((id): id is string => id !== null);
   }
 
   const searchQuery = params.activeSearch.trim();
-  const releaseSortedFilteredIds = searchQuery
+  const defaultSortedFilteredIds = searchQuery
     ? [...filteredIds].sort((a, b) => {
         const cardA = getCardMapById().get(a);
         const cardB = getCardMapById().get(b);
@@ -689,9 +704,46 @@ export async function fetchMasterCardsPage(params: {
       })
     : filteredIds;
 
-  const orderedFilteredIds = params.randomSeed && !searchQuery
-    ? shuffleRowsWithSeed(releaseSortedFilteredIds, params.randomSeed)
-    : releaseSortedFilteredIds;
+  let orderedFilteredIds = defaultSortedFilteredIds;
+
+  if (activeSort === "random") {
+    orderedFilteredIds = params.randomSeed
+      ? shuffleRowsWithSeed(defaultSortedFilteredIds, params.randomSeed)
+      : defaultSortedFilteredIds;
+  } else if (activeSort === "release-desc" || activeSort === "release-asc") {
+    orderedFilteredIds = [...defaultSortedFilteredIds].sort((a, b) => {
+      const cardA = getCardMapById().get(a);
+      const cardB = getCardMapById().get(b);
+      const releaseA = cardA ? setMetaMap.get(cardA.setCode)?.releaseDate ?? "" : "";
+      const releaseB = cardB ? setMetaMap.get(cardB.setCode)?.releaseDate ?? "" : "";
+      const compare = activeSort === "release-desc"
+        ? releaseB.localeCompare(releaseA)
+        : releaseA.localeCompare(releaseB);
+      if (compare !== 0) return compare;
+      return compareMasterCardIdsByDefaultOrder(defaultBrowseOrderIndex, a, b);
+    });
+  } else if (activeSort === "number-desc" || activeSort === "number-asc") {
+    orderedFilteredIds = [...defaultSortedFilteredIds].sort((a, b) => {
+      const cardA = getCardMapById().get(a);
+      const cardB = getCardMapById().get(b);
+      const numberA = cardA?.cardNumber ?? "";
+      const numberB = cardB?.cardNumber ?? "";
+      const compare = activeSort === "number-desc"
+        ? numberB.localeCompare(numberA, undefined, { numeric: true })
+        : numberA.localeCompare(numberB, undefined, { numeric: true });
+      if (compare !== 0) return compare;
+      return compareMasterCardIdsByDefaultOrder(defaultBrowseOrderIndex, a, b);
+    });
+  } else if (activeSort === "price-desc" || activeSort === "price-asc") {
+    const priceMap = await fetchPricesForMasterCardIds(defaultSortedFilteredIds);
+    orderedFilteredIds = [...defaultSortedFilteredIds].sort((a, b) => {
+      const priceA = priceMap[a] ?? 0;
+      const priceB = priceMap[b] ?? 0;
+      const compare = activeSort === "price-desc" ? priceB - priceA : priceA - priceB;
+      if (compare !== 0) return compare;
+      return compareMasterCardIdsByDefaultOrder(defaultBrowseOrderIndex, a, b);
+    });
+  }
 
   const totalDocs = orderedFilteredIds.length;
   const startIndex = (params.page - 1) * pageSize;

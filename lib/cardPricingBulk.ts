@@ -53,10 +53,7 @@ export function readMarketGbp(
 export async function fetchPricesForMasterCardIds(
   masterCardIds: string[],
 ): Promise<Record<string, number>> {
-  const ids = [...new Set(masterCardIds.map((id) => id.trim()).filter((id) => id.length > 0))].slice(
-    0,
-    5000,
-  );
+  const ids = [...new Set(masterCardIds.map((id) => id.trim()).filter((id) => id.length > 0))];
   if (ids.length === 0) return {};
 
   const cardMap = getCardMapById();

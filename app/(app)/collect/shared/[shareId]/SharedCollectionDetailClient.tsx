@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 
 import { SharedCollectionTradesClient } from "@/app/(app)/collect/shared/[shareId]/SharedCollectionTradesClient";
 import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
@@ -61,17 +61,20 @@ export function SharedCollectionDetailClient({
   gradingByMasterCardId,
   viewerOwnedMasterCardIds: viewerOwnedIds,
 }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState<Tab>(() => tabFromSearchParams(searchParams.get("tab")) ?? "collection");
-
-  useEffect(() => {
-    const t = tabFromSearchParams(searchParams.get("tab"));
-    if (t) setTab(t);
-  }, [searchParams]);
+  const tab = tabFromSearchParams(searchParams.get("tab")) ?? "collection";
 
   const collectionManualSet = useMemo(() => new Set(collectionManualIds), [collectionManualIds]);
   const wishlistManualSet = useMemo(() => new Set(wishlistManualIds), [wishlistManualIds]);
   const viewerOwnedSet = useMemo(() => new Set(viewerOwnedIds), [viewerOwnedIds]);
+
+  const setActiveTab = (nextTab: Tab) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", nextTab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   const cards = tab === "collection" ? collectionCards : tab === "wishlist" ? wishlistCards : [];
   const cardPricesByMasterCardId =
@@ -99,7 +102,7 @@ export function SharedCollectionDetailClient({
             type="button"
             role="tab"
             aria-selected={tab === "collection"}
-            onClick={() => setTab("collection")}
+            onClick={() => setActiveTab("collection")}
             className={`flex-1 px-3 py-2 text-sm font-medium transition ${
               tab === "collection"
                 ? "bg-[var(--foreground)]/15 text-[var(--foreground)]"
@@ -113,7 +116,7 @@ export function SharedCollectionDetailClient({
             type="button"
             role="tab"
             aria-selected={tab === "wishlist"}
-            onClick={() => setTab("wishlist")}
+            onClick={() => setActiveTab("wishlist")}
             className={`flex-1 px-3 py-2 text-sm font-medium transition ${
               tab === "wishlist"
                 ? "bg-[var(--foreground)]/15 text-[var(--foreground)]"
@@ -127,7 +130,7 @@ export function SharedCollectionDetailClient({
             type="button"
             role="tab"
             aria-selected={tab === "trade"}
-            onClick={() => setTab("trade")}
+            onClick={() => setActiveTab("trade")}
             className={`flex-1 px-3 py-2 text-sm font-medium transition ${
               tab === "trade"
                 ? "bg-[var(--foreground)]/15 text-[var(--foreground)]"
@@ -159,7 +162,7 @@ export function SharedCollectionDetailClient({
             setLogosByCode={setLogosByCode}
             setSymbolsByCode={setSymbolsByCode}
             variant={tab === "collection" ? "collection" : "wishlist"}
-            filterScope="friends"
+            filterScope={tab === "collection" ? "friends-collection" : "friends-wishlist"}
             itemConditions={itemConditions}
             wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
             collectionLinesByMasterCardId={collectionLinesByMasterCardId}
@@ -169,7 +172,6 @@ export function SharedCollectionDetailClient({
             readOnly
             collectionSectionTitle={ownerDisplayName ? `${ownerDisplayName}'s collection` : "Their collection"}
             viewerOwnedMasterCardIds={viewerOwnedSet}
-            sharedWishlistOwnedFilter={tab === "wishlist"}
           />
         </div>
       )}

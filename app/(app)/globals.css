@@ -6,8 +6,8 @@
   --mobile-page-top-offset: max(1.5rem, calc(env(safe-area-inset-top, 0px) + 0.5rem));
   /* Fixed bottom nav: floating pill shell + safe area (matches BottomNav). */
   --bottom-nav-offset: calc(6.5rem + env(safe-area-inset-bottom, 0px));
-  /* Fixed top search bar: safe area + bar height + padding. */
-  --top-search-offset: calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 3.25rem + 0.5rem);
+  /* Fixed top search chrome: safe area + main bar + chip row + padding. */
+  --top-search-offset: calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 6.5rem);
 }
 
 @theme inline {
@@ -29,6 +29,12 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
 }
 
 /* Safari / iOS: native `type="search"` styling can squash icons and offset placeholder text. */
@@ -52,6 +58,14 @@ input[type="search"]::-webkit-search-results-decoration {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  scrollbar-width: none;
 }
 
 /* Skip off-screen layout work in long card grids (helps scroll + filter navigations). */

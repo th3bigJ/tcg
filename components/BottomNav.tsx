@@ -4,7 +4,6 @@ import { useEffectEvent } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 
 import { BOTTOM_CHROME_HIDDEN_TRANSFORM, BOTTOM_CHROME_VISIBLE_TRANSFORM } from "@/lib/chromeVisibility";
 import { SEARCH_NAV_RESELECT_EVENT } from "@/lib/searchNavEvents";
@@ -17,11 +16,26 @@ type NavItem = {
   match: (pathname: string) => boolean;
 };
 
-type MoreItem = {
-  href: string;
-  label: string;
-  description: string;
-};
+function IconDashboard({ active }: { active: boolean }) {
+  const c = active ? "text-white" : "text-white/45";
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-6 w-6 ${c}`}
+      aria-hidden="true"
+    >
+      <path d="M3 13.5 12 4l9 9.5" />
+      <path d="M5 11.5V20h14v-8.5" />
+      <path d="M9 20v-5h6v5" />
+    </svg>
+  );
+}
 
 function IconCollect({ active }: { active: boolean }) {
   const c = active ? "text-white" : "text-white/45";
@@ -106,29 +120,20 @@ function IconFriends({ active }: { active: boolean }) {
   );
 }
 
-function IconMore({ active }: { active: boolean }) {
-  const c = active ? "text-white" : "text-white/45";
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`h-6 w-6 ${c}`}
-      aria-hidden="true"
-    >
-      <circle cx="5" cy="12" r="1.75" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1.75" fill="currentColor" stroke="none" />
-      <circle cx="19" cy="12" r="1.75" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-const icons = [IconSearch, IconCollect, IconWishlist, IconFriends, IconMore] as const;
+const icons = [IconDashboard, IconSearch, IconCollect, IconWishlist, IconFriends] as const;
 const navItems: NavItem[] = [
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    match: (p) =>
+      p === "/dashboard" ||
+      p.startsWith("/dashboard/") ||
+      p === "/more" ||
+      p.startsWith("/more/") ||
+      p.startsWith("/account") ||
+      p === "/login" ||
+      p === "/register",
+  },
   {
     href: "/search",
     label: "Search",
@@ -149,16 +154,6 @@ const navItems: NavItem[] = [
     label: "Friends",
     match: (p) => p.startsWith("/collect/shared"),
   },
-  {
-    href: "/more",
-    label: "More",
-    match: (p) =>
-      p === "/more" ||
-      p.startsWith("/more/") ||
-      p.startsWith("/account") ||
-      p === "/login" ||
-      p === "/register",
-  },
 ];
 
 export function BottomNav({
@@ -169,10 +164,9 @@ export function BottomNav({
   initialFriendsUnreadCount?: number;
 }) {
   const pathname = usePathname() ?? "";
-  const [moreOpen, setMoreOpen] = useState(false);
   const [friendsUnreadCount, setFriendsUnreadCount] = useState(initialFriendsUnreadCount);
   const visibleFriendsUnreadCount = isLoggedIn ? friendsUnreadCount : 0;
-  const chromeVisible = useAutoHideChrome({ disabled: moreOpen });
+  const chromeVisible = useAutoHideChrome();
 
   const refreshFriendsUnreadCount = useEffectEvent(async () => {
     if (!isLoggedIn) return;
@@ -211,36 +205,6 @@ export function BottomNav({
     return () => window.removeEventListener(TRADE_NOTIFICATIONS_UPDATED_EVENT, onUpdate);
   }, [isLoggedIn]);
 
-  const moreItems: MoreItem[] = isLoggedIn
-    ? [
-        {
-          href: "/more/grade",
-          label: "Grade opportunities",
-          description: "Find the best card to grade.",
-        },
-        {
-          href: "/account",
-          label: "Account",
-          description: "View your details and manage your sign-in.",
-        },
-        {
-          href: "/account/transactions",
-          label: "Transactions",
-          description: "Review and manage your purchase history.",
-        },
-      ]
-    : [
-        {
-          href: "/login",
-          label: "Sign in",
-          description: "Access your collection, wishlist, and account tools.",
-        },
-        {
-          href: "/register",
-          label: "Create account",
-          description: "Set up an account to save your collection and activity.",
-        },
-      ];
   return (
     <>
       <nav
@@ -264,7 +228,7 @@ export function BottomNav({
           }}
         >
           {navItems.map((item, i) => {
-            const active = item.match(pathname) || (item.label === "More" && moreOpen);
+            const active = item.match(pathname);
             const Icon = icons[i];
             const itemClass = `flex min-w-0 basis-0 flex-1 flex-col items-center justify-center gap-1 text-[10px] font-medium leading-tight transition-all sm:text-[11px]`;
             const itemStyle: React.CSSProperties = {
@@ -273,25 +237,6 @@ export function BottomNav({
               color: active ? "white" : "rgba(255,255,255,0.45)",
               background: active ? "rgba(255,255,255,0.15)" : "transparent",
             };
-
-            if (item.label === "More") {
-              return (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={() => setMoreOpen(true)}
-                  className={itemClass}
-                  style={itemStyle}
-                  aria-current={active ? "page" : undefined}
-                  aria-haspopup="dialog"
-                  aria-expanded={moreOpen}
-                  aria-controls="bottom-nav-more-sheet"
-                >
-                  <Icon active={active} />
-                  <span className="max-w-full truncate">{item.label}</span>
-                </button>
-              );
-            }
 
             const friendsPendingLabel =
               item.href === "/collect/shared" && visibleFriendsUnreadCount > 0
@@ -303,6 +248,7 @@ export function BottomNav({
                 key={`${item.href}-${item.label}`}
                 href={item.href}
                 prefetch={
+                  item.href === "/dashboard" ||
                   item.href === "/search" ||
                   item.href === "/collect" ||
                   item.href === "/wishlist" ||
@@ -336,70 +282,6 @@ export function BottomNav({
           })}
         </div>
       </nav>
-      {moreOpen && typeof document !== "undefined"
-        ? createPortal(
-            <div
-              className="fixed inset-0 z-[10001] flex items-end justify-center bg-black/55"
-              onClick={() => setMoreOpen(false)}
-              role="presentation"
-            >
-              <div
-                id="bottom-nav-more-sheet"
-                className="pointer-events-auto border border-[var(--foreground)]/15 bg-[var(--background)] p-4 text-[var(--foreground)] shadow-xl"
-                style={{
-                  borderRadius: "28px",
-                  // Match nav shell width exactly: viewport minus 1.25rem side padding on each side.
-                  width: "calc(100vw - 2.5rem)",
-                  maxWidth: "34rem",
-                  marginBottom:
-                    "calc(0.5rem + max(0.25rem, calc(env(safe-area-inset-bottom, 0px) - 1rem)) + 4.5rem + 0.35rem)",
-                }}
-                onClick={(event) => event.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-                aria-label="More"
-              >
-                <h2 className="text-lg font-semibold">More</h2>
-                <p className="mt-1 text-sm text-[var(--foreground)]/65">
-                  {isLoggedIn
-                    ? "Quick access to account tools and activity."
-                    : "Sign in or create an account to manage your collection and history."}
-                </p>
-                <div className="mt-4 flex flex-col gap-3">
-                  {moreItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMoreOpen(false)}
-                      className="rounded-xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.05] px-4 py-3 transition hover:bg-[var(--foreground)]/[0.09]"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="text-sm font-semibold">{item.label}</div>
-                          <p className="mt-1 text-sm text-[var(--foreground)]/68">{item.description}</p>
-                        </div>
-                        <span
-                          aria-hidden="true"
-                          className="text-lg leading-none text-[var(--foreground)]/45"
-                        >
-                          ›
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setMoreOpen(false)}
-                  className="mt-6 w-full rounded-md border border-[var(--foreground)]/25 px-4 py-2 text-sm font-medium"
-                >
-                  Close
-                </button>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
     </>
   );
 }

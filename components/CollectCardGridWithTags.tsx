@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import { cardMatchesEnergyTypeSelection } from "@/lib/cardEnergyFilter";
 import { isBasicRarity } from "@/lib/cardRarityFilter";
@@ -13,47 +13,19 @@ import { collectionGroupKeyFromLine, type CollectionLineSummary, type Storefront
 
 type SortOrder = "price-desc" | "price-asc" | "release-desc" | "release-asc" | "number-desc" | "number-asc" | "added-desc";
 
-const SORT_OPTIONS: { value: SortOrder; label: string }[] = [
-  { value: "price-desc", label: "Price: high to low" },
-  { value: "price-asc", label: "Price: low to high" },
-  { value: "release-desc", label: "Release date: newest first" },
-  { value: "release-asc", label: "Release date: oldest first" },
-  { value: "number-desc", label: "Card number: high to low" },
-  { value: "number-asc", label: "Card number: low to high" },
-  { value: "added-desc", label: "Added date: newest first" },
-];
-
-function normalizeFilterOptionLabel(value: string) {
-  return value.trim().replace(/\s+/g, " ");
-}
-
-function preferredFilterOptionLabel(labels: string[]) {
-  return [...labels].sort((a, b) => {
-    const aHasUppercase = /[A-Z]/.test(a);
-    const bHasUppercase = /[A-Z]/.test(b);
-    if (aHasUppercase !== bHasUppercase) return aHasUppercase ? -1 : 1;
-    return a.localeCompare(b);
-  })[0] ?? "";
-}
-
-function buildDistinctFilterOptions(values: Array<string | null | undefined>) {
-  const grouped = new Map<string, string[]>();
-
-  for (const rawValue of values) {
-    const label = normalizeFilterOptionLabel(String(rawValue ?? ""));
-    if (!label) continue;
-    const key = label.toLocaleLowerCase();
-    const existing = grouped.get(key);
-    if (existing) {
-      existing.push(label);
-    } else {
-      grouped.set(key, [label]);
-    }
+function readSortOrderForScope(filterScope: PersistedFilterScope | undefined, readOnly: boolean): SortOrder {
+  const s = readPersistedFilters(filterScope).sort;
+  if (
+    s === "price-asc" ||
+    s === "price-desc" ||
+    s === "release-desc" ||
+    s === "release-asc" ||
+    s === "number-desc" ||
+    s === "number-asc"
+  ) {
+    return s as SortOrder;
   }
-
-  return [...grouped.values()]
-    .map((labels) => preferredFilterOptionLabel(labels))
-    .sort((a, b) => a.localeCompare(b));
+  return readOnly ? "price-asc" : "price-desc";
 }
 
 type CollectCardGridWithTagsProps = {
@@ -73,12 +45,12 @@ type CollectCardGridWithTagsProps = {
   collectionSectionTitle?: string;
   /** Master card IDs the viewer owns (shared wishlist: show badge + optional filter) */
   viewerOwnedMasterCardIds?: Set<string>;
-  /** When true with viewerOwnedMasterCardIds, show “Cards I own” filter on wishlist */
-  sharedWishlistOwnedFilter?: boolean;
   /** Trade wizard: tap tiles to select line quantities */
   tradePickMode?: boolean;
   tradeSelectedQtyByEntryId?: Record<string, number>;
   onTradePickEntry?: (entryId: string, card: CardEntry, maxQty: number) => void;
+  initialVisibleCount?: number;
+  loadMoreStep?: number;
 };
 
 export function CollectCardGridWithTags({
@@ -97,34 +69,19 @@ export function CollectCardGridWithTags({
   readOnly = false,
   collectionSectionTitle,
   viewerOwnedMasterCardIds,
-  sharedWishlistOwnedFilter = false,
   tradePickMode = false,
   tradeSelectedQtyByEntryId,
   onTradePickEntry,
+  initialVisibleCount = 105,
+  loadMoreStep = 42,
 }: CollectCardGridWithTagsProps) {
-  const readLocalSortOrder = (): SortOrder => {
-    const s = readPersistedFilters(filterScope).sort;
-    if (
-      s === "price-asc" ||
-      s === "price-desc" ||
-      s === "release-desc" ||
-      s === "release-asc" ||
-      s === "number-desc" ||
-      s === "number-asc"
-    ) {
-      return s as SortOrder;
-    }
-    return readOnly ? "price-asc" : "price-desc";
-  };
   const [groupBySet, setGroupBySet] = useState(false);
-  const [search, setSearch] = useState("");
   const [rarity, setRarity] = useState(() => readPersistedFilters(filterScope).rarity ?? "");
   const [energy, setEnergy] = useState(() => readPersistedFilters(filterScope).energy ?? "");
   const [category, setCategory] = useState(() => readPersistedFilters(filterScope).category ?? "");
   const [excludeCommonUncommon, setExcludeCommonUncommon] = useState(() => readPersistedFilters(filterScope).excludeCommonUncommon ?? false);
   const [excludeCollected, setExcludeCollected] = useState(() => readPersistedFilters(filterScope).excludeCollected ?? false);
-  const [duplicatesOnly, setDuplicatesOnly] = useState(false);
-  const [sortOrder, setSortOrder] = useState<SortOrder>(readLocalSortOrder);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(() => readSortOrderForScope(filterScope, readOnly));
   const [ownedFilterOnly, setOwnedFilterOnly] = useState(false);
 
   useEffect(() => {
@@ -137,7 +94,7 @@ export function CollectCardGridWithTags({
       setExcludeCommonUncommon(persisted.excludeCommonUncommon ?? false);
       setExcludeCollected(persisted.excludeCollected ?? false);
       setOwnedFilterOnly(persisted.showOwnedOnly ?? false);
-      setSortOrder(readLocalSortOrder());
+      setSortOrder(readSortOrderForScope(filterScope, readOnly));
     };
 
     syncPersistedFilters();
@@ -162,18 +119,6 @@ export function CollectCardGridWithTags({
     return counts;
   }, [cards]);
 
-  const rarityOptions = useMemo(() => {
-    return buildDistinctFilterOptions(cards.map((card) => card.rarity));
-  }, [cards]);
-
-  const energyOptions = useMemo(() => {
-    return buildDistinctFilterOptions(cards.flatMap((card) => card.elementTypes ?? []));
-  }, [cards]);
-
-  const categoryOptions = useMemo(() => {
-    return buildDistinctFilterOptions(cards.map((card) => card.category));
-  }, [cards]);
-
   const effectiveCollectionPriceRangeByMasterCardId = useMemo(() => {
     const out: Record<string, { low: number; high: number }> = {};
     for (const [mid, lines] of Object.entries(collectionLinesByMasterCardId)) {
@@ -196,7 +141,6 @@ export function CollectCardGridWithTags({
   }, [cardPricesByMasterCardId, collectionLinesByMasterCardId]);
 
   const filteredCards = useMemo(() => {
-    const q = search.trim().toLowerCase();
     const viewerOwnsCard = (masterCardId: string | null | undefined) => {
       if (!masterCardId) return false;
       if (viewerOwnedMasterCardIds) return viewerOwnedMasterCardIds.has(masterCardId);
@@ -206,12 +150,6 @@ export function CollectCardGridWithTags({
       if (ownedFilterOnly && card.masterCardId) {
         if (!viewerOwnsCard(card.masterCardId)) return false;
       }
-      if (q) {
-        const name = (card.cardName ?? "").toLowerCase();
-        const number = (card.cardNumber ?? "").toLowerCase();
-        const artist = (card.artist ?? "").toLowerCase();
-        if (!name.includes(q) && !number.includes(q) && !artist.includes(q)) return false;
-      }
       if (rarity && card.rarity !== rarity) return false;
       if (energy && !cardMatchesEnergyTypeSelection(card.elementTypes, energy)) return false;
       if (category && card.category !== category) return false;
@@ -220,10 +158,9 @@ export function CollectCardGridWithTags({
         excludeCollected &&
         card.masterCardId &&
         (variant === "wishlist" || (readOnly && viewerOwnedMasterCardIds))
-      ) {
+        ) {
         if (viewerOwnsCard(card.masterCardId)) return false;
       }
-      if (duplicatesOnly && (card.quantity ?? 1) <= 1) return false;
       return true;
     });
 
@@ -256,42 +193,147 @@ export function CollectCardGridWithTags({
     return result;
   }, [
     cards,
-    search,
     rarity,
     energy,
     category,
     excludeCommonUncommon,
     excludeCollected,
-    duplicatesOnly,
     sortOrder,
     cardPricesByMasterCardId,
     effectiveCollectionPriceRangeByMasterCardId,
-    sharedWishlistOwnedFilter,
     variant,
     ownedFilterOnly,
     collectionLinesByMasterCardId,
     viewerOwnedMasterCardIds,
     readOnly,
   ]);
+  const sliceKey = [
+    effectiveGroupBySet ? "grouped" : "flat",
+    filteredCards.length,
+    rarity,
+    energy,
+    category,
+    excludeCommonUncommon ? "1" : "0",
+    excludeCollected ? "1" : "0",
+    ownedFilterOnly ? "1" : "0",
+    sortOrder,
+    variant,
+    readOnly ? "1" : "0",
+  ].join("|");
 
-  const ownedFilterTag =
-    (variant === "collection" ||
-      variant === "wishlist" ||
-      viewerOwnedMasterCardIds)
-      ? {
-          active: ownedFilterOnly,
-          onToggle: () => setOwnedFilterOnly((v) => !v),
+  return (
+    <VisibleCollectCardGrid
+      key={sliceKey}
+      cards={filteredCards}
+      setLogosByCode={setLogosByCode}
+      setSymbolsByCode={setSymbolsByCode}
+      variant={variant}
+      customerLoggedIn={!readOnly}
+      readOnly={readOnly}
+      viewerOwnedMasterCardIds={viewerOwnedMasterCardIds}
+      collectionSectionTitle={collectionSectionTitle}
+      itemConditions={itemConditions}
+      wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
+      collectionLinesByMasterCardId={collectionLinesByMasterCardId}
+      cardPricesByMasterCardId={cardPricesByMasterCardId}
+      manualPriceMasterCardIds={manualPriceMasterCardIds}
+      gradingByMasterCardId={gradingByMasterCardId}
+      groupBySet={effectiveGroupBySet}
+      collectedCountBySetCode={effectiveGroupBySet ? collectedCountBySetCode : undefined}
+      tradePickMode={tradePickMode}
+      tradeSelectedQtyByEntryId={tradeSelectedQtyByEntryId}
+      onTradePickEntry={onTradePickEntry}
+      initialVisibleCount={initialVisibleCount}
+      loadMoreStep={loadMoreStep}
+    />
+  );
+}
+
+type VisibleCollectCardGridProps = {
+  cards: (CardEntry & Pick<StorefrontCardExtras, "addedAt">)[];
+  setLogosByCode: Record<string, string>;
+  setSymbolsByCode: Record<string, string>;
+  variant: "collection" | "wishlist";
+  customerLoggedIn: boolean;
+  readOnly: boolean;
+  viewerOwnedMasterCardIds?: Set<string>;
+  collectionSectionTitle?: string;
+  itemConditions: { id: string; name: string }[];
+  wishlistEntryIdsByMasterCardId: Record<string, { id: string; printing?: string }>;
+  collectionLinesByMasterCardId: Record<string, CollectionLineSummary[]>;
+  cardPricesByMasterCardId: Record<string, number>;
+  manualPriceMasterCardIds?: Set<string>;
+  gradingByMasterCardId?: Record<string, { company: string; grade: string; imageUrl?: string }>;
+  groupBySet: boolean;
+  collectedCountBySetCode?: Record<string, number>;
+  tradePickMode: boolean;
+  tradeSelectedQtyByEntryId?: Record<string, number>;
+  onTradePickEntry?: (entryId: string, card: CardEntry, maxQty: number) => void;
+  initialVisibleCount: number;
+  loadMoreStep: number;
+};
+
+function VisibleCollectCardGrid({
+  cards,
+  setLogosByCode,
+  setSymbolsByCode,
+  variant,
+  customerLoggedIn,
+  readOnly,
+  viewerOwnedMasterCardIds,
+  collectionSectionTitle,
+  itemConditions,
+  wishlistEntryIdsByMasterCardId,
+  collectionLinesByMasterCardId,
+  cardPricesByMasterCardId,
+  manualPriceMasterCardIds,
+  gradingByMasterCardId,
+  groupBySet,
+  collectedCountBySetCode,
+  tradePickMode,
+  tradeSelectedQtyByEntryId,
+  onTradePickEntry,
+  initialVisibleCount,
+  loadMoreStep,
+}: VisibleCollectCardGridProps) {
+  const revealAll = groupBySet;
+  const loadMoreRef = useRef<HTMLButtonElement>(null);
+  const [visibleCount, setVisibleCount] = useState(() =>
+    revealAll ? cards.length : Math.min(cards.length, initialVisibleCount),
+  );
+
+  useEffect(() => {
+    if (revealAll || visibleCount >= cards.length) return;
+    const button = loadMoreRef.current;
+    if (!button) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((current) => Math.min(cards.length, current + loadMoreStep));
         }
-      : undefined;
+      },
+      { rootMargin: "0px 0px 200px 0px", threshold: 0 },
+    );
+
+    observer.observe(button);
+    return () => observer.disconnect();
+  }, [cards.length, loadMoreStep, revealAll, visibleCount]);
+
+  const visibleCards = useMemo(
+    () => (revealAll ? cards : cards.slice(0, visibleCount)),
+    [cards, revealAll, visibleCount],
+  );
+  const canLoadMore = !revealAll && visibleCount < cards.length;
 
   return (
     <div className="px-4">
       <CardGrid
-        cards={filteredCards}
+        cards={visibleCards}
         setLogosByCode={setLogosByCode}
         setSymbolsByCode={setSymbolsByCode}
         variant={variant}
-        customerLoggedIn={!readOnly}
+        customerLoggedIn={customerLoggedIn}
         readOnly={readOnly}
         viewerOwnedMasterCardIds={viewerOwnedMasterCardIds}
         collectionSectionTitle={collectionSectionTitle}
@@ -301,12 +343,24 @@ export function CollectCardGridWithTags({
         cardPricesByMasterCardId={cardPricesByMasterCardId}
         manualPriceMasterCardIds={manualPriceMasterCardIds}
         gradingByMasterCardId={gradingByMasterCardId}
-        groupBySet={effectiveGroupBySet}
-        collectedCountBySetCode={effectiveGroupBySet ? collectedCountBySetCode : undefined}
+        groupBySet={groupBySet}
+        collectedCountBySetCode={groupBySet ? collectedCountBySetCode : undefined}
         tradePickMode={tradePickMode}
         tradeSelectedQtyByEntryId={tradeSelectedQtyByEntryId}
         onTradePickEntry={onTradePickEntry}
       />
+      {canLoadMore ? (
+        <div className="flex items-center justify-center pb-[var(--bottom-nav-offset,0px)] pt-6">
+          <button
+            ref={loadMoreRef}
+            type="button"
+            onClick={() => setVisibleCount((current) => Math.min(cards.length, current + loadMoreStep))}
+            className="rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium transition hover:bg-[var(--foreground)]/18"
+          >
+            Load {Math.min(loadMoreStep, cards.length - visibleCount)} more
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

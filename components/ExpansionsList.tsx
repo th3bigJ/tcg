@@ -10,10 +10,12 @@ export function ExpansionsList({
   groups,
   uniqueOwnedBySetCode = null,
   uniqueWishlistedBySetCode = null,
+  searchSelectionParams = {},
 }: {
   groups: ExpansionSeriesGroup[];
   uniqueOwnedBySetCode?: Record<string, number> | null;
   uniqueWishlistedBySetCode?: Record<string, number> | null;
+  searchSelectionParams?: Record<string, string>;
 }) {
   const search = "";
 
@@ -79,7 +81,7 @@ export function ExpansionsList({
               return (
                 <li key={set.code}>
                   <Link
-                    href={`/expansions/${encodeURIComponent(set.code)}`}
+                    href={buildSearchHref(searchSelectionParams, set.code)}
                     prefetch={false}
                     className="flex items-center gap-3 rounded-xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-3 py-2.5 shadow-sm transition hover:border-[var(--foreground)]/22 hover:bg-[var(--foreground)]/8 active:opacity-90"
                   >
@@ -132,6 +134,25 @@ export function ExpansionsList({
       )}
     </div>
   );
+}
+
+function buildSearchHref(searchSelectionParams: Record<string, string>, setCode: string) {
+  const params = new URLSearchParams(searchSelectionParams);
+  const returnTo = params.get("return_to");
+  params.delete("return_to");
+  params.set("set", setCode);
+  params.delete("pokemon");
+  params.delete("take");
+  const qs = params.toString();
+  if (returnTo && returnTo.startsWith("/")) {
+    const url = new URL(returnTo, "http://local");
+    const targetParams = new URLSearchParams(url.search);
+    targetParams.set("set", setCode);
+    targetParams.delete("pokemon");
+    targetParams.delete("take");
+    return `${url.pathname}${targetParams.toString() ? `?${targetParams.toString()}` : ""}`;
+  }
+  return `/search${qs ? `?${qs}` : ""}`;
 }
 
 function slugifyHeadingId(value: string): string {
