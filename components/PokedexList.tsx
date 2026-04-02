@@ -94,7 +94,7 @@ export function PokedexList({
 
             return (
               <section
-                key={group.generation}
+                key={`generation-${group.generation}`}
                 className="overflow-hidden rounded-2xl border border-[var(--foreground)]/10 bg-[var(--foreground)]/3"
               >
                 <button
@@ -128,7 +128,7 @@ export function PokedexList({
                       {group.items.map((item) => {
                         const collected = collectedDexIds.has(item.nationalDexNumber);
                         return (
-                          <li key={item.nationalDexNumber}>
+                          <li key={`generation-${group.generation}-pokemon-${item.nationalDexNumber}`}>
                             <Link
                               href={buildSearchHref(searchSelectionParams, item.nationalDexNumber)}
                               prefetch={false}
