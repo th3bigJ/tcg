@@ -19,6 +19,7 @@ export type PokemonFilterOption = {
   nationalDexNumber: number;
   name: string;
   imageUrl: string;
+  generation: number;
 };
 
 const getAllSetFilterOptions = cache(async function getAllSetFilterOptions(): Promise<SetFilterOption[]> {
@@ -68,6 +69,7 @@ const getAllPokemonFilterOptions = cache(async function getAllPokemonFilterOptio
   return raw.map((p) => ({
     nationalDexNumber: p.nationalDexNumber,
     name: p.name,
+    generation: p.generation,
     imageUrl: /^https?:\/\//i.test(p.imageUrl)
       ? p.imageUrl
       : resolvePokemonMediaURL(p.imageUrl),

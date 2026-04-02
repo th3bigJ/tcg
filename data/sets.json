@@ -330,6 +330,21 @@
     "symbolSrc": "sets/symbol/sv01.webp"
   },
   {
+    "id": "577",
+    "name": "Scarlet & Violet Energies",
+    "slug": "scarlet-violet-energies",
+    "code": "sve",
+    "tcgdexId": "sve",
+    "releaseDate": "2023-03-31T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 24,
+    "cardCountOfficial": 24,
+    "seriesName": "Scarlet & Violet",
+    "seriesSlug": "scarlet-violet-sv",
+    "logoSrc": "sets/logo/sve-logo.png",
+    "symbolSrc": "sets/symbol/sve-symbol.png"
+  },
+  {
     "id": "540",
     "name": "SVP Black Star Promos",
     "slug": "svp-black-star-promos",

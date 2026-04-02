@@ -242,6 +242,42 @@ export function parseScrydexCardPageRawNearMintUsd(html: string): Record<string,
   return out;
 }
 
+function decodeBasicHtmlEntities(value: string): string {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ");
+}
+
+export function parseScrydexCardPageRarity(html: string): string | null {
+  const normalize = (value: string): string | null => {
+    const rarity = decodeBasicHtmlEntities(value).trim();
+    if (!rarity || rarity === "-" || rarity === "—") return null;
+    return rarity;
+  };
+
+  const valueMatch = html.match(
+    /<div class="mb-2 text-sm text-white">Rarity<\/div><div class="relative inline-block"><div><div class="text-body-16 text-mono-4">([^<]*)<\/div>/i,
+  );
+  if (valueMatch) {
+    const rarity = normalize(valueMatch[1]);
+    if (rarity) return rarity;
+  }
+
+  const dashMatch = html.match(
+    /<div class="mb-2 text-sm text-white">Rarity<\/div><span class="text-mono-4">([^<]*)<\/span>/i,
+  );
+  if (dashMatch) {
+    const rarity = normalize(dashMatch[1]);
+    if (rarity) return rarity;
+  }
+
+  return null;
+}
+
 export async function fetchScrydexCardPageHtml(
   path: string,
   variant = "holofoil",

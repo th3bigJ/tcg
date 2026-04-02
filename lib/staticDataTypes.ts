@@ -67,4 +67,5 @@ export type PokemonJsonEntry = {
   nationalDexNumber: number;
   name: string;
   imageUrl: string;
+  generation: number;
 };

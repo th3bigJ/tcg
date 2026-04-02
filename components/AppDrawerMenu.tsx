@@ -122,10 +122,6 @@ export function AppDrawerMenu({
       ];
   return (
     <div className="flex h-full flex-col overflow-y-auto border-r border-white/8 bg-[#090a0d] pb-[calc(var(--bottom-nav-offset)+1.5rem)] pt-[max(1rem,calc(env(safe-area-inset-top,0px)+0.75rem))] text-white shadow-[18px_0_50px_rgba(0,0,0,0.45)]">
-      <div className="px-4">
-        <div className="mb-4 h-1.5 w-12 rounded-full bg-white/10" aria-hidden="true" />
-      </div>
-
       <div className="flex items-center justify-between px-4 pb-4">
         <h2 className="text-[2rem] font-semibold tracking-tight">Menu</h2>
         <button

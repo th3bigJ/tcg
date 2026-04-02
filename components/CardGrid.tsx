@@ -155,6 +155,35 @@ function normalizeWishlistEntriesByMasterCardId(
   return out;
 }
 
+function mapWishlistDocsByMasterCardId(
+  docs: unknown,
+): WishlistEntriesByMasterCardId | null {
+  if (!Array.isArray(docs)) return null;
+
+  const out: WishlistEntriesByMasterCardId = {};
+  for (const doc of docs) {
+    if (!doc || typeof doc !== "object") continue;
+    const row = doc as Record<string, unknown>;
+    const masterCardId =
+      typeof row.master_card_id === "string" && row.master_card_id.trim()
+        ? row.master_card_id.trim()
+        : "";
+    const id = row.id != null ? String(row.id) : "";
+    if (!masterCardId || !id) continue;
+    const entries = out[masterCardId] ?? [];
+    entries.push({
+      id,
+      printing:
+        typeof row.target_printing === "string" && row.target_printing.trim()
+          ? row.target_printing.trim()
+          : undefined,
+    });
+    out[masterCardId] = entries;
+  }
+
+  return out;
+}
+
 function formatMoneyGbp(n: number): string {
   return gbpFormatter.format(n);
 }
@@ -1331,6 +1360,31 @@ export function CardGrid({
       setLocalWishlistMap(normalizedWishlistEntryIdsByMasterCardId);
     }
   }, [normalizedWishlistEntryIdsByMasterCardId]);
+
+  useEffect(() => {
+    if (!allowMutations) return;
+
+    const controller = new AbortController();
+
+    const syncWishlistMap = async () => {
+      try {
+        const response = await fetch("/api/wishlist", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const payload = (await response.json()) as { docs?: unknown };
+        if (controller.signal.aborted) return;
+        const next = mapWishlistDocsByMasterCardId(payload.docs);
+        if (next) setLocalWishlistMap(next);
+      } catch {
+        // Keep the server snapshot if the client sync fails.
+      }
+    };
+
+    void syncWishlistMap();
+    return () => controller.abort();
+  }, [allowMutations, pathname]);
 
   const [localCollectionLinesByMasterCardId, setLocalCollectionLinesByMasterCardId] = useState<
     Record<string, CollectionLineSummary[]> | null
