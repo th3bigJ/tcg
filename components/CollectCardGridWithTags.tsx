@@ -16,6 +16,13 @@ import {
   type WishlistEntriesByMasterCardId,
 } from "@/lib/storefrontCardMaps";
 import { isGradedConditionId, isGradedConditionLabel } from "@/lib/referenceData";
+import type { CollectGridSealedRow, CollectMergedFlatRow } from "@/lib/collectGridSealed";
+import { filterCollectGridSealedRows } from "@/lib/collectGridSealedFilter";
+import {
+  buildUnifiedCardAndSealedSections,
+  mergeFlatCardAndSealedRows,
+  type CollectUnifiedSection,
+} from "@/lib/collectGridSealedMerge";
 
 type SortOrder = "price-desc" | "price-asc" | "release-desc" | "release-asc" | "number-desc" | "number-asc" | "added-desc";
 
@@ -57,6 +64,12 @@ type CollectCardGridWithTagsProps = {
   onTradePickEntry?: (entryId: string, card: CardEntry, maxQty: number) => void;
   initialVisibleCount?: number;
   loadMoreStep?: number;
+  /** Merged into the same grid as cards (collect / wishlist). */
+  sealedRows?: CollectGridSealedRow[];
+  /** Sealed product IDs the viewer owns in collection (shared wishlist filters). */
+  viewerOwnedSealedProductIds?: Set<number>;
+  /** Sealed product IDs in the owner’s collection (wishlist “hide collected”). */
+  collectionSealedProductIds?: Set<number>;
 };
 
 export function CollectCardGridWithTags({
@@ -80,6 +93,9 @@ export function CollectCardGridWithTags({
   onTradePickEntry,
   initialVisibleCount = 105,
   loadMoreStep = 42,
+  sealedRows,
+  viewerOwnedSealedProductIds,
+  collectionSealedProductIds,
 }: CollectCardGridWithTagsProps) {
   const [groupBySet, setGroupBySet] = useState(false);
   const [rarity, setRarity] = useState("");
@@ -232,9 +248,66 @@ export function CollectCardGridWithTags({
     viewerOwnedMasterCardIds,
     readOnly,
   ]);
+
+  const filteredSealed = useMemo(() => {
+    if (!sealedRows?.length) return [];
+    return filterCollectGridSealedRows(sealedRows, {
+      variant,
+      rarity,
+      energy,
+      category,
+      excludeCommonUncommon,
+      duplicatesOnly,
+      ownedFilterOnly,
+      excludeCollected,
+      viewerOwnedSealedProductIds,
+      collectionSealedProductIds,
+    });
+  }, [
+    sealedRows,
+    variant,
+    rarity,
+    energy,
+    category,
+    excludeCommonUncommon,
+    duplicatesOnly,
+    ownedFilterOnly,
+    excludeCollected,
+    viewerOwnedSealedProductIds,
+    collectionSealedProductIds,
+  ]);
+
+  const collectMergedFlatRows: CollectMergedFlatRow[] | undefined = useMemo(() => {
+    if (effectiveGroupBySet) return undefined;
+    if (!filteredSealed.length) return undefined;
+    return mergeFlatCardAndSealedRows(
+      filteredCards,
+      filteredSealed,
+      sortOrder,
+      variant,
+      cardPricesByMasterCardId,
+      effectiveCollectionPriceRangeByMasterCardId,
+    );
+  }, [
+    effectiveGroupBySet,
+    filteredCards,
+    filteredSealed,
+    sortOrder,
+    variant,
+    cardPricesByMasterCardId,
+    effectiveCollectionPriceRangeByMasterCardId,
+  ]);
+
+  const collectUnifiedGroups: CollectUnifiedSection[] | undefined = useMemo(() => {
+    if (!effectiveGroupBySet) return undefined;
+    if (!filteredSealed.length) return undefined;
+    return buildUnifiedCardAndSealedSections(filteredCards, filteredSealed, undefined);
+  }, [effectiveGroupBySet, filteredCards, filteredSealed]);
+
   const sliceKey = [
     effectiveGroupBySet ? "grouped" : "flat",
     filteredCards.length,
+    filteredSealed.length,
     rarity,
     energy,
     category,
@@ -271,6 +344,8 @@ export function CollectCardGridWithTags({
       onTradePickEntry={onTradePickEntry}
       initialVisibleCount={initialVisibleCount}
       loadMoreStep={loadMoreStep}
+      collectMergedFlatRows={collectMergedFlatRows}
+      collectUnifiedGroups={collectUnifiedGroups}
     />
   );
 }
@@ -297,6 +372,8 @@ type VisibleCollectCardGridProps = {
   onTradePickEntry?: (entryId: string, card: CardEntry, maxQty: number) => void;
   initialVisibleCount: number;
   loadMoreStep: number;
+  collectMergedFlatRows?: CollectMergedFlatRow[];
+  collectUnifiedGroups?: CollectUnifiedSection[];
 };
 
 function VisibleCollectCardGrid({
@@ -321,22 +398,25 @@ function VisibleCollectCardGrid({
   onTradePickEntry,
   initialVisibleCount,
   loadMoreStep,
+  collectMergedFlatRows,
+  collectUnifiedGroups,
 }: VisibleCollectCardGridProps) {
   const revealAll = groupBySet;
+  const rowCount = collectMergedFlatRows?.length ?? cards.length;
   const loadMoreRef = useRef<HTMLButtonElement>(null);
   const [visibleCount, setVisibleCount] = useState(() =>
-    revealAll ? cards.length : Math.min(cards.length, initialVisibleCount),
+    revealAll ? rowCount : Math.min(rowCount, initialVisibleCount),
   );
 
   useEffect(() => {
-    if (revealAll || visibleCount >= cards.length) return;
+    if (revealAll || visibleCount >= rowCount) return;
     const button = loadMoreRef.current;
     if (!button) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          setVisibleCount((current) => Math.min(cards.length, current + loadMoreStep));
+          setVisibleCount((current) => Math.min(rowCount, current + loadMoreStep));
         }
       },
       { rootMargin: "0px 0px 200px 0px", threshold: 0 },
@@ -344,18 +424,29 @@ function VisibleCollectCardGrid({
 
     observer.observe(button);
     return () => observer.disconnect();
-  }, [cards.length, loadMoreStep, revealAll, visibleCount]);
+  }, [rowCount, loadMoreStep, revealAll, visibleCount]);
+
+  const visibleMergedRows = useMemo(
+    () =>
+      collectMergedFlatRows
+        ? revealAll
+          ? collectMergedFlatRows
+          : collectMergedFlatRows.slice(0, visibleCount)
+        : undefined,
+    [collectMergedFlatRows, revealAll, visibleCount],
+  );
 
   const visibleCards = useMemo(
     () => (revealAll ? cards : cards.slice(0, visibleCount)),
     [cards, revealAll, visibleCount],
   );
-  const canLoadMore = !revealAll && visibleCount < cards.length;
+  const cardsForGrid = collectMergedFlatRows ? cards : visibleCards;
+  const canLoadMore = !revealAll && visibleCount < rowCount;
 
   return (
     <div className="px-4">
       <CardGrid
-        cards={visibleCards}
+        cards={cardsForGrid}
         setLogosByCode={setLogosByCode}
         setSymbolsByCode={setSymbolsByCode}
         variant={variant}
@@ -374,16 +465,18 @@ function VisibleCollectCardGrid({
         tradePickMode={tradePickMode}
         tradeSelectedQtyByEntryId={tradeSelectedQtyByEntryId}
         onTradePickEntry={onTradePickEntry}
+        collectMergedFlatRows={visibleMergedRows}
+        collectUnifiedGroups={collectUnifiedGroups}
       />
       {canLoadMore ? (
         <div className="flex items-center justify-center pb-[var(--bottom-nav-offset,0px)] pt-6">
           <button
             ref={loadMoreRef}
             type="button"
-            onClick={() => setVisibleCount((current) => Math.min(cards.length, current + loadMoreStep))}
+            onClick={() => setVisibleCount((current) => Math.min(rowCount, current + loadMoreStep))}
             className="rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium transition hover:bg-[var(--foreground)]/18"
           >
-            Load {Math.min(loadMoreStep, cards.length - visibleCount)} more
+            Load {Math.min(loadMoreStep, rowCount - visibleCount)} more
           </button>
         </div>
       ) : null}

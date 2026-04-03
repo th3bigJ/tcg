@@ -1,4 +1,8 @@
-import { type StorefrontCardEntry, collectionGroupKeyFromEntry } from "@/lib/storefrontCardMaps";
+import {
+  type StorefrontCardEntry,
+  collectionGroupKeyFromEntry,
+  isGradedCollectionEntry,
+} from "@/lib/storefrontCardMaps";
 import { getPricingForSet, getPricingForCard } from "@/lib/r2Pricing";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import { getTcgplayerVariantBlock } from "@/lib/tcgdexMarketLinks";
@@ -146,6 +150,43 @@ export type CollectionMarketValueResult = {
   attemptedCardCount: number;
   hasIncompleteData: boolean;
 };
+
+export type CardCollectionMarketBucketsGbp = {
+  singleCardsGbp: number;
+  gradedCardsGbp: number;
+  /** Ungraded cards logged as pulled from packs (`purchase_type === "packed"`). */
+  rippedGbp: number;
+};
+
+/** Splits raw singles vs slabs vs packed pulls, then estimates each bucket (parallel R2 pricing). */
+export async function estimateCardCollectionBucketsGbp(
+  entries: StorefrontCardEntry[],
+): Promise<CardCollectionMarketBucketsGbp> {
+  const graded: StorefrontCardEntry[] = [];
+  const ripped: StorefrontCardEntry[] = [];
+  const single: StorefrontCardEntry[] = [];
+  for (const e of entries) {
+    if (isGradedCollectionEntry(e)) {
+      graded.push(e);
+      continue;
+    }
+    if (e.purchaseType === "packed") {
+      ripped.push(e);
+      continue;
+    }
+    single.push(e);
+  }
+  const [g, r, s] = await Promise.all([
+    graded.length > 0 ? estimateCollectionMarketValueGbp(graded) : Promise.resolve({ totalGbp: 0 }),
+    ripped.length > 0 ? estimateCollectionMarketValueGbp(ripped) : Promise.resolve({ totalGbp: 0 }),
+    single.length > 0 ? estimateCollectionMarketValueGbp(single) : Promise.resolve({ totalGbp: 0 }),
+  ]);
+  return {
+    gradedCardsGbp: g.totalGbp,
+    rippedGbp: r.totalGbp,
+    singleCardsGbp: s.totalGbp,
+  };
+}
 
 /**
  * Estimates total market value for a list of storefront card rows from R2 pricing.

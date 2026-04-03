@@ -2,10 +2,14 @@ import Link from "next/link";
 
 import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
+import { CollectWishlistValueBreakdown } from "@/components/CollectWishlistValueBreakdown";
 import { getCurrentCustomer } from "@/lib/auth";
+import type { CollectGridSealedRow } from "@/lib/collectGridSealed";
 import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
 import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
+import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
+import { estimateSealedMarketValueGbp, formatSealedUnitPriceGbp, sealedUnitPriceSortGbp } from "@/lib/sealedMarketValueGbp";
 import {
   collectionGroupKeyFromEntry,
   fetchItemConditionOptions,
@@ -15,6 +19,11 @@ import {
   totalCopiesFromMergedGrid,
 } from "@/lib/storefrontCardMaps";
 import { fetchCollectionCardEntries, fetchWishlistIdsByMasterCard } from "@/lib/storefrontCardMapsServer";
+import { mergeSealedCollectionForGrid } from "@/lib/sealedCustomerItems";
+import {
+  fetchSealedCollectionLines,
+  resolveSealedProductsByIds,
+} from "@/lib/sealedCustomerItemsServer";
 import { isGradedConditionId, isGradedConditionLabel } from "@/lib/referenceData";
 
 type CollectPageProps = {
@@ -44,12 +53,35 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const groupBySet = resolvedSearchParams.group_by_set === "1";
 
-  const [entries, itemConditions, wishlistEntryIdsByMasterCardId, facets] = await Promise.all([
+  const [entries, itemConditions, wishlistEntryIdsByMasterCardId, facets, sealedLines] = await Promise.all([
     fetchCollectionCardEntries(customer.id),
     fetchItemConditionOptions(),
     fetchWishlistIdsByMasterCard(customer.id),
     getCachedFilterFacets(),
+    fetchSealedCollectionLines(customer.id),
   ]);
+  const sealedProductIds = [...new Set(sealedLines.map((l) => l.sealedProductId))];
+  const sealedProductMap = await resolveSealedProductsByIds(sealedProductIds);
+  const sealedForGrid = mergeSealedCollectionForGrid(sealedLines, sealedProductMap);
+  const multipliers = await fetchGbpConversionMultipliers();
+  const sealedCollectGridRows: CollectGridSealedRow[] = sealedForGrid.map((g) => ({
+    sealedProductId: g.sealedProductId,
+    source: "collection",
+    entryIds: g.entryIds,
+    totalQuantity: g.totalQuantity,
+    sealedQuantity: g.sealedQuantity,
+    openedQuantity: g.openedQuantity,
+    sealedEntryIds: g.sealedEntryIds,
+    name: g.product?.name ?? `Product #${g.sealedProductId}`,
+    imageUrl: g.product?.imageUrl ?? null,
+    series: g.product?.series?.trim() || null,
+    priceLabel: formatSealedUnitPriceGbp(g.product ?? null, multipliers.usdToGbp),
+    priceSortGbp: sealedUnitPriceSortGbp(g.product ?? null, multipliers.usdToGbp),
+    releaseDate: g.product?.release_date ?? null,
+    addedAt: g.newestAddedAt,
+  }));
+  const sealedStillCount = sealedForGrid.reduce((sum, g) => sum + g.sealedQuantity, 0);
+  const sealedOpenedCount = sealedForGrid.reduce((sum, g) => sum + g.openedQuantity, 0);
   const collectionLinesByMasterCardId = {
     ...groupCollectionLinesByMasterCardId(entries),
     ...groupCollectionLinesByGroupKey(entries),
@@ -68,10 +100,16 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
   }
   const allCardsForGrid = mergeCollectionEntriesForGrid(entries);
 
-  const [setFilterOptions, collectionValue, pricesResult] = await Promise.all([
+  const [setFilterOptions, collectionValue, pricesResult, sealedValueGbp] = await Promise.all([
     getCachedSetFilterOptions((facets ?? {}).setCodes ?? []),
     entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
     entries.length > 0 ? estimateCardUnitPricesGbp(entries) : Promise.resolve({ prices: {}, manualPriceIds: new Set<string>() }),
+    sealedForGrid.length > 0
+      ? estimateSealedMarketValueGbp(
+          sealedForGrid.map((g) => ({ product: g.product, quantity: g.sealedQuantity })),
+          multipliers.usdToGbp,
+        )
+      : Promise.resolve(0),
   ]);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
@@ -103,37 +141,42 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
   }
   const manualPriceMasterCardIds = pricesResult.manualPriceIds;
 
-  const valueFormatted =
-    collectionValue && collectionValue.totalGbp > 0
-      ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(
-          collectionValue.totalGbp,
-        )
-      : null;
+  const cardValueGbp = collectionValue?.totalGbp ?? 0;
 
   const uniqueCatalogCards = allCardsForGrid.length;
   const totalCopies = totalCopiesFromMergedGrid(allCardsForGrid);
-  const collectionCountLabel =
+  const cardInventoryLabel =
     totalCopies === 0
-      ? null
+      ? "0 cards"
       : uniqueCatalogCards === totalCopies
         ? `${totalCopies} card${totalCopies === 1 ? "" : "s"}`
         : `${totalCopies} card${totalCopies === 1 ? "" : "s"} (${uniqueCatalogCards} Unique)`;
+  const sealedInventoryLabel =
+    sealedStillCount === 0 && sealedOpenedCount === 0
+      ? "0 sealed"
+      : sealedStillCount > 0 && sealedOpenedCount > 0
+        ? `${sealedStillCount} sealed · ${sealedOpenedCount} opened`
+        : sealedStillCount > 0
+          ? `${sealedStillCount} sealed`
+          : `${sealedOpenedCount} opened`;
+
+  const hasAnyItems = allCardsForGrid.length > 0 || sealedCollectGridRows.length > 0;
 
   const scrollRestoreKey = ["collect", groupBySet ? "grouped" : "flat"].join("|");
 
   return (
     <div className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
-      {collectionCountLabel ? (
-        <p className="mt-4 shrink-0 px-4 text-sm text-[var(--foreground)]/65">{collectionCountLabel}</p>
+      {hasAnyItems ? (
+        <CollectWishlistValueBreakdown
+          cardValueGbp={cardValueGbp}
+          sealedValueGbp={sealedValueGbp}
+          cardInventoryLabel={cardInventoryLabel}
+          sealedInventoryLabel={sealedInventoryLabel}
+        />
       ) : null}
-      {valueFormatted ? (
-        <p className="mt-1 shrink-0 px-4 text-base font-semibold tabular-nums text-[var(--foreground)]">
-          {valueFormatted} <span className="text-sm font-normal text-[var(--foreground)]/55">Market value</span>
-        </p>
-      ) : null}
-      {allCardsForGrid.length === 0 ? (
+      {allCardsForGrid.length === 0 && sealedCollectGridRows.length === 0 ? (
         <p className="mt-4 px-4 max-w-md text-sm text-[var(--foreground)]/70">
-          Nothing here yet. Open Search, tap a card, then use + to add copies you own.
+          Nothing here yet. Open Search, tap a card, then use + to add copies you own — or add sealed products from Search (sealed tab) or a product page.
         </p>
       ) : (
         <div className="mt-6">
@@ -145,20 +188,23 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
             scrollsWindow
           >
             <div className="pb-4">
-              <CollectCardGridWithTags
-                cards={allCardsForGrid}
-                setLogosByCode={setLogosByCode}
-                setSymbolsByCode={setSymbolsByCode}
-                variant="collection"
-                routeGroupBySet={groupBySet}
-                filterScope="collect"
-                itemConditions={itemConditions}
-                wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
-                collectionLinesByMasterCardId={collectionLinesByMasterCardId}
-                cardPricesByMasterCardId={cardPricesByMasterCardId}
-                manualPriceMasterCardIds={manualPriceMasterCardIds}
-                gradingByMasterCardId={gradingByMasterCardId}
-              />
+              {allCardsForGrid.length > 0 || sealedCollectGridRows.length > 0 ? (
+                <CollectCardGridWithTags
+                  cards={allCardsForGrid}
+                  setLogosByCode={setLogosByCode}
+                  setSymbolsByCode={setSymbolsByCode}
+                  variant="collection"
+                  routeGroupBySet={groupBySet}
+                  filterScope="collect"
+                  itemConditions={itemConditions}
+                  wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
+                  collectionLinesByMasterCardId={collectionLinesByMasterCardId}
+                  cardPricesByMasterCardId={cardPricesByMasterCardId}
+                  manualPriceMasterCardIds={manualPriceMasterCardIds}
+                  gradingByMasterCardId={gradingByMasterCardId}
+                  sealedRows={sealedCollectGridRows}
+                />
+              ) : null}
             </div>
           </CardsResultsScroll>
         </div>

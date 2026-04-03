@@ -1,11 +1,13 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
+import { SealedModalCloseHint } from "@/components/SealedModalCloseHint";
+import { SealedProductDetailSidebar } from "@/components/SealedProductDetailSidebar";
+import { getCurrentCustomer } from "@/lib/auth";
+import { buildEbayUkSoldListingsUrl } from "@/lib/ebaySoldSearchUrl";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
+import { fetchSealedProductUserState } from "@/lib/sealedCustomerItemsServer";
 import {
   buildSealedBrowseHref,
-  buildCollectionTransactionHref,
   findShopSealedProductById,
   getSealedProductCatalog,
   getSealedProductPrices,
@@ -56,46 +58,40 @@ function formatProductType(value: string | null | undefined): string {
     .join(" ");
 }
 
-function DetailStat({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function DetailStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3">
-      <dt className="text-[10px] font-medium uppercase tracking-[0.24em] text-white/45">{label}</dt>
-      <dd className="mt-1 text-sm font-medium text-white">{value}</dd>
+    <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3">
+      <div className="min-w-0 flex-1">
+        <dt className="text-[11px] font-medium uppercase tracking-wide text-white/50">{label}</dt>
+        <dd className="mt-0.5 text-sm font-medium leading-snug text-white">{value}</dd>
+      </div>
     </div>
   );
 }
 
-function ActionIcon({
-  href,
-  label,
-  children,
+function SealedHeadline({
+  product,
 }: {
-  href: string;
-  label: string;
-  children: ReactNode;
+  product: {
+    name: string;
+    series: string | null;
+    type: string | null;
+  };
 }) {
-  const isExternal = href.startsWith("http://") || href.startsWith("https://");
-  const className =
-    "inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20";
-
-  if (isExternal) {
-    return (
-      <a aria-label={label} className={className} href={href} rel="noreferrer" target="_blank">
-        {children}
-      </a>
-    );
-  }
-
   return (
-    <Link aria-label={label} className={className} href={href}>
-      {children}
-    </Link>
+    <div className="w-full px-1 py-4 text-center text-white md:px-0 md:py-0">
+      <h1 className="text-balance break-words text-xl font-bold leading-tight md:text-xl">
+        {product.name}
+      </h1>
+      <p className="mt-2 flex flex-wrap items-center justify-center gap-2 text-sm leading-snug text-white/75 md:mt-1.5">
+        {product.series ? (
+          <span className="min-w-0 font-medium text-white/85 underline decoration-white/30 underline-offset-2">
+            {product.series}
+          </span>
+        ) : null}
+        <span className="font-medium text-white/70">{formatProductType(product.type)}</span>
+      </p>
+    </div>
   );
 }
 
@@ -120,147 +116,93 @@ export default async function SealedProductDetailPage({ params }: SealedProductD
   }
 
   const imageFailure = catalog?.imageFailures?.find((failure) => failure.id === product.id) ?? null;
-  const browseMoreHref = buildSealedBrowseHref(
+  const closeHref = buildSealedBrowseHref(
     {
       series: product.series ?? undefined,
       type: product.type ?? undefined,
     },
     { basePath: "/search", tab: "sealed" },
   );
+  const ebaySearchParts = ["Pokemon", product.series ?? "", product.name, formatProductType(product.type)]
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  const ebayUrl = ebaySearchParts.length > 0 ? buildEbayUkSoldListingsUrl(ebaySearchParts.join(" ")) : null;
+
+  const customer = await getCurrentCustomer();
+  const sealedUserState = customer ? await fetchSealedProductUserState(customer.id, product.id) : null;
 
   return (
-    <div className="min-h-full bg-[#050608] text-white">
-      <div className="mx-auto flex w-full max-w-[34rem] flex-col px-4 pb-[calc(var(--bottom-nav-offset,0px)+2rem)] pt-[var(--mobile-page-top-offset)]">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-white/55">
-          <Link className="transition hover:text-white" href="/sealed">
-            Sealed Prices
-          </Link>
-          <span>/</span>
-          <span className="text-white/72">{product.name}</span>
+    <div className="card-viewer-overlay fixed inset-0 z-[10050] isolate overflow-x-hidden overflow-y-auto overscroll-y-contain text-white md:overflow-hidden">
+      <div className="relative mx-auto flex min-h-[100dvh] w-full min-w-0 max-w-[1460px] flex-col overflow-x-hidden px-3 pb-14 pt-[max(1rem,calc(env(safe-area-inset-top,0px)+0.75rem))] sm:px-6 md:h-[100dvh] md:max-h-[100dvh] md:min-h-0 md:overflow-hidden md:px-8 md:pb-5 md:pt-6">
+        <div className="md:hidden">
+          <SealedModalCloseHint fallbackHref={closeHref} />
         </div>
 
-        <div className="mt-6 flex justify-center">
-          <div className="w-full overflow-hidden rounded-[2rem] border border-white/10 bg-white shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
-            <div className="relative aspect-[5/4] bg-white">
-              {product.imageUrl ? (
-                <Image
-                  alt={product.name}
-                  className="h-full w-full object-contain"
-                  fill
-                  sizes="(max-width: 640px) 100vw, 34rem"
-                  src={product.imageUrl}
-                  unoptimized
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-slate-500">No mirrored image</div>
+        <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-[1fr_minmax(18rem,26rem)_minmax(9rem,13rem)] md:flex-1 md:min-h-0 md:items-stretch md:gap-4 md:overflow-hidden">
+          <div className="flex w-full min-w-0 max-w-full flex-col items-center gap-3 overflow-x-hidden md:min-h-0 md:items-stretch md:gap-2 md:self-stretch">
+            <div className="w-full min-w-0 max-w-full overflow-x-hidden md:flex md:min-h-0 md:flex-1 md:flex-col">
+              <div className="flex md:min-h-0 md:flex-1 md:items-stretch">
+                <div className="flex shrink-0 flex-col items-center gap-3 md:h-full md:min-h-0 md:gap-2" style={{ width: "100%", minWidth: "100%", maxWidth: "100%" }}>
+                  <div className="relative flex min-h-[33vh] w-full items-start justify-center pb-0 pt-1 sm:min-h-[38vh] md:min-h-0 md:max-h-[min(78vh,calc(100dvh-8.5rem))] md:flex-1 md:items-center md:justify-center md:pb-0 md:pt-0">
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="block max-h-[min(64vh,640px)] w-auto max-w-full rounded-[var(--card-viewer-image-radius)] object-contain shadow-2xl md:mx-auto md:max-h-full md:max-w-full md:self-center"
+                        draggable={false}
+                      />
+                    ) : (
+                      <div
+                        className="aspect-[3/4] max-h-[min(64vh,640px)] w-[min(85%,240px)] rounded-[var(--card-viewer-image-radius)] bg-white/[0.06] md:mx-auto md:max-h-full md:max-w-full md:self-center"
+                        aria-hidden
+                      />
+                    )}
+                  </div>
+                  <div className="w-full min-w-0 max-w-full md:hidden">
+                    <SealedHeadline product={product} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="col-span-1 flex min-w-0 max-w-full flex-col gap-6 overflow-x-hidden rounded-xl border border-white/15 bg-black/35 p-4 pt-2 text-white shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-md sm:gap-8 sm:p-5 sm:pt-5 md:contents md:overflow-visible md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
+            <div className="flex w-full min-w-0 flex-col gap-6 sm:gap-8 md:min-h-0 md:gap-3 md:overflow-y-auto md:rounded-xl md:border md:border-white/15 md:bg-black/35 md:p-4 md:shadow-[0_20px_60px_rgba(0,0,0,0.45)] md:backdrop-blur-md">
+              <div className="hidden md:block">
+                <SealedHeadline product={product} />
+              </div>
+              <SealedProductDetailSidebar
+                key={product.id}
+                product={product}
+                typeLabel={formatProductType(product.type)}
+                marketValueLabel={formatGbp(product.marketValue, multipliers.usdToGbp)}
+                releaseLabel={formatDate(product.release_date)}
+                ebayUrl={ebayUrl}
+                loggedIn={Boolean(customer)}
+                initialWishlistEntryId={sealedUserState?.wishlistEntryId ?? null}
+                initialCollectionEntryIds={sealedUserState?.collectionEntryIds ?? []}
+                initialTotalQuantity={sealedUserState?.totalQuantity ?? 0}
+              />
+
+              {imageFailure && (
+                <div className="rounded-2xl border border-amber-300/25 bg-amber-500/10 p-4 text-sm text-amber-100">
+                  This product had a mirrored image fetch failure during the last sync. The current page is falling back to the source image URL when available.
+                </div>
               )}
             </div>
+
+            <div className="flex w-full min-w-0 flex-col gap-6 sm:gap-8 md:min-h-0 md:gap-2 md:overflow-y-auto md:rounded-xl md:border md:border-white/15 md:bg-black/35 md:p-4 md:shadow-[0_20px_60px_rgba(0,0,0,0.45)] md:backdrop-blur-md">
+              <section className="flex flex-col gap-2" aria-label="Attributes">
+                <h2 className="text-base font-bold tracking-tight text-white md:text-sm">Attributes</h2>
+                <dl className="flex flex-col gap-2 md:gap-1.5">
+                  <DetailStat label="Product ID" value={String(product.id)} />
+                  <DetailStat label="Language" value={formatBadgeLabel(product.language, "Unknown")} />
+                  <DetailStat label="Series" value={formatBadgeLabel(product.series, "Unknown")} />
+                  <DetailStat label="Set ID" value={product.set_id ? String(product.set_id) : "Unknown"} />
+                  <DetailStat label="Type" value={formatProductType(product.type)} />
+                </dl>
+              </section>
+            </div>
           </div>
-        </div>
-
-        <section className="mt-5 text-center">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="rounded-full border border-white/12 bg-white/[0.08] px-3 py-1 text-xs font-medium text-white/78">
-              {formatBadgeLabel(product.tcg, "Pokemon")}
-            </span>
-            <span className="rounded-full border border-white/12 bg-white/[0.08] px-3 py-1 text-xs font-medium text-white/78">
-              {formatProductType(product.type)}
-            </span>
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-medium ${
-                product.live
-                  ? "bg-emerald-500/18 text-emerald-300"
-                  : "border border-white/12 bg-white/[0.08] text-white/65"
-              }`}
-            >
-              {product.live ? "Live" : "Archived"}
-            </span>
-          </div>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-white">{product.name}</h1>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/58">
-            Track mirrored sealed pricing, keep a clean record of this product in your collection, and jump straight into logging a purchase.
-          </p>
-        </section>
-
-        <div className="mt-6 rounded-[1.9rem] border border-white/12 bg-black/35 p-4 text-white shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-md">
-          <section className="flex flex-col gap-2" aria-label="Your collection">
-            <h2 className="text-sm font-bold tracking-tight text-white">Your collection</h2>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3">
-              <p className="text-xs leading-relaxed text-white/60">
-                No sealed entries saved for this product yet. Use add to collection to log a sealed purchase with its own details.
-              </p>
-            </div>
-          </section>
-
-          <section className="mt-6 flex flex-col gap-2" aria-label="Market prices">
-            <h2 className="text-sm font-bold tracking-tight text-white">Market prices</h2>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.08] px-3 py-3">
-              <div className="flex items-center gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium text-white">Sealed</div>
-                  <div className="mt-1 text-[11px] text-white/48">Mirrored blended market value</div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <ActionIcon href={buildCollectionTransactionHref(product)} label="Add sealed product to collection">
-                    <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
-                    </svg>
-                  </ActionIcon>
-                  {product.image.source_url ? (
-                    <ActionIcon href={product.image.source_url} label="Open source image">
-                      <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 17 17 7" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h9v9" />
-                      </svg>
-                    </ActionIcon>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="mt-3 grid grid-cols-3 divide-x divide-white/10">
-                <div className="flex flex-col items-center px-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">Market</span>
-                  <span className="text-sm font-semibold tabular-nums text-white">
-                    {formatGbp(product.marketValue, multipliers.usdToGbp)}
-                  </span>
-                </div>
-                <div className="flex flex-col items-center px-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">Release</span>
-                  <span className="text-center text-sm font-semibold text-white">{formatDate(product.release_date)}</span>
-                </div>
-                <div className="flex flex-col items-center px-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">Status</span>
-                  <span className="text-sm font-semibold text-white">{product.live ? "Live" : "Archived"}</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="mt-6 flex flex-col gap-2" aria-label="Product details">
-            <h2 className="text-sm font-bold tracking-tight text-white">Product details</h2>
-            <dl className="grid gap-2 sm:grid-cols-2">
-              <DetailStat label="Product ID" value={String(product.id)} />
-              <DetailStat label="Language" value={formatBadgeLabel(product.language, "Unknown")} />
-              <DetailStat label="Series" value={formatBadgeLabel(product.series, "Unknown")} />
-              <DetailStat label="Set ID" value={product.set_id ? String(product.set_id) : "Unknown"} />
-              <DetailStat label="Type" value={formatProductType(product.type)} />
-              <DetailStat label="Browse more" value={product.tcg ? `${product.tcg} sealed` : "Sealed prices"} />
-            </dl>
-            <div className="pt-1">
-              <Link
-                className="inline-flex rounded-full border border-white/18 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white/82 transition hover:bg-white/[0.12]"
-                href={browseMoreHref}
-              >
-                More sealed prices
-              </Link>
-            </div>
-          </section>
-
-          {imageFailure && (
-            <div className="mt-6 rounded-2xl border border-amber-300/25 bg-amber-500/10 p-4 text-sm text-amber-100">
-              This product had a mirrored image fetch failure during the last sync. The current page is falling back to the source image URL when available.
-            </div>
-          )}
         </div>
       </div>
     </div>

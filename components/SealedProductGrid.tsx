@@ -46,7 +46,7 @@ export function SealedProductGrid({ products, usdToGbpMultiplier }: SealedProduc
                     alt={product.name}
                     fill
                     sizes="(max-width: 640px) 33vw, (max-width: 1024px) 25vw, (max-width: 1536px) 20vw, 14vw"
-                    className="scale-[1.22] object-contain object-center p-1 transition-transform duration-200 group-hover:scale-[1.26]"
+                    className="scale-[1.3] object-contain object-center p-1 transition-transform duration-200 group-hover:scale-[1.34]"
                   />
                 ) : (
                   <span className="text-[11px] text-[var(--foreground)]/45">No image</span>

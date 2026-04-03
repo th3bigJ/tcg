@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FilterChipRow, FilterClearChip, FilterControlsShell } from "@/components/card-filters/FilterPrimitives";
-import { buildSealedBrowseHref } from "@/lib/r2SealedProducts";
+import { buildSealedBrowseHref, DEFAULT_SEALED_SORT } from "@/lib/r2SealedProducts";
 
 type FilterOption = {
   value: string;
@@ -25,7 +25,7 @@ type SealedTagFilterRowProps = {
 type SheetKey = "sort" | "type" | "series";
 
 const SORT_OPTIONS = [
-  { value: "", label: "Featured" },
+  { value: DEFAULT_SEALED_SORT, label: "Random" },
   { value: "price-desc", label: "Price" },
   { value: "release-desc", label: "Newest" },
   { value: "name-asc", label: "Name" },
@@ -231,7 +231,8 @@ export function SealedTagFilterRow({
 }: SealedTagFilterRowProps) {
   const router = useRouter();
   const [activeSheet, setActiveSheet] = useState<SheetKey | null>(null);
-  const hasActiveFilters = Boolean(activeSeries || activeType || activeSort);
+  const hasActiveSort = activeSort !== DEFAULT_SEALED_SORT;
+  const hasActiveFilters = Boolean(activeSeries || activeType || hasActiveSort);
 
   useEffect(() => {
     if (!activeSheet) return;
@@ -289,12 +290,12 @@ export function SealedTagFilterRow({
             <TopChromeChipSelect
               label="Sort"
               active
-              clearable={Boolean(activeSort)}
-              count={activeSort ? 1 : 0}
+              clearable={hasActiveSort}
+              count={hasActiveSort ? 1 : 0}
               icon={<IconSort />}
               onClick={() => {
-                if (activeSort) {
-                  pushFilters({ sort: "" });
+                if (hasActiveSort) {
+                  pushFilters({ sort: DEFAULT_SEALED_SORT });
                   return;
                 }
                 setActiveSheet("sort");

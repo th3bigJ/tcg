@@ -44,10 +44,22 @@ type PokemonResult = {
   imageUrl: string;
 };
 
+type SealedResult = {
+  id: number;
+  name: string;
+  imageUrl: string;
+  series: string | null;
+  type: string | null;
+  marketValue: number | null;
+  marketValueGbp?: number | null;
+  releaseDate: string | null;
+};
+
 type SearchResults = {
   cards: CardResult[];
   sets: SetResult[];
   pokemon: PokemonResult[];
+  sealed: SealedResult[];
   collection: CardResult[];
   wishlist: CardResult[];
 };
@@ -417,6 +429,50 @@ function CardThumb({ card, onClick }: { card: CardResult; onClick: () => void })
   );
 }
 
+function formatSealedResultMeta(item: SealedResult): string {
+  const primary = (item.series ?? "").trim() || (item.type ?? "").trim();
+  if (primary) return primary;
+  if (!item.releaseDate) return "";
+  const parsed = Date.parse(item.releaseDate);
+  if (!Number.isFinite(parsed)) return "";
+  return new Intl.DateTimeFormat("en-GB", { year: "numeric", timeZone: "UTC" }).format(new Date(parsed));
+}
+
+function formatSealedResultPrice(value: number | null | undefined): string {
+  if (typeof value !== "number") return "";
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function SealedThumb({ item, onClick }: { item: SealedResult; onClick: () => void }) {
+  const meta = formatSealedResultMeta(item);
+  const price = formatSealedResultPrice(item.marketValueGbp);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex flex-col items-center gap-1 rounded-lg border border-white/10 bg-white/5 p-1.5 text-left transition hover:bg-white/10"
+    >
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded bg-white">
+        <img
+          src={item.imageUrl}
+          alt={item.name}
+          className="h-full w-full object-contain"
+          loading="lazy"
+        />
+      </div>
+      <span className="line-clamp-1 w-full text-center text-[10px] text-white/80">{item.name}</span>
+      {meta ? <span className="line-clamp-1 w-full text-center text-[9px] text-white/40">{meta}</span> : null}
+      {price ? <span className="line-clamp-1 w-full text-center text-[9px] text-white/55">{price}</span> : null}
+    </button>
+  );
+}
+
 // ─── Section header ─────────────────────────────────────────────────────────────
 
 function SectionHeader({
@@ -444,12 +500,15 @@ function SectionHeader({
 
 // ─── Main component ─────────────────────────────────────────────────────────────
 
-type SectionKey = "cards" | "sets" | "pokedex" | "collection" | "wishlist";
+type SectionKey = "cards" | "sets" | "pokedex" | "sealed" | "collection" | "wishlist";
 
-function getSectionPriority(pathname: string): SectionKey {
+function getSectionPriority(pathname: string, searchTab: string): SectionKey {
   if (pathname.startsWith("/collect/shared")) return "collection";
   if (pathname.startsWith("/collect")) return "collection";
   if (pathname.startsWith("/wishlist")) return "wishlist";
+  if ((pathname.startsWith("/search") && searchTab === "sealed") || pathname === "/sealed" || pathname.startsWith("/sealed/")) {
+    return "sealed";
+  }
   if (pathname.startsWith("/expansions")) return "sets";
   if (pathname.startsWith("/pokedex")) return "pokedex";
   return "cards";
@@ -1091,6 +1150,8 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   function buildSealedHref() {
     const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     p.set("tab", "sealed");
+    if (query) p.set("search", query);
+    else p.delete("search");
     p.delete("set");
     p.delete("pokemon");
     p.delete("rarity");
@@ -1115,6 +1176,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     (results.cards.length > 0 ||
       results.sets.length > 0 ||
       results.pokemon.length > 0 ||
+      results.sealed.length > 0 ||
       results.collection.length > 0 ||
       results.wishlist.length > 0);
 
@@ -1265,6 +1327,10 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     setRecentSearches(readRecentSearches());
   }, [isOpen]);
 
+  if (pathname.startsWith("/sealed/")) {
+    return null;
+  }
+
   return (
     <>
       <style>{`:root{--top-search-offset:${contentTopOffset};}`}</style>
@@ -1314,7 +1380,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                     value={query}
                     onChange={(e) => handleQueryChange(e.target.value)}
                     onFocus={() => { if (modalMode !== "search") setModalMode("search"); }}
-                    placeholder="Search cards, sets, Pokemon..."
+                    placeholder="Search cards, sets, Pokemon, sealed..."
                     className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder-white/35 outline-none"
                     autoFocus={modalMode === "search"}
                     autoComplete="off"
@@ -1328,7 +1394,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                     className="min-w-0 flex-1 truncate text-left text-sm text-white/45"
                     aria-label="Open search"
                   >
-                    {query || "Search cards, sets, Pokemon..."}
+                    {query || "Search cards, sets, Pokemon, sealed..."}
                   </button>
                 )}
                 {isOpen && query ? (
@@ -1573,9 +1639,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
             <div
               className="fixed inset-0 z-[1001] flex flex-col bg-black"
               style={{
-                paddingTop: showFilterRow || showBrowseTabRow
-                  ? "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 6.5rem)"
-                  : "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 4rem)",
+                paddingTop: contentTopOffset,
               }}
               onClickCapture={handleScopedLinkClickCapture}
               onTouchStart={handleModalTouchStart}
@@ -1592,10 +1656,11 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                   loading={loading}
                   hasResults={Boolean(hasResults)}
                   isLoggedIn={isLoggedIn}
-                  priority={getSectionPriority(pathname)}
+                  priority={getSectionPriority(pathname, searchTab)}
                   cardsHref={buildCardsHref()}
                   setsHref={buildSetsHref()}
                   pokedexHref={buildPokedexHref()}
+                  sealedHref={buildSealedHref()}
                   onNavigate={handleNavigate}
                   onCardClick={(card) => {
                     setQuickViewLoading(true);
@@ -1625,6 +1690,10 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                   onPokemonClick={(p) => {
                     close();
                     router.push(`/search?pokemon=${encodeURIComponent(String(p.nationalDexNumber))}`);
+                  }}
+                  onSealedClick={(item) => {
+                    close();
+                    router.push(`/sealed/${encodeURIComponent(String(item.id))}`);
                   }}
                 />
               </div>
@@ -1671,10 +1740,12 @@ function SearchResultsPanel({
   cardsHref,
   setsHref,
   pokedexHref,
+  sealedHref,
   onNavigate,
   onCardClick,
   onSetClick,
   onPokemonClick,
+  onSealedClick,
 }: {
   query: string;
   recentSearches: string[];
@@ -1687,10 +1758,12 @@ function SearchResultsPanel({
   cardsHref: string;
   setsHref: string;
   pokedexHref: string;
+  sealedHref: string;
   onNavigate: () => void;
   onCardClick: (card: CardResult) => void;
   onSetClick: (set: SetResult) => void;
   onPokemonClick: (p: PokemonResult) => void;
+  onSealedClick: (item: SealedResult) => void;
 }) {
   if (!query || query.trim().length < 2) {
     return (
@@ -1721,7 +1794,7 @@ function SearchResultsPanel({
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
           </svg>
-          <p className="text-sm text-white/45">Type to search cards, sets, and Pokémon</p>
+          <p className="text-sm text-white/45">Type to search cards, sets, Pokémon, and sealed products</p>
         </div>
       </div>
     );
@@ -1792,6 +1865,17 @@ function SearchResultsPanel({
     </section>
   ) : null;
 
+  const sectionSealed = results && results.sealed.length > 0 ? (
+    <section key="sealed">
+      <SectionHeader title="Sealed" href={sealedHref} onNavigate={onNavigate} />
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {results.sealed.map((item) => (
+          <SealedThumb key={item.id} item={item} onClick={() => onSealedClick(item)} />
+        ))}
+      </div>
+    </section>
+  ) : null;
+
   const sectionCollection = isLoggedIn ? (
     results && results.collection.length > 0 ? (
       <section key="collection">
@@ -1838,7 +1922,7 @@ function SearchResultsPanel({
     </section>
   );
 
-  const defaultOrder: SectionKey[] = ["cards", "sets", "pokedex", "collection", "wishlist"];
+  const defaultOrder: SectionKey[] = ["cards", "sets", "pokedex", "sealed", "collection", "wishlist"];
   const orderedKeys: SectionKey[] = [
     priority,
     ...defaultOrder.filter((k) => k !== priority),
@@ -1848,6 +1932,7 @@ function SearchResultsPanel({
     cards: sectionCards,
     sets: sectionSets,
     pokedex: sectionPokedex,
+    sealed: sectionSealed,
     collection: sectionCollection,
     wishlist: sectionWishlist,
   };

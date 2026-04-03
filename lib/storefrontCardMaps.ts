@@ -255,7 +255,8 @@ export function collectionGroupKeyFromLine(
   return `${mid}|${printing}|${conditionLabel}|${language}|${gc}|${gv}`;
 }
 
-function isGradedCollectionEntry(
+/** True if this collection line is a graded/slab entry (not a raw single). */
+export function isGradedCollectionEntry(
   entry: Pick<StorefrontCardEntry, "gradingCompany" | "gradeValue" | "conditionId" | "conditionLabel">,
 ): boolean {
   if ((entry.gradingCompany?.trim() ?? "") && (entry.gradeValue?.trim() ?? "")) return true;

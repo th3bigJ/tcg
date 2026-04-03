@@ -138,20 +138,15 @@ export function ExpansionsList({
 
 function buildSearchHref(searchSelectionParams: Record<string, string>, setCode: string) {
   const params = new URLSearchParams(searchSelectionParams);
-  const returnTo = params.get("return_to");
   params.delete("return_to");
+  params.set("tab", "cards");
   params.set("set", setCode);
   params.delete("pokemon");
   params.delete("take");
+  params.delete("type");
+  params.delete("series");
+  params.delete("page");
   const qs = params.toString();
-  if (returnTo && returnTo.startsWith("/")) {
-    const url = new URL(returnTo, "http://local");
-    const targetParams = new URLSearchParams(url.search);
-    targetParams.set("set", setCode);
-    targetParams.delete("pokemon");
-    targetParams.delete("take");
-    return `${url.pathname}${targetParams.toString() ? `?${targetParams.toString()}` : ""}`;
-  }
   return `/search${qs ? `?${qs}` : ""}`;
 }
 

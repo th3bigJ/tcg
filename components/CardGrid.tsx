@@ -17,7 +17,10 @@ import {
 import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { CollectGridSealedTile } from "@/components/CollectGridSealedTile";
 import { useCardGridPreferences } from "@/components/CardGridPreferencesProvider";
+import type { CollectMergedFlatRow } from "@/lib/collectGridSealed";
+import type { CollectUnifiedSection } from "@/lib/collectGridSealedMerge";
 import { normalizeVariantForStorage, variantLabel } from "@/lib/cardVariantLabels";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import {
@@ -1240,6 +1243,8 @@ export function CardGrid({
   onModalClose,
   /** Opens a matching card modal once after mount/update when provided. */
   initialOpenCardMasterCardId,
+  collectMergedFlatRows,
+  collectUnifiedGroups,
 }: {
   cards: CardEntry[];
   setLogosByCode?: Record<string, string>;
@@ -1269,6 +1274,8 @@ export function CardGrid({
   hideGrid?: boolean;
   onModalClose?: () => void;
   initialOpenCardMasterCardId?: string;
+  collectMergedFlatRows?: CollectMergedFlatRow[];
+  collectUnifiedGroups?: CollectUnifiedSection[];
 }) {
   const router = useRouter();
   const pathname = usePathname() ?? "";
@@ -3965,10 +3972,26 @@ export function CardGrid({
 
   const gridContent = (() => {
     if (hideGrid) return null;
+    const sealedTileVariant = variant === "wishlist" ? "wishlist" : "collection";
     if (!groupBySet) {
+      const flatRows =
+        collectMergedFlatRows ??
+        normalizedCards.map((_, cardIndex) => ({ kind: "card" as const, cardIndex }));
       return (
         <ul className="card-grid-columns-dynamic grid gap-2 md:gap-3" style={gridColumnStyle}>
-          {normalizedCards.map((card, index) => {
+          {flatRows.map((row, index) => {
+            if (row.kind === "sealed") {
+              return (
+                <CollectGridSealedTile
+                  key={`sealed-${row.row.sealedProductId}-${row.row.wishlistEntryId ?? row.row.entryIds?.[0] ?? index}`}
+                  row={row.row}
+                  variant={sealedTileVariant}
+                  visualIndex={index}
+                />
+              );
+            }
+            const card = normalizedCards[row.cardIndex];
+            if (!card) return null;
             const mapKey = cardCollectionMapKey(card);
             const showPrice = mapKey !== "" && cardPricesByMasterCardId[mapKey] !== undefined;
             const unitPrice = showPrice ? cardPricesByMasterCardId[mapKey]! : null;
@@ -4022,6 +4045,144 @@ export function CardGrid({
             );
           })}
         </ul>
+      );
+    }
+
+    if (groupBySet && collectUnifiedGroups && collectUnifiedGroups.length > 0) {
+      let sealedVisual = 0;
+      return (
+        <div className="flex flex-col gap-6">
+          {collectUnifiedGroups.map((section) => {
+            if (section.kind === "sealedSeries") {
+              return (
+                <section key={`sealed-series-${section.title}-${section.sortDate}`}>
+                  <div className="mb-3 flex items-center gap-2.5">
+                    <span className="text-sm font-semibold text-[var(--foreground)]">{section.title}</span>
+                  </div>
+                  <ul className="card-grid-columns-dynamic grid gap-2 md:gap-3" style={gridColumnStyle}>
+                    {section.rows.map((row, i) => (
+                      <CollectGridSealedTile
+                        key={`sealed-${row.sealedProductId}-${row.wishlistEntryId ?? i}`}
+                        row={row}
+                        variant={sealedTileVariant}
+                        visualIndex={sealedVisual++}
+                      />
+                    ))}
+                  </ul>
+                </section>
+              );
+            }
+            const setCode = section.setCode;
+            const groupEntries = section.entries;
+            const firstCard = groupEntries[0]?.card;
+            const setName = firstCard?.setName || setCode;
+            const logoSrc = setLogosByCode?.[setCode] ?? firstCard?.setLogoSrc ?? "";
+            let groupValue = 0;
+            for (const { card } of groupEntries) {
+              const mk = cardCollectionMapKey(card);
+              if (mk && cardPricesByMasterCardId[mk] !== undefined) {
+                groupValue += cardPricesByMasterCardId[mk];
+              }
+            }
+            const groupValueFormatted = groupValue > 0 ? formatMoneyGbp(groupValue) : null;
+
+            const collectedCount = collectedCountBySetCode?.[setCode];
+
+            return (
+              <section key={setCode}>
+                <div className="mb-3 flex items-center gap-2.5">
+                  {logoSrc ? (
+                    <img
+                      src={logoSrc}
+                      alt=""
+                      className="h-7 w-auto max-w-[80px] shrink-0 object-contain object-left"
+                    />
+                  ) : (
+                    <span className="text-sm font-semibold text-[var(--foreground)]">{setName}</span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    {logoSrc ? (
+                      <span className="block truncate text-sm font-medium text-[var(--foreground)]/70">{setName}</span>
+                    ) : null}
+                    {collectedCount !== undefined ? (
+                      <span className="block text-xs text-[var(--foreground)]/45">
+                        {collectedCount} collected
+                      </span>
+                    ) : null}
+                  </div>
+                  {groupValueFormatted ? (
+                    <span className="ml-auto shrink-0 text-sm font-semibold tabular-nums text-[var(--foreground)]">
+                      {groupValueFormatted}
+                    </span>
+                  ) : null}
+                </div>
+                <ul className="card-grid-columns-dynamic grid gap-2 md:gap-3" style={gridColumnStyle}>
+                  {groupEntries.map(({ card, globalIndex }) => {
+                    const mapKey = cardCollectionMapKey(card);
+                    const showPrice = mapKey !== "" && cardPricesByMasterCardId[mapKey] !== undefined;
+                    const unitPrice = showPrice ? cardPricesByMasterCardId[mapKey]! : null;
+                    const mid = card.masterCardId?.trim() ?? "";
+                    const collectionPriceMeta =
+                      variant === "collection" && mid && mapKey === mid
+                        ? collectionPriceMetaByMasterCardId[mid]
+                        : undefined;
+                    const owned = Boolean(ownedByMapKey[mapKey] || (card.masterCardId && ownedByMapKey[card.masterCardId]));
+                    const ownedQuantity =
+                      ownedQuantityByMapKey[mapKey] ??
+                      (card.masterCardId ? ownedQuantityByMapKey[card.masterCardId] ?? 0 : 0);
+                    const isManualPrice =
+                      variant === "collection"
+                        ? Boolean(collectionPriceMeta?.hasManual)
+                        : Boolean(mapKey && manualPriceMasterCardIds?.has(mapKey));
+                    const grading = mapKey ? gradingByMasterCardId?.[mapKey] : undefined;
+                    const gradingLabel = grading ? `${grading.company} ${grading.grade}` : undefined;
+                    const gradedImageSrc = grading?.imageUrl;
+                    const viewerOwnsOnWishlist =
+                      variant === "wishlist" && viewerOwnedMasterCardIds && mid
+                        ? viewerOwnedMasterCardIds.has(mid)
+                        : false;
+                    const wishlisted =
+                      variant === "wishlist"
+                        ? Boolean(card.wishlistEntryId) || (mid ? hasWishlistEntry(effectiveWishlistMap[mid]) : false)
+                        : mid
+                          ? hasWishlistEntry(effectiveWishlistMap[mid])
+                          : false;
+                    return (
+                      <CardGridItem
+                        key={
+                          card.wishlistEntryId ??
+                          card.collectionEntryId ??
+                          card.collectionGroupKey ??
+                          card.masterCardId ??
+                          `${card.set}/${card.filename}/${globalIndex}`
+                        }
+                        card={card}
+                        index={globalIndex}
+                        variant={variant}
+                        unitPrice={unitPrice ?? null}
+                        priceLabel={collectionPriceMeta?.label ?? null}
+                        owned={owned}
+                        ownedQuantity={ownedQuantity}
+                        wishlisted={wishlisted}
+                        isManualPrice={isManualPrice}
+                        gradingLabel={gradingLabel}
+                        gradedImageSrc={gradedImageSrc}
+                        onOpen={openModal}
+                        setSymbolsByCode={setSymbolsByCode}
+                        viewerOwnsOnWishlist={viewerOwnsOnWishlist}
+                        tradePickMode={tradePickMode}
+                        tradeSelectedQty={
+                          card.collectionEntryId ? tradeSelectedQtyByEntryId[card.collectionEntryId] ?? 0 : 0
+                        }
+                        onTradePick={onTradePickEntry}
+                      />
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
+        </div>
       );
     }
 

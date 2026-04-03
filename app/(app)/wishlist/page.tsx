@@ -1,11 +1,15 @@
 import Link from "next/link";
 
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
+import { CollectWishlistValueBreakdown } from "@/components/CollectWishlistValueBreakdown";
 import { WishlistGridClient } from "@/components/WishlistGridClient";
 import { getCurrentCustomer } from "@/lib/auth";
+import type { CollectGridSealedRow } from "@/lib/collectGridSealed";
 import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
 import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
+import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
+import { estimateSealedMarketValueGbp, formatSealedUnitPriceGbp, sealedUnitPriceSortGbp } from "@/lib/sealedMarketValueGbp";
 import {
   collectionGroupKeyFromEntry,
   fetchItemConditionOptions,
@@ -17,6 +21,12 @@ import {
   fetchWishlistCardEntries,
   fetchWishlistIdsByMasterCard,
 } from "@/lib/storefrontCardMapsServer";
+import { mapSealedWishlistLinesToGrid } from "@/lib/sealedCustomerItems";
+import {
+  fetchSealedCollectionLines,
+  fetchSealedWishlistLines,
+  resolveSealedProductsByIds,
+} from "@/lib/sealedCustomerItemsServer";
 
 type WishlistPageProps = {
   searchParams?: Promise<{ group_by_set?: string }>;
@@ -45,7 +55,33 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   const resolvedSearchParams = (await searchParams) ?? {};
   const groupBySet = resolvedSearchParams.group_by_set === "1";
 
-  const entries = await fetchWishlistCardEntries(customer.id);
+  const [entries, sealedWishlistLines, sealedCollectionLines] = await Promise.all([
+    fetchWishlistCardEntries(customer.id),
+    fetchSealedWishlistLines(customer.id),
+    fetchSealedCollectionLines(customer.id),
+  ]);
+  const collectionSealedProductIds = new Set(sealedCollectionLines.map((l) => l.sealedProductId));
+  const sealedWishIds = [...new Set(sealedWishlistLines.map((l) => l.sealedProductId))];
+  const sealedWishProductMap = await resolveSealedProductsByIds(sealedWishIds);
+  const sealedWishGrid = mapSealedWishlistLinesToGrid(sealedWishlistLines, sealedWishProductMap);
+  const multipliers = await fetchGbpConversionMultipliers();
+  const sealedWishItems: CollectGridSealedRow[] = sealedWishGrid.map((g) => ({
+    sealedProductId: g.sealedProductId,
+    source: "wishlist",
+    wishlistEntryId: g.wishlistEntryId,
+    totalQuantity: 1,
+    sealedQuantity: 1,
+    openedQuantity: 0,
+    sealedEntryIds: [],
+    name: g.product?.name ?? `Product #${g.sealedProductId}`,
+    imageUrl: g.product?.imageUrl ?? null,
+    series: g.product?.series?.trim() || null,
+    priceLabel: formatSealedUnitPriceGbp(g.product ?? null, multipliers.usdToGbp),
+    priceSortGbp: sealedUnitPriceSortGbp(g.product ?? null, multipliers.usdToGbp),
+    releaseDate: g.product?.release_date ?? null,
+    addedAt: g.addedAt,
+  }));
+
   const allCardsForGrid = entries.map((e) => ({
     ...e,
     collectionGroupKey: collectionGroupKeyFromEntry(e),
@@ -75,36 +111,40 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
 
-  const [wishlistValue, pricesResult] = await Promise.all([
+  const [wishlistValue, pricesResult, sealedWishValueGbp] = await Promise.all([
     entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
     entries.length > 0
       ? estimateCardUnitPricesGbp(entries)
       : Promise.resolve({ prices: {}, manualPriceIds: new Set<string>() }),
+    sealedWishGrid.length > 0
+      ? estimateSealedMarketValueGbp(
+          sealedWishGrid.map((g) => ({ product: g.product, quantity: 1 })),
+          multipliers.usdToGbp,
+        )
+      : Promise.resolve(0),
   ]);
   const cardPricesByMasterCardId = pricesResult.prices;
 
-  const valueFormatted =
-    wishlistValue && wishlistValue.totalGbp > 0
-      ? new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(
-          wishlistValue.totalGbp,
-        )
-      : null;
+  const cardValueGbp = wishlistValue?.totalGbp ?? 0;
+  const hasAnyItems = allCardsForGrid.length > 0 || sealedWishItems.length > 0;
+  const cardInventoryLabel = `${allCardsForGrid.length} card${allCardsForGrid.length === 1 ? "" : "s"}`;
+  const sealedInventoryLabel = `${sealedWishItems.length} sealed`;
 
   const scrollRestoreKey = ["wishlist", groupBySet ? "grouped" : "flat"].join("|");
 
   return (
     <div className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
-      <p className="mt-4 shrink-0 px-4 text-sm text-[var(--foreground)]/65">
-        {allCardsForGrid.length} card{allCardsForGrid.length === 1 ? "" : "s"}
-      </p>
-      {valueFormatted ? (
-        <p className="mt-1 shrink-0 px-4 text-base font-semibold tabular-nums text-[var(--foreground)]">
-          {valueFormatted} <span className="text-sm font-normal text-[var(--foreground)]/55">Market value</span>
-        </p>
+      {hasAnyItems ? (
+        <CollectWishlistValueBreakdown
+          cardValueGbp={cardValueGbp}
+          sealedValueGbp={sealedWishValueGbp}
+          cardInventoryLabel={cardInventoryLabel}
+          sealedInventoryLabel={sealedInventoryLabel}
+        />
       ) : null}
-      {allCardsForGrid.length === 0 ? (
+      {allCardsForGrid.length === 0 && sealedWishItems.length === 0 ? (
         <p className="mt-4 px-4 max-w-md text-sm text-[var(--foreground)]/70">
-          Save cards from Search with the heart button on the card preview.
+          Save cards from Search with the heart on the card preview — or heart sealed products on a product page.
         </p>
       ) : (
         <div className="mt-6">
@@ -116,18 +156,23 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
             scrollsWindow
           >
             <div className="pb-4">
-              <WishlistGridClient
-                cards={allCardsForGrid}
-                setLogosByCode={setLogosByCode}
-                setSymbolsByCode={setSymbolsByCode}
-                variant="wishlist"
-                routeGroupBySet={groupBySet}
-                filterScope="wishlist"
-                itemConditions={itemConditions}
-                wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
-                collectionLinesByMasterCardId={collectionLinesByMasterCardId}
-                cardPricesByMasterCardId={cardPricesByMasterCardId}
-              />
+              {allCardsForGrid.length > 0 || sealedWishItems.length > 0 ? (
+                <WishlistGridClient
+                  cards={allCardsForGrid}
+                  setLogosByCode={setLogosByCode}
+                  setSymbolsByCode={setSymbolsByCode}
+                  variant="wishlist"
+                  routeGroupBySet={groupBySet}
+                  filterScope="wishlist"
+                  itemConditions={itemConditions}
+                  wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
+                  collectionLinesByMasterCardId={collectionLinesByMasterCardId}
+                  cardPricesByMasterCardId={cardPricesByMasterCardId}
+                  sealedRows={sealedWishItems}
+                  viewerOwnedSealedProductIds={collectionSealedProductIds}
+                  collectionSealedProductIds={collectionSealedProductIds}
+                />
+              ) : null}
             </div>
           </CardsResultsScroll>
         </div>

@@ -70,6 +70,23 @@ export type ShopSealedProductFilters = {
   sort?: string;
 };
 
+export const DEFAULT_SEALED_SORT = "random";
+
+export function normalizeSealedSortValue(value: string | null | undefined): string {
+  switch ((value ?? "").trim()) {
+    case "":
+    case "featured":
+    case DEFAULT_SEALED_SORT:
+      return DEFAULT_SEALED_SORT;
+    case "price-desc":
+    case "release-desc":
+    case "name-asc":
+      return value!.trim();
+    default:
+      return DEFAULT_SEALED_SORT;
+  }
+}
+
 export function normalizeSealedSeriesValue(value: string | null | undefined): string {
   const trimmed = (value ?? "").trim();
   if (!trimmed) return "";
@@ -127,7 +144,9 @@ export function buildSealedBrowseHref(
   if (filters.type?.trim()) searchParams.set("type", filters.type.trim());
   if (filters.series?.trim()) searchParams.set("series", filters.series.trim());
   if (filters.search?.trim()) searchParams.set("search", filters.search.trim());
-  if (filters.sort?.trim()) searchParams.set("sort", filters.sort.trim());
+  if (filters.sort?.trim() && filters.sort.trim() !== DEFAULT_SEALED_SORT) {
+    searchParams.set("sort", filters.sort.trim());
+  }
   if (filters.take && filters.take > 0) searchParams.set("take", String(filters.take));
   const queryString = searchParams.toString();
   const basePath = options?.basePath?.trim() || "/sealed";

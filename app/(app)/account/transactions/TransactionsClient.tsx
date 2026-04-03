@@ -21,6 +21,7 @@ type TransactionDoc = {
   unitPrice: number;
   transactionDate: string;
   notes?: string | null;
+  masterCardId?: string | null;
   sealedState?: "sealed" | "opened" | null;
   sourceReference?: string | null;
   productType: { id: string | number; name?: string } | string | number | null;
@@ -56,6 +57,27 @@ function productTypeId(pt: TransactionDoc["productType"]): string {
   if (!pt) return "";
   if (typeof pt === "object" && "id" in pt) return String(pt.id);
   return String(pt);
+}
+
+type FourWayCategory = "single" | "graded" | "sealed" | "ripped";
+
+/**
+ * Spend/sold by transaction line. Opened sealed inventory (ETBs, packs you opened, etc.) counts as Ripped.
+ * Single/graded card lines ignore sealed state. Collection value for Ripped still includes packed singles.
+ */
+function transactionFourWayCategory(doc: TransactionDoc): FourWayCategory {
+  const slug = productTypeId(doc.productType);
+  if (slug === "graded-card") return "graded";
+  if (slug === "single-card") return "single";
+  if (doc.sealedState === "opened") return "ripped";
+  return "sealed";
+}
+
+function fourWayTxnChipLabel(cat: FourWayCategory): string {
+  if (cat === "single") return "Single";
+  if (cat === "graded") return "Graded";
+  if (cat === "sealed") return "Sealed";
+  return "Ripped";
 }
 
 const PRODUCT_TYPE_CHIP_KEYS = new Set([
@@ -357,6 +379,10 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
   // ── Load transactions + collection value ──────────────────────────────────
 
   const [collectionValue, setCollectionValue] = useState<number | null>(null);
+  const [singleCardsCollectionValue, setSingleCardsCollectionValue] = useState<number | null>(null);
+  const [gradedCardsCollectionValue, setGradedCardsCollectionValue] = useState<number | null>(null);
+  const [rippedCollectionValue, setRippedCollectionValue] = useState<number | null>(null);
+  const [sealedCollectionValue, setSealedCollectionValue] = useState<number | null>(null);
   const [collectionValueLoading, setCollectionValueLoading] = useState(true);
 
   useEffect(() => {
@@ -370,9 +396,21 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
 
     fetch("/api/collection-value")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: { totalValue?: number } | null) => {
-        if (data?.totalValue !== undefined) setCollectionValue(data.totalValue);
-      })
+      .then(
+        (data: {
+          totalValue?: number;
+          singleCardsValueGbp?: number;
+          gradedCardsValueGbp?: number;
+          rippedValueGbp?: number;
+          sealedValueGbp?: number;
+        } | null) => {
+          if (data?.totalValue !== undefined) setCollectionValue(data.totalValue);
+          if (data?.singleCardsValueGbp !== undefined) setSingleCardsCollectionValue(data.singleCardsValueGbp);
+          if (data?.gradedCardsValueGbp !== undefined) setGradedCardsCollectionValue(data.gradedCardsValueGbp);
+          if (data?.rippedValueGbp !== undefined) setRippedCollectionValue(data.rippedValueGbp);
+          if (data?.sealedValueGbp !== undefined) setSealedCollectionValue(data.sealedValueGbp);
+        },
+      )
       .catch(() => {})
       .finally(() => setCollectionValueLoading(false));
   }, []);
@@ -412,6 +450,40 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
         .reduce((s, d) => s + d.unitPrice * d.quantity, 0),
     [filtered],
   );
+
+  const spentByCategory = useMemo(() => {
+    let single = 0;
+    let graded = 0;
+    let sealed = 0;
+    let ripped = 0;
+    for (const d of filtered) {
+      if (d.direction !== "purchase") continue;
+      const line = d.unitPrice * d.quantity;
+      const cat = transactionFourWayCategory(d);
+      if (cat === "graded") graded += line;
+      else if (cat === "sealed") sealed += line;
+      else if (cat === "ripped") ripped += line;
+      else single += line;
+    }
+    return { single, graded, sealed, ripped };
+  }, [filtered]);
+
+  const soldByCategory = useMemo(() => {
+    let single = 0;
+    let graded = 0;
+    let sealed = 0;
+    let ripped = 0;
+    for (const d of filtered) {
+      if (d.direction !== "sale") continue;
+      const line = d.unitPrice * d.quantity;
+      const cat = transactionFourWayCategory(d);
+      if (cat === "graded") graded += line;
+      else if (cat === "sealed") sealed += line;
+      else if (cat === "ripped") ripped += line;
+      else single += line;
+    }
+    return { single, graded, sealed, ripped };
+  }, [filtered]);
 
   // P&L = (sold proceeds + current collection value) - total spent
   const netPnl = totalSold + (collectionValue ?? 0) - totalSpent;
@@ -559,32 +631,122 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
         ))}
       </div>
 
-      {/* Summary */}
-      <div className="mb-6 grid grid-cols-2 gap-3">
-        <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">Spent</span>
-          <span className="mt-2 text-lg font-bold tabular-nums leading-none text-red-400">{fmt(totalSpent)}</span>
+      {/* Summary totals + category breakdown */}
+      <div className="mb-6 flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">
+              Spent
+            </span>
+            <span className="mt-2 text-lg font-bold tabular-nums leading-none text-red-400">{fmt(totalSpent)}</span>
+          </div>
+          <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">
+              Sold
+            </span>
+            <span className="mt-2 text-lg font-bold tabular-nums leading-none text-green-400">{fmt(totalSold)}</span>
+          </div>
+          <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">
+              Collection
+            </span>
+            <span className="mt-2 text-lg font-bold tabular-nums leading-none text-[var(--foreground)]/90">
+              {collectionValueLoading ? "…" : fmt(collectionValue ?? 0)}
+            </span>
+          </div>
+          <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">
+              P&amp;L
+            </span>
+            <span
+              className={`mt-2 text-lg font-bold tabular-nums leading-none ${
+                netPnl >= 0 ? "text-green-400" : "text-red-400"
+              }`}
+            >
+              {collectionValueLoading ? "…" : `${netPnl >= 0 ? "+" : ""}${fmt(netPnl)}`}
+            </span>
+            <span className="mt-1.5 text-[10px] leading-tight text-[var(--foreground)]/38">Sold + collection − spent</span>
+          </div>
         </div>
-        <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">Sold</span>
-          <span className="mt-2 text-lg font-bold tabular-nums leading-none text-green-400">{fmt(totalSold)}</span>
-        </div>
-        <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">Collection</span>
-          <span className="mt-2 text-lg font-bold tabular-nums leading-none text-[var(--foreground)]/90">
-            {collectionValueLoading ? "…" : fmt(collectionValue ?? 0)}
-          </span>
-        </div>
-        <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">P&amp;L</span>
-          <span
-            className={`mt-2 text-lg font-bold tabular-nums leading-none ${
-              netPnl >= 0 ? "text-green-400" : "text-red-400"
-            }`}
-          >
-            {collectionValueLoading ? "…" : `${netPnl >= 0 ? "+" : ""}${fmt(netPnl)}`}
-          </span>
-          <span className="mt-1.5 text-[10px] leading-tight text-[var(--foreground)]/38">Sold + collection − spent</span>
+
+        <div className="txn-breakdown overflow-x-auto rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.035] p-1 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
+          <table className="txn-breakdown__table w-full min-w-[28rem] border-collapse text-left text-[13px]">
+            <thead>
+              <tr className="border-b border-[var(--foreground)]/10">
+                <th className="txn-breakdown__th px-3 py-2.5 font-semibold text-[var(--foreground)]/55">Category</th>
+                <th className="txn-breakdown__th px-3 py-2.5 text-right font-semibold text-[var(--foreground)]/55">
+                  Collection
+                </th>
+                <th className="txn-breakdown__th px-3 py-2.5 text-right font-semibold text-[var(--foreground)]/55">Spent</th>
+                <th className="txn-breakdown__th px-3 py-2.5 text-right font-semibold text-[var(--foreground)]/55">Sold</th>
+                <th className="txn-breakdown__th px-3 py-2.5 text-right font-semibold text-[var(--foreground)]/55">
+                  P&amp;L
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {(
+                [
+                  ["Single cards", "single"] as const,
+                  ["Graded cards", "graded"] as const,
+                  ["Sealed product", "sealed"] as const,
+                  ["Ripped (packed & opened)", "ripped"] as const,
+                ] as const
+              ).map(([label, key]) => {
+                const collectionAmt = collectionValueLoading
+                  ? 0
+                  : key === "single"
+                    ? (singleCardsCollectionValue ?? 0)
+                    : key === "graded"
+                      ? (gradedCardsCollectionValue ?? 0)
+                      : key === "sealed"
+                        ? (sealedCollectionValue ?? 0)
+                        : (rippedCollectionValue ?? 0);
+                const spentAmt =
+                  key === "single"
+                    ? spentByCategory.single
+                    : key === "graded"
+                      ? spentByCategory.graded
+                      : key === "sealed"
+                        ? spentByCategory.sealed
+                        : spentByCategory.ripped;
+                const soldAmt =
+                  key === "single"
+                    ? soldByCategory.single
+                    : key === "graded"
+                      ? soldByCategory.graded
+                      : key === "sealed"
+                        ? soldByCategory.sealed
+                        : soldByCategory.ripped;
+                const rowPnl = collectionAmt + soldAmt - spentAmt;
+                return (
+                  <tr key={key} className="border-b border-[var(--foreground)]/8 last:border-b-0">
+                    <td className="txn-breakdown__td px-3 py-2.5 font-medium text-[var(--foreground)]/88">{label}</td>
+                    <td className="txn-breakdown__td px-3 py-2.5 text-right tabular-nums text-[var(--foreground)]/90">
+                      {collectionValueLoading ? "…" : fmt(collectionAmt)}
+                    </td>
+                    <td className="txn-breakdown__td px-3 py-2.5 text-right tabular-nums text-red-400/95">{fmt(spentAmt)}</td>
+                    <td className="txn-breakdown__td px-3 py-2.5 text-right tabular-nums text-green-400/95">{fmt(soldAmt)}</td>
+                    <td
+                      className={`txn-breakdown__td px-3 py-2.5 text-right text-sm font-semibold tabular-nums ${
+                        collectionValueLoading
+                          ? "text-[var(--foreground)]/50"
+                          : rowPnl >= 0
+                            ? "text-green-400"
+                            : "text-red-400"
+                      }`}
+                    >
+                      {collectionValueLoading ? "…" : `${rowPnl >= 0 ? "+" : ""}${fmt(rowPnl)}`}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p className="border-t border-[var(--foreground)]/8 px-3 py-2 text-[10px] leading-snug text-[var(--foreground)]/42">
+            Ripped collection value is cards marked as pulled from packs. Spent and sold for Ripped include transactions
+            with <span className="font-semibold text-[var(--foreground)]/55">Opened</span> sealed product.
+          </p>
         </div>
       </div>
 
@@ -619,6 +781,7 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
             const isEditing = editingId === id;
             const isDeleting = deletingId === id;
             const directionLabel = doc.direction === "sale" ? "Sale" : "Purchase";
+            const spendCat = transactionFourWayCategory(doc);
 
             return (
               <li
@@ -651,6 +814,12 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
                             }`}
                           >
                             {directionLabel}
+                          </span>
+                          <span
+                            className="rounded-full border border-[var(--foreground)]/14 bg-[var(--foreground)]/[0.07] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--foreground)]/58"
+                            title="Transaction category"
+                          >
+                            {fourWayTxnChipLabel(spendCat)}
                           </span>
                           <span className={productTypeChipClass(doc.productType)} title="Product type">
                             {productTypeName(doc.productType)}

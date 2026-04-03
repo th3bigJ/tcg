@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     unitPrice: row.unit_price,
     transactionDate: row.transaction_date,
     notes: row.notes,
-    masterCardId: row.master_card_id,
+    masterCardId: row.master_card_id != null ? String(row.master_card_id) : null,
     sealedState: (row.sealed_state as "sealed" | "opened" | null | undefined) ?? null,
     sourceReference: (row.source_reference as string | null | undefined) ?? null,
     productType: row.product_type_id ? (getProductTypeById(row.product_type_id as string) ?? null) : null,

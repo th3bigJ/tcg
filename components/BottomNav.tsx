@@ -168,6 +168,10 @@ export function BottomNav() {
   const pathname = usePathname() ?? "";
   const chromeVisible = useAutoHideChrome();
 
+  if (pathname.startsWith("/sealed/")) {
+    return null;
+  }
+
   return (
     <>
       <nav

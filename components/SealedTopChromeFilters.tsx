@@ -3,7 +3,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { buildSealedBrowseHref, normalizeSealedSeriesValue } from "@/lib/r2SealedProducts";
+import { buildSealedBrowseHref, DEFAULT_SEALED_SORT, normalizeSealedSeriesValue, normalizeSealedSortValue } from "@/lib/r2SealedProducts";
 
 type FilterOption = {
   value: string;
@@ -13,7 +13,7 @@ type FilterOption = {
 type SheetKey = "sort" | "type" | "series";
 
 const SORT_OPTIONS = [
-  { value: "", label: "Featured" },
+  { value: DEFAULT_SEALED_SORT, label: "Random" },
   { value: "price-desc", label: "Price" },
   { value: "release-desc", label: "Newest" },
   { value: "name-asc", label: "Name" },
@@ -172,10 +172,11 @@ export function SealedTopChromeFilters() {
   const [typeOptions, setTypeOptions] = useState<FilterOption[]>([]);
   const [seriesOptions, setSeriesOptions] = useState<FilterOption[]>([]);
 
-  const activeSort = (searchParams?.get("sort") ?? "").trim();
+  const activeSort = normalizeSealedSortValue(searchParams?.get("sort"));
   const activeType = (searchParams?.get("type") ?? "").trim();
   const activeSeries = normalizeSealedSeriesValue(searchParams?.get("series") ?? "");
   const activeSearch = (searchParams?.get("search") ?? "").trim();
+  const hasActiveSort = activeSort !== DEFAULT_SEALED_SORT;
 
   useEffect(() => {
     let cancelled = false;
@@ -209,7 +210,7 @@ export function SealedTopChromeFilters() {
     };
   }, [activeSheet]);
 
-  const hasActiveFilters = Boolean(activeSort || activeType || activeSeries);
+  const hasActiveFilters = Boolean(hasActiveSort || activeType || activeSeries);
 
   const pushFilters = (next: { sort?: string; type?: string; series?: string }) => {
     router.push(
@@ -253,12 +254,12 @@ export function SealedTopChromeFilters() {
         <TopChromeChipSelect
           label="Sort"
           active
-          clearable={Boolean(activeSort)}
-          count={activeSort ? 1 : 0}
+          clearable={hasActiveSort}
+          count={hasActiveSort ? 1 : 0}
           icon={<IconSort />}
           onClick={() => {
-            if (activeSort) {
-              pushFilters({ sort: "" });
+            if (hasActiveSort) {
+              pushFilters({ sort: DEFAULT_SEALED_SORT });
               return;
             }
             setActiveSheet("sort");

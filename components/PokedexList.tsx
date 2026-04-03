@@ -167,19 +167,14 @@ export function PokedexList({
 
 function buildSearchHref(searchSelectionParams: Record<string, string>, nationalDexNumber: number) {
   const params = new URLSearchParams(searchSelectionParams);
-  const returnTo = params.get("return_to");
   params.delete("return_to");
+  params.set("tab", "cards");
   params.set("pokemon", String(nationalDexNumber));
   params.delete("set");
   params.delete("take");
+  params.delete("type");
+  params.delete("series");
+  params.delete("page");
   const qs = params.toString();
-  if (returnTo && returnTo.startsWith("/")) {
-    const url = new URL(returnTo, "http://local");
-    const targetParams = new URLSearchParams(url.search);
-    targetParams.set("pokemon", String(nationalDexNumber));
-    targetParams.delete("set");
-    targetParams.delete("take");
-    return `${url.pathname}${targetParams.toString() ? `?${targetParams.toString()}` : ""}`;
-  }
   return `/search${qs ? `?${qs}` : ""}`;
 }

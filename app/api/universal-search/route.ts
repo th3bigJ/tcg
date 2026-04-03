@@ -4,7 +4,15 @@ import { getCurrentCustomerForApiRoute } from "@/lib/auth";
 import { jsonResponseWithAuthCookies, createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { getAllCards, getAllSets } from "@/lib/staticCards";
 import { getFilterFacets } from "@/lib/staticCardIndex";
+import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import { resolvePokemonMediaURL } from "@/lib/media";
+import {
+  getSealedProductCatalog,
+  getSealedProductPrices,
+  mergeSealedProductsWithPrices,
+  searchShopSealedProducts,
+  sortShopSealedProducts,
+} from "@/lib/r2SealedProducts";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pokemonJson = require("../../../data/pokemon.json") as Array<{
@@ -52,7 +60,7 @@ export async function GET(request: NextRequest) {
 
   if (q.length < 2) {
     return jsonResponseWithAuthCookies(
-      { cards: [], sets: [], pokemon: [], collection: [], wishlist: [] },
+      { cards: [], sets: [], pokemon: [], sealed: [], collection: [], wishlist: [] },
       authCookieResponse,
     );
   }
@@ -94,15 +102,36 @@ export async function GET(request: NextRequest) {
       imageUrl: resolvePokemonMediaURL(p.imageUrl),
     }));
 
+  const [sealedCatalog, sealedPrices, multipliers] = await Promise.all([
+    getSealedProductCatalog(),
+    getSealedProductPrices(),
+    fetchGbpConversionMultipliers(),
+  ]);
+
+  const sealed = sortShopSealedProducts(
+    searchShopSealedProducts(mergeSealedProductsWithPrices(sealedCatalog, sealedPrices), q),
+  )
+    .slice(0, 6)
+    .map((product) => ({
+      id: product.id,
+      name: product.name,
+      imageUrl: product.imageUrl,
+      series: product.series,
+      type: product.type,
+      marketValue: product.marketValue,
+      marketValueGbp: typeof product.marketValue === "number" ? product.marketValue * multipliers.usdToGbp : null,
+      releaseDate: product.release_date,
+    }));
+
   // Collection & Wishlist — only when signed in
-  let collection: Array<{
+  const collection: Array<{
     masterCardId: string;
     cardName: string;
     setName: string;
     imageLowSrc: string;
     setCode: string;
   }> = [];
-  let wishlist: typeof collection = [];
+  const wishlist: typeof collection = [];
 
   if (customer) {
     const { supabase } = createSupabaseRouteHandlerClient(request);
@@ -164,7 +193,7 @@ export async function GET(request: NextRequest) {
   }
 
   return jsonResponseWithAuthCookies(
-    { cards, sets, pokemon, collection, wishlist },
+    { cards, sets, pokemon, sealed, collection, wishlist },
     authCookieResponse,
   );
 }

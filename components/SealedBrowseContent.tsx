@@ -3,13 +3,14 @@ import { SealedProductGrid } from "@/components/SealedProductGrid";
 import { SealedTagFilterRow } from "@/components/SealedTagFilterRow";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import {
+  DEFAULT_SEALED_SORT,
   buildSealedBrowseHref,
   filterShopSealedProducts,
   getSealedProductCatalog,
   getSealedProductPrices,
   mergeSealedProductsWithPrices,
   normalizeSealedSeriesValue,
-  sortShopSealedProducts,
+  normalizeSealedSortValue,
   type ShopSealedProduct,
 } from "@/lib/r2SealedProducts";
 
@@ -30,6 +31,30 @@ type SealedBrowseContentProps = {
 
 const SEALED_LOAD_MORE_STEP = 60;
 const SEALED_INITIAL_TAKE = 60;
+
+function createSeededRandom(seed: string) {
+  let h = 1779033703 ^ seed.length;
+  for (let i = 0; i < seed.length; i++) {
+    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function seededRandom() {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  };
+}
+
+function shuffleProductsWithSeed(products: readonly ShopSealedProduct[], seed: string): ShopSealedProduct[] {
+  const shuffled = [...products];
+  const random = createSeededRandom(seed);
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+  }
+  return shuffled;
+}
 
 function parseSealedTake(value: string | undefined, pageValue: string | undefined): number {
   const parsedTake = Number.parseInt(value ?? "", 10);
@@ -113,20 +138,11 @@ function buildSeriesOptions(products: ShopSealedProduct[]): Array<{ value: strin
     }));
 }
 
-function normalizeSort(value: string | undefined): string {
-  switch ((value ?? "").trim()) {
-    case "featured":
-    case "price-desc":
-    case "release-desc":
-    case "name-asc":
-      return value!.trim();
-    default:
-      return "";
-  }
-}
-
 function sortVisibleProducts(products: ShopSealedProduct[], sort: string): ShopSealedProduct[] {
-  if (!sort || sort === "featured") return sortShopSealedProducts(products);
+  if (sort === DEFAULT_SEALED_SORT) {
+    const seed = products.map((product) => String(product.id)).join("|");
+    return shuffleProductsWithSeed(products, seed);
+  }
 
   return [...products].sort((left, right) => {
     if (sort === "price-desc") {
@@ -157,7 +173,7 @@ export async function SealedBrowseContent({
 }: SealedBrowseContentProps) {
   const requestedSearch = (params.search ?? params.q ?? "").trim();
   const requestedTake = parseSealedTake(params.take, params.page);
-  const activeSort = normalizeSort(params.sort);
+  const activeSort = normalizeSealedSortValue(params.sort);
 
   const [catalog, prices, multipliers] = await Promise.all([
     getSealedProductCatalog(),
