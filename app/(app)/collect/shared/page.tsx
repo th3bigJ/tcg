@@ -2,9 +2,7 @@ import Link from "next/link";
 
 import { SharedCollectionsHubClient } from "@/app/(app)/collect/shared/SharedCollectionsHubClient";
 import { getCurrentCustomer } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listIncomingProfileShares, listOutgoingProfileShares } from "@/lib/customerProfileSharesServer";
-import { listUnreadTradeNotifications } from "@/lib/tradeNotificationsServer";
 
 export default async function SharedCollectionsPage() {
   const customer = await getCurrentCustomer();
@@ -24,20 +22,10 @@ export default async function SharedCollectionsPage() {
     );
   }
 
-  const [outgoing, incoming, initialTradeNotifications] = await Promise.all([
+  const [outgoing, incoming] = await Promise.all([
     listOutgoingProfileShares(customer.id),
     listIncomingProfileShares(customer.id),
-    (async () => {
-      const supabase = await createSupabaseServerClient();
-      return listUnreadTradeNotifications(supabase);
-    })(),
   ]);
 
-  return (
-    <SharedCollectionsHubClient
-      outgoing={outgoing}
-      incoming={incoming}
-      initialTradeNotifications={initialTradeNotifications}
-    />
-  );
+  return <SharedCollectionsHubClient outgoing={outgoing} incoming={incoming} />;
 }

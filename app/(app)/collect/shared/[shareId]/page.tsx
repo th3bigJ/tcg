@@ -41,10 +41,6 @@ export default async function SharedCollectionDetailPage({ params }: PageProps) 
     >
       <SharedCollectionDetailClient
         shareId={data.shareId}
-        viewerCustomerId={data.viewerCustomerId}
-        counterpartyDisplayName={data.counterpartyDisplayName}
-        viewerCollectionEntries={data.viewerCollectionEntries}
-        counterpartyCollectionEntries={data.counterpartyCollectionEntries}
         pageTitle={data.pageTitle}
         ownerDisplayName={data.ownerDisplayName}
         collectionCards={data.collectionCards}

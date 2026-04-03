@@ -1,15 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
 import type { CustomerProfileShareStatus } from "@/lib/customerProfileShares";
 import { displayCustomerName } from "@/lib/customerProfileShares";
 import type { OutgoingShareListItem, IncomingShareListItem } from "@/lib/customerProfileSharesServer";
-import { TRADE_NOTIFICATIONS_UPDATED_EVENT } from "@/lib/tradeNotificationsConstants";
-import type { TradeNotificationListItem } from "@/lib/tradeNotificationsServer";
 
 function outgoingPendingLabel(status: CustomerProfileShareStatus): string {
   switch (status) {
@@ -22,34 +19,20 @@ function outgoingPendingLabel(status: CustomerProfileShareStatus): string {
   }
 }
 
-function formatTradeNotificationTime(iso: string): string {
-  try {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "";
-    return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return "";
-  }
-}
-
 type Props = {
   outgoing: OutgoingShareListItem[];
   incoming: IncomingShareListItem[];
-  initialTradeNotifications: TradeNotificationListItem[];
 };
 
 export function SharedCollectionsHubClient({
   outgoing: initialOutgoing,
   incoming: initialIncoming,
-  initialTradeNotifications,
 }: Props) {
-  const router = useRouter();
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
-  const [tradeNotifs, setTradeNotifs] = useState<TradeNotificationListItem[]>(initialTradeNotifications);
   const [localOutgoing, setLocalOutgoing] = useState<OutgoingShareListItem[] | null>(null);
   const [localIncoming, setLocalIncoming] = useState<IncomingShareListItem[] | null>(null);
   const outgoing = localOutgoing ?? initialOutgoing;
@@ -60,10 +43,6 @@ export function SharedCollectionsHubClient({
     setLocalIncoming(null);
   }, [initialIncoming, initialOutgoing]);
 
-  useEffect(() => {
-    setTradeNotifs(initialTradeNotifications);
-  }, [initialTradeNotifications]);
-
   const refresh = async () => {
     const r = await fetch("/api/profile-shares");
     if (!r.ok) return;
@@ -71,27 +50,6 @@ export function SharedCollectionsHubClient({
     setLocalOutgoing(j.outgoing ?? outgoing);
     setLocalIncoming(j.incoming ?? incoming);
   };
-
-  const openTradeNotification = useCallback(
-    async (n: TradeNotificationListItem) => {
-      const res = await fetch(`/api/trade-notifications/${encodeURIComponent(n.id)}`, {
-        method: "PATCH",
-        credentials: "include",
-      });
-      if (!res.ok) return;
-      setTradeNotifs((prev) => prev.filter((x) => x.id !== n.id));
-      window.dispatchEvent(new Event(TRADE_NOTIFICATIONS_UPDATED_EVENT));
-      if (n.shareId && n.tradeId) {
-        router.push(
-          `/collect/shared/${encodeURIComponent(n.shareId)}/trade/${encodeURIComponent(n.tradeId)}`,
-        );
-      } else {
-        router.push("/collect/shared");
-      }
-      router.refresh();
-    },
-    [router],
-  );
 
   const closeShareSheet = () => {
     setShareSheetOpen(false);
@@ -116,7 +74,6 @@ export function SharedCollectionsHubClient({
       setEmail("");
       closeShareSheet();
       await refresh();
-      router.refresh();
     } finally {
       setPending(false);
     }
@@ -130,7 +87,6 @@ export function SharedCollectionsHubClient({
       return;
     }
     await refresh();
-    router.refresh();
   };
 
   const decline = async (id: string) => {
@@ -141,7 +97,6 @@ export function SharedCollectionsHubClient({
       return;
     }
     await refresh();
-    router.refresh();
   };
 
   const revoke = async (id: string) => {
@@ -152,7 +107,6 @@ export function SharedCollectionsHubClient({
       return;
     }
     await refresh();
-    router.refresh();
   };
 
   const {
@@ -187,8 +141,7 @@ export function SharedCollectionsHubClient({
   const hasActiveOutgoing = activeOutgoing.length > 0;
   const hasActiveIncoming = activeIncoming.length > 0;
   const hasActive = hasActiveOutgoing || hasActiveIncoming;
-  const hasUnreadTradeNotifs = tradeNotifs.length > 0;
-  const showMainStack = hasPending || hasActive || hasUnreadTradeNotifs;
+  const showMainStack = hasPending || hasActive;
 
   return (
     <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-[var(--bottom-nav-offset)] pt-2 text-[var(--foreground)]">
@@ -269,36 +222,6 @@ export function SharedCollectionsHubClient({
                     </div>
                   </li>
                 ))}
-              </ul>
-            </section>
-          ) : null}
-
-          {hasUnreadTradeNotifs ? (
-            <section aria-label="Unread trade notifications">
-              <h2 className="text-base font-semibold">Notifications</h2>
-              <ul className="mt-3 flex flex-col gap-2">
-                {tradeNotifs.map((n) => {
-                  const timeLabel = formatTradeNotificationTime(n.createdAt);
-                  return (
-                    <li key={n.id}>
-                      <button
-                        type="button"
-                        onClick={() => void openTradeNotification(n)}
-                        className="flex w-full cursor-pointer touch-manipulation items-center justify-between gap-4 rounded-full border border-[var(--foreground)]/12 bg-[var(--foreground)]/5 px-5 py-3 text-left transition hover:bg-[var(--foreground)]/10 active:bg-[var(--foreground)]/12"
-                      >
-                        <span className="min-w-0 flex-1">
-                          <span className="line-clamp-3 text-sm font-medium">{n.body}</span>
-                          {timeLabel ? (
-                            <span className="mt-1 block text-xs text-[var(--foreground)]/50">{timeLabel}</span>
-                          ) : null}
-                        </span>
-                        <span className="shrink-0 pr-1 text-lg leading-none text-[var(--foreground)]/45" aria-hidden>
-                          ›
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
               </ul>
             </section>
           ) : null}

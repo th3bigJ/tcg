@@ -12,7 +12,6 @@ import {
   groupCollectionLinesByGroupKey,
   groupCollectionLinesByMasterCardId,
   mergeCollectionEntriesForGrid,
-  storefrontEntriesToTradeGridCards,
   type StorefrontCardEntry,
   type WishlistEntriesByMasterCardId,
 } from "@/lib/storefrontCardMaps";
@@ -22,30 +21,10 @@ import {
   fetchWishlistIdsByMasterCard,
 } from "@/lib/storefrontCardMapsServer";
 
-function gradingByGroupKeyFromEntries(
-  entries: StorefrontCardEntry[],
-): Record<string, { company: string; grade: string; imageUrl?: string }> {
-  const out: Record<string, { company: string; grade: string; imageUrl?: string }> = {};
-  for (const e of entries) {
-    if (e.gradingCompany && e.gradeValue) {
-      out[collectionGroupKeyFromEntry(e)] = {
-        company: e.gradingCompany,
-        grade: e.gradeValue,
-        imageUrl: e.gradedImageUrl,
-      };
-    }
-  }
-  return out;
-}
-
 export type SharedCollectionLoaderResult = {
   shareId: string;
-  viewerCustomerId: string;
-  counterpartyDisplayName: string;
   pageTitle: string;
   ownerDisplayName: string;
-  viewerCollectionEntries: StorefrontCardEntry[];
-  counterpartyCollectionEntries: StorefrontCardEntry[];
   collectionCards: StorefrontCardEntry[];
   wishlistCards: StorefrontCardEntry[];
   setLogosByCode: Record<string, string>;
@@ -59,22 +38,6 @@ export type SharedCollectionLoaderResult = {
   wishlistManualPriceMasterCardIds: string[];
   gradingByMasterCardId: Record<string, { company: string; grade: string; imageUrl?: string }>;
   viewerOwnedMasterCardIds: string[];
-  viewerTradeGridCards: StorefrontCardEntry[];
-  viewerTradeCardPricesByMasterCardId: Record<string, number>;
-  viewerTradeCollectionLinesByMasterCardId: Record<
-    string,
-    import("@/lib/storefrontCardMaps").CollectionLineSummary[]
-  >;
-  viewerTradeManualPriceMasterCardIds: string[];
-  viewerTradeGradingByMasterCardId: Record<string, { company: string; grade: string; imageUrl?: string }>;
-  counterpartyTradeGridCards: StorefrontCardEntry[];
-  counterpartyTradeCardPricesByMasterCardId: Record<string, number>;
-  counterpartyTradeCollectionLinesByMasterCardId: Record<
-    string,
-    import("@/lib/storefrontCardMaps").CollectionLineSummary[]
-  >;
-  counterpartyTradeManualPriceMasterCardIds: string[];
-  counterpartyTradeGradingByMasterCardId: Record<string, { company: string; grade: string; imageUrl?: string }>;
 };
 
 export async function loadSharedCollectionData(
@@ -103,8 +66,6 @@ export async function loadSharedCollectionData(
     ]);
 
   const viewerCollectionEntries = resolved.viewerIsOwner ? ownerCollectionEntries : recipientCollectionEntries;
-  const viewerCollectionForTrade = viewerCollectionEntries;
-  const counterpartyCollectionForTrade = resolved.viewerIsOwner ? recipientCollectionEntries : ownerCollectionEntries;
 
   const wishlistEntryIdsByMasterCardId = await fetchWishlistIdsByMasterCard(ownerId);
   const collectionLinesByMasterCardId = {
@@ -133,36 +94,14 @@ export async function loadSharedCollectionData(
   const setLogosByCode = Object.fromEntries(setFilterOptions.map((option) => [option.code, option.logoSrc]));
   const setSymbolsByCode = Object.fromEntries(setFilterOptions.map((option) => [option.code, option.symbolSrc]));
 
-  const [cPricesResult, wPricesResult, viewerTradePricesResult, counterpartyTradePricesResult] = await Promise.all([
+  const [cPricesResult, wPricesResult] = await Promise.all([
     collectionEntries.length > 0
       ? estimateCardUnitPricesGbp(collectionEntries)
       : Promise.resolve({ prices: {} as Record<string, number>, manualPriceIds: new Set<string>() }),
     wishlistEntries.length > 0
       ? estimateCardUnitPricesGbp(wishlistEntries)
       : Promise.resolve({ prices: {} as Record<string, number>, manualPriceIds: new Set<string>() }),
-    viewerCollectionForTrade.length > 0
-      ? estimateCardUnitPricesGbp(viewerCollectionForTrade)
-      : Promise.resolve({ prices: {} as Record<string, number>, manualPriceIds: new Set<string>() }),
-    counterpartyCollectionForTrade.length > 0
-      ? estimateCardUnitPricesGbp(counterpartyCollectionForTrade)
-      : Promise.resolve({ prices: {} as Record<string, number>, manualPriceIds: new Set<string>() }),
   ]);
-
-  const viewerTradeGridRaw = storefrontEntriesToTradeGridCards(viewerCollectionForTrade);
-  const counterpartyTradeGridRaw = storefrontEntriesToTradeGridCards(counterpartyCollectionForTrade);
-  const viewerTradeGridSorted =
-    viewerTradeGridRaw.length > 0
-      ? sortCollectGridRowsByPriceDesc(viewerTradeGridRaw, viewerTradePricesResult.prices)
-      : viewerTradeGridRaw;
-  const counterpartyTradeGridSorted =
-    counterpartyTradeGridRaw.length > 0
-      ? sortCollectGridRowsByPriceDesc(counterpartyTradeGridRaw, counterpartyTradePricesResult.prices)
-      : counterpartyTradeGridRaw;
-
-  const viewerTradeLinesByMasterCardId = groupCollectionLinesByMasterCardId(viewerCollectionForTrade);
-  const counterpartyTradeLinesByMasterCardId = groupCollectionLinesByMasterCardId(counterpartyCollectionForTrade);
-  const viewerTradeGradingByMasterCardId = gradingByGroupKeyFromEntries(viewerCollectionForTrade);
-  const counterpartyTradeGradingByMasterCardId = gradingByGroupKeyFromEntries(counterpartyCollectionForTrade);
 
   const collectionSorted =
     allCollectionForGrid.length > 0
@@ -204,12 +143,8 @@ export async function loadSharedCollectionData(
 
   return {
     shareId,
-    viewerCustomerId: customerId,
-    counterpartyDisplayName: otherName,
     pageTitle,
     ownerDisplayName: ownerName,
-    viewerCollectionEntries: viewerCollectionForTrade,
-    counterpartyCollectionEntries: counterpartyCollectionForTrade,
     collectionCards: collectionSorted,
     wishlistCards: wishlistSorted,
     setLogosByCode,
@@ -223,15 +158,5 @@ export async function loadSharedCollectionData(
     wishlistManualPriceMasterCardIds: [...wPricesResult.manualPriceIds],
     gradingByMasterCardId,
     viewerOwnedMasterCardIds,
-    viewerTradeGridCards: viewerTradeGridSorted,
-    viewerTradeCardPricesByMasterCardId: viewerTradePricesResult.prices,
-    viewerTradeCollectionLinesByMasterCardId: viewerTradeLinesByMasterCardId,
-    viewerTradeManualPriceMasterCardIds: [...viewerTradePricesResult.manualPriceIds],
-    viewerTradeGradingByMasterCardId,
-    counterpartyTradeGridCards: counterpartyTradeGridSorted,
-    counterpartyTradeCardPricesByMasterCardId: counterpartyTradePricesResult.prices,
-    counterpartyTradeCollectionLinesByMasterCardId: counterpartyTradeLinesByMasterCardId,
-    counterpartyTradeManualPriceMasterCardIds: [...counterpartyTradePricesResult.manualPriceIds],
-    counterpartyTradeGradingByMasterCardId,
   };
 }

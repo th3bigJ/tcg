@@ -107,7 +107,7 @@ export function AppDrawerMenu({
     { href: "/search", label: "Browse cards", description: "Search singles and sets", icon: <DrawerIconCompass /> },
     { href: "/collect", label: "Collection", description: "Track what you own", icon: <DrawerIconCards /> },
     { href: "/wishlist", label: "Wishlist", description: "Keep tabs on your targets", icon: <DrawerIconClock /> },
-    { href: "/collect/shared", label: "Trading circle", description: "Shared collections and trades", icon: <DrawerIconGroups /> },
+    { href: "/collect/shared", label: "Friends", description: "Shared collections", icon: <DrawerIconGroups /> },
     { href: "/more/grade", label: "Grade opportunities", description: "Surface your best submissions", icon: <DrawerIconSparkles /> },
     { href: "/account/transactions", label: "Transactions", description: "Recent orders and purchases", icon: <DrawerIconReceipt /> },
   ];

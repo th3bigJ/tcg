@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffectEvent } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 import { SEARCH_NAV_RESELECT_EVENT } from "@/lib/searchNavEvents";
-import { TRADE_NOTIFICATIONS_UPDATED_EVENT } from "@/lib/tradeNotificationsConstants";
 import { useAutoHideChrome } from "@/lib/useAutoHideChrome";
 
 type NavItem = {
@@ -155,54 +153,9 @@ const navItems: NavItem[] = [
   },
 ];
 
-export function BottomNav({
-  isLoggedIn,
-  initialFriendsUnreadCount = 0,
-}: {
-  isLoggedIn: boolean;
-  initialFriendsUnreadCount?: number;
-}) {
+export function BottomNav() {
   const pathname = usePathname() ?? "";
-  const [friendsUnreadCount, setFriendsUnreadCount] = useState(initialFriendsUnreadCount);
-  const visibleFriendsUnreadCount = isLoggedIn ? friendsUnreadCount : 0;
   const chromeVisible = useAutoHideChrome();
-
-  const refreshFriendsUnreadCount = useEffectEvent(async () => {
-    if (!isLoggedIn) return;
-    try {
-      const res = await fetch("/api/trade-notifications?countOnly=1", { credentials: "include" });
-      if (!res.ok) return;
-      const j = (await res.json()) as { count?: number };
-      setFriendsUnreadCount(typeof j.count === "number" ? j.count : 0);
-    } catch {
-      setFriendsUnreadCount(0);
-    }
-  });
-
-  useEffect(() => {
-    if (!isLoggedIn || initialFriendsUnreadCount > 0) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const res = await fetch("/api/trade-notifications?countOnly=1", { credentials: "include" });
-        if (!res.ok) return;
-        const j = (await res.json()) as { count?: number };
-        if (!cancelled) setFriendsUnreadCount(typeof j.count === "number" ? j.count : 0);
-      } catch {
-        if (!cancelled) setFriendsUnreadCount(0);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [initialFriendsUnreadCount, isLoggedIn]);
-
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    const onUpdate = () => void refreshFriendsUnreadCount();
-    window.addEventListener(TRADE_NOTIFICATIONS_UPDATED_EVENT, onUpdate);
-    return () => window.removeEventListener(TRADE_NOTIFICATIONS_UPDATED_EVENT, onUpdate);
-  }, [isLoggedIn]);
 
   return (
     <>
@@ -237,11 +190,6 @@ export function BottomNav({
               background: active ? "rgba(255,255,255,0.15)" : "transparent",
             };
 
-            const friendsPendingLabel =
-              item.href === "/collect/shared" && visibleFriendsUnreadCount > 0
-                ? `Friends, ${visibleFriendsUnreadCount} unread ${visibleFriendsUnreadCount === 1 ? "notification" : "notifications"}`
-                : undefined;
-
             return (
               <Link
                 key={`${item.href}-${item.label}`}
@@ -262,18 +210,9 @@ export function BottomNav({
                 className={itemClass}
                 style={itemStyle}
                 aria-current={active ? "page" : undefined}
-                aria-label={friendsPendingLabel}
               >
-                <span className="relative inline-flex">
+                <span className="inline-flex">
                   <Icon active={active} />
-                  {item.href === "/collect/shared" && visibleFriendsUnreadCount > 0 ? (
-                    <span
-                      className="absolute -right-1 -top-0.5 flex min-h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold leading-none text-white dark:bg-red-500"
-                      aria-hidden
-                    >
-                      {visibleFriendsUnreadCount > 9 ? "9+" : visibleFriendsUnreadCount}
-                    </span>
-                  ) : null}
                 </span>
                 <span className="max-w-full truncate">{item.label}</span>
               </Link>

@@ -4,24 +4,18 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
-import { SharedCollectionTradesClient } from "@/app/(app)/collect/shared/[shareId]/SharedCollectionTradesClient";
 import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
 import type { CardEntry } from "@/components/CardGrid";
 import type {
   CollectionLineSummary,
-  StorefrontCardEntry,
   StorefrontCardExtras,
   WishlistEntriesByMasterCardId,
 } from "@/lib/storefrontCardMaps";
 
-type Tab = "collection" | "wishlist" | "trade";
+type Tab = "collection" | "wishlist";
 
 type Props = {
   shareId: string;
-  viewerCustomerId: string;
-  counterpartyDisplayName: string;
-  viewerCollectionEntries: StorefrontCardEntry[];
-  counterpartyCollectionEntries: StorefrontCardEntry[];
   pageTitle: string;
   ownerDisplayName: string;
   collectionCards: (CardEntry & Pick<StorefrontCardExtras, "addedAt">)[];
@@ -40,16 +34,11 @@ type Props = {
 };
 
 function tabFromSearchParams(value: string | null): Tab | null {
-  if (value === "collection" || value === "wishlist" || value === "trade") return value;
+  if (value === "collection" || value === "wishlist") return value;
   return null;
 }
 
 export function SharedCollectionDetailClient({
-  shareId,
-  viewerCustomerId,
-  counterpartyDisplayName,
-  viewerCollectionEntries,
-  counterpartyCollectionEntries,
   pageTitle,
   ownerDisplayName,
   collectionCards,
@@ -81,9 +70,8 @@ export function SharedCollectionDetailClient({
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const cards = tab === "collection" ? collectionCards : tab === "wishlist" ? wishlistCards : [];
-  const cardPricesByMasterCardId =
-    tab === "collection" ? collectionCardPricesByMasterCardId : wishlistCardPricesByMasterCardId;
+  const cards = tab === "collection" ? collectionCards : wishlistCards;
+  const cardPricesByMasterCardId = tab === "collection" ? collectionCardPricesByMasterCardId : wishlistCardPricesByMasterCardId;
   const manualPriceMasterCardIds = tab === "collection" ? collectionManualSet : wishlistManualSet;
 
   return (
@@ -131,32 +119,10 @@ export function SharedCollectionDetailClient({
           >
             Wishlist
           </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "trade"}
-            onClick={() => setActiveTab("trade")}
-            className={`flex-1 px-3 py-2 text-sm font-medium transition ${
-              tab === "trade"
-                ? "bg-[var(--foreground)]/15 text-[var(--foreground)]"
-                : "text-[var(--foreground)]/55 hover:text-[var(--foreground)]/85"
-            }`}
-            style={{ borderRadius: "999px" }}
-          >
-            Trade
-          </button>
         </div>
       </div>
 
-      {tab === "trade" ? (
-        <SharedCollectionTradesClient
-          shareId={shareId}
-          viewerCustomerId={viewerCustomerId}
-          counterpartyDisplayName={counterpartyDisplayName}
-          viewerCollectionEntries={viewerCollectionEntries}
-          counterpartyCollectionEntries={counterpartyCollectionEntries}
-        />
-      ) : cards.length === 0 ? (
+      {cards.length === 0 ? (
         <p className="mt-6 px-4 text-sm text-[var(--foreground)]/65">
           {tab === "collection" ? "Their collection is empty." : "Their wishlist is empty."}
         </p>
