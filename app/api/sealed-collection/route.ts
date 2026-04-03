@@ -255,18 +255,25 @@ export async function PATCH(request: NextRequest) {
     return jsonResponseWithAuthCookies({ error: txUpdateErr.message }, authCookieResponse, { status: 422 });
   }
 
+  /** Remove this copy from sealed inventory; purchase history stays on `account_transactions` (now opened). */
+  const { error: deleteErr } = await supabase
+    .from("customer_sealed_collections")
+    .delete()
+    .eq("id", id)
+    .eq("customer_id", customer.id);
+
+  if (deleteErr) {
+    return jsonResponseWithAuthCookies({ error: deleteErr.message }, authCookieResponse, { status: 422 });
+  }
+
   revalidateSealedSurfaces();
   return jsonResponseWithAuthCookies(
     {
-      doc: {
-        id: String(row.id),
-        sealedProductId: row.sealed_product_id as number,
-        quantity: row.quantity as number,
-        sealedState: "opened" as const,
-        purchaseType: row.purchase_type as string | null,
-        pricePaid: row.price_paid as number | null,
-        addedAt: row.added_at as string | null,
-      },
+      ok: true,
+      opened: true,
+      removedCollectionId: id,
+      sealedProductId: row.sealed_product_id as number,
+      transactionId: tx.id,
     },
     authCookieResponse,
   );
