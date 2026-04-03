@@ -11,26 +11,22 @@ type FilterOption = {
 
 type SealedMobileControlsProps = {
   activeSearch: string;
-  activeTcg: string;
   activeType: string;
-  activeLanguage: string;
-  liveOnly: boolean;
+  activeSeries: string;
+  activeSort: string;
   resetFiltersHref: string;
-  tcgOptions: FilterOption[];
   typeOptions: FilterOption[];
-  languageOptions: FilterOption[];
+  seriesOptions: FilterOption[];
 };
 
 export function SealedMobileControls({
   activeSearch,
-  activeTcg,
   activeType,
-  activeLanguage,
-  liveOnly,
+  activeSeries,
+  activeSort,
   resetFiltersHref,
-  tcgOptions,
   typeOptions,
-  languageOptions,
+  seriesOptions,
 }: SealedMobileControlsProps) {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
@@ -47,10 +43,9 @@ export function SealedMobileControls({
     <>
       <div className="mb-4 flex shrink-0 flex-col gap-2 lg:hidden">
         <form method="get" action="/sealed" className="flex items-center gap-2">
-          {activeTcg ? <input type="hidden" name="tcg" value={activeTcg} /> : null}
           {activeType ? <input type="hidden" name="type" value={activeType} /> : null}
-          {activeLanguage ? <input type="hidden" name="language" value={activeLanguage} /> : null}
-          {liveOnly ? <input type="hidden" name="live" value="1" /> : null}
+          {activeSeries ? <input type="hidden" name="series" value={activeSeries} /> : null}
+          {activeSort ? <input type="hidden" name="sort" value={activeSort} /> : null}
           <input
             type="search"
             name="search"
@@ -168,13 +163,11 @@ export function SealedMobileControls({
           <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto rounded-lg border border-[var(--foreground)]/10 bg-[var(--foreground)]/5 p-3">
             <SealedFiltersPanel
               activeSearch={activeSearch}
-              activeTcg={activeTcg}
               activeType={activeType}
-              activeLanguage={activeLanguage}
-              liveOnly={liveOnly}
-              tcgOptions={tcgOptions}
+              activeSeries={activeSeries}
+              activeSort={activeSort}
               typeOptions={typeOptions}
-              languageOptions={languageOptions}
+              seriesOptions={seriesOptions}
               onSelection={() => setIsFilterModalOpen(false)}
             />
           </div>

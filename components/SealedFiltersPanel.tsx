@@ -10,13 +10,11 @@ type FilterOption = {
 
 type SealedFiltersPanelProps = {
   activeSearch: string;
-  activeTcg: string;
   activeType: string;
-  activeLanguage: string;
-  liveOnly: boolean;
-  tcgOptions: FilterOption[];
+  activeSeries: string;
+  activeSort: string;
   typeOptions: FilterOption[];
-  languageOptions: FilterOption[];
+  seriesOptions: FilterOption[];
   onSelection?: () => void;
 };
 
@@ -78,122 +76,52 @@ function FilterSection({
 
 export function SealedFiltersPanel({
   activeSearch,
-  activeTcg,
   activeType,
-  activeLanguage,
-  liveOnly,
-  tcgOptions,
+  activeSeries,
+  activeSort,
   typeOptions,
-  languageOptions,
+  seriesOptions,
   onSelection,
 }: SealedFiltersPanelProps) {
   return (
     <div className="space-y-4">
-      <section className="space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--foreground)]/55">Status</h3>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href={buildSealedBrowseHref({
-              search: activeSearch,
-              tcg: activeTcg,
-              type: activeType,
-              language: activeLanguage,
-              liveOnly: false,
-            })}
-            prefetch={false}
-            onClick={onSelection}
-            className={`inline-flex rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
-              !liveOnly
-                ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-                : "border-[var(--foreground)]/18 bg-[var(--foreground)]/6 text-[var(--foreground)]/82 hover:bg-[var(--foreground)]/10"
-            }`}
-          >
-            All products
-          </Link>
-          <Link
-            href={buildSealedBrowseHref({
-              search: activeSearch,
-              tcg: activeTcg,
-              type: activeType,
-              language: activeLanguage,
-              liveOnly: true,
-            })}
-            prefetch={false}
-            onClick={onSelection}
-            className={`inline-flex rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
-              liveOnly
-                ? "border-[var(--foreground)]/40 bg-[var(--foreground)] text-[var(--background)]"
-                : "border-[var(--foreground)]/18 bg-[var(--foreground)]/6 text-[var(--foreground)]/82 hover:bg-[var(--foreground)]/10"
-            }`}
-          >
-            Live only
-          </Link>
-        </div>
-      </section>
-
-      <FilterSection
-        title="TCG"
-        activeValue={activeTcg}
-        allLabel="All TCGs"
-        allHref={buildSealedBrowseHref({
-          search: activeSearch,
-          type: activeType,
-          language: activeLanguage,
-          liveOnly,
-        })}
-        options={tcgOptions}
-        onSelection={onSelection}
-        hrefBuilder={(value) =>
-          buildSealedBrowseHref({
-            search: activeSearch,
-            tcg: value,
-            type: activeType,
-            language: activeLanguage,
-            liveOnly,
-          })}
-      />
-
       <FilterSection
         title="Product Type"
         activeValue={activeType}
         allLabel="All types"
         allHref={buildSealedBrowseHref({
           search: activeSearch,
-          tcg: activeTcg,
-          language: activeLanguage,
-          liveOnly,
+          series: activeSeries,
+          sort: activeSort,
         })}
         options={typeOptions}
         onSelection={onSelection}
         hrefBuilder={(value) =>
           buildSealedBrowseHref({
             search: activeSearch,
-            tcg: activeTcg,
             type: value,
-            language: activeLanguage,
-            liveOnly,
+            series: activeSeries,
+            sort: activeSort,
           })}
       />
 
       <FilterSection
-        title="Language"
-        activeValue={activeLanguage}
-        allLabel="All languages"
+        title="Series"
+        activeValue={activeSeries}
+        allLabel="All series"
         allHref={buildSealedBrowseHref({
           search: activeSearch,
-          tcg: activeTcg,
           type: activeType,
-          liveOnly,
+          sort: activeSort,
         })}
-        options={languageOptions}
+        options={seriesOptions}
         onSelection={onSelection}
         hrefBuilder={(value) =>
           buildSealedBrowseHref({
             search: activeSearch,
-            tcg: activeTcg,
             type: activeType,
-            language: value,
-            liveOnly,
+            series: value,
+            sort: activeSort,
           })}
       />
     </div>

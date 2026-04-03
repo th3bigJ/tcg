@@ -67,6 +67,24 @@ export function collectionCopyTotalFromEntries(entries: StorefrontCardEntry[]): 
   return entries.reduce((sum, e) => sum + collectionLineQuantity(e), 0);
 }
 
+/** Copy counts by category — matches {@link estimateCardCollectionBucketsGbp} / collection value buckets. */
+export function collectionCardCopyBucketsFromEntries(entries: StorefrontCardEntry[]): {
+  gradedCopies: number;
+  singleCopies: number;
+  packedCopies: number;
+} {
+  let gradedCopies = 0;
+  let singleCopies = 0;
+  let packedCopies = 0;
+  for (const e of entries) {
+    const q = collectionLineQuantity(e);
+    if (isGradedCollectionEntry(e)) gradedCopies += q;
+    else if (e.purchaseType === "packed") packedCopies += q;
+    else singleCopies += q;
+  }
+  return { gradedCopies, singleCopies, packedCopies };
+}
+
 export function getMasterCardCopyTotals(
   entries: Pick<StorefrontCardEntry, "masterCardId" | "quantity">[],
 ): Record<string, number> {

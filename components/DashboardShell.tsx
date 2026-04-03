@@ -13,6 +13,10 @@ type DashboardShellProps = {
   collectionValueLabel: string;
   cardsOwnedCount: number;
   wishlistCount: number;
+  gradedCopies: number;
+  singleCopies: number;
+  packedCopies: number;
+  sealedCopies: number;
 };
 
 function DrawerIconArrow() {
@@ -29,6 +33,10 @@ export function DashboardShell({
   collectionValueLabel,
   cardsOwnedCount,
   wishlistCount,
+  gradedCopies,
+  singleCopies,
+  packedCopies,
+  sealedCopies,
 }: DashboardShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -62,10 +70,15 @@ export function DashboardShell({
     return () => document.body.classList.remove("app-menu-open");
   }, [drawerOpen]);
 
+  const fmt = (n: number) => n.toLocaleString("en-GB");
   const quickStats = [
     { label: "Collection value", value: collectionValueLabel, detail: "Based on current market pricing" },
-    { label: "Cards owned", value: cardsOwnedCount.toLocaleString("en-GB"), detail: "Across your collection" },
-    { label: "Wishlist targets", value: wishlistCount.toLocaleString("en-GB"), detail: "Cards you are chasing" },
+    { label: "Cards owned", value: fmt(cardsOwnedCount), detail: "Across your collection" },
+    { label: "Graded", value: fmt(gradedCopies), detail: "Slab copies in your collection" },
+    { label: "Singles", value: fmt(singleCopies), detail: "Raw bought or traded cards" },
+    { label: "Packed pulls", value: fmt(packedCopies), detail: "Logged as pulled from packs" },
+    { label: "Sealed", value: fmt(sealedCopies), detail: "Still sealed product copies" },
+    { label: "Wishlist targets", value: fmt(wishlistCount), detail: "Cards you are chasing" },
   ];
 
   return (
@@ -82,15 +95,15 @@ export function DashboardShell({
               <p className="text-sm text-white/56">Today’s snapshot</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight">Your collection at a glance</h2>
               <p className="mt-2 max-w-xs text-sm leading-6 text-white/60">
-                A quick summary of your collection value, owned cards, and wishlist progress.
+                A quick summary of value, card mix (graded, singles, packed), sealed inventory, and wishlist progress.
               </p>
             </div>
 
-            <div className="mt-5 grid gap-3">
+            <div className="mt-5 grid grid-cols-2 gap-3">
               {quickStats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-[1.4rem] border border-white/7 bg-white/[0.03] px-4 py-3"
+                  className="min-w-0 rounded-[1.4rem] border border-white/7 bg-white/[0.03] px-4 py-3"
                 >
                   <div className="text-sm text-white/45">{stat.label}</div>
                   <div className="mt-1 text-2xl font-semibold tracking-tight">{stat.value}</div>
