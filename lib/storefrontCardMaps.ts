@@ -2,7 +2,7 @@ import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import { resolveMediaURL } from "@/lib/media";
 import { getCardMapById } from "@/lib/staticCardIndex";
 import { getAllSets } from "@/lib/staticCards";
-import { ITEM_CONDITIONS } from "@/lib/referenceData";
+import { isGradedConditionId, isGradedConditionLabel, ITEM_CONDITIONS } from "@/lib/referenceData";
 
 export type StorefrontCardExtras = {
   /** Stable key for collection line(s): variant + condition + grade. Set on merged collection grid rows. */
@@ -259,8 +259,15 @@ function isGradedCollectionEntry(
   entry: Pick<StorefrontCardEntry, "gradingCompany" | "gradeValue" | "conditionId" | "conditionLabel">,
 ): boolean {
   if ((entry.gradingCompany?.trim() ?? "") && (entry.gradeValue?.trim() ?? "")) return true;
-  if ((entry.conditionId?.trim() ?? "").toLowerCase() === "graded") return true;
-  return (entry.conditionLabel?.trim() ?? "").toLowerCase() === "graded";
+  if (isGradedConditionId(entry.conditionId)) return true;
+  return isGradedConditionLabel(entry.conditionLabel);
+}
+
+/** Product type slug for `account_transactions` when logging a collection sale. */
+export function accountTransactionProductTypeSlugForCollectionLine(
+  line: Pick<CollectionLineSummary, "conditionId" | "conditionLabel" | "gradingCompany" | "gradeValue">,
+): "graded-card" | "single-card" {
+  return isGradedCollectionEntry(line) ? "graded-card" : "single-card";
 }
 
 export function groupCollectionLinesByMasterCardId(

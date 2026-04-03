@@ -109,10 +109,10 @@ function IconFriends({ active }: { active: boolean }) {
       className={`h-6 w-6 ${c}`}
       aria-hidden="true"
     >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      <circle cx="8" cy="9" r="3" />
+      <circle cx="17" cy="8" r="2.5" />
+      <path d="M3.5 19a4.5 4.5 0 0 1 9 0" />
+      <path d="M14 18a3.5 3.5 0 0 1 6 0" />
     </svg>
   );
 }
@@ -134,12 +134,23 @@ const navItems: NavItem[] = [
   {
     href: "/search",
     label: "Search",
-    match: (p) => p === "/search" || p.startsWith("/search?") || p.startsWith("/scan"),
+    match: (p) =>
+      p === "/search" ||
+      p.startsWith("/search?") ||
+      p.startsWith("/scan") ||
+      p === "/sealed" ||
+      p.startsWith("/sealed/") ||
+      p === "/shop" ||
+      p.startsWith("/shop/") ||
+      p === "/expansions" ||
+      p.startsWith("/expansions/") ||
+      p === "/pokedex" ||
+      p.startsWith("/pokedex/"),
   },
   {
     href: "/collect",
     label: "Collect",
-    match: (p) => p === "/collect",
+    match: (p) => p === "/collect" || p.startsWith("/collect?"),
   },
   {
     href: "/wishlist",
@@ -149,7 +160,7 @@ const navItems: NavItem[] = [
   {
     href: "/collect/shared",
     label: "Friends",
-    match: (p) => p.startsWith("/collect/shared"),
+    match: (p) => p === "/collect/shared" || p.startsWith("/collect/shared/"),
   },
 ];
 

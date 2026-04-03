@@ -6,6 +6,7 @@ import { startTransition, useCallback, useEffect, useRef, useState } from "react
 import { createPortal } from "react-dom";
 import { AppDrawerMenu } from "@/components/AppDrawerMenu";
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
+import { SealedTopChromeFilters } from "@/components/SealedTopChromeFilters";
 import { DASHBOARD_MENU_TOGGLE_EVENT } from "@/lib/dashboardMenuEvents";
 import {
   type SortOrder,
@@ -1087,6 +1088,28 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     return s ? `/pokedex?${s}` : "/pokedex";
   }
 
+  function buildSealedHref() {
+    const p = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    p.set("tab", "sealed");
+    p.delete("set");
+    p.delete("pokemon");
+    p.delete("rarity");
+    p.delete("energy");
+    p.delete("category");
+    p.delete("artist");
+    p.delete("exclude_cu");
+    p.delete("exclude_owned");
+    p.delete("owned_only");
+    p.delete("duplicates_only");
+    p.delete("missing_only");
+    p.delete("open_card");
+    p.delete("seed");
+    p.delete("page");
+    p.delete("take");
+    const s = p.toString();
+    return s ? `/search?${s}` : "/search?tab=sealed";
+  }
+
   const hasResults =
     results &&
     (results.cards.length > 0 ||
@@ -1106,13 +1129,29 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     { value: "number-desc", label: "Number desc" },
     { value: "number-asc", label: "Number asc" },
   ];
-  const showTagRow = isFilterablePage;
-  const contentTopOffset = showTagRow
-    ? "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 6.5rem)"
-    : "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 3.5rem)";
-  const topChromePadding = showTagRow
-    ? "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1rem 0.75rem"
-    : "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1rem 0.5rem";
+  const isSealedSearchTab = pathname.startsWith("/search") && searchTab === "sealed";
+  const showBrowseTabRow =
+    pathname.startsWith("/search") ||
+    pathname.startsWith("/expansions") ||
+    pathname.startsWith("/pokedex") ||
+    pathname === "/sealed" ||
+    pathname.startsWith("/sealed/");
+  const showFilterRow = isFilterablePage && !isSealedSearchTab;
+  const showSealedFilterRow = isSealedSearchTab;
+  const contentTopOffset = showFilterRow && showBrowseTabRow
+    ? "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 9rem)"
+    : showSealedFilterRow && showBrowseTabRow
+      ? "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 9rem)"
+    : showFilterRow || showBrowseTabRow
+      ? "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 6.5rem)"
+      : "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 3.5rem)";
+  const topChromePadding = showFilterRow && showBrowseTabRow
+    ? "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1rem 1rem"
+    : showSealedFilterRow && showBrowseTabRow
+      ? "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1rem 1rem"
+    : showFilterRow || showBrowseTabRow
+      ? "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1rem 0.75rem"
+      : "max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) 1rem 0.5rem";
   const sheetConfig: Record<FilterSheetKey, { title: string; value: string; options: { value: string; label: string }[]; onApply: (value: string) => void }> = {
     sort: {
       title: "Sort",
@@ -1167,8 +1206,6 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     Boolean(selectedSetParam) ||
     Boolean(selectedPokemonParam);
   const prioritizeActiveFilterTags = hasMounted;
-  const activeSetTag = Boolean(selectedSetParam);
-  const activePokemonTag = Boolean(selectedPokemonParam);
   const activeEnergyTag = prioritizeActiveFilterTags && Boolean(filters.energy);
   const activeRarityTag = prioritizeActiveFilterTags && Boolean(filters.rarity);
   const activeCategoryTag = prioritizeActiveFilterTags && Boolean(filters.category);
@@ -1177,6 +1214,12 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const activeHideOwnedTag = prioritizeActiveFilterTags && filters.excludeCollected;
   const activeDuplicatesTag = prioritizeActiveFilterTags && filters.duplicatesOnly;
   const activeOwnedOnlyTag = prioritizeActiveFilterTags && filters.showOwnedOnly;
+  const browseCardsHref = buildCardsHref();
+  const browseSealedHref = buildSealedHref();
+  const cardsTabActive = pathname.startsWith("/search") && searchTab !== "sealed";
+  const setsTabActive = pathname === "/expansions" || pathname.startsWith("/expansions/");
+  const pokedexTabActive = pathname === "/pokedex" || pathname.startsWith("/pokedex/");
+  const sealedTabActive = isSealedSearchTab || pathname === "/sealed" || pathname.startsWith("/sealed/");
 
   const handleModalTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     const touch = e.touches[0];
@@ -1316,13 +1359,52 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
             </div>
           </div>
 
-          {showTagRow ? (
-            <div className="pointer-events-auto scrollbar-hide flex items-center gap-2 overflow-x-auto pb-0.5">
-              <TagSlot active={false} pinnedOrder={0}>
-                {hasMounted && hasActiveTagFilters ? (
+          {showBrowseTabRow ? (
+            <div
+              className="pointer-events-auto scrollbar-hide flex items-center gap-2 overflow-x-auto pb-0.5"
+              style={{ paddingRight: "0.75rem" }}
+            >
+              <TopChromeChipLink
+                label="Cards"
+                active={cardsTabActive}
+                onClick={() => {
+                  router.push(browseCardsHref);
+                }}
+              />
+              <TopChromeChipLink
+                label="Sets"
+                active={setsTabActive}
+                onClick={() => {
+                  router.push(setsHref);
+                }}
+              />
+              <TopChromeChipLink
+                label="Pokedex"
+                active={pokedexTabActive}
+                onClick={() => {
+                  router.push(pokedexHref);
+                }}
+              />
+              <TopChromeChipLink
+                label="Sealed"
+                active={sealedTabActive}
+                onClick={() => {
+                  router.push(browseSealedHref);
+                }}
+              />
+            </div>
+          ) : null}
+
+          {showFilterRow ? (
+            <div
+              className="pointer-events-auto scrollbar-hide flex items-center gap-2 overflow-x-auto pb-0.5"
+              style={{ paddingRight: "0.75rem" }}
+            >
+              {hasMounted && hasActiveTagFilters ? (
+                <TagSlot active={false} pinnedOrder={0}>
                   <TopChromeClearButton onClick={clearTopChromeFilters} />
-                ) : null}
-              </TagSlot>
+                </TagSlot>
+              ) : null}
 
               <TagSlot active={false} pinnedOrder={1}>
                 <TopChromeChipSelect
@@ -1330,44 +1412,6 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                   active
                   onClick={() => setFilterSheet("sort")}
                   icon={<IconSort />}
-                />
-              </TagSlot>
-
-              <TagSlot active={activeSetTag}>
-                <TopChromeChipLink
-                  label={selectedSetParam ? "Sets (1)" : "Sets"}
-                  active={activeSetTag}
-                  clearable
-                  onClick={() => {
-                    if (selectedSetParam) {
-                      const params = new URLSearchParams(searchParams?.toString() ?? "");
-                      params.delete("set");
-                      params.delete("take");
-                      const href = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-                      router.replace(href, { scroll: false });
-                      return;
-                    }
-                    router.push(setsHref);
-                  }}
-                />
-              </TagSlot>
-
-              <TagSlot active={activePokemonTag}>
-                <TopChromeChipLink
-                  label={selectedPokemonParam ? "Pokedex (1)" : "Pokedex"}
-                  active={activePokemonTag}
-                  clearable
-                  onClick={() => {
-                    if (selectedPokemonParam) {
-                      const params = new URLSearchParams(searchParams?.toString() ?? "");
-                      params.delete("pokemon");
-                      params.delete("take");
-                      const href = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-                      router.replace(href, { scroll: false });
-                      return;
-                    }
-                    router.push(pokedexHref);
-                  }}
                 />
               </TagSlot>
 
@@ -1479,9 +1523,10 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
                   />
                 </TagSlot>
               ) : null}
-
             </div>
           ) : null}
+
+          {showSealedFilterRow ? <SealedTopChromeFilters /> : null}
         </div>
       </div>
 
@@ -1528,7 +1573,7 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
             <div
               className="fixed inset-0 z-[1001] flex flex-col bg-black"
               style={{
-                paddingTop: showTagRow
+                paddingTop: showFilterRow || showBrowseTabRow
                   ? "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 6.5rem)"
                   : "calc(max(0.5rem, calc(env(safe-area-inset-top, 0px) + 0.25rem)) + 4rem)",
               }}

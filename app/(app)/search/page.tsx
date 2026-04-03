@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppLoadingScreen } from "@/app/(app)/AppLoadingScreen";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
+import { SealedBrowseContent } from "@/components/SealedBrowseContent";
 import { SearchCardsTabGridClient } from "@/components/SearchCardsTabGridClient";
 import { getCurrentCustomer } from "@/lib/auth";
 import {
@@ -94,6 +95,21 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
 async function SearchPageContent({ searchParams }: SearchPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const activeTab = (resolvedSearchParams.tab ?? "cards").trim() || "cards";
+
+  if (activeTab === "sealed") {
+    return (
+      <div className={searchShellClass}>
+        <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-2 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+          <div className="flex min-h-0 flex-1 overflow-hidden">
+            <section className="flex min-h-0 flex-1 flex-col overflow-hidden lg:pr-1">
+              <SealedBrowseContent params={resolvedSearchParams} basePath="/search" tab="sealed" showFilterRow={false} />
+            </section>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   const selectedSet = (resolvedSearchParams.set ?? "").trim();
   const selectedPokemon = (resolvedSearchParams.pokemon ?? "").trim();
   const selectedSort = parseSortOrder(resolvedSearchParams.sort);

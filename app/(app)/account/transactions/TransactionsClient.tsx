@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+
+import { productTypeSupportsSealedState } from "@/lib/referenceData";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,6 +21,8 @@ type TransactionDoc = {
   unitPrice: number;
   transactionDate: string;
   notes?: string | null;
+  sealedState?: "sealed" | "opened" | null;
+  sourceReference?: string | null;
   productType: { id: string | number; name?: string } | string | number | null;
 };
 
@@ -55,6 +60,7 @@ function productTypeId(pt: TransactionDoc["productType"]): string {
 
 const PRODUCT_TYPE_CHIP_KEYS = new Set([
   "single-card",
+  "graded-card",
   "booster-pack",
   "elite-trainer-box",
   "booster-box",
@@ -93,6 +99,9 @@ type FormState = {
   unitPrice: string;
   transactionDate: string;
   notes: string;
+  sourceReference: string;
+  /** Empty = unset (stored as null). Only used when product type supports sealed inventory. */
+  sealedState: "" | "sealed" | "opened";
 };
 
 function blankForm(): FormState {
@@ -104,10 +113,37 @@ function blankForm(): FormState {
     unitPrice: "",
     transactionDate: todayIso(),
     notes: "",
+    sourceReference: "",
+    sealedState: "",
+  };
+}
+
+function buildPrefillForm(searchParams: URLSearchParams): FormState | null {
+  const description = searchParams.get("description")?.trim() ?? "";
+  if (!description) return null;
+
+  const directionParam = searchParams.get("direction");
+  const sealedStateParam = searchParams.get("sealedState");
+  const productTypeId = searchParams.get("productTypeId")?.trim() ?? "";
+
+  return {
+    direction: directionParam === "sale" ? "sale" : "purchase",
+    productTypeId,
+    description,
+    quantity: searchParams.get("quantity")?.trim() || "1",
+    unitPrice: searchParams.get("unitPrice")?.trim() || "",
+    transactionDate: searchParams.get("transactionDate")?.trim() || todayIso(),
+    notes: searchParams.get("notes")?.trim() || "",
+    sourceReference: searchParams.get("sourceReference")?.trim() || "",
+    sealedState:
+      sealedStateParam === "sealed" || sealedStateParam === "opened"
+        ? sealedStateParam
+        : "",
   };
 }
 
 function formFromDoc(doc: TransactionDoc): FormState {
+  const ss = doc.sealedState;
   return {
     direction: doc.direction,
     productTypeId: productTypeId(doc.productType),
@@ -116,6 +152,8 @@ function formFromDoc(doc: TransactionDoc): FormState {
     unitPrice: String(doc.unitPrice),
     transactionDate: doc.transactionDate ? doc.transactionDate.slice(0, 10) : todayIso(),
     notes: doc.notes ?? "",
+    sourceReference: doc.sourceReference ?? "",
+    sealedState: ss === "sealed" || ss === "opened" ? ss : "",
   };
 }
 
@@ -166,10 +204,15 @@ function TransactionForm({
 
       {/* Product type */}
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium">Product type</span>
+        <span className="font-medium">Product type (optional)</span>
         <select
           value={form.productTypeId}
-          onChange={(e) => setForm({ ...form, productTypeId: e.target.value })}
+          onChange={(e) => {
+            const productTypeId = e.target.value;
+            const next: FormState = { ...form, productTypeId };
+            if (!productTypeSupportsSealedState(productTypeId)) next.sealedState = "";
+            setForm(next);
+          }}
           className={inputCls}
         >
           <option value="">— Select —</option>
@@ -180,6 +223,29 @@ function TransactionForm({
           ))}
         </select>
       </label>
+
+      {productTypeSupportsSealedState(form.productTypeId) ? (
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="font-medium">Sealed product</span>
+          <select
+            value={form.sealedState}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                sealedState: e.target.value as FormState["sealedState"],
+              })
+            }
+            className={inputCls}
+          >
+            <option value="">— Not set —</option>
+            <option value="sealed">Sealed</option>
+            <option value="opened">Opened</option>
+          </select>
+          <span className="text-[11px] leading-snug text-[var(--foreground)]/45">
+            For packs, boxes, and other sealed products. Leave unset if unknown.
+          </span>
+        </label>
+      ) : null}
 
       {/* Description */}
       <label className="flex flex-col gap-1 text-sm">
@@ -254,7 +320,7 @@ function TransactionForm({
         </button>
         <button
           type="button"
-          disabled={pending || !form.description.trim() || !form.productTypeId}
+          disabled={pending || !form.description.trim()}
           onClick={onSubmit}
           className="flex-1 rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium disabled:opacity-50"
         >
@@ -268,6 +334,7 @@ function TransactionForm({
 // ── Main component ───────────────────────────────────────────────────────────
 
 export function TransactionsClient({ productTypes }: { productTypes: ProductTypeOption[] }) {
+  const searchParams = useSearchParams();
   const [docs, setDocs] = useState<TransactionDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("all");
@@ -285,6 +352,7 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
   // Delete confirm
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletePending, setDeletePending] = useState(false);
+  const [prefillApplied, setPrefillApplied] = useState(false);
 
   // ── Load transactions + collection value ──────────────────────────────────
 
@@ -308,6 +376,16 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
       .catch(() => {})
       .finally(() => setCollectionValueLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (prefillApplied) return;
+    const next = buildPrefillForm(searchParams);
+    if (!next) return;
+    setNewForm(next);
+    setShowNew(true);
+    setEditingId(null);
+    setPrefillApplied(true);
+  }, [prefillApplied, searchParams]);
 
   // ── Filtered docs + summary ────────────────────────────────────────────────
 
@@ -348,7 +426,7 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           direction: newForm.direction,
-          productTypeId: newForm.productTypeId,
+          ...(newForm.productTypeId.trim() ? { productTypeId: newForm.productTypeId } : {}),
           description: newForm.description,
           quantity: parseInt(newForm.quantity, 10) || 1,
           unitPrice: parseFloat(newForm.unitPrice) || 0,
@@ -356,6 +434,11 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
             ? new Date(newForm.transactionDate).toISOString()
             : new Date().toISOString(),
           notes: newForm.notes || null,
+          sourceReference: newForm.sourceReference || null,
+          sealedState:
+            newForm.sealedState === "sealed" || newForm.sealedState === "opened"
+              ? newForm.sealedState
+              : null,
         }),
       });
       if (!res.ok) return;
@@ -389,7 +472,9 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           direction: editForm.direction,
-          productTypeId: editForm.productTypeId,
+          ...(editForm.productTypeId.trim()
+            ? { productTypeId: editForm.productTypeId }
+            : { productTypeId: null }),
           description: editForm.description,
           quantity: parseInt(editForm.quantity, 10) || 1,
           unitPrice: parseFloat(editForm.unitPrice) || 0,
@@ -397,6 +482,11 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
             ? new Date(editForm.transactionDate).toISOString()
             : new Date().toISOString(),
           notes: editForm.notes || null,
+          sourceReference: editForm.sourceReference || null,
+          sealedState:
+            editForm.sealedState === "sealed" || editForm.sealedState === "opened"
+              ? editForm.sealedState
+              : null,
         }),
       });
       if (!res.ok) return;
@@ -565,6 +655,14 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
                           <span className={productTypeChipClass(doc.productType)} title="Product type">
                             {productTypeName(doc.productType)}
                           </span>
+                          {doc.sealedState === "sealed" || doc.sealedState === "opened" ? (
+                            <span
+                              className="rounded-full border border-[var(--foreground)]/18 bg-[var(--foreground)]/[0.06] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--foreground)]/65"
+                              title="Sealed product state"
+                            >
+                              {doc.sealedState === "sealed" ? "Sealed" : "Opened"}
+                            </span>
+                          ) : null}
                         </div>
                         <p className="text-[15px] font-semibold leading-snug tracking-tight text-[var(--foreground)]">
                           {doc.description}

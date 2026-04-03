@@ -20,6 +20,7 @@ import {
   fetchWishlistCardEntries,
   fetchWishlistIdsByMasterCard,
 } from "@/lib/storefrontCardMapsServer";
+import { isGradedConditionId, isGradedConditionLabel } from "@/lib/referenceData";
 
 export type SharedCollectionLoaderResult = {
   shareId: string;
@@ -124,8 +125,8 @@ export async function loadSharedCollectionData(
     let highest: number | null = null;
     for (const line of lines) {
       if ((line.gradingCompany?.trim() ?? "") && (line.gradeValue?.trim() ?? "")) continue;
-      if ((line.conditionId?.trim() ?? "").toLowerCase() === "graded") continue;
-      if ((line.conditionLabel?.trim() ?? "").toLowerCase() === "graded") continue;
+      if (isGradedConditionId(line.conditionId)) continue;
+      if (isGradedConditionLabel(line.conditionLabel)) continue;
       const groupKey = collectionGroupKeyFromEntry({
         masterCardId: mid,
         conditionLabel: line.conditionLabel,

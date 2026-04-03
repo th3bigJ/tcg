@@ -2,7 +2,11 @@ import { type NextRequest } from "next/server";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
 import { createSupabaseRouteHandlerClient, jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
-import { getProductTypeById, getProductTypeBySlug } from "@/lib/referenceData";
+import {
+  getProductTypeById,
+  getProductTypeBySlug,
+  normalizeSealedStateForProductType,
+} from "@/lib/referenceData";
 
 type TransactionPatchBody = {
   direction?: string;
@@ -14,6 +18,8 @@ type TransactionPatchBody = {
   unitPrice?: number;
   transactionDate?: string;
   notes?: string | null;
+  sealedState?: "sealed" | "opened" | null;
+  sourceReference?: string | null;
 };
 
 export async function PATCH(
@@ -65,14 +71,65 @@ export async function PATCH(
         ? body.masterCardId.trim()
         : null;
   }
+  if (body.sourceReference !== undefined) {
+    updates.source_reference =
+      typeof body.sourceReference === "string" && body.sourceReference.trim()
+        ? body.sourceReference.trim()
+        : null;
+  }
 
   // Resolve product type update
-  if (typeof body.productTypeId === "string" && body.productTypeId.trim()) {
+  let resolvedProductTypeId: string | null = null;
+  if (
+    body.productTypeId === null ||
+    body.productTypeId === "" ||
+    body.productTypeSlug === null ||
+    body.productTypeSlug === ""
+  ) {
+    if (
+      body.productTypeId !== undefined ||
+      body.productTypeSlug !== undefined
+    ) {
+      updates.product_type_id = null;
+      resolvedProductTypeId = null;
+    }
+  } else if (typeof body.productTypeId === "string" && body.productTypeId.trim()) {
     const pt = getProductTypeById(body.productTypeId.trim());
-    if (pt) updates.product_type_id = pt.id;
+    if (pt) {
+      updates.product_type_id = pt.id;
+      resolvedProductTypeId = pt.id;
+    }
   } else if (typeof body.productTypeSlug === "string" && body.productTypeSlug.trim()) {
     const pt = getProductTypeBySlug(body.productTypeSlug.trim());
-    if (pt) updates.product_type_id = pt.id;
+    if (pt) {
+      updates.product_type_id = pt.id;
+      resolvedProductTypeId = pt.id;
+    }
+  }
+
+  if (body.sealedState !== undefined) {
+    const slugForSeal =
+      resolvedProductTypeId !== null
+        ? (getProductTypeById(resolvedProductTypeId)?.slug ?? resolvedProductTypeId)
+        : null;
+    if (slugForSeal) {
+      updates.sealed_state = normalizeSealedStateForProductType(slugForSeal, body.sealedState);
+    } else {
+      const { data: existingRow } = await supabase
+        .from("account_transactions")
+        .select("product_type_id")
+        .eq("id", rawId)
+        .eq("customer_id", customer.id)
+        .maybeSingle();
+      const existingPtId = existingRow?.product_type_id as string | undefined;
+      const slug =
+        existingPtId !== undefined
+          ? (getProductTypeById(String(existingPtId))?.slug ?? String(existingPtId))
+          : "";
+      if (slug) {
+        updates.sealed_state = normalizeSealedStateForProductType(slug, body.sealedState);
+      }
+    }
   }
 
   if (Object.keys(updates).length === 0) {
@@ -100,6 +157,8 @@ export async function PATCH(
     transactionDate: updated.transaction_date,
     notes: updated.notes,
     masterCardId: updated.master_card_id,
+    sealedState: (updated.sealed_state as "sealed" | "opened" | null | undefined) ?? null,
+    sourceReference: (updated.source_reference as string | null | undefined) ?? null,
     productType: updated.product_type_id ? (getProductTypeById(updated.product_type_id as string) ?? null) : null,
   };
 

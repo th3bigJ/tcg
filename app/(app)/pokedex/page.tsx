@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { PokedexList } from "@/components/PokedexList";
 import { getCurrentCustomer } from "@/lib/auth";
 import { getCachedPokemonFilterOptions } from "@/lib/cardsFilterOptionsServer";
@@ -30,23 +29,10 @@ export default async function PokedexIndexPage({ searchParams }: PokedexIndexPag
       }
     }
   }
-  const backHref =
-    typeof resolvedSearchParams.return_to === "string" && resolvedSearchParams.return_to.startsWith("/")
-      ? resolvedSearchParams.return_to
-      : "/search";
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       <main className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-4 pb-4 pt-0">
-        <header className="mb-2 flex shrink-0 items-center gap-2 border-b border-[var(--foreground)]/10 pb-1.5">
-          <Link
-            href={backHref}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--foreground)] transition hover:bg-[var(--foreground)]/8"
-            aria-label="Back to search"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-          </Link>
+        <header className="mb-2 flex shrink-0 items-center border-b border-[var(--foreground)]/10 pb-1.5">
           <div className="min-w-0">
             <h1 className="flex min-h-9 items-center leading-none text-base font-semibold">Select a Pokemon</h1>
             {customer ? (

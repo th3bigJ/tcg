@@ -15,6 +15,7 @@ import {
   type StorefrontCardExtras,
   type WishlistEntriesByMasterCardId,
 } from "@/lib/storefrontCardMaps";
+import { isGradedConditionId, isGradedConditionLabel } from "@/lib/referenceData";
 
 type SortOrder = "price-desc" | "price-asc" | "release-desc" | "release-asc" | "number-desc" | "number-asc" | "added-desc";
 
@@ -134,8 +135,8 @@ export function CollectCardGridWithTags({
       let highest: number | null = null;
       for (const line of lines) {
         if ((line.gradingCompany?.trim() ?? "") && (line.gradeValue?.trim() ?? "")) continue;
-        if ((line.conditionId?.trim() ?? "").toLowerCase() === "graded") continue;
-        if ((line.conditionLabel?.trim() ?? "").toLowerCase() === "graded") continue;
+        if (isGradedConditionId(line.conditionId)) continue;
+        if (isGradedConditionLabel(line.conditionLabel)) continue;
         const groupKey = collectionGroupKeyFromLine(mid, line);
         const price = cardPricesByMasterCardId[groupKey];
         if (typeof price !== "number" || !Number.isFinite(price)) continue;

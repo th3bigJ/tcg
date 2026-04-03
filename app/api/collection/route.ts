@@ -135,23 +135,28 @@ export async function POST(request: NextRequest) {
 
   // Auto-create a purchase transaction when a card is bought with a price
   if (purchaseType === "bought" && pricePaid !== null) {
-    try {
-      const pt = getProductTypeBySlug("single-card");
-      if (pt) {
-        const cardName = getCardMapById().get(masterCardId)?.cardName ?? "Unknown card";
-        await supabase.from("account_transactions").insert({
-          customer_id: customer.id,
-          direction: "purchase",
-          product_type_id: pt.id,
-          description: cardName,
-          master_card_id: masterCardId,
-          quantity,
-          unit_price: pricePaid,
-          transaction_date: purchaseDate ? purchaseDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
-        });
+    const pt = getProductTypeBySlug("single-card");
+    if (pt) {
+      const cardName = getCardMapById().get(masterCardId)?.cardName ?? "Unknown card";
+      const firstEntryId = createdRows?.[0]?.id;
+      const sourceRef =
+        firstEntryId !== undefined && firstEntryId !== null
+          ? `collection:${String(firstEntryId)}`
+          : null;
+      const { error: txErr } = await supabase.from("account_transactions").insert({
+        customer_id: customer.id,
+        direction: "purchase",
+        product_type_id: pt.id,
+        description: cardName,
+        master_card_id: masterCardId,
+        quantity,
+        unit_price: pricePaid,
+        transaction_date: purchaseDate ? purchaseDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+        ...(sourceRef ? { source_reference: sourceRef } : {}),
+      });
+      if (txErr) {
+        console.error("[account_transactions] Failed to log purchase transaction:", txErr);
       }
-    } catch {
-      // Transaction creation is best-effort — don't fail the collection add
     }
   }
 

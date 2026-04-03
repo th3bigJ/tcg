@@ -107,7 +107,8 @@ export function DashboardShell({
             </div>
             <div className="grid gap-3">
               {[
-                { href: "/search", label: "Browse cards", description: "Search singles and sets" },
+                { href: "/search", label: "Search", description: "Browse cards, sets, and Pokedex" },
+                { href: "/search?tab=sealed", label: "Search sealed", description: "Track sealed prices and products" },
                 { href: "/expansions", label: "Browse sets", description: "Explore expansions and set lists" },
                 { href: "/pokedex", label: "Browse Pokemon", description: "Jump by national dex and species" },
               ].map((item) => (

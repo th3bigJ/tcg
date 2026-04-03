@@ -15,6 +15,7 @@ import {
   totalCopiesFromMergedGrid,
 } from "@/lib/storefrontCardMaps";
 import { fetchCollectionCardEntries, fetchWishlistIdsByMasterCard } from "@/lib/storefrontCardMapsServer";
+import { isGradedConditionId, isGradedConditionLabel } from "@/lib/referenceData";
 
 type CollectPageProps = {
   searchParams?: Promise<{ group_by_set?: string }>;
@@ -84,8 +85,8 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
     let highest: number | null = null;
     for (const line of lines) {
       if ((line.gradingCompany?.trim() ?? "") && (line.gradeValue?.trim() ?? "")) continue;
-      if ((line.conditionId?.trim() ?? "").toLowerCase() === "graded") continue;
-      if ((line.conditionLabel?.trim() ?? "").toLowerCase() === "graded") continue;
+      if (isGradedConditionId(line.conditionId)) continue;
+      if (isGradedConditionLabel(line.conditionLabel)) continue;
       const groupKey = collectionGroupKeyFromEntry({
         masterCardId: mid,
         conditionLabel: line.conditionLabel,

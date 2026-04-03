@@ -1,7 +1,12 @@
-export default function ShopPage() {
-  return (
-    <div className="flex min-h-full flex-col bg-[var(--background)] px-4 pb-6 pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
-      <h1 className="text-xl font-semibold">Shop</h1>
-    </div>
-  );
+import { redirect } from "next/navigation";
+
+type ShopPageProps = {
+  searchParams?: Promise<Record<string, string>>;
+};
+
+export default async function ShopPage({ searchParams }: ShopPageProps) {
+  const params = (await searchParams) ?? {};
+  const nextParams = new URLSearchParams(params);
+  const query = nextParams.toString();
+  redirect(query ? `/sealed?${query}` : "/sealed");
 }

@@ -2,7 +2,11 @@ import { type NextRequest } from "next/server";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
 import { createSupabaseRouteHandlerClient, jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
-import { getProductTypeById, getProductTypeBySlug } from "@/lib/referenceData";
+import {
+  getProductTypeById,
+  getProductTypeBySlug,
+  normalizeSealedStateForProductType,
+} from "@/lib/referenceData";
 
 type TransactionPostBody = {
   direction?: string;
@@ -14,6 +18,9 @@ type TransactionPostBody = {
   unitPrice?: number;
   transactionDate?: string;
   notes?: string | null;
+  sealedState?: "sealed" | "opened" | null;
+  /** e.g. `collection:<customer_collections.id>` */
+  sourceReference?: string | null;
 };
 
 export async function GET(request: NextRequest) {
@@ -25,7 +32,9 @@ export async function GET(request: NextRequest) {
   const { supabase } = createSupabaseRouteHandlerClient(request);
   const { data, error } = await supabase
     .from("account_transactions")
-    .select("id, direction, description, master_card_id, quantity, unit_price, transaction_date, notes, created_at, product_type_id")
+    .select(
+      "id, direction, description, master_card_id, quantity, unit_price, transaction_date, notes, created_at, product_type_id, sealed_state, source_reference",
+    )
     .eq("customer_id", customer.id)
     .order("transaction_date", { ascending: false })
     .limit(2000);
@@ -43,6 +52,8 @@ export async function GET(request: NextRequest) {
     transactionDate: row.transaction_date,
     notes: row.notes,
     masterCardId: row.master_card_id,
+    sealedState: (row.sealed_state as "sealed" | "opened" | null | undefined) ?? null,
+    sourceReference: (row.source_reference as string | null | undefined) ?? null,
     productType: row.product_type_id ? (getProductTypeById(row.product_type_id as string) ?? null) : null,
   }));
 
@@ -90,36 +101,57 @@ export async function POST(request: NextRequest) {
 
   const { supabase } = createSupabaseRouteHandlerClient(request);
 
-  // Resolve product type — accept either an id or a slug
+  // Resolve product type — optional (e.g. fees / adjustments without a catalog product type)
   let productTypeId: string | null = null;
   if (typeof body.productTypeId === "string" && body.productTypeId.trim()) {
     const pt = getProductTypeById(body.productTypeId.trim());
     productTypeId = pt?.id ?? null;
+    if (!productTypeId) {
+      return jsonResponseWithAuthCookies(
+        { error: "productTypeId must resolve to a valid product type when provided" },
+        authCookieResponse,
+        { status: 400 },
+      );
+    }
   } else if (typeof body.productTypeSlug === "string" && body.productTypeSlug.trim()) {
     const pt = getProductTypeBySlug(body.productTypeSlug.trim());
     productTypeId = pt?.id ?? null;
+    if (!productTypeId) {
+      return jsonResponseWithAuthCookies(
+        { error: "productTypeSlug must resolve to a valid product type when provided" },
+        authCookieResponse,
+        { status: 400 },
+      );
+    }
   }
 
-  if (!productTypeId) {
-    return jsonResponseWithAuthCookies(
-      { error: "productTypeId or productTypeSlug is required and must resolve to a valid product type" },
-      authCookieResponse,
-      { status: 400 },
-    );
-  }
+  const ptSlug = productTypeId ? (getProductTypeById(productTypeId)?.slug ?? productTypeId) : "";
+  const sealedStateNormalized =
+    !productTypeId || !ptSlug.trim()
+      ? null
+      : body.sealedState === undefined
+        ? null
+        : normalizeSealedStateForProductType(ptSlug, body.sealedState);
+
+  const sourceReference =
+    typeof body.sourceReference === "string" && body.sourceReference.trim()
+      ? body.sourceReference.trim()
+      : null;
 
   const { data: created, error } = await supabase
     .from("account_transactions")
     .insert({
       customer_id: customer.id,
       direction,
-      product_type_id: productTypeId,
+      product_type_id: productTypeId ?? null,
       description,
       master_card_id: masterCardId,
       quantity,
       unit_price: unitPrice,
       transaction_date: transactionDate,
       notes,
+      sealed_state: sealedStateNormalized,
+      source_reference: sourceReference,
     })
     .select()
     .single();
@@ -137,6 +169,8 @@ export async function POST(request: NextRequest) {
     transactionDate: created.transaction_date,
     notes: created.notes,
     masterCardId: created.master_card_id,
+    sealedState: (created.sealed_state as "sealed" | "opened" | null | undefined) ?? null,
+    sourceReference: (created.source_reference as string | null | undefined) ?? null,
     productType: created.product_type_id ? (getProductTypeById(created.product_type_id as string) ?? null) : null,
   };
 

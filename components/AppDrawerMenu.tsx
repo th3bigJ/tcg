@@ -47,6 +47,16 @@ function DrawerIconGroups() {
   );
 }
 
+function DrawerIconBox() {
+  return (
+    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M12 3 4.5 7 12 11l7.5-4Z" />
+      <path d="M4.5 7v10L12 21l7.5-4V7" />
+      <path d="M12 11v10" />
+    </svg>
+  );
+}
+
 function DrawerIconPlus() {
   return (
     <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -104,7 +114,8 @@ export function AppDrawerMenu({
 }) {
   const primaryItems: DrawerItem[] = [
     { href: "/dashboard", label: "Dashboard", description: "Overview and shortcuts", icon: <DashboardGlyph /> },
-    { href: "/search", label: "Browse cards", description: "Search singles and sets", icon: <DrawerIconCompass /> },
+    { href: "/search", label: "Search", description: "Browse cards, sets, Pokedex, and sealed", icon: <DrawerIconCompass /> },
+    { href: "/search?tab=sealed", label: "Sealed", description: "Track sealed prices and products", icon: <DrawerIconBox /> },
     { href: "/collect", label: "Collection", description: "Track what you own", icon: <DrawerIconCards /> },
     { href: "/wishlist", label: "Wishlist", description: "Keep tabs on your targets", icon: <DrawerIconClock /> },
     { href: "/collect/shared", label: "Friends", description: "Shared collections", icon: <DrawerIconGroups /> },

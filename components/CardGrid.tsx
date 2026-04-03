@@ -21,12 +21,13 @@ import { useCardGridPreferences } from "@/components/CardGridPreferencesProvider
 import { normalizeVariantForStorage, variantLabel } from "@/lib/cardVariantLabels";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import {
+  accountTransactionProductTypeSlugForCollectionLine,
   collectionGroupKeyFromLine,
   type CollectionLineSummary,
   type WishlistEntriesByMasterCardId,
   type WishlistEntrySummary,
 } from "@/lib/storefrontCardMaps";
-import { getItemConditionName } from "@/lib/referenceData";
+import { getItemConditionName, isGradedConditionId, isGradedConditionLabel } from "@/lib/referenceData";
 
 export type CardEntry = CardsPageCardEntry & {
   /** When set (collection grid), {@link collectionGroupKeyFromEntry} — indexes line maps and graded image lookup. */
@@ -1341,6 +1342,9 @@ export function CardGrid({
   /** Map key in {@link localCollectionLinesByMasterCardId} (group key or master id). */
   const [pendingRemovalLinesMapKey, setPendingRemovalLinesMapKey] = useState<string | null>(null);
   const [pendingRemovalCardName, setPendingRemovalCardName] = useState<string>("");
+  const [pendingRemovalProductTypeSlug, setPendingRemovalProductTypeSlug] = useState<"graded-card" | "single-card">(
+    "single-card",
+  );
   const [removalReason, setRemovalReason] = useState<
     "" | "lost" | "traded" | "sold" | "damaged" | "gifted" | "built_deck"
   >("");
@@ -1431,8 +1435,8 @@ export function CardGrid({
       let hasManual = false;
       for (const line of lines) {
         if ((line.gradingCompany?.trim() ?? "") && (line.gradeValue?.trim() ?? "")) continue;
-        if ((line.conditionId?.trim() ?? "").toLowerCase() === "graded") continue;
-        if ((line.conditionLabel?.trim() ?? "").toLowerCase() === "graded") continue;
+        if (isGradedConditionId(line.conditionId)) continue;
+        if (isGradedConditionLabel(line.conditionLabel)) continue;
         const groupKey = collectionGroupKeyFromLine(mid, line);
         const unit = cardPricesByMasterCardId[groupKey];
         if (unit === undefined) continue;
@@ -1717,9 +1721,12 @@ export function CardGrid({
     }
     if (!selectedCard?.masterCardId) return;
 
-    const isGraded = Boolean(line?.gradingCompany && line?.gradeValue);
+    const isGraded =
+      isGradedConditionId(line?.conditionId) ||
+      isGradedConditionLabel(line?.conditionLabel) ||
+      Boolean(line?.gradingCompany && line?.gradeValue);
     if (isGraded) {
-      setAddConditionId("graded");
+      setAddConditionId("graded-card");
       setAddQuantity(1);
       setAddPrinting(line?.printing?.trim() || "Standard");
       setAddPurchaseType("packed");
@@ -1780,7 +1787,7 @@ export function CardGrid({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           masterCardId: selectedCard.masterCardId,
-          conditionId: "graded",
+          conditionId: "graded-card",
           quantity: 1,
           printing: addPrinting,
           language: "English",
@@ -1808,7 +1815,7 @@ export function CardGrid({
           fd.append("file", gradedImageFile);
           await fetch("/api/collection/upload-image", { method: "POST", body: fd }).catch(() => {});
         }
-        const gradedConditionLabel = getItemConditionName("graded").trim() || "graded";
+        const gradedConditionLabel = getItemConditionName("graded-card").trim() || "Graded";
         const line: CollectionLineSummary = {
           entryId: String(rawId),
           quantity: 1,
@@ -1955,6 +1962,7 @@ export function CardGrid({
         setPendingRemovalMasterCardId(mid);
         setPendingRemovalLinesMapKey(mapKey);
         setPendingRemovalCardName(cardName);
+        setPendingRemovalProductTypeSlug(accountTransactionProductTypeSlugForCollectionLine(line));
         setRemovalReason("");
         setRemovalSaleValue("");
         setRemovalTradeItems([]);
@@ -2130,14 +2138,26 @@ export function CardGrid({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               direction: "sale",
-              productTypeSlug: "single-card",
+              productTypeSlug: pendingRemovalProductTypeSlug,
               description: pendingRemovalCardName || "Unknown card",
               masterCardId: pendingRemovalMasterCardId,
               quantity: 1,
               unitPrice: saleVal,
               transactionDate: new Date().toISOString(),
+              sourceReference: `collection:${pendingRemovalEntryId}`,
             }),
-          }).catch(() => {});
+          })
+            .then(async (res) => {
+              if (!res.ok) {
+                const bodyText = await res.text().catch(() => "");
+                console.error(
+                  "[account_transactions] Failed to log sale transaction:",
+                  res.status,
+                  bodyText || res.statusText,
+                );
+              }
+            })
+            .catch((err) => console.error("[account_transactions] Failed to log sale transaction:", err));
         }
       }
 
@@ -2170,6 +2190,7 @@ export function CardGrid({
     pendingRemovalLinesMapKey,
     pendingRemovalMasterCardId,
     pendingRemovalCardName,
+    pendingRemovalProductTypeSlug,
     removalReason,
     removalSaleValue,
     removalTradeItems,
