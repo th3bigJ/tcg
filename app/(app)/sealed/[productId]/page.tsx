@@ -2,10 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SealedModalCloseHint } from "@/components/SealedModalCloseHint";
 import { SealedProductDetailSidebar } from "@/components/SealedProductDetailSidebar";
+import { SealedProductModalShell } from "@/components/SealedProductModalShell";
 import { getCurrentCustomer } from "@/lib/auth";
 import { buildEbayUkSoldListingsUrl } from "@/lib/ebaySoldSearchUrl";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
-import { fetchSealedProductUserState } from "@/lib/sealedCustomerItemsServer";
+import { mergeSealedCollectionForGrid } from "@/lib/sealedCustomerItems";
+import {
+  fetchSealedCollectionLinesForProduct,
+  fetchSealedProductUserState,
+} from "@/lib/sealedCustomerItemsServer";
 import {
   buildSealedBrowseHref,
   findShopSealedProductById,
@@ -129,21 +134,30 @@ export default async function SealedProductDetailPage({ params }: SealedProductD
   const ebayUrl = ebaySearchParts.length > 0 ? buildEbayUkSoldListingsUrl(ebaySearchParts.join(" ")) : null;
 
   const customer = await getCurrentCustomer();
-  const sealedUserState = customer ? await fetchSealedProductUserState(customer.id, product.id) : null;
+  const [sealedUserState, productLines] = customer
+    ? await Promise.all([
+        fetchSealedProductUserState(customer.id, product.id),
+        fetchSealedCollectionLinesForProduct(customer.id, product.id),
+      ])
+    : [null, []];
+  const mergedRow = mergeSealedCollectionForGrid(productLines, new Map([[product.id, product]]))[0];
 
   return (
-    <div className="card-viewer-overlay fixed inset-0 z-[10050] isolate overflow-x-hidden overflow-y-auto overscroll-y-contain text-white md:overflow-hidden">
+    <SealedProductModalShell fallbackHref={closeHref}>
       <div className="relative mx-auto flex min-h-[100dvh] w-full min-w-0 max-w-[1460px] flex-col overflow-x-hidden px-3 pb-14 pt-[max(1rem,calc(env(safe-area-inset-top,0px)+0.75rem))] sm:px-6 md:h-[100dvh] md:max-h-[100dvh] md:min-h-0 md:overflow-hidden md:px-8 md:pb-5 md:pt-6">
         <div className="md:hidden">
           <SealedModalCloseHint fallbackHref={closeHref} />
         </div>
 
         <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-[1fr_minmax(18rem,26rem)_minmax(9rem,13rem)] md:flex-1 md:min-h-0 md:items-stretch md:gap-4 md:overflow-hidden">
-          <div className="flex w-full min-w-0 max-w-full flex-col items-center gap-3 overflow-x-hidden md:min-h-0 md:items-stretch md:gap-2 md:self-stretch">
+          <div className="flex w-full min-w-0 max-w-full flex-col items-center gap-2 overflow-x-hidden md:min-h-0 md:items-stretch md:gap-2 md:self-stretch">
             <div className="w-full min-w-0 max-w-full overflow-x-hidden md:flex md:min-h-0 md:flex-1 md:flex-col">
               <div className="flex md:min-h-0 md:flex-1 md:items-stretch">
-                <div className="flex shrink-0 flex-col items-center gap-3 md:h-full md:min-h-0 md:gap-2" style={{ width: "100%", minWidth: "100%", maxWidth: "100%" }}>
-                  <div className="relative flex min-h-[33vh] w-full items-start justify-center pb-0 pt-1 sm:min-h-[38vh] md:min-h-0 md:max-h-[min(78vh,calc(100dvh-8.5rem))] md:flex-1 md:items-center md:justify-center md:pb-0 md:pt-0">
+                <div
+                  className="flex w-full min-w-0 shrink-0 flex-col items-center gap-2 md:h-full md:min-h-0 md:gap-2"
+                  style={{ width: "100%", minWidth: "100%", maxWidth: "100%" }}
+                >
+                  <div className="relative flex w-full flex-col items-center justify-center pt-1 md:min-h-0 md:max-h-[min(78vh,calc(100dvh-8.5rem))] md:flex-1 md:py-0">
                     {product.imageUrl ? (
                       <img
                         src={product.imageUrl}
@@ -179,8 +193,10 @@ export default async function SealedProductDetailPage({ params }: SealedProductD
                 ebayUrl={ebayUrl}
                 loggedIn={Boolean(customer)}
                 initialWishlistEntryId={sealedUserState?.wishlistEntryId ?? null}
-                initialCollectionEntryIds={sealedUserState?.collectionEntryIds ?? []}
-                initialTotalQuantity={sealedUserState?.totalQuantity ?? 0}
+                initialCollectionEntryIds={mergedRow?.entryIds ?? []}
+                initialTotalQuantity={mergedRow?.totalQuantity ?? 0}
+                initialNextSealedEntryId={mergedRow?.sealedEntryIds?.[0] ?? null}
+                collectionLineSealedStateById={Object.fromEntries(productLines.map((l) => [l.id, l.sealedState]))}
               />
 
               {imageFailure && (
@@ -205,6 +221,6 @@ export default async function SealedProductDetailPage({ params }: SealedProductD
           </div>
         </div>
       </div>
-    </div>
+    </SealedProductModalShell>
   );
 }

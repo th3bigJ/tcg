@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 import type { CollectGridSealedRow } from "@/lib/collectGridSealed";
 
@@ -15,36 +13,8 @@ export function CollectGridSealedTile({
   variant: "collection" | "wishlist";
   visualIndex: number;
 }) {
-  const router = useRouter();
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pending, setPending] = useState(false);
-
   const showWishlistHeart = variant === "wishlist";
   const showQty = variant === "collection" && row.totalQuantity > 1;
-  const canMarkOpened =
-    variant === "collection" && row.sealedEntryIds.length > 0 && row.sealedQuantity >= 1;
-  const nextSealedEntryId = row.sealedEntryIds[0] ?? "";
-
-  async function markSealedLineOpened() {
-    if (!nextSealedEntryId) return;
-    setPending(true);
-    try {
-      const res = await fetch("/api/sealed-collection", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: nextSealedEntryId, sealedState: "opened" }),
-      });
-      const j = (await res.json().catch(() => ({}))) as { error?: string };
-      if (!res.ok) {
-        window.alert(typeof j.error === "string" ? j.error : "Could not mark as opened.");
-        return;
-      }
-      setConfirmOpen(false);
-      router.refresh();
-    } finally {
-      setPending(false);
-    }
-  }
 
   return (
     <li className="card-grid-item flex flex-col">
@@ -84,66 +54,12 @@ export function CollectGridSealedTile({
             </svg>
           </span>
         ) : null}
-        {canMarkOpened ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setConfirmOpen(true);
-            }}
-            className="absolute bottom-1.5 left-1.5 z-30 max-w-[calc(100%-12px)] rounded-md border border-[var(--foreground)]/20 bg-[var(--background)]/92 px-2 py-1 text-[9px] font-semibold leading-tight text-[var(--foreground)] shadow-sm backdrop-blur-sm transition hover:bg-[var(--background)]"
-          >
-            Mark opened
-          </button>
-        ) : null}
         <Link
           href={`/sealed/${row.sealedProductId}`}
           className="absolute inset-0 z-10"
           aria-label={`View ${row.name}`}
         />
       </div>
-      {confirmOpen ? (
-        <div
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/55 p-4 sm:items-center"
-          role="presentation"
-          onClick={() => !pending && setConfirmOpen(false)}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="sealed-opened-confirm-title"
-            className="w-full max-w-sm rounded-2xl border border-[var(--foreground)]/14 bg-[var(--background)] p-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="sealed-opened-confirm-title" className="text-sm font-semibold text-[var(--foreground)]">
-              Mark as opened?
-            </h2>
-            <p className="mt-2 text-xs leading-relaxed text-[var(--foreground)]/65">
-              Sets the linked purchase transaction to Opened (that is where sealed vs opened is stored).
-              Your transactions summary treats that spend as Ripped.
-            </p>
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => setConfirmOpen(false)}
-                className="flex-1 rounded-full border border-[var(--foreground)]/22 bg-[var(--foreground)]/8 py-2.5 text-xs font-semibold text-[var(--foreground)]/85 transition hover:bg-[var(--foreground)]/12 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => void markSealedLineOpened()}
-                className="flex-1 rounded-full border border-[var(--foreground)]/25 bg-[var(--foreground)]/14 py-2.5 text-xs font-semibold text-[var(--foreground)] transition hover:bg-[var(--foreground)]/20 disabled:opacity-50"
-              >
-                {pending ? "Saving…" : "Confirm"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
       <div className="relative mt-1 min-h-[2.9rem]">
         {showQty ? (
           <span className="absolute left-0 top-0 inline-flex rounded bg-[var(--foreground)]/85 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-[var(--background)]">

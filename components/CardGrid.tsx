@@ -17,6 +17,10 @@ import {
 import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import {
+  CollectionRemovalReasonSheet,
+  type CollectionRemovalConfirmPayload,
+} from "@/components/CollectionRemovalReasonSheet";
 import { CollectGridSealedTile } from "@/components/CollectGridSealedTile";
 import { useCardGridPreferences } from "@/components/CardGridPreferencesProvider";
 import type { CollectMergedFlatRow } from "@/lib/collectGridSealed";
@@ -1352,14 +1356,6 @@ export function CardGrid({
   const [pendingRemovalProductTypeSlug, setPendingRemovalProductTypeSlug] = useState<"graded-card" | "single-card">(
     "single-card",
   );
-  const [removalReason, setRemovalReason] = useState<
-    "" | "lost" | "traded" | "sold" | "damaged" | "gifted" | "built_deck"
-  >("");
-  const [removalSaleValue, setRemovalSaleValue] = useState<string>("");
-  type TradeItem =
-    | { type: "card"; tempId: string; masterCardId: string; cardSearchQuery: string; cardSearchResults: { id: string; cardName: string; setName: string }[]; cardSearchLoading: boolean; quantity: number }
-    | { type: "sealed"; tempId: string; description: string; quantity: number };
-  const [removalTradeItems, setRemovalTradeItems] = useState<TradeItem[]>([]);
   const [removalPending, setRemovalPending] = useState(false);
 
   const effectiveWishlistMap = localWishlistMap ?? normalizedWishlistEntryIdsByMasterCardId;
@@ -1970,9 +1966,6 @@ export function CardGrid({
         setPendingRemovalLinesMapKey(mapKey);
         setPendingRemovalCardName(cardName);
         setPendingRemovalProductTypeSlug(accountTransactionProductTypeSlugForCollectionLine(line));
-        setRemovalReason("");
-        setRemovalSaleValue("");
-        setRemovalTradeItems([]);
         setRemovalSheetOpen(true);
         return;
       }
@@ -2117,93 +2110,94 @@ export function CardGrid({
     return collectionLinesForSelected.findIndex((l) => l.entryId === editEntryId);
   }, [editSheetOpen, collectionLinesForSelected, editEntryId]);
 
-  const submitRemoval = useCallback(async () => {
-    if (!pendingRemovalEntryId || !removalReason) return;
-    setRemovalPending(true);
-    try {
-      // 1. DELETE the collection entry
-      const deleteRes = await fetch(
-        `/api/collection?id=${encodeURIComponent(pendingRemovalEntryId)}`,
-        { method: "DELETE" },
-      );
-      if (!deleteRes.ok) return;
-
-      // Update local state
-      if (pendingRemovalLinesMapKey) {
-        setLocalCollectionLinesByMasterCardId((prev) =>
-          replaceCollectionLineQuantity(prev ?? effectiveCollectionLinesByMasterCardId, pendingRemovalLinesMapKey, pendingRemovalEntryId, 0),
+  const handleRemovalConfirm = useCallback(
+    async (payload: CollectionRemovalConfirmPayload) => {
+      if (!pendingRemovalEntryId || !payload.reason) return;
+      setRemovalPending(true);
+      try {
+        const deleteRes = await fetch(
+          `/api/collection?id=${encodeURIComponent(pendingRemovalEntryId)}`,
+          { method: "DELETE" },
         );
-      }
-      if (variant !== "browse") router.refresh();
+        if (!deleteRes.ok) return;
 
-      // 2. If sold: create a sale transaction (best-effort)
-      if (removalReason === "sold" && removalSaleValue !== "") {
-        const saleVal = parseFloat(removalSaleValue);
-        if (Number.isFinite(saleVal) && saleVal >= 0) {
-          fetch("/api/transactions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              direction: "sale",
-              productTypeSlug: pendingRemovalProductTypeSlug,
-              description: pendingRemovalCardName || "Unknown card",
-              masterCardId: pendingRemovalMasterCardId,
-              quantity: 1,
-              unitPrice: saleVal,
-              transactionDate: new Date().toISOString(),
-              sourceReference: `collection:${pendingRemovalEntryId}`,
-            }),
-          })
-            .then(async (res) => {
-              if (!res.ok) {
-                const bodyText = await res.text().catch(() => "");
-                console.error(
-                  "[account_transactions] Failed to log sale transaction:",
-                  res.status,
-                  bodyText || res.statusText,
-                );
-              }
-            })
-            .catch((err) => console.error("[account_transactions] Failed to log sale transaction:", err));
+        if (pendingRemovalLinesMapKey) {
+          setLocalCollectionLinesByMasterCardId((prev) =>
+            replaceCollectionLineQuantity(
+              prev ?? effectiveCollectionLinesByMasterCardId,
+              pendingRemovalLinesMapKey,
+              pendingRemovalEntryId,
+              0,
+            ),
+          );
         }
-      }
+        if (variant !== "browse") router.refresh();
 
-      // 3. If traded: POST received cards to /api/collection
-      if (removalReason === "traded") {
-        for (const item of removalTradeItems) {
-          if (item.type === "card" && item.masterCardId) {
-            fetch("/api/collection", {
+        if (payload.reason === "sold" && payload.saleValue !== "") {
+          const saleVal = parseFloat(payload.saleValue);
+          if (Number.isFinite(saleVal) && saleVal >= 0) {
+            fetch("/api/transactions", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                masterCardId: item.masterCardId,
-                quantity: item.quantity,
-                purchaseType: "packed",
+                direction: "sale",
+                productTypeSlug: pendingRemovalProductTypeSlug,
+                description: pendingRemovalCardName || "Unknown card",
+                masterCardId: pendingRemovalMasterCardId,
+                quantity: 1,
+                unitPrice: saleVal,
+                transactionDate: new Date().toISOString(),
+                sourceReference: `collection:${pendingRemovalEntryId}`,
               }),
-            }).catch(() => {});
+            })
+              .then(async (res) => {
+                if (!res.ok) {
+                  const bodyText = await res.text().catch(() => "");
+                  console.error(
+                    "[account_transactions] Failed to log sale transaction:",
+                    res.status,
+                    bodyText || res.statusText,
+                  );
+                }
+              })
+              .catch((err) => console.error("[account_transactions] Failed to log sale transaction:", err));
           }
-          // Sealed items have no masterCard — just noted, not added to collection
         }
-      }
 
-      setRemovalSheetOpen(false);
-    } catch {
-      /* Network error */
-    } finally {
-      setRemovalPending(false);
-    }
-  }, [
-    pendingRemovalEntryId,
-    pendingRemovalLinesMapKey,
-    pendingRemovalMasterCardId,
-    pendingRemovalCardName,
-    pendingRemovalProductTypeSlug,
-    removalReason,
-    removalSaleValue,
-    removalTradeItems,
-    router,
-    variant,
-  ]);
+        if (payload.reason === "traded") {
+          for (const item of payload.tradeItems) {
+            if (item.type === "card" && item.masterCardId) {
+              fetch("/api/collection", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  masterCardId: item.masterCardId,
+                  quantity: item.quantity,
+                  purchaseType: "packed",
+                }),
+              }).catch(() => {});
+            }
+          }
+        }
+
+        setRemovalSheetOpen(false);
+      } catch {
+        /* Network error */
+      } finally {
+        setRemovalPending(false);
+      }
+    },
+    [
+      pendingRemovalEntryId,
+      pendingRemovalLinesMapKey,
+      pendingRemovalMasterCardId,
+      pendingRemovalCardName,
+      pendingRemovalProductTypeSlug,
+      router,
+      variant,
+      effectiveCollectionLinesByMasterCardId,
+    ],
+  );
 
   const toggleWishlist = useCallback(async (targetVariant?: string) => {
     if (!selectedCard?.masterCardId) return;
@@ -3701,275 +3695,6 @@ export function CardGrid({
       document.body,
     );
 
-  // ── Trade item helpers ────────────────────────────────────────────────────
-  const addTradeItem = useCallback((type: "card" | "sealed") => {
-    const tempId = String(Date.now()) + String(Math.random());
-    setRemovalTradeItems((prev) => [
-      ...prev,
-      type === "card"
-        ? { type: "card", tempId, masterCardId: "", cardSearchQuery: "", cardSearchResults: [], cardSearchLoading: false, quantity: 1 }
-        : { type: "sealed", tempId, description: "", quantity: 1 },
-    ]);
-  }, []);
-
-  const removeTradeItem = useCallback((tempId: string) => {
-    setRemovalTradeItems((prev) => prev.filter((i) => i.tempId !== tempId));
-  }, []);
-
-  const updateTradeItem = useCallback((tempId: string, patch: Partial<TradeItem>) => {
-    setRemovalTradeItems((prev) =>
-      prev.map((i) => (i.tempId === tempId ? ({ ...i, ...patch } as TradeItem) : i)),
-    );
-  }, []);
-
-  const searchCardForTrade = useCallback(async (tempId: string, query: string) => {
-    updateTradeItem(tempId, { cardSearchQuery: query, cardSearchLoading: true, cardSearchResults: [] } as Partial<TradeItem>);
-    if (query.length < 2) {
-      updateTradeItem(tempId, { cardSearchLoading: false } as Partial<TradeItem>);
-      return;
-    }
-    try {
-      const res = await fetch(`/api/cards/search?q=${encodeURIComponent(query)}`);
-      if (res.ok) {
-        const data = (await res.json()) as { docs?: { id: string; cardName: string; setName: string }[] };
-        updateTradeItem(tempId, { cardSearchResults: data.docs ?? [], cardSearchLoading: false } as Partial<TradeItem>);
-      } else {
-        updateTradeItem(tempId, { cardSearchLoading: false } as Partial<TradeItem>);
-      }
-    } catch {
-      updateTradeItem(tempId, { cardSearchLoading: false } as Partial<TradeItem>);
-    }
-  }, [updateTradeItem]);
-
-  // ── Removal reason sheet portal ───────────────────────────────────────────
-  const removalSheet =
-    removalSheetOpen &&
-    typeof document !== "undefined" &&
-    createPortal(
-      <div
-        className="fixed inset-0 z-[10001] flex flex-col justify-end bg-black/60"
-        onClick={() => setRemovalSheetOpen(false)}
-        role="presentation"
-      >
-        <div
-          className="max-h-[90dvh] overflow-y-auto rounded-t-2xl border border-[var(--foreground)]/15 bg-[var(--background)] p-4 text-[var(--foreground)] shadow-xl"
-          onClick={(e) => e.stopPropagation()}
-          role="dialog"
-          aria-label="Remove from collection"
-        >
-          <h2 className="text-lg font-semibold">Remove from collection</h2>
-          <p className="mt-1 text-sm text-[var(--foreground)]/65">{pendingRemovalCardName}</p>
-
-          {/* Reason */}
-          <div className="mt-4 flex flex-col gap-1 text-sm">
-            <span className="font-medium">Reason</span>
-            <div className="mt-1 grid grid-cols-3 gap-2">
-              {(["lost", "sold", "traded", "damaged", "gifted", "built_deck"] as const).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRemovalReason(r)}
-                  className={`rounded-md border px-3 py-2 text-sm font-medium transition ${
-                    removalReason === r
-                      ? "border-[var(--foreground)]/50 bg-[var(--foreground)]/15"
-                      : "border-[var(--foreground)]/20 bg-transparent opacity-60"
-                  }`}
-                >
-                  {r === "built_deck" ? "Built deck" : r.charAt(0).toUpperCase() + r.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Sold: sale value */}
-          {removalReason === "sold" && (
-            <div className="mt-4 flex flex-col gap-1 text-sm">
-              <label className="font-medium" htmlFor="removal-sale-value">
-                Sale value (£)
-              </label>
-              <input
-                id="removal-sale-value"
-                type="number"
-                min={0}
-                step={0.01}
-                placeholder="0.00"
-                value={removalSaleValue}
-                onChange={(e) => setRemovalSaleValue(e.target.value)}
-                className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2"
-              />
-            </div>
-          )}
-
-          {/* Traded: received items */}
-          {removalReason === "traded" && (
-            <div className="mt-4 flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Items received in trade</span>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => addTradeItem("card")}
-                    className="rounded-md border border-[var(--foreground)]/20 bg-[var(--foreground)]/8 px-2.5 py-1 text-xs font-medium transition hover:bg-[var(--foreground)]/14"
-                  >
-                    + Card
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addTradeItem("sealed")}
-                    className="rounded-md border border-[var(--foreground)]/20 bg-[var(--foreground)]/8 px-2.5 py-1 text-xs font-medium transition hover:bg-[var(--foreground)]/14"
-                  >
-                    + Sealed
-                  </button>
-                </div>
-              </div>
-
-              {removalTradeItems.length === 0 && (
-                <p className="text-xs text-[var(--foreground)]/45">
-                  Add the cards or sealed products you received.
-                </p>
-              )}
-
-              {removalTradeItems.map((item) => (
-                <div
-                  key={item.tempId}
-                  className="rounded-md border border-[var(--foreground)]/15 bg-[var(--foreground)]/5 p-3"
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-[var(--foreground)]/50">
-                      {item.type === "card" ? "Card" : "Sealed product"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeTradeItem(item.tempId)}
-                      className="text-xs text-[var(--foreground)]/40 hover:text-[var(--foreground)]/70"
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  {item.type === "card" ? (
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="text"
-                        placeholder="Search card name…"
-                        value={item.cardSearchQuery}
-                        onChange={(e) => void searchCardForTrade(item.tempId, e.target.value)}
-                        className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2 text-sm"
-                      />
-                      {item.cardSearchLoading && (
-                        <p className="text-xs text-[var(--foreground)]/45">Searching…</p>
-                      )}
-                      {item.cardSearchResults.length > 0 && !item.masterCardId && (
-                        <ul className="max-h-32 overflow-y-auto rounded-md border border-[var(--foreground)]/15 bg-[var(--background)]">
-                          {item.cardSearchResults.map((r) => (
-                            <li key={r.id}>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  updateTradeItem(item.tempId, {
-                                    masterCardId: r.id,
-                                    cardSearchQuery: `${r.cardName} — ${r.setName}`,
-                                    cardSearchResults: [],
-                                  } as Partial<TradeItem>)
-                                }
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-[var(--foreground)]/8"
-                              >
-                                <span className="font-medium">{String(r.cardName)}</span>
-                                {r.setName ? (
-                                  <span className="ml-1 text-[var(--foreground)]/50">— {String(r.setName)}</span>
-                                ) : null}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      {item.masterCardId && (
-                        <div className="flex items-center justify-between rounded-md border border-green-500/30 bg-green-500/10 px-3 py-1.5 text-sm">
-                          <span className="text-green-400">{item.cardSearchQuery}</span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateTradeItem(item.tempId, {
-                                masterCardId: "",
-                                cardSearchQuery: "",
-                                cardSearchResults: [],
-                              } as Partial<TradeItem>)
-                            }
-                            className="ml-2 text-xs text-[var(--foreground)]/40 hover:text-[var(--foreground)]/70"
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      )}
-                      <label className="flex items-center gap-2 text-sm">
-                        <span className="text-[var(--foreground)]/65">Qty</span>
-                        <input
-                          type="number"
-                          min={1}
-                          value={item.quantity}
-                          onChange={(e) =>
-                            updateTradeItem(item.tempId, {
-                              quantity: Math.max(1, parseInt(e.target.value, 10) || 1),
-                            } as Partial<TradeItem>)
-                          }
-                          className="w-20 rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-1.5 text-sm"
-                        />
-                      </label>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="text"
-                        placeholder="e.g. Surging Sparks ETB"
-                        value={item.description}
-                        onChange={(e) =>
-                          updateTradeItem(item.tempId, { description: e.target.value } as Partial<TradeItem>)
-                        }
-                        className="rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-2 text-sm"
-                      />
-                      <label className="flex items-center gap-2 text-sm">
-                        <span className="text-[var(--foreground)]/65">Qty</span>
-                        <input
-                          type="number"
-                          min={1}
-                          value={item.quantity}
-                          onChange={(e) =>
-                            updateTradeItem(item.tempId, {
-                              quantity: Math.max(1, parseInt(e.target.value, 10) || 1),
-                            } as Partial<TradeItem>)
-                          }
-                          className="w-20 rounded-md border border-[var(--foreground)]/20 bg-[var(--background)] px-3 py-1.5 text-sm"
-                        />
-                      </label>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-6 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setRemovalSheetOpen(false)}
-              className="flex-1 rounded-md border border-[var(--foreground)]/25 px-4 py-2 text-sm font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={removalPending || !removalReason}
-              onClick={() => void submitRemoval()}
-              className="flex-1 rounded-md border border-[var(--foreground)]/25 bg-[var(--foreground)]/10 px-4 py-2 text-sm font-medium disabled:opacity-50"
-            >
-              {removalPending ? "Removing…" : "Confirm"}
-            </button>
-          </div>
-        </div>
-      </div>,
-      document.body,
-    );
-
   const gridContent = (() => {
     if (hideGrid) return null;
     const sealedTileVariant = variant === "wishlist" ? "wishlist" : "collection";
@@ -4337,7 +4062,13 @@ export function CardGrid({
       {addSheet}
       {editSheet}
       {wishSheet}
-      {removalSheet}
+      <CollectionRemovalReasonSheet
+        open={removalSheetOpen}
+        onClose={() => setRemovalSheetOpen(false)}
+        itemName={pendingRemovalCardName}
+        onConfirm={handleRemovalConfirm}
+        confirmPending={removalPending}
+      />
     </>
   );
 }

@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import type { ShopSealedProduct } from "@/lib/r2SealedProducts";
+
+import {
+  CollectionRemovalReasonSheet,
+  type CollectionRemovalConfirmPayload,
+} from "@/components/CollectionRemovalReasonSheet";
+import { suggestedProductTypeIdForSealedProduct, type ShopSealedProduct } from "@/lib/r2SealedProducts";
 
 type SealedProductDetailSidebarProps = {
   product: ShopSealedProduct;
@@ -17,6 +22,10 @@ type SealedProductDetailSidebarProps = {
   /** Newest first (matches remove-one = LIFO) */
   initialCollectionEntryIds: string[];
   initialTotalQuantity: number;
+  /** Next sealed row to mark opened (matches grid / transactions). */
+  initialNextSealedEntryId: string | null;
+  /** Per collection row id: sealed vs opened (for sale transaction `sealed_state`). */
+  collectionLineSealedStateById: Record<string, "sealed" | "opened">;
 };
 
 export function SealedProductDetailSidebar({
@@ -29,12 +38,17 @@ export function SealedProductDetailSidebar({
   initialWishlistEntryId,
   initialCollectionEntryIds,
   initialTotalQuantity,
+  initialNextSealedEntryId,
+  collectionLineSealedStateById,
 }: SealedProductDetailSidebarProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [wishlistEntryId, setWishlistEntryId] = useState<string | null>(initialWishlistEntryId);
   const [collectionEntryIds, setCollectionEntryIds] = useState<string[]>(initialCollectionEntryIds);
   const [totalQuantity, setTotalQuantity] = useState(initialTotalQuantity);
+  const [nextSealedEntryId, setNextSealedEntryId] = useState<string | null>(initialNextSealedEntryId);
+  const [markOpenedConfirmOpen, setMarkOpenedConfirmOpen] = useState(false);
+  const [markOpenedPending, setMarkOpenedPending] = useState(false);
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [addPending, setAddPending] = useState(false);
   const [wishPending, setWishPending] = useState(false);
@@ -43,6 +57,8 @@ export function SealedProductDetailSidebar({
   const [addPricePaid, setAddPricePaid] = useState("");
   /** Empty until first open — avoids server/client date mismatch at midnight boundaries. */
   const [addPurchaseDate, setAddPurchaseDate] = useState("");
+  const [removalSheetOpen, setRemovalSheetOpen] = useState(false);
+  const [removalPending, setRemovalPending] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -56,6 +72,31 @@ export function SealedProductDetailSidebar({
     setCollectionEntryIds(initialCollectionEntryIds);
     setTotalQuantity(initialTotalQuantity);
   }, [initialCollectionEntryIds, initialTotalQuantity]);
+
+  useEffect(() => {
+    setNextSealedEntryId(initialNextSealedEntryId);
+  }, [initialNextSealedEntryId]);
+
+  const markSealedLineOpened = useCallback(async () => {
+    if (!nextSealedEntryId) return;
+    setMarkOpenedPending(true);
+    try {
+      const res = await fetch("/api/sealed-collection", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: nextSealedEntryId, sealedState: "opened" }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        window.alert(typeof j.error === "string" ? j.error : "Could not mark as opened.");
+        return;
+      }
+      setMarkOpenedConfirmOpen(false);
+      router.refresh();
+    } finally {
+      setMarkOpenedPending(false);
+    }
+  }, [nextSealedEntryId, router]);
 
   const submitAdd = useCallback(async () => {
     setAddPending(true);
@@ -101,20 +142,75 @@ export function SealedProductDetailSidebar({
     }
   }, [addPurchaseDate, addPurchaseType, addPricePaid, addQuantity, product.id, router]);
 
-  const removeOneCopy = useCallback(async () => {
-    const newest = collectionEntryIds[0];
-    if (!newest) return;
-    setAddPending(true);
-    try {
-      const res = await fetch(`/api/sealed-collection?id=${encodeURIComponent(newest)}`, { method: "DELETE" });
-      if (!res.ok) return;
-      setCollectionEntryIds((prev) => prev.slice(1));
-      setTotalQuantity((t) => Math.max(0, t - 1));
-      router.refresh();
-    } finally {
-      setAddPending(false);
-    }
-  }, [collectionEntryIds, router]);
+  const handleSealedRemovalConfirm = useCallback(
+    async (payload: CollectionRemovalConfirmPayload) => {
+      const entryId = collectionEntryIds[0];
+      if (!entryId || !payload.reason) return;
+      setRemovalPending(true);
+      try {
+        const deleteRes = await fetch(`/api/sealed-collection?id=${encodeURIComponent(entryId)}`, {
+          method: "DELETE",
+        });
+        if (!deleteRes.ok) return;
+
+        setCollectionEntryIds((prev) => prev.slice(1));
+        setTotalQuantity((t) => Math.max(0, t - 1));
+        router.refresh();
+
+        const productTypeSlug = suggestedProductTypeIdForSealedProduct(product);
+        const lineSealedState = collectionLineSealedStateById[entryId] ?? "sealed";
+
+        if (payload.reason === "sold" && payload.saleValue !== "") {
+          const saleVal = parseFloat(payload.saleValue);
+          if (Number.isFinite(saleVal) && saleVal >= 0) {
+            fetch("/api/transactions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                direction: "sale",
+                productTypeSlug,
+                description: product.name,
+                masterCardId: null,
+                quantity: 1,
+                unitPrice: saleVal,
+                transactionDate: new Date().toISOString(),
+                sourceReference: `sealed-collection:${entryId}`,
+                sealedState: lineSealedState,
+              }),
+            })
+              .then(async (res) => {
+                if (!res.ok) {
+                  const bodyText = await res.text().catch(() => "");
+                  console.error("[account_transactions] sealed sale log failed:", res.status, bodyText);
+                }
+              })
+              .catch((err) => console.error("[account_transactions] sealed sale log failed:", err));
+          }
+        }
+
+        if (payload.reason === "traded") {
+          for (const item of payload.tradeItems) {
+            if (item.type === "card" && item.masterCardId) {
+              fetch("/api/collection", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  masterCardId: item.masterCardId,
+                  quantity: item.quantity,
+                  purchaseType: "packed",
+                }),
+              }).catch(() => {});
+            }
+          }
+        }
+
+        setRemovalSheetOpen(false);
+      } finally {
+        setRemovalPending(false);
+      }
+    },
+    [collectionEntryIds, collectionLineSealedStateById, product, router],
+  );
 
   const toggleWishlist = useCallback(async () => {
     setWishPending(true);
@@ -275,19 +371,50 @@ export function SealedProductDetailSidebar({
             No sealed copies saved yet. Tap + to add with purchase details.
           </p>
         ) : (
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-white/85">
-              <span className="font-semibold tabular-nums text-white">{totalQuantity}</span>{" "}
-              {totalQuantity === 1 ? "copy" : "copies"} in your collection
-            </p>
-            <button
-              type="button"
-              onClick={() => void removeOneCopy()}
-              disabled={addPending}
-              className="text-xs font-medium text-white/55 underline decoration-white/25 underline-offset-2 hover:text-white/80"
-            >
-              Remove one
-            </button>
+          <div className="flex min-h-[52px] items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium leading-snug text-white">{typeLabel}</div>
+              <div className="mt-0.5 text-[10px] leading-snug text-white/55">
+                {totalQuantity === 1 ? "1 copy" : `${totalQuantity} copies`} in your collection
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {nextSealedEntryId ? (
+                <button
+                  type="button"
+                  onClick={() => setMarkOpenedConfirmOpen(true)}
+                  disabled={markOpenedPending || addPending || removalPending}
+                  className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 px-3 text-[11px] font-semibold text-white transition hover:bg-white/20 disabled:opacity-40"
+                  title="Mark as opened"
+                  aria-label="Mark as opened"
+                >
+                  Opened
+                </button>
+              ) : null}
+              <button
+                type="button"
+                disabled={addPending || removalPending}
+                onClick={() => setRemovalSheetOpen(true)}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold leading-none text-white transition hover:bg-white/20 disabled:opacity-40"
+                aria-label="Remove one copy from collection"
+              >
+                −
+              </button>
+              <span className="min-w-[2rem] text-center text-sm font-semibold tabular-nums text-white">{totalQuantity}</span>
+              <button
+                type="button"
+                disabled={addPending || removalPending}
+                onClick={() => {
+                  setAddPurchaseDate((d) => d || new Date().toISOString().slice(0, 10));
+                  setAddPurchaseType("bought");
+                  setAddSheetOpen(true);
+                }}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 text-lg font-semibold leading-none text-white transition hover:bg-white/20 disabled:opacity-40"
+                aria-label="Add another copy with purchase details"
+              >
+                +
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -405,6 +532,58 @@ export function SealedProductDetailSidebar({
         ) : null}
       </section>
       {loggedIn ? addSheet : null}
+      <CollectionRemovalReasonSheet
+        open={removalSheetOpen}
+        onClose={() => setRemovalSheetOpen(false)}
+        itemName={product.name}
+        onConfirm={handleSealedRemovalConfirm}
+        confirmPending={removalPending}
+        overlayZIndexClass="z-[10100]"
+      />
+      {markOpenedConfirmOpen && mounted && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[10002] flex items-end justify-center bg-black/55 p-4 sm:items-center"
+              role="presentation"
+              onClick={() => !markOpenedPending && setMarkOpenedConfirmOpen(false)}
+            >
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="sealed-modal-opened-confirm-title"
+                className="w-full max-w-sm rounded-2xl border border-white/14 bg-[#0a0a0c] p-4 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 id="sealed-modal-opened-confirm-title" className="text-sm font-semibold text-white">
+                  Mark as opened?
+                </h2>
+                <p className="mt-2 text-xs leading-relaxed text-white/65">
+                  Sets the linked purchase transaction to Opened (that is where sealed vs opened is stored). Your
+                  transactions summary treats that spend as Ripped.
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    disabled={markOpenedPending}
+                    onClick={() => setMarkOpenedConfirmOpen(false)}
+                    className="flex-1 rounded-full border border-white/22 bg-white/8 py-2.5 text-xs font-semibold text-white/85 transition hover:bg-white/12 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={markOpenedPending}
+                    onClick={() => void markSealedLineOpened()}
+                    className="flex-1 rounded-full border border-white/25 bg-white/14 py-2.5 text-xs font-semibold text-white transition hover:bg-white/20 disabled:opacity-50"
+                  >
+                    {markOpenedPending ? "Saving…" : "Confirm"}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }

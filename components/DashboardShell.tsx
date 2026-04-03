@@ -11,6 +11,9 @@ type DashboardShellProps = {
   isLoggedIn: boolean;
   displayName: string;
   collectionValueLabel: string;
+  singleCardsValueLabel: string;
+  gradedValueLabel: string;
+  sealedValueLabel: string;
   cardsOwnedCount: number;
   wishlistCount: number;
   gradedCopies: number;
@@ -31,6 +34,9 @@ export function DashboardShell({
   isLoggedIn,
   displayName,
   collectionValueLabel,
+  singleCardsValueLabel,
+  gradedValueLabel,
+  sealedValueLabel,
   cardsOwnedCount,
   wishlistCount,
   gradedCopies,
@@ -72,7 +78,18 @@ export function DashboardShell({
 
   const fmt = (n: number) => n.toLocaleString("en-GB");
   const quickStats = [
-    { label: "Collection value", value: collectionValueLabel, detail: "Based on current market pricing" },
+    {
+      label: "Collection value",
+      value: collectionValueLabel,
+      detail: "All cards and sealed inventory (market pricing)",
+    },
+    {
+      label: "Single cards",
+      value: singleCardsValueLabel,
+      detail: "Ungraded loose cards (raw and packed pulls)",
+    },
+    { label: "Graded value", value: gradedValueLabel, detail: "Slabbed cards" },
+    { label: "Sealed value", value: sealedValueLabel, detail: "Still sealed product inventory" },
     { label: "Cards owned", value: fmt(cardsOwnedCount), detail: "Across your collection" },
     { label: "Graded", value: fmt(gradedCopies), detail: "Slab copies in your collection" },
     { label: "Singles", value: fmt(singleCopies), detail: "Raw bought or traded cards" },
@@ -94,8 +111,9 @@ export function DashboardShell({
             <div>
               <p className="text-sm text-white/56">Today’s snapshot</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight">Your collection at a glance</h2>
-              <p className="mt-2 max-w-xs text-sm leading-6 text-white/60">
-                A quick summary of value, card mix (graded, singles, packed), sealed inventory, and wishlist progress.
+              <p className="mt-2 max-w-sm text-sm leading-6 text-white/60">
+                Total value includes sealed products. Breakdown shows single cards, graded slabs, and sealed — plus copy
+                counts and wishlist.
               </p>
             </div>
 

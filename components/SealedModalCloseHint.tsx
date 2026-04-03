@@ -18,7 +18,7 @@ export function SealedModalCloseHint({ fallbackHref }: { fallbackHref: string })
       className="mb-2 block w-full text-center text-[11px] text-white/65 transition hover:text-white/85"
       aria-label="Close sealed preview"
     >
-      Swipe down from the top to close.
+      Tap here or swipe down from the top to close.
     </button>
   );
 }

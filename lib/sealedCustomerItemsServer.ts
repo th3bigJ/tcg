@@ -42,6 +42,28 @@ export async function fetchSealedStateByCollectionIdFromTransactions(
   return map;
 }
 
+function mapSealedCollectionRowsToLines(
+  rows: Record<string, unknown>[],
+  sealedStateByLineId: Map<string, SealedCollectionLine["sealedState"]>,
+): SealedCollectionLine[] {
+  return rows.map((row) => {
+    const id = String(row.id ?? "");
+    return {
+      id,
+      sealedProductId: Number(row.sealed_product_id),
+      quantity:
+        typeof row.quantity === "number" && Number.isFinite(row.quantity) && row.quantity >= 1
+          ? row.quantity
+          : 1,
+      sealedState: sealedStateByLineId.get(id) ?? "sealed",
+      purchaseType: parsePurchaseType(row.purchase_type),
+      pricePaid:
+        typeof row.price_paid === "number" && Number.isFinite(row.price_paid) ? row.price_paid : null,
+      addedAt: typeof row.added_at === "string" ? row.added_at : null,
+    };
+  });
+}
+
 export async function fetchSealedCollectionLines(customerId: string): Promise<SealedCollectionLine[]> {
   noStore();
   const supabase = await createSupabaseServerClient();
@@ -63,23 +85,27 @@ export async function fetchSealedCollectionLines(customerId: string): Promise<Se
   }
 
   const sealedStateByLineId = await fetchSealedStateByCollectionIdFromTransactions(customerId);
+  return mapSealedCollectionRowsToLines(allRows, sealedStateByLineId);
+}
 
-  return allRows.map((row) => {
-    const id = String(row.id ?? "");
-    return {
-      id,
-      sealedProductId: Number(row.sealed_product_id),
-      quantity:
-        typeof row.quantity === "number" && Number.isFinite(row.quantity) && row.quantity >= 1
-          ? row.quantity
-          : 1,
-      sealedState: sealedStateByLineId.get(id) ?? "sealed",
-      purchaseType: parsePurchaseType(row.purchase_type),
-      pricePaid:
-        typeof row.price_paid === "number" && Number.isFinite(row.price_paid) ? row.price_paid : null,
-      addedAt: typeof row.added_at === "string" ? row.added_at : null,
-    };
-  });
+/** Collection lines for one sealed product (e.g. product modal “mark opened”). */
+export async function fetchSealedCollectionLinesForProduct(
+  customerId: string,
+  sealedProductId: number,
+): Promise<SealedCollectionLine[]> {
+  noStore();
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("customer_sealed_collections")
+    .select("id, sealed_product_id, quantity, purchase_type, price_paid, added_at")
+    .eq("customer_id", customerId)
+    .eq("sealed_product_id", sealedProductId)
+    .order("added_at", { ascending: false });
+
+  if (error || !data?.length) return [];
+
+  const sealedStateByLineId = await fetchSealedStateByCollectionIdFromTransactions(customerId);
+  return mapSealedCollectionRowsToLines(data as Record<string, unknown>[], sealedStateByLineId);
 }
 
 export async function fetchSealedWishlistLines(customerId: string): Promise<SealedWishlistLine[]> {
