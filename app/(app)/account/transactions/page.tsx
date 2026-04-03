@@ -11,7 +11,7 @@ export default async function TransactionsPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-[var(--background)] text-[var(--foreground)]">
+    <div className="flex min-h-full min-w-0 flex-col bg-[var(--background)] text-[var(--foreground)]">
       <TransactionsClient productTypes={PRODUCT_TYPES} />
     </div>
   );

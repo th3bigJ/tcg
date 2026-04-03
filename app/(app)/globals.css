@@ -299,6 +299,11 @@ input[type="search"]::-webkit-search-results-decoration {
   }
 }
 
+/* Transactions: category breakdown — scroll on narrow viewports (flex min-w-0 chain in TransactionsClient) */
+.txn-breakdown {
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Transactions: Spent / Sold / Collection by category */
 .txn-breakdown__table {
   font-variant-numeric: tabular-nums;

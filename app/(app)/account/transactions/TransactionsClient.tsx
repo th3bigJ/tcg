@@ -596,7 +596,7 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-full flex-col px-4 pb-[var(--bottom-nav-offset)] pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
+    <div className="flex min-h-full min-w-0 w-full flex-col px-4 pb-[var(--bottom-nav-offset)] pt-[var(--mobile-page-top-offset)] text-[var(--foreground)]">
       {/* Header */}
       <div className="mb-5 flex items-center gap-3">
         <h1 className="flex-1 text-xl font-semibold tracking-tight">Transactions</h1>
@@ -632,7 +632,7 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
       </div>
 
       {/* Summary totals + category breakdown */}
-      <div className="mb-6 flex flex-col gap-4">
+      <div className="mb-6 flex min-w-0 flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.045] p-4 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_8%,transparent)]">
             <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--foreground)]/48">
@@ -669,17 +669,24 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
           </div>
         </div>
 
-        <div className="txn-breakdown overflow-x-auto rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.035] p-1 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
-          <table className="txn-breakdown__table w-full min-w-[28rem] border-collapse text-left text-[13px]">
+        <div className="txn-breakdown w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain rounded-2xl border border-[var(--foreground)]/12 bg-[var(--foreground)]/[0.035] p-1 shadow-[0_1px_0_color-mix(in_srgb,var(--foreground)_6%,transparent)]">
+          <table className="txn-breakdown__table w-full min-w-[18rem] border-collapse text-left text-[11px] sm:min-w-[24rem] sm:text-[13px]">
             <thead>
               <tr className="border-b border-[var(--foreground)]/10">
-                <th className="txn-breakdown__th px-3 py-2.5 font-semibold text-[var(--foreground)]/55">Category</th>
-                <th className="txn-breakdown__th px-3 py-2.5 text-right font-semibold text-[var(--foreground)]/55">
-                  Collection
+                <th className="txn-breakdown__th px-1.5 py-2 font-semibold text-[var(--foreground)]/55 sm:px-3 sm:py-2.5">
+                  Category
                 </th>
-                <th className="txn-breakdown__th px-3 py-2.5 text-right font-semibold text-[var(--foreground)]/55">Spent</th>
-                <th className="txn-breakdown__th px-3 py-2.5 text-right font-semibold text-[var(--foreground)]/55">Sold</th>
-                <th className="txn-breakdown__th px-3 py-2.5 text-right font-semibold text-[var(--foreground)]/55">
+                <th className="txn-breakdown__th px-1.5 py-2 text-right font-semibold text-[var(--foreground)]/55 sm:px-3 sm:py-2.5">
+                  <span className="sm:hidden">Coll.</span>
+                  <span className="hidden sm:inline">Collection</span>
+                </th>
+                <th className="txn-breakdown__th px-1.5 py-2 text-right font-semibold text-[var(--foreground)]/55 sm:px-3 sm:py-2.5">
+                  Spent
+                </th>
+                <th className="txn-breakdown__th px-1.5 py-2 text-right font-semibold text-[var(--foreground)]/55 sm:px-3 sm:py-2.5">
+                  Sold
+                </th>
+                <th className="txn-breakdown__th px-1.5 py-2 text-right font-semibold text-[var(--foreground)]/55 sm:px-3 sm:py-2.5">
                   P&amp;L
                 </th>
               </tr>
@@ -721,14 +728,20 @@ export function TransactionsClient({ productTypes }: { productTypes: ProductType
                 const rowPnl = collectionAmt + soldAmt - spentAmt;
                 return (
                   <tr key={key} className="border-b border-[var(--foreground)]/8 last:border-b-0">
-                    <td className="txn-breakdown__td px-3 py-2.5 font-medium text-[var(--foreground)]/88">{label}</td>
-                    <td className="txn-breakdown__td px-3 py-2.5 text-right tabular-nums text-[var(--foreground)]/90">
+                    <td className="txn-breakdown__td max-w-[7.25rem] break-words px-1.5 py-2 font-medium leading-snug text-[var(--foreground)]/88 sm:max-w-none sm:px-3 sm:py-2.5 sm:leading-normal">
+                      {label}
+                    </td>
+                    <td className="txn-breakdown__td whitespace-nowrap px-1.5 py-2 text-right tabular-nums text-[var(--foreground)]/90 sm:px-3 sm:py-2.5">
                       {collectionValueLoading ? "…" : fmt(collectionAmt)}
                     </td>
-                    <td className="txn-breakdown__td px-3 py-2.5 text-right tabular-nums text-red-400/95">{fmt(spentAmt)}</td>
-                    <td className="txn-breakdown__td px-3 py-2.5 text-right tabular-nums text-green-400/95">{fmt(soldAmt)}</td>
+                    <td className="txn-breakdown__td whitespace-nowrap px-1.5 py-2 text-right tabular-nums text-red-400/95 sm:px-3 sm:py-2.5">
+                      {fmt(spentAmt)}
+                    </td>
+                    <td className="txn-breakdown__td whitespace-nowrap px-1.5 py-2 text-right tabular-nums text-green-400/95 sm:px-3 sm:py-2.5">
+                      {fmt(soldAmt)}
+                    </td>
                     <td
-                      className={`txn-breakdown__td px-3 py-2.5 text-right text-sm font-semibold tabular-nums ${
+                      className={`txn-breakdown__td whitespace-nowrap px-1.5 py-2 text-right text-xs font-semibold tabular-nums sm:px-3 sm:py-2.5 sm:text-sm ${
                         collectionValueLoading
                           ? "text-[var(--foreground)]/50"
                           : rowPnl >= 0
