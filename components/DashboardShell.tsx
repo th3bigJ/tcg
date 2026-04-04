@@ -119,7 +119,7 @@ export function DashboardShell({
             </section>
           ) : null}
 
-          <div className="mt-6 rounded-[2rem] border border-white/8 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.18),transparent_35%),linear-gradient(160deg,#111318_0%,#0c0d10_65%,#090a0c_100%)] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+          <div className="mt-6 rounded-[2rem] border border-white/8 bg-[#0e1014] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
             <div>
               <p className="text-sm text-white/56">Today’s snapshot</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight">Your collection at a glance</h2>
