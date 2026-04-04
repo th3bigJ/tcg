@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { unstable_noStore as noStore } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -18,11 +19,10 @@ function parsePurchaseType(value: unknown): SealedCollectionLine["purchaseType"]
 const SEALED_COLLECTION_REF_PREFIX = "sealed-collection:";
 
 /** Opened vs sealed for each collection row id, from `account_transactions.sealed_state` + `source_reference`. */
-export async function fetchSealedStateByCollectionIdFromTransactions(
+export async function fetchSealedStateByCollectionIdWithSupabase(
+  supabase: SupabaseClient,
   customerId: string,
 ): Promise<Map<string, SealedCollectionLine["sealedState"]>> {
-  noStore();
-  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("account_transactions")
     .select("source_reference, sealed_state")
@@ -40,6 +40,14 @@ export async function fetchSealedStateByCollectionIdFromTransactions(
     map.set(id, row.sealed_state === "opened" ? "opened" : "sealed");
   }
   return map;
+}
+
+export async function fetchSealedStateByCollectionIdFromTransactions(
+  customerId: string,
+): Promise<Map<string, SealedCollectionLine["sealedState"]>> {
+  noStore();
+  const supabase = await createSupabaseServerClient();
+  return fetchSealedStateByCollectionIdWithSupabase(supabase, customerId);
 }
 
 function mapSealedCollectionRowsToLines(
@@ -64,9 +72,10 @@ function mapSealedCollectionRowsToLines(
   });
 }
 
-export async function fetchSealedCollectionLines(customerId: string): Promise<SealedCollectionLine[]> {
-  noStore();
-  const supabase = await createSupabaseServerClient();
+export async function fetchSealedCollectionLinesWithSupabase(
+  supabase: SupabaseClient,
+  customerId: string,
+): Promise<SealedCollectionLine[]> {
   const allRows: Record<string, unknown>[] = [];
   let from = 0;
 
@@ -84,8 +93,14 @@ export async function fetchSealedCollectionLines(customerId: string): Promise<Se
     from += PAGE_SIZE;
   }
 
-  const sealedStateByLineId = await fetchSealedStateByCollectionIdFromTransactions(customerId);
+  const sealedStateByLineId = await fetchSealedStateByCollectionIdWithSupabase(supabase, customerId);
   return mapSealedCollectionRowsToLines(allRows, sealedStateByLineId);
+}
+
+export async function fetchSealedCollectionLines(customerId: string): Promise<SealedCollectionLine[]> {
+  noStore();
+  const supabase = await createSupabaseServerClient();
+  return fetchSealedCollectionLinesWithSupabase(supabase, customerId);
 }
 
 /** Collection lines for one sealed product (e.g. product modal “mark opened”). */
@@ -104,7 +119,7 @@ export async function fetchSealedCollectionLinesForProduct(
 
   if (error || !data?.length) return [];
 
-  const sealedStateByLineId = await fetchSealedStateByCollectionIdFromTransactions(customerId);
+  const sealedStateByLineId = await fetchSealedStateByCollectionIdWithSupabase(supabase, customerId);
   return mapSealedCollectionRowsToLines(data as Record<string, unknown>[], sealedStateByLineId);
 }
 

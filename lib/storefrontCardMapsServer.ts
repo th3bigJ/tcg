@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getItemConditionName } from "@/lib/referenceData";
@@ -10,9 +11,11 @@ import {
 
 const PAGE_SIZE = 1000;
 
-export async function fetchCollectionCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {
-  noStore();
-  const supabase = await createSupabaseServerClient();
+/** Card collection entries for a customer (any Supabase client with RLS or service role). */
+export async function fetchCollectionCardEntriesWithSupabase(
+  supabase: SupabaseClient,
+  customerId: string,
+): Promise<StorefrontCardEntry[]> {
   const allRows: Record<string, unknown>[] = [];
   let from = 0;
 
@@ -36,6 +39,12 @@ export async function fetchCollectionCardEntries(customerId: string): Promise<St
       return mapCustomerCollectionRow(row, conditionName);
     })
     .filter((e): e is StorefrontCardEntry => Boolean(e));
+}
+
+export async function fetchCollectionCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {
+  noStore();
+  const supabase = await createSupabaseServerClient();
+  return fetchCollectionCardEntriesWithSupabase(supabase, customerId);
 }
 
 export async function fetchWishlistCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {

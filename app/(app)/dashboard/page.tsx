@@ -1,5 +1,6 @@
 import { DashboardShell } from "@/components/DashboardShell";
 import { getCurrentCustomer } from "@/lib/auth";
+import { fetchPortfolioSnapshotDocumentForServer } from "@/lib/r2PortfolioSnapshots";
 import { estimateCardCollectionBucketsGbp } from "@/lib/collectionMarketValueGbp";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import { mergeSealedCollectionForGrid } from "@/lib/sealedCustomerItems";
@@ -36,13 +37,15 @@ export default async function DashboardPage() {
     singleCopies,
     packedCopies,
     sealedCopies,
+    portfolioHistoryPoints,
   ] = customer
     ? await (async () => {
-        const [collectionEntries, wishlistEntries, sealedLines, multipliers] = await Promise.all([
+        const [collectionEntries, wishlistEntries, sealedLines, multipliers, portfolioDoc] = await Promise.all([
           fetchCollectionCardEntries(customer.id),
           fetchWishlistCardEntries(customer.id),
           fetchSealedCollectionLines(customer.id),
           fetchGbpConversionMultipliers(),
+          fetchPortfolioSnapshotDocumentForServer(customer.id),
         ]);
 
         const cardBuckets =
@@ -69,6 +72,9 @@ export default async function DashboardPage() {
 
         const buckets = collectionCardCopyBucketsFromEntries(collectionEntries);
 
+        const historyPoints =
+          portfolioDoc?.points.map((p) => ({ date: p.date, totalValueGbp: p.totalValueGbp })) ?? [];
+
         return [
           formatGbp(totalGbp),
           formatGbp(looseSinglesValueGbp),
@@ -80,9 +86,22 @@ export default async function DashboardPage() {
           buckets.singleCopies,
           buckets.packedCopies,
           sealedCopyCount,
+          historyPoints,
         ] as const;
       })()
-    : (["£0.00", "£0.00", "£0.00", "£0.00", 0, 0, 0, 0, 0, 0] as const);
+    : ([
+        "£0.00",
+        "£0.00",
+        "£0.00",
+        "£0.00",
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        [] as { date: string; totalValueGbp: number }[],
+      ] as const);
 
   return (
     <DashboardShell
@@ -98,6 +117,7 @@ export default async function DashboardPage() {
       singleCopies={singleCopies}
       packedCopies={packedCopies}
       sealedCopies={sealedCopies}
+      portfolioHistoryPoints={portfolioHistoryPoints}
     />
   );
 }

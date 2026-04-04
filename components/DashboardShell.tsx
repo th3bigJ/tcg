@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { AppDrawerMenu } from "@/components/AppDrawerMenu";
+import { PortfolioValueChart } from "@/components/PortfolioValueChart";
 import { DASHBOARD_MENU_TOGGLE_EVENT } from "@/lib/dashboardMenuEvents";
 
 type DashboardShellProps = {
@@ -20,6 +21,7 @@ type DashboardShellProps = {
   singleCopies: number;
   packedCopies: number;
   sealedCopies: number;
+  portfolioHistoryPoints: { date: string; totalValueGbp: number }[];
 };
 
 function DrawerIconArrow() {
@@ -43,6 +45,7 @@ export function DashboardShell({
   singleCopies,
   packedCopies,
   sealedCopies,
+  portfolioHistoryPoints,
 }: DashboardShellProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -106,6 +109,15 @@ export function DashboardShell({
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/35">Dashboard</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">Hi, {displayName}</h1>
           </div>
+
+          {isLoggedIn ? (
+            <section className="mt-6">
+              <h2 className="text-lg font-semibold">Collection Value</h2>
+              <div className="mt-3">
+                <PortfolioValueChart points={portfolioHistoryPoints} />
+              </div>
+            </section>
+          ) : null}
 
           <div className="mt-6 rounded-[2rem] border border-white/8 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.18),transparent_35%),linear-gradient(160deg,#111318_0%,#0c0d10_65%,#090a0c_100%)] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
             <div>

@@ -4,6 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { productTypeSupportsSealedState } from "@/lib/referenceData";
+import {
+  type FourWayCategory,
+  transactionFourWayCategoryFromProductTypeId,
+} from "@/lib/transactionFourWay";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,18 +63,8 @@ function productTypeId(pt: TransactionDoc["productType"]): string {
   return String(pt);
 }
 
-type FourWayCategory = "single" | "graded" | "sealed" | "ripped";
-
-/**
- * Spend/sold by transaction line. Opened sealed inventory (ETBs, packs you opened, etc.) counts as Ripped.
- * Single/graded card lines ignore sealed state. Collection value for Ripped still includes packed singles.
- */
 function transactionFourWayCategory(doc: TransactionDoc): FourWayCategory {
-  const slug = productTypeId(doc.productType);
-  if (slug === "graded-card") return "graded";
-  if (slug === "single-card") return "single";
-  if (doc.sealedState === "opened") return "ripped";
-  return "sealed";
+  return transactionFourWayCategoryFromProductTypeId(productTypeId(doc.productType), doc.sealedState);
 }
 
 function fourWayTxnChipLabel(cat: FourWayCategory): string {
