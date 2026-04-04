@@ -6,6 +6,8 @@
  * Usage:
  *   node --import tsx/esm scripts/backfillPriceHistoryFromScrydex.ts --set=me03
  *   node --import tsx/esm scripts/backfillPriceHistoryFromScrydex.ts --set=me03 --dry-run
+ *   node --import tsx/esm scripts/backfillPriceHistoryFromScrydex.ts --series="Sword & Shield,Base"
+ *   (comma-separated set codes for --set=; comma-separated series names for --series=; both narrow together)
  */
 
 import fs from "fs";
@@ -48,6 +50,10 @@ const dryRun = process.argv.includes("--dry-run");
 const setArg = process.argv.find((arg) => arg.startsWith("--set="));
 const onlySetCodes = setArg
   ? setArg.slice("--set=".length).split(",").map((value) => value.trim()).filter(Boolean)
+  : undefined;
+const seriesArg = process.argv.find((arg) => arg.startsWith("--series="));
+const onlySeriesNames = seriesArg
+  ? seriesArg.slice("--series=".length).split(",").map((value) => value.trim()).filter(Boolean)
   : undefined;
 
 function readJson<T>(filePath: string): T {
@@ -328,20 +334,39 @@ async function main(): Promise<void> {
   }
 
   const allSets = loadSets();
-  const allowed = new Set((onlySetCodes ?? []).map((value) => value.toLowerCase()));
-  const sets = onlySetCodes?.length
-    ? allSets.filter(
-        (set) =>
-          (set.code && allowed.has(set.code.toLowerCase())) ||
-          (set.tcgdexId && allowed.has(set.tcgdexId.toLowerCase())),
-      )
-    : allSets;
+  const allowedCodes =
+    onlySetCodes && onlySetCodes.length > 0
+      ? new Set(onlySetCodes.map((value) => value.toLowerCase()))
+      : null;
+  const allowedSeries =
+    onlySeriesNames && onlySeriesNames.length > 0
+      ? new Set(onlySeriesNames.map((value) => value.toLowerCase()))
+      : null;
+
+  const sets = allSets.filter((set) => {
+    if (allowedCodes) {
+      const codeOk =
+        (set.code && allowedCodes.has(set.code.toLowerCase())) ||
+        (set.tcgdexId && allowedCodes.has(set.tcgdexId.toLowerCase()));
+      if (!codeOk) return false;
+    }
+    if (allowedSeries) {
+      const name = set.seriesName?.trim().toLowerCase();
+      if (!name || !allowedSeries.has(name)) return false;
+    }
+    return true;
+  });
 
   if (!sets.length) {
-    throw new Error(`No sets found matching: ${(onlySetCodes ?? []).join(", ")}`);
+    const parts: string[] = [];
+    if (onlySetCodes?.length) parts.push(`set codes: ${onlySetCodes.join(", ")}`);
+    if (onlySeriesNames?.length) parts.push(`series: ${onlySeriesNames.join(", ")}`);
+    throw new Error(`No sets found matching ${parts.join("; ") || "filters"}`);
   }
 
-  console.log(`=== Scrydex price-history backfill (${onlySetCodes?.join(", ") ?? "all sets"}) ===`);
+  const filterLabel =
+    [onlySetCodes?.join(", "), onlySeriesNames?.join(", ")].filter(Boolean).join(" + ") || "all sets";
+  console.log(`=== Scrydex price-history backfill (${filterLabel}) ===`);
   if (dryRun) console.log("(dry-run: no R2 uploads)\n");
   console.log(`Windows: daily=${todayKey()} weekly=${currentWeekKey()} monthly=${currentMonthKey()}`);
 

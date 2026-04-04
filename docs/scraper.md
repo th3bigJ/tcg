@@ -130,20 +130,13 @@ Approx. 4,587 cards.
 npm run scrape:pricing -- --series="XY,EX,Platinum,HeartGold & SoulSilver"
 ```
 
-### Batch sealed pricing
 
-npm run scrape:pokedata-products:prices
 
-### Backfill sealed price history
 
-```bash
-npm run backfill:sealed-price-history
-```
+npm run backfill:price-history -- --series="Sword & Shield,Base,Neo,Gym,POP,Legendary Collection,Call of Legends,McDonald's Collection,Trainer kits"
 
-```bash
-npm run backfill:sealed-price-history -- --series="Mega Evolution"
-```
+npm run backfill:price-history -- --series="Scarlet & Violet,Diamond & Pearl,Mega Evolution"
 
-```bash
-npm run backfill:sealed-price-history -- --product-id=7419
-```
+npm run backfill:price-history -- --series="Sun & Moon,Black & White,E-Card"
+
+npm run backfill:price-history -- --series="XY,EX,Platinum,HeartGold & SoulSilver"
