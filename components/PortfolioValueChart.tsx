@@ -79,6 +79,13 @@ export function PortfolioValueChart({ points }: PortfolioValueChartProps) {
     y: padding.top + innerHeight - ((value - chartMin) / chartRange) * innerHeight,
   }));
 
+  const startDateLabel = sorted[0] ? formatDateLabel(sorted[0].date) : "";
+  const endDateLabel = sorted.length ? formatDateLabel(sorted[sorted.length - 1].date) : "";
+  const middleDateLabel =
+    sorted.length > 2
+      ? formatDateLabel(sorted[Math.floor((sorted.length - 1) / 2)].date)
+      : "";
+
   return (
     <div className="rounded-2xl border border-white/10 bg-black/20 px-2 py-3">
       <div className="mb-3 flex items-start justify-between gap-3 px-1">
@@ -139,6 +146,23 @@ export function PortfolioValueChart({ points }: PortfolioValueChartProps) {
           />
         ))}
       </svg>
+
+      {sorted.length === 1 ? (
+        <div className="mt-2 px-1 text-center text-[11px] font-medium tracking-wide text-white/45">
+          {startDateLabel}
+        </div>
+      ) : sorted.length === 2 ? (
+        <div className="mt-2 grid grid-cols-2 items-center gap-2 px-1 text-[11px] font-medium tracking-wide text-white/45">
+          <span className="truncate">{startDateLabel}</span>
+          <span className="truncate text-right">{endDateLabel}</span>
+        </div>
+      ) : (
+        <div className="mt-2 grid grid-cols-3 items-center gap-2 px-1 text-[11px] font-medium tracking-wide text-white/45">
+          <span className="truncate">{startDateLabel}</span>
+          <span className="truncate text-center">{middleDateLabel}</span>
+          <span className="truncate text-right">{endDateLabel}</span>
+        </div>
+      )}
     </div>
   );
 }

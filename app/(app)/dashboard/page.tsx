@@ -1,5 +1,6 @@
 import { DashboardShell } from "@/components/DashboardShell";
 import { getCurrentCustomer } from "@/lib/auth";
+import { mergePortfolioHistoryWithLiveToday } from "@/lib/portfolioChartPoints";
 import { fetchPortfolioSnapshotDocumentForServer } from "@/lib/r2PortfolioSnapshots";
 import { estimateCardCollectionBucketsGbp } from "@/lib/collectionMarketValueGbp";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
@@ -72,8 +73,9 @@ export default async function DashboardPage() {
 
         const buckets = collectionCardCopyBucketsFromEntries(collectionEntries);
 
-        const historyPoints =
+        const historyFromFile =
           portfolioDoc?.points.map((p) => ({ date: p.date, totalValueGbp: p.totalValueGbp })) ?? [];
+        const historyPoints = mergePortfolioHistoryWithLiveToday(historyFromFile, totalGbp);
 
         return [
           formatGbp(totalGbp),

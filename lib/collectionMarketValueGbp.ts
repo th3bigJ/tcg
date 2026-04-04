@@ -1,3 +1,4 @@
+import { catalogVariantKeyForPricingLookup } from "@/lib/cardVariantLabels";
 import {
   type StorefrontCardEntry,
   collectionGroupKeyFromEntry,
@@ -6,6 +7,7 @@ import {
 import { getPricingForSet, getPricingForCard } from "@/lib/r2Pricing";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import { getTcgplayerVariantBlock } from "@/lib/tcgdexMarketLinks";
+import { TCGDEX_TCGPLAYER_MARKET_KEYS_BY_VARIANT_KEY } from "@/lib/pricingVariantRegistry";
 import { TCG_PRICE_VARIANTS } from "@/lib/tcgdexTcgplayerVariants";
 
 function readMarketFromVariantBlock(block: unknown): number | null {
@@ -33,10 +35,17 @@ function estimateUnitGbpFromPricing(
   gradeValue?: string,
 ): number | null {
   const tpObj = tcgplayer && typeof tcgplayer === "object" ? (tcgplayer as Record<string, unknown>) : null;
+  const variantKey = catalogVariantKeyForPricingLookup(printing ?? undefined);
+  const tcgplayerKeysForVariant =
+    variantKey !== null && variantKey !== undefined
+      ? (TCGDEX_TCGPLAYER_MARKET_KEYS_BY_VARIANT_KEY[variantKey] ?? [variantKey])
+      : [];
   if (tpObj) {
-    if (printing?.trim()) {
-      const specific = readMarketFromVariantBlock(tpObj[printing.trim()]);
-      if (specific !== null) return specific * multipliers.usdToGbp;
+    if (tcgplayerKeysForVariant.length > 0) {
+      for (const k of tcgplayerKeysForVariant) {
+        const specific = readMarketFromVariantBlock(tpObj[k]);
+        if (specific !== null) return specific * multipliers.usdToGbp;
+      }
     }
     for (const k of TCG_PRICE_VARIANTS) {
       const v = readMarketFromVariantBlock(getTcgplayerVariantBlock(tpObj, k));
@@ -78,9 +87,11 @@ function estimateUnitGbpFromPricing(
       const r = b.raw;
       return typeof r === "number" && Number.isFinite(r) ? r : null;
     };
-    if (printing?.trim()) {
-      const v = readGradedOrRaw(scObj[printing.trim()]);
-      if (v !== null) return v;
+    if (tcgplayerKeysForVariant.length > 0) {
+      for (const k of tcgplayerKeysForVariant) {
+        const v = readGradedOrRaw(scObj[k]);
+        if (v !== null) return v;
+      }
     }
     for (const block of Object.values(scObj)) {
       const v = readGradedOrRaw(block);

@@ -25,7 +25,12 @@ import { CollectGridSealedTile } from "@/components/CollectGridSealedTile";
 import { useCardGridPreferences } from "@/components/CardGridPreferencesProvider";
 import type { CollectMergedFlatRow } from "@/lib/collectGridSealed";
 import type { CollectUnifiedSection } from "@/lib/collectGridSealedMerge";
-import { normalizeVariantForStorage, variantLabel } from "@/lib/cardVariantLabels";
+import {
+  customerCollectionPrintingFromVariant,
+  normalizeVariantForStorage,
+  variantLabel,
+} from "@/lib/cardVariantLabels";
+import { CUSTOMER_COLLECTION_PRINTING_BASE } from "@/lib/customerCollectionPrintingEnum";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import type { CardPriceTrendSummary } from "@/lib/staticDataTypes";
 import {
@@ -87,14 +92,7 @@ function ownedCopyCount(
   return total;
 }
 
-const PRINTING_OPTIONS = [
-  "Standard",
-  "Reverse Holo",
-  "Holo",
-  "First Edition",
-  "Shadowless",
-  "other",
-] as const;
+const PRINTING_OPTIONS = CUSTOMER_COLLECTION_PRINTING_BASE;
 
 function readUsdLowHigh(block: unknown): { low: number | null; high: number | null } {
   if (!block || typeof block !== "object") return { low: null, high: null };
@@ -1835,7 +1833,7 @@ export function CardGrid({
           masterCardId: selectedCard.masterCardId,
           conditionId: "graded-card",
           quantity: 1,
-          printing: addPrinting,
+          printing: customerCollectionPrintingFromVariant(addPrinting),
           language: "English",
           purchaseType: gradedPurchaseType,
           pricePaid:
@@ -1862,11 +1860,12 @@ export function CardGrid({
           await fetch("/api/collection/upload-image", { method: "POST", body: fd }).catch(() => {});
         }
         const gradedConditionLabel = getItemConditionName("graded-card").trim() || "Graded";
+        const resolvedPrinting = customerCollectionPrintingFromVariant(addPrinting);
         const line: CollectionLineSummary = {
           entryId: String(rawId),
           quantity: 1,
           conditionLabel: gradedConditionLabel,
-          printing: addPrinting,
+          printing: resolvedPrinting,
           language: "English",
           gradingCompany: gradedCompany,
           gradeValue: gradedValue,
@@ -1917,7 +1916,7 @@ export function CardGrid({
           masterCardId: selectedCard.masterCardId,
           conditionId: addConditionId || undefined,
           quantity: Math.max(1, Math.floor(addQuantity) || 1),
-          printing: addPrinting === "Unlisted" ? "Standard" : addPrinting,
+          printing: customerCollectionPrintingFromVariant(addPrinting),
           language: "English",
           purchaseType: addPurchaseType,
           pricePaid: addPurchaseType === "bought" && addPricePaid !== "" ? parseFloat(addPricePaid) : undefined,
@@ -1945,7 +1944,7 @@ export function CardGrid({
         const conditionName = addConditionId
           ? itemConditions.find((c) => c.id === addConditionId)?.name?.trim() || "—"
           : "—";
-        const resolvedPrinting = addPrinting === "Unlisted" ? "Standard" : addPrinting;
+        const resolvedPrinting = customerCollectionPrintingFromVariant(addPrinting);
         setLocalCollectionLinesByMasterCardId((prev) => {
           let next = prev ?? effectiveCollectionLinesByMasterCardId;
           for (const id of createdIds) {
@@ -2091,7 +2090,7 @@ export function CardGrid({
       const patchBody: Record<string, unknown> = { id: editEntryId };
       patchBody.quantity = Number.isFinite(editQuantity) && editQuantity >= 1 ? Math.floor(editQuantity) : 1;
       patchBody.conditionId = editConditionId.trim() || null;
-      patchBody.printing = editPrinting.trim() || null;
+      patchBody.printing = editPrinting.trim() ? customerCollectionPrintingFromVariant(editPrinting) : null;
       patchBody.purchaseDate = editPurchaseDate.trim() || null;
       if (editGradingCompany !== "") patchBody.gradingCompany = editGradingCompany;
       if (editGradeValue !== "") patchBody.gradeValue = editGradeValue;

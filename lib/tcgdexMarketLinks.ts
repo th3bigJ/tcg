@@ -4,7 +4,8 @@ import type { TcgPriceVariant } from "@/lib/tcgdexTcgplayerVariants";
 export const TCGPLAYER_VARIANT_BLOCK_KEYS: Record<TcgPriceVariant, readonly string[]> = {
   normal: ["normal"],
   holofoil: ["holofoil"],
-  reverseHolofoil: ["reverseHolofoil", "reverse-holofoil"],
+  /** TCGdex uses `reverse` on many English cards; `reverse-holofoil` appears in API docs. */
+  reverseHolofoil: ["reverseHolofoil", "reverse-holofoil", "reverse"],
 };
 
 export function getTcgplayerVariantBlock(

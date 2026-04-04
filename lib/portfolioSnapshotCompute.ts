@@ -14,8 +14,14 @@ import { transactionFourWayCategoryFromProductTypeId } from "@/lib/transactionFo
 
 const TXN_PAGE = 1000;
 
-function utcDateKey(d = new Date()): string {
-  return d.toISOString().slice(0, 10);
+/**
+ * UTC calendar date stored on each snapshot row: **yesterday** so “today” on the chart is always the live value only.
+ * (Run the batch after prices update; the row represents the closing state for the prior UTC day.)
+ */
+export function snapshotStorageDateKeyUtc(d = new Date()): string {
+  const x = new Date(d.getTime());
+  x.setUTCDate(x.getUTCDate() - 1);
+  return x.toISOString().slice(0, 10);
 }
 
 type TxnRow = {
@@ -91,7 +97,7 @@ export async function computePortfolioSnapshotPoint(
   customerId: string,
   capturedAt: Date = new Date(),
 ): Promise<PortfolioSnapshotPoint> {
-  const date = utcDateKey(capturedAt);
+  const date = snapshotStorageDateKeyUtc(capturedAt);
 
   const [collectionEntries, sealedLines, multipliers, txnRows] = await Promise.all([
     fetchCollectionCardEntriesWithSupabase(supabase, customerId),

@@ -444,16 +444,6 @@ export function ModalCardPricing({
         if (cancelled) return;
         const tp = j.tcgplayer ?? null;
         setPayload({ tcgplayer: tp, cardmarket: j.cardmarket ?? null });
-        const cb = onVariantsLoadedRef.current;
-        if (cb) {
-          const tpObj = tp && typeof tp === "object" ? (tp as Record<string, unknown>) : null;
-          const keys = tpObj
-            ? Object.entries(tpObj)
-                .filter(([, block]) => readUsdMarket(block) !== null || readPsa10(block) !== null || readAce10(block) !== null)
-                .map(([key]) => key)
-            : [];
-          cb(keys.length > 0 ? keys : ["Unlisted"]);
-        }
       } catch {
         if (!cancelled) {
           setPayload({ tcgplayer: null, cardmarket: null });
@@ -533,10 +523,27 @@ export function ModalCardPricing({
   const historyVariantKeys = useMemo(() => Object.keys(history ?? {}), [history]);
   const allVariantKeys = useMemo(() => {
     const seen = new Set<string>();
+    if (tpObj) {
+      for (const key of Object.keys(tpObj)) seen.add(key);
+    }
     for (const key of variantRows.map((row) => row.key)) seen.add(key);
     for (const key of historyVariantKeys) seen.add(key);
     return [...seen];
-  }, [historyVariantKeys, variantRows]);
+  }, [historyVariantKeys, tpObj, variantRows]);
+
+  const marketVariantKeys = useMemo(() => {
+    return [...allVariantKeys].sort((a, b) => {
+      if (a === "normal") return -1;
+      if (b === "normal") return 1;
+      return a.localeCompare(b);
+    });
+  }, [allVariantKeys]);
+
+  useEffect(() => {
+    const cb = onVariantsLoadedRef.current;
+    if (!cb || !pricingLoaded || !showDexRows) return;
+    cb(allVariantKeys.length > 0 ? allVariantKeys : ["Unlisted"]);
+  }, [allVariantKeys, pricingLoaded, showDexRows]);
 
   useEffect(() => {
     if (allVariantKeys.length === 0) {
@@ -582,7 +589,7 @@ export function ModalCardPricing({
     [history, selectedGrade, selectedVariant],
   );
 
-  const showUnlistedRow = pricingLoaded && variantRows.length === 0 && (onAdd ?? onWishlist);
+  const showUnlistedRow = pricingLoaded && allVariantKeys.length === 0 && (onAdd ?? onWishlist);
   const unlistedWishlisted = Boolean(
     showUnlistedRow &&
       wishlisted &&
@@ -625,7 +632,12 @@ export function ModalCardPricing({
       <h4 className="text-sm font-bold tracking-tight text-white">Market prices</h4>
       <div className="flex flex-col gap-2">
         {showDexRows
-          ? variantRows.map(({ key, raw, psa10, ace10 }) => {
+          ? marketVariantKeys.map((key) => {
+              const row = variantRows.find((r) => r.key === key);
+              const raw = row?.raw ?? null;
+              const psa10 = row?.psa10 ?? null;
+              const ace10 = row?.ace10 ?? null;
+              const hasAnyPrice = raw !== null || psa10 !== null || ace10 !== null;
               const isFilled = (wishlistedVariants ?? []).some((variant) => variantMatches(variant, key));
               return (
                 <div
@@ -668,28 +680,36 @@ export function ModalCardPricing({
                       </button>
                     ) : null}
                   </div>
-                  {raw !== null || psa10 !== null || ace10 !== null ? (
+                  {hasAnyPrice ? (
                     <div className="grid grid-cols-3 divide-x divide-white/10">
                       {raw !== null ? (
                         <div className="flex flex-col items-center">
                           <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">Raw</span>
                           <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(raw)}</span>
                         </div>
-                      ) : <div />}
+                      ) : (
+                        <div />
+                      )}
                       {psa10 !== null ? (
                         <div className="flex flex-col items-center">
                           <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">PSA 10</span>
                           <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(psa10)}</span>
                         </div>
-                      ) : <div />}
+                      ) : (
+                        <div />
+                      )}
                       {ace10 !== null ? (
                         <div className="flex flex-col items-center">
                           <span className="text-[10px] font-medium uppercase tracking-wide text-white/50">ACE 10</span>
                           <span className="text-sm font-semibold tabular-nums text-white">{formatMoneyGbp(ace10)}</span>
                         </div>
-                      ) : <div />}
+                      ) : (
+                        <div />
+                      )}
                     </div>
-                  ) : null}
+                  ) : (
+                    <p className="text-center text-xs text-white/45">No market price</p>
+                  )}
                 </div>
               );
             })

@@ -63,7 +63,7 @@ export async function fetchPortfolioSnapshotDocumentFromPublicUrl(
 }
 
 /** Reads snapshot JSON via S3 API (same credentials as upload). Use when public URL is unset or unreachable from the server. */
-async function fetchPortfolioSnapshotDocumentFromBucket(
+export async function fetchPortfolioSnapshotDocumentFromBucket(
   customerId: string,
 ): Promise<PortfolioSnapshotDocument | null> {
   if (!process.env.R2_BUCKET || !process.env.R2_ENDPOINT) return null;

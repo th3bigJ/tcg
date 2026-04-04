@@ -1,4 +1,5 @@
 import { PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
+import { PRICING_VARIANT_DISPLAY_ORDER } from "@/lib/pricingVariantRegistry";
 import { buildPricingLookupIds } from "@/lib/r2Pricing";
 import type {
   CardPriceHistory,
@@ -12,7 +13,7 @@ import type {
 export type { CardPriceTrendSummary, SetPriceTrendMap };
 
 const FLAT_THRESHOLD_PCT = 1;
-const PRIMARY_VARIANT_ORDER = ["default", "holofoil", "reverseHolofoil", "staffStamp"];
+const PRIMARY_VARIANT_ORDER: string[] = [...PRICING_VARIANT_DISPLAY_ORDER];
 const PRIMARY_GRADE_ORDER = ["raw", "psa10", "ace10"];
 
 function getPriceTrendBaseUrl(): string {

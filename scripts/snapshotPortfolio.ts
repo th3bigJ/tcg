@@ -1,8 +1,8 @@
 import "./registerCjsRequireForEsm";
 
 /**
- * For every row in `customers`, computes today’s portfolio snapshot and merges it into
- * R2 at `portfolio-snapshots/{customerId}.json` (one JSON file per user).
+ * For every row in `customers`, computes a portfolio snapshot (stored under **yesterday’s** UTC date) and merges it into
+ * R2 at `portfolio-snapshots/{customerId}.json` (one JSON file per user). The dashboard chart adds **today** as the live total.
  *
  * Required env:
  *   NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL)
@@ -21,53 +21,14 @@ import "./registerCjsRequireForEsm";
  * Loads `.env` then `.env.local` from the repo root.
  */
 
-import { readFileSync, existsSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { createClient } from "@supabase/supabase-js";
 
 import { fetchAllCustomerIds } from "../lib/portfolioSnapshotCustomers";
 import { computePortfolioSnapshotPoint } from "../lib/portfolioSnapshotCompute";
 import { mergeAndUploadPortfolioSnapshot } from "../lib/r2PortfolioSnapshots";
+import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
 
-/** Repo root (parent of `scripts/`), not `process.cwd()` — npm may run with a different cwd. */
-function getRepoRoot(): string {
-  return resolve(dirname(fileURLToPath(import.meta.url)), "..");
-}
-
-function applyEnvFile(path: string, override: boolean): void {
-  if (!existsSync(path)) return;
-  const text = readFileSync(path, "utf8");
-  for (const line of text.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq <= 0) continue;
-    const key = trimmed.slice(0, eq).trim();
-    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) continue;
-    let val = trimmed.slice(eq + 1).trim();
-    if (
-      (val.startsWith('"') && val.endsWith('"')) ||
-      (val.startsWith("'") && val.endsWith("'"))
-    ) {
-      val = val.slice(1, -1);
-    }
-    if (!override && process.env[key] !== undefined) continue;
-    process.env[key] = val;
-  }
-}
-
-/** Loads `.env` then `.env.local` from the repo root (via `import.meta.url`) and again from `cwd()` if different. */
-function loadEnvFilesFromRepoRoot(): void {
-  const roots = [...new Set([getRepoRoot(), process.cwd()])];
-  for (const root of roots) {
-    applyEnvFile(resolve(root, ".env"), false);
-    applyEnvFile(resolve(root, ".env.local"), true);
-  }
-}
-
-loadEnvFilesFromRepoRoot();
+loadEnvFilesFromRepoRoot(import.meta.url);
 
 function parseArgs(): { dryRun: boolean; onlySet: Set<string> | null } {
   const dryRun = process.argv.includes("--dry-run");
