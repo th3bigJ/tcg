@@ -113,13 +113,6 @@ export function CollectGridSealedTile({
               </span>
             ) : null}
           </span>
-          {variant === "collection" && (row.openedQuantity > 0 || row.sealedQuantity > 0) ? (
-            <span className="mt-0.5 block text-[9px] font-medium text-[var(--foreground)]/52">
-              {row.sealedQuantity > 0 ? `${row.sealedQuantity} sealed` : null}
-              {row.sealedQuantity > 0 && row.openedQuantity > 0 ? " · " : null}
-              {row.openedQuantity > 0 ? `${row.openedQuantity} opened` : null}
-            </span>
-          ) : null}
         </div>
       </div>
     </li>
