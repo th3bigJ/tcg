@@ -4,11 +4,13 @@ import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { CollectWishlistValueBreakdown } from "@/components/CollectWishlistValueBreakdown";
 import { WishlistGridClient } from "@/components/WishlistGridClient";
 import { getCurrentCustomer } from "@/lib/auth";
+import { fetchPriceSummariesForMasterCardIds } from "@/lib/cardPricingBulk";
 import type { CollectGridSealedRow } from "@/lib/collectGridSealed";
 import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
 import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
+import { getSealedPriceTrends } from "@/lib/r2SealedPriceTrends";
 import { estimateSealedMarketValueGbp, formatSealedUnitPriceGbp, sealedUnitPriceSortGbp } from "@/lib/sealedMarketValueGbp";
 import {
   collectionGroupKeyFromEntry,
@@ -65,6 +67,7 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   const sealedWishProductMap = await resolveSealedProductsByIds(sealedWishIds);
   const sealedWishGrid = mapSealedWishlistLinesToGrid(sealedWishlistLines, sealedWishProductMap);
   const multipliers = await fetchGbpConversionMultipliers();
+  const sealedTrendMap = await getSealedPriceTrends();
   const sealedWishItems: CollectGridSealedRow[] = sealedWishGrid.map((g) => ({
     sealedProductId: g.sealedProductId,
     source: "wishlist",
@@ -78,6 +81,7 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     series: g.product?.series?.trim() || null,
     priceLabel: formatSealedUnitPriceGbp(g.product ?? null, multipliers.usdToGbp),
     priceSortGbp: sealedUnitPriceSortGbp(g.product ?? null, multipliers.usdToGbp),
+    trend: sealedTrendMap?.[String(g.sealedProductId)] ?? null,
     releaseDate: g.product?.release_date ?? null,
     addedAt: g.addedAt,
   }));
@@ -86,6 +90,13 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     ...e,
     collectionGroupKey: collectionGroupKeyFromEntry(e),
   }));
+  const uniqueMasterCardIds = [
+    ...new Set(
+      allCardsForGrid
+        .map((card) => card.masterCardId)
+        .filter((value): value is string => typeof value === "string" && value.length > 0),
+    ),
+  ];
 
   const [
     collectionEntries,
@@ -111,11 +122,14 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     setFilterOptions.map((option) => [option.code, option.symbolSrc]),
   );
 
-  const [wishlistValue, pricesResult, sealedWishValueGbp] = await Promise.all([
+  const [wishlistValue, pricesResult, priceSummaryResult, sealedWishValueGbp] = await Promise.all([
     entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
     entries.length > 0
       ? estimateCardUnitPricesGbp(entries)
       : Promise.resolve({ prices: {}, manualPriceIds: new Set<string>() }),
+    uniqueMasterCardIds.length > 0
+      ? fetchPriceSummariesForMasterCardIds(uniqueMasterCardIds)
+      : Promise.resolve({ prices: {}, trends: {} }),
     sealedWishGrid.length > 0
       ? estimateSealedMarketValueGbp(
           sealedWishGrid.map((g) => ({ product: g.product, quantity: 1 })),
@@ -124,6 +138,7 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
       : Promise.resolve(0),
   ]);
   const cardPricesByMasterCardId = pricesResult.prices;
+  const cardPriceTrendsByMasterCardId = priceSummaryResult.trends;
 
   const cardValueGbp = wishlistValue?.totalGbp ?? 0;
   const hasAnyItems = allCardsForGrid.length > 0 || sealedWishItems.length > 0;
@@ -168,6 +183,7 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
                   wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
                   collectionLinesByMasterCardId={collectionLinesByMasterCardId}
                   cardPricesByMasterCardId={cardPricesByMasterCardId}
+                  cardPriceTrendsByMasterCardId={cardPriceTrendsByMasterCardId}
                   sealedRows={sealedWishItems}
                   viewerOwnedSealedProductIds={collectionSealedProductIds}
                   collectionSealedProductIds={collectionSealedProductIds}

@@ -15,21 +15,6 @@
     "symbolSrc": null
   },
   {
-    "id": "575",
-    "name": "Mega Evolution Energy",
-    "slug": "mega-evolution-energy",
-    "code": "mee",
-    "tcgdexId": "mee",
-    "releaseDate": "2025-09-25T00:00:00.000Z",
-    "isActive": true,
-    "cardCountTotal": 8,
-    "cardCountOfficial": 8,
-    "seriesName": "Mega Evolution",
-    "seriesSlug": "mega-evolution-me",
-    "logoSrc": "sets/logo/mee-logo.webp",
-    "symbolSrc": "sets/symbol/mee-symbol.png"
-  },
-  {
     "id": "574",
     "name": "Ascended Heroes",
     "slug": "ascended-heroes",
@@ -88,6 +73,21 @@
     "seriesSlug": "mega-evolution-me",
     "logoSrc": "sets/logo/me01.webp",
     "symbolSrc": "sets/symbol/me01.webp"
+  },
+  {
+    "id": "575",
+    "name": "Mega Evolution Energy",
+    "slug": "mega-evolution-energy",
+    "code": "mee",
+    "tcgdexId": "mee",
+    "releaseDate": "2025-09-25T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 8,
+    "cardCountOfficial": 8,
+    "seriesName": "Mega Evolution",
+    "seriesSlug": "mega-evolution-me",
+    "logoSrc": "sets/logo/mee-logo.webp",
+    "symbolSrc": "sets/symbol/mee-symbol.png"
   },
   {
     "id": "565",
@@ -163,6 +163,21 @@
     "seriesSlug": "scarlet-violet-sv",
     "logoSrc": "sets/logo/sv08.5.webp",
     "symbolSrc": "sets/symbol/sv8pt5-symbol.png"
+  },
+  {
+    "id": "580",
+    "name": "McDonald's Collection 2024",
+    "slug": "mcdonald-s-collection-2024",
+    "code": null,
+    "tcgdexId": "2024sv",
+    "releaseDate": "2024-12-04T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 15,
+    "cardCountOfficial": 15,
+    "seriesName": "McDonald's Collection",
+    "seriesSlug": "mcdonald-s-collection-mc",
+    "logoSrc": "sets/logo/2024sv-logo.jpg",
+    "symbolSrc": "sets/symbol/2024sv-symbol.jpg"
   },
   {
     "id": "553",
@@ -300,6 +315,21 @@
     "symbolSrc": "sets/symbol/sv03.webp"
   },
   {
+    "id": "579",
+    "name": "McDonald's Collection 2023",
+    "slug": "mcdonald-s-collection-2023",
+    "code": null,
+    "tcgdexId": "2023sv",
+    "releaseDate": "2023-08-01T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 15,
+    "cardCountOfficial": 15,
+    "seriesName": "McDonald's Collection",
+    "seriesSlug": "mcdonald-s-collection-mc",
+    "logoSrc": "sets/logo/2023sv-logo.jpg",
+    "symbolSrc": "sets/symbol/2023sv-symbol.jpg"
+  },
+  {
     "id": "542",
     "name": "Paldea Evolved",
     "slug": "paldea-evolved",
@@ -313,21 +343,6 @@
     "seriesSlug": "scarlet-violet-sv",
     "logoSrc": "sets/logo/sv02.webp",
     "symbolSrc": "sets/symbol/sv02.webp"
-  },
-  {
-    "id": "541",
-    "name": "Scarlet & Violet",
-    "slug": "scarlet-violet",
-    "code": null,
-    "tcgdexId": "sv01",
-    "releaseDate": "2023-03-31T00:00:00.000Z",
-    "isActive": true,
-    "cardCountTotal": 258,
-    "cardCountOfficial": 198,
-    "seriesName": "Scarlet & Violet",
-    "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv01.webp",
-    "symbolSrc": "sets/symbol/sv01.webp"
   },
   {
     "id": "577",
@@ -345,6 +360,21 @@
     "symbolSrc": "sets/symbol/sve-symbol.png"
   },
   {
+    "id": "541",
+    "name": "Scarlet & Violet",
+    "slug": "scarlet-violet",
+    "code": null,
+    "tcgdexId": "sv01",
+    "releaseDate": "2023-03-31T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 258,
+    "cardCountOfficial": 198,
+    "seriesName": "Scarlet & Violet",
+    "seriesSlug": "scarlet-violet-sv",
+    "logoSrc": "sets/logo/sv01.webp",
+    "symbolSrc": "sets/symbol/sv01.webp"
+  },
+  {
     "id": "540",
     "name": "SVP Black Star Promos",
     "slug": "svp-black-star-promos",
@@ -352,7 +382,7 @@
     "tcgdexId": "svp",
     "releaseDate": "2023-03-31T00:00:00.000Z",
     "isActive": true,
-    "cardCountTotal": 219,
+    "cardCountTotal": 224,
     "cardCountOfficial": 0,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
@@ -403,6 +433,21 @@
     "seriesSlug": "sword-shield-swsh",
     "logoSrc": "sets/logo/swsh11.webp",
     "symbolSrc": "sets/symbol/swsh11.webp"
+  },
+  {
+    "id": "578",
+    "name": "McDonald's Collection 2022",
+    "slug": "mcdonald-s-collection-2022",
+    "code": null,
+    "tcgdexId": "2022swsh",
+    "releaseDate": "2022-08-03T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 15,
+    "cardCountOfficial": 15,
+    "seriesName": "McDonald's Collection",
+    "seriesSlug": "mcdonald-s-collection-mc",
+    "logoSrc": "sets/logo/2022swsh-logo.jpg",
+    "symbolSrc": "sets/symbol/2022swsh-symbol.jpg"
   },
   {
     "id": "536",
@@ -2100,6 +2145,21 @@
     "symbolSrc": "sets/symbol/ex6.webp"
   },
   {
+    "id": "581",
+    "name": "Poké Card Creator Pack",
+    "slug": "pok-card-creator-pack",
+    "code": null,
+    "tcgdexId": "ex5.5",
+    "releaseDate": "2004-07-01T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 5,
+    "cardCountOfficial": 5,
+    "seriesName": "EX",
+    "seriesSlug": "ex-ex",
+    "logoSrc": "sets/logo/ex5.5-logo.jpg",
+    "symbolSrc": "sets/symbol/ex5.5-symbol.jpg"
+  },
+  {
     "id": "404",
     "name": "EX trainer Kit (Latias)",
     "slug": "ex-trainer-kit-latias",
@@ -2242,7 +2302,7 @@
     "tcgdexId": "ecard2",
     "releaseDate": "2003-01-15T00:00:00.000Z",
     "isActive": true,
-    "cardCountTotal": 186,
+    "cardCountTotal": 182,
     "cardCountOfficial": 147,
     "seriesName": "E-Card",
     "seriesSlug": "e-card-ecard",
@@ -2488,5 +2548,65 @@
     "seriesSlug": "base-base",
     "logoSrc": "sets/logo/base1-1.webp",
     "symbolSrc": "sets/symbol/base1-symbol.png"
+  },
+  {
+    "id": "582",
+    "name": "Celebrations: Classic Collection",
+    "slug": "celebrations-classic-collection",
+    "code": null,
+    "tcgdexId": "cel25c",
+    "releaseDate": "2021/10/08T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 25,
+    "cardCountOfficial": 25,
+    "seriesName": "Sword & Shield",
+    "seriesSlug": "sword-shield-swsh",
+    "logoSrc": "sets/logo/cel25c-logo.jpg",
+    "symbolSrc": "sets/symbol/cel25c-symbol.jpg"
+  },
+  {
+    "id": "583",
+    "name": "Pokémon TCG Classic - Venusaur",
+    "slug": "pok-mon-tcg-classic-venusaur",
+    "code": null,
+    "tcgdexId": "clv",
+    "releaseDate": "2023/11/16T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 34,
+    "cardCountOfficial": 34,
+    "seriesName": "Miscellaneous",
+    "seriesSlug": "miscellaneous-misc",
+    "logoSrc": "sets/logo/clv-logo.jpg",
+    "symbolSrc": "sets/symbol/clv-symbol.jpg"
+  },
+  {
+    "id": "584",
+    "name": "Pokémon TCG Classic - Charizard",
+    "slug": "pok-mon-tcg-classic-charizard",
+    "code": null,
+    "tcgdexId": "clc",
+    "releaseDate": "2023/11/16T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 34,
+    "cardCountOfficial": 34,
+    "seriesName": "Miscellaneous",
+    "seriesSlug": "miscellaneous-misc",
+    "logoSrc": "sets/logo/clc-logo.jpg",
+    "symbolSrc": "sets/symbol/clc-symbol.jpg"
+  },
+  {
+    "id": "585",
+    "name": "Pokémon TCG Classic - Blastoise",
+    "slug": "pok-mon-tcg-classic-blastoise",
+    "code": null,
+    "tcgdexId": "clb",
+    "releaseDate": "2023/11/16T00:00:00.000Z",
+    "isActive": true,
+    "cardCountTotal": 34,
+    "cardCountOfficial": 34,
+    "seriesName": "Miscellaneous",
+    "seriesSlug": "miscellaneous-misc",
+    "logoSrc": "sets/logo/clb-logo.jpg",
+    "symbolSrc": "sets/symbol/clb-symbol.jpg"
   }
 ]

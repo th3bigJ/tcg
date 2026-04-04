@@ -1,7 +1,8 @@
 import { getCardMapById } from "@/lib/staticCardIndex";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import { getPricingForCard, getPricingForSet } from "@/lib/r2Pricing";
-import type { CardJsonEntry } from "@/lib/staticDataTypes";
+import { getPriceTrendForCard, getPriceTrendsForSet } from "@/lib/r2PriceTrends";
+import type { CardJsonEntry, CardPriceTrendSummary } from "@/lib/staticDataTypes";
 
 export function readMarketGbp(
   tcgplayer: unknown,
@@ -53,8 +54,14 @@ export function readMarketGbp(
 export async function fetchPricesForMasterCardIds(
   masterCardIds: string[],
 ): Promise<Record<string, number>> {
+  return (await fetchPriceSummariesForMasterCardIds(masterCardIds)).prices;
+}
+
+export async function fetchPriceSummariesForMasterCardIds(
+  masterCardIds: string[],
+): Promise<{ prices: Record<string, number>; trends: Record<string, CardPriceTrendSummary> }> {
   const ids = [...new Set(masterCardIds.map((id) => id.trim()).filter((id) => id.length > 0))];
-  if (ids.length === 0) return {};
+  if (ids.length === 0) return { prices: {}, trends: {} };
 
   const cardMap = getCardMapById();
   const multipliers = await fetchGbpConversionMultipliers();
@@ -69,33 +76,45 @@ export async function fetchPricesForMasterCardIds(
   }
 
   const prices: Record<string, number> = {};
+  const trends: Record<string, CardPriceTrendSummary> = {};
   await Promise.all(
     [...bySet.entries()].map(async ([setCode, setIds]) => {
-      const pricingMap = await getPricingForSet(setCode);
-      if (!pricingMap) return;
+      const [pricingMap, trendMap] = await Promise.all([
+        getPricingForSet(setCode),
+        getPriceTrendsForSet(setCode),
+      ]);
+      if (!pricingMap && !trendMap) return;
 
       for (const masterCardId of setIds) {
         const card = cardMap.get(masterCardId);
         const externalId = resolvePricingExternalId(card);
         if (!card || !externalId) continue;
-        const pricing = getPricingForCard(
-          pricingMap,
-          externalId,
-          resolvePricingFallbackIds(card, externalId),
-        );
-        if (!pricing) continue;
-        const price = readMarketGbp(
-          pricing.tcgplayer,
-          pricing.cardmarket,
-          pricing.scrydex,
-          multipliers,
-        );
-        if (price !== null) prices[masterCardId] = price;
+        const fallback = resolvePricingFallbackIds(card, externalId);
+        if (pricingMap) {
+          const pricing = getPricingForCard(
+            pricingMap,
+            externalId,
+            fallback,
+          );
+          if (pricing) {
+            const price = readMarketGbp(
+              pricing.tcgplayer,
+              pricing.cardmarket,
+              pricing.scrydex,
+              multipliers,
+            );
+            if (price !== null) prices[masterCardId] = price;
+          }
+        }
+        if (trendMap) {
+          const trend = getPriceTrendForCard(trendMap, externalId, fallback);
+          if (trend) trends[masterCardId] = trend;
+        }
       }
     }),
   );
 
-  return prices;
+  return { prices, trends };
 }
 
 function resolvePricingExternalId(card: CardJsonEntry | undefined): string | null {

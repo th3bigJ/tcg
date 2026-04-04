@@ -231,6 +231,40 @@
     "imageHighSrc": "cards/hsp-HGSS19-high.png"
   },
   {
+    "masterCardId": "22542",
+    "externalId": "hsp-HGSS18",
+    "tcgdex_id": "hgssp-HGSS18",
+    "localId": "HGSS18",
+    "setCode": "hgssp",
+    "setTcgdexId": "hgssp",
+    "cardNumber": "HGSS18/25",
+    "cardName": "Tropical Tidal Wave",
+    "fullDisplayName": "Tropical Tidal Wave HGSS18/25 HGSS Black Star Promos",
+    "rarity": "Common",
+    "category": "Trainer",
+    "stage": null,
+    "hp": null,
+    "elementTypes": [],
+    "dexIds": [
+      25,
+      183,
+      54,
+      187
+    ],
+    "subtypes": [
+      "Item"
+    ],
+    "trainerType": "Item",
+    "energyType": null,
+    "regulationMark": null,
+    "evolveFrom": null,
+    "artist": "Sumiyoshi Kizuki",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/hgssp-HGSS18-low.jpg",
+    "imageHighSrc": "cards/hgssp-HGSS18-low.jpg"
+  },
+  {
     "masterCardId": "6863",
     "externalId": null,
     "tcgdex_id": "hgssp-HGSS17",

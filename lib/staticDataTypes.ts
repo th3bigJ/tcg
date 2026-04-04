@@ -56,12 +56,63 @@ export type SeriesJsonEntry = {
 };
 
 export type CardPricingEntry = {
-  scrydex: unknown | null;
+  scrydex: ScrydexCardPricing | null;
   tcgplayer: unknown | null;
   cardmarket: unknown | null;
 };
 
 export type SetPricingMap = Record<string, CardPricingEntry>;
+
+export type ScrydexVariantPricing = {
+  raw?: number;
+  psa10?: number;
+  ace10?: number;
+};
+
+export type ScrydexCardPricing = Record<string, ScrydexVariantPricing>;
+
+export type PriceHistoryPoint = [string, number];
+
+export type PriceHistoryWindow = {
+  daily: PriceHistoryPoint[];
+  weekly: PriceHistoryPoint[];
+  monthly: PriceHistoryPoint[];
+};
+
+export type CardPriceHistory = Record<string, Record<string, PriceHistoryWindow>>;
+
+export type SetPriceHistoryMap = Record<string, CardPriceHistory>;
+
+export type PriceTrendDirection = "up" | "down" | "flat";
+
+export type PriceTrendWindowSummary = {
+  changePct: number | null;
+  direction: PriceTrendDirection;
+};
+
+export type CardPriceTrendSummary = {
+  variant: string;
+  grade: string;
+  current: number;
+  daily: PriceTrendWindowSummary;
+  weekly: PriceTrendWindowSummary;
+  monthly: PriceTrendWindowSummary;
+};
+
+export type SetPriceTrendMap = Record<string, CardPriceTrendSummary>;
+
+export type SealedProductPriceHistory = PriceHistoryWindow;
+
+export type SealedProductPriceHistoryMap = Record<string, SealedProductPriceHistory>;
+
+export type SealedProductPriceTrendSummary = {
+  current: number;
+  daily: PriceTrendWindowSummary;
+  weekly: PriceTrendWindowSummary;
+  monthly: PriceTrendWindowSummary;
+};
+
+export type SealedProductPriceTrendMap = Record<string, SealedProductPriceTrendSummary>;
 
 export type PokemonJsonEntry = {
   nationalDexNumber: number;

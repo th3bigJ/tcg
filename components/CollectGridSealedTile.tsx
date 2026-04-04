@@ -3,6 +3,30 @@
 import Link from "next/link";
 
 import type { CollectGridSealedRow } from "@/lib/collectGridSealed";
+import type { PriceTrendDirection } from "@/lib/staticDataTypes";
+
+function trendTone(direction: PriceTrendDirection | null | undefined): string {
+  switch (direction) {
+    case "up":
+      return "border-emerald-400/22 bg-emerald-400/8 text-emerald-200";
+    case "down":
+      return "border-rose-400/22 bg-rose-400/8 text-rose-200";
+    default:
+      return "border-white/10 bg-white/[0.04] text-[var(--foreground)]/58";
+  }
+}
+
+function formatTrendPercent(changePct: number | null | undefined): string {
+  if (typeof changePct !== "number" || !Number.isFinite(changePct)) return "";
+  if (Math.abs(changePct) < 1) return "Flat";
+  return `${changePct > 0 ? "+" : ""}${changePct.toFixed(1)}%`;
+}
+
+function TrendGlyph({ direction }: { direction: PriceTrendDirection | null | undefined }) {
+  if (direction === "up") return <span aria-hidden="true">↑</span>;
+  if (direction === "down") return <span aria-hidden="true">↓</span>;
+  return <span aria-hidden="true">→</span>;
+}
 
 export function CollectGridSealedTile({
   row,
@@ -15,6 +39,8 @@ export function CollectGridSealedTile({
 }) {
   const showWishlistHeart = variant === "wishlist";
   const showQty = variant === "collection" && row.totalQuantity > 1;
+  const weeklyChange = row.trend?.weekly.changePct ?? null;
+  const weeklyDirection = row.trend?.weekly.direction ?? null;
 
   return (
     <li className="card-grid-item flex flex-col">
@@ -75,6 +101,17 @@ export function CollectGridSealedTile({
           ) : null}
           <span className="mt-0.5 block text-[10px] font-medium tabular-nums text-[var(--foreground)]/70">
             {row.priceLabel ?? <span aria-hidden="true">&nbsp;</span>}
+            {typeof weeklyChange === "number" && Number.isFinite(weeklyChange) ? (
+              <span
+                className={`ml-1.5 inline-flex items-center gap-1 rounded-md border px-1.5 py-[3px] align-middle text-[8px] font-semibold tracking-[0.02em] leading-none ${trendTone(
+                  weeklyDirection,
+                )}`}
+                title={`Weekly trend: ${weeklyChange > 0 ? "+" : ""}${weeklyChange.toFixed(1)}%`}
+              >
+                <TrendGlyph direction={weeklyDirection} />
+                <span>{formatTrendPercent(weeklyChange) || "Flat"}</span>
+              </span>
+            ) : null}
           </span>
           {variant === "collection" && (row.openedQuantity > 0 || row.sealedQuantity > 0) ? (
             <span className="mt-0.5 block text-[9px] font-medium text-[var(--foreground)]/52">

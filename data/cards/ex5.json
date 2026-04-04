@@ -1,5 +1,38 @@
 [
   {
+    "masterCardId": "22543",
+    "externalId": "ex5-102",
+    "tcgdex_id": "ex5-102",
+    "localId": "102",
+    "setCode": "ex5",
+    "setTcgdexId": "ex5",
+    "cardNumber": "102/101",
+    "cardName": "Groudon",
+    "fullDisplayName": "Groudon 102/101 Hidden Legends",
+    "rarity": "Rare",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 80,
+    "elementTypes": [
+      "Fighting"
+    ],
+    "dexIds": [
+      383
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": null,
+    "evolveFrom": null,
+    "artist": "Mitsuhiro Arita",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/ex5-102-low.jpg",
+    "imageHighSrc": "cards/ex5-102-low.jpg"
+  },
+  {
     "masterCardId": "6149",
     "externalId": null,
     "tcgdex_id": "ex5-101",

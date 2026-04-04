@@ -4816,6 +4816,39 @@
     "imageHighSrc": "cards/xyp-XY69-high.png"
   },
   {
+    "masterCardId": "22541",
+    "externalId": "xyp-XY68",
+    "tcgdex_id": "xyp-XY68",
+    "localId": "XY68",
+    "setCode": "xyp",
+    "setTcgdexId": "xyp",
+    "cardNumber": "XY68/211",
+    "cardName": "Chesnaught",
+    "fullDisplayName": "Chesnaught XY68/211 XY Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 2",
+    "hp": 160,
+    "elementTypes": [
+      "Grass"
+    ],
+    "dexIds": [
+      652
+    ],
+    "subtypes": [
+      "Stage 2"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": null,
+    "evolveFrom": "Quilladin",
+    "artist": "Mitsuhiro Arita",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/xyp-XY68-low.jpg",
+    "imageHighSrc": "cards/xyp-XY68-low.jpg"
+  },
+  {
     "masterCardId": "20487",
     "externalId": null,
     "tcgdex_id": "xyp-XY67a",
@@ -5549,6 +5582,39 @@
     "imageHighSrc": "cards/xyp-XY47-high.png"
   },
   {
+    "masterCardId": "22540",
+    "externalId": "xyp-XY46",
+    "tcgdex_id": "xyp-XY46",
+    "localId": "XY46",
+    "setCode": "xyp",
+    "setTcgdexId": "xyp",
+    "cardNumber": "XY46/211",
+    "cardName": "Altaria",
+    "fullDisplayName": "Altaria XY46/211 XY Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 1",
+    "hp": 90,
+    "elementTypes": [
+      "Colorless"
+    ],
+    "dexIds": [
+      334
+    ],
+    "subtypes": [
+      "Stage 1"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": null,
+    "evolveFrom": "Swablu",
+    "artist": "Naoki Saito",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/xyp-XY46-low.jpg",
+    "imageHighSrc": "cards/xyp-XY46-low.jpg"
+  },
+  {
     "masterCardId": "20374",
     "externalId": null,
     "tcgdex_id": "xyp-XY45",
@@ -5750,6 +5816,39 @@
     "noPricing": false,
     "imageLowSrc": "cards/xyp-XY40-low.png",
     "imageHighSrc": "cards/xyp-XY40-high.png"
+  },
+  {
+    "masterCardId": "22539",
+    "externalId": "xyp-XY39",
+    "tcgdex_id": "xyp-XY39",
+    "localId": "XY39",
+    "setCode": "xyp",
+    "setTcgdexId": "xyp",
+    "cardNumber": "XY39/211",
+    "cardName": "Kingdra",
+    "fullDisplayName": "Kingdra XY39/211 XY Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 2",
+    "hp": 130,
+    "elementTypes": [
+      "Dragon"
+    ],
+    "dexIds": [
+      230
+    ],
+    "subtypes": [
+      "Stage 2"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": null,
+    "evolveFrom": "Seadra",
+    "artist": "hatachu",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/xyp-XY39-low.jpg",
+    "imageHighSrc": "cards/xyp-XY39-low.jpg"
   },
   {
     "masterCardId": "20339",

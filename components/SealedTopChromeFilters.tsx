@@ -15,6 +15,8 @@ type SheetKey = "sort" | "type" | "series";
 const SORT_OPTIONS = [
   { value: DEFAULT_SEALED_SORT, label: "Random" },
   { value: "price-desc", label: "Price" },
+  { value: "change-desc", label: "% change high-low" },
+  { value: "change-asc", label: "% change low-high" },
   { value: "release-desc", label: "Newest" },
   { value: "name-asc", label: "Name" },
 ];

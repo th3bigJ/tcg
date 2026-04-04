@@ -1,6 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { fetchGbpConversionMultipliers } from "../lib/marketPriceExchange";
+import { updateSealedPriceHistory } from "../lib/r2SealedPriceHistory";
+import { uploadSealedPriceTrends } from "../lib/r2SealedPriceTrends";
 
 type PokedataProduct = {
   hot?: number;
@@ -476,6 +479,9 @@ async function main(): Promise<void> {
 
   if (mode === "all" || mode === "prices") {
     await uploadJson(s3, bucket, pricesKey, pricesPayload);
+    const multipliers = await fetchGbpConversionMultipliers();
+    const historyMap = await updateSealedPriceHistory(s3, pricesPayload.prices, multipliers.usdToGbp);
+    await uploadSealedPriceTrends(s3, historyMap);
     console.log(`Uploaded price snapshot to R2 ${pricesKey}`);
   }
 }

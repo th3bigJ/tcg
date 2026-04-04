@@ -14,6 +14,8 @@ import fs from "fs";
 import path from "path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import type { CardJsonEntry, SetJsonEntry, SeriesJsonEntry, SetPricingMap } from "../lib/staticDataTypes";
+import { updatePriceHistory } from "../lib/r2PriceHistory";
+import { uploadPriceTrends } from "../lib/r2PriceTrends";
 import {
   fetchScrydexExpansionMultiPageHtml,
   parseScrydexExpansionListPrices,
@@ -284,6 +286,7 @@ async function scrapeSet(
   const conc = Number.parseInt(process.env.SCRYDEX_CARD_PAGE_CONCURRENCY ?? "20", 10);
   console.log(`  [${setCode}] fetching ${pathsNeeded.size} card detail pages (concurrency=${conc})…`);
   const pathHtml = new Map<string, string>();
+  const normalVariantPathHtml = new Map<string, string>();
   let fetched = 0;
   const total = pathsNeeded.size;
   await mapPool([...pathsNeeded], conc, async (p) => {
@@ -302,7 +305,7 @@ async function scrapeSet(
   // Build pricing map
   const pricingMap: SetPricingMap = {};
   for (const card of cards) {
-    const ext = (card.tcgdex_id ?? card.externalId ?? "").trim().toLowerCase();
+    const ext = (card.externalId ?? card.tcgdex_id ?? "").trim().toLowerCase();
     if (!ext) continue;
 
     let flatUsd: Record<string, number> = {};
@@ -311,10 +314,34 @@ async function scrapeSet(
       if (!entry) continue;
       const listUsd = resolveScrydexListUsd(entry.priceMap, ext, cfg.listPrefix, tcgPrefixes);
       const cardPath = resolveScrydexCardPath(entry.pathMap, ext, cfg.listPrefix, tcgPrefixes);
-      const html = cardPath ? (pathHtml.get(cardPath) ?? "") : "";
-      const detailUsd = html ? parseScrydexCardPageRawNearMintUsd(html) : {};
-      const psa10Usd = html ? parseScrydexCardPagePsa10Usd(html) : {};
-      const ace10Usd = html ? parseScrydexCardPageAce10Usd(html) : {};
+      let html = cardPath ? (pathHtml.get(cardPath) ?? "") : "";
+      let detailUsd = html ? parseScrydexCardPageRawNearMintUsd(html) : {};
+      let psa10Usd = html ? parseScrydexCardPagePsa10Usd(html) : {};
+      let ace10Usd = html ? parseScrydexCardPageAce10Usd(html) : {};
+
+      if (
+        cardPath &&
+        Object.keys(detailUsd).length === 0 &&
+        Object.keys(psa10Usd).length === 0 &&
+        Object.keys(ace10Usd).length === 0
+      ) {
+        let normalHtml = normalVariantPathHtml.get(cardPath) ?? "";
+        if (!normalVariantPathHtml.has(cardPath)) {
+          try {
+            normalHtml = await fetchScrydexCardPageHtml(cardPath, "normal");
+          } catch {
+            normalHtml = "";
+          }
+          normalVariantPathHtml.set(cardPath, normalHtml);
+        }
+        if (normalHtml) {
+          html = normalHtml;
+          detailUsd = parseScrydexCardPageRawNearMintUsd(html);
+          psa10Usd = parseScrydexCardPagePsa10Usd(html);
+          ace10Usd = parseScrydexCardPageAce10Usd(html);
+        }
+      }
+
       flatUsd = {
         ...flatUsd,
         ...mergeScrydexExpansionAndDetailUsd(listUsd, detailUsd),
@@ -338,6 +365,8 @@ async function scrapeSet(
     console.log(`  [${setCode}] ${count} priced cards (dry-run — skipping R2 upload)`);
   } else {
     await uploadToR2(s3, setCode, json);
+    const historyMap = await updatePriceHistory(s3, setCode, pricingMap);
+    await uploadPriceTrends(s3, setCode, historyMap);
     console.log(`  [${setCode}] ${count} priced cards → R2 pricing/${setCode}.json`);
   }
 }

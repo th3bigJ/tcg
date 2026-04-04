@@ -1,5 +1,546 @@
 [
   {
+    "masterCardId": "22538",
+    "externalId": "svp-224",
+    "tcgdex_id": "svp-224",
+    "localId": "224",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "224/0",
+    "cardName": "Paradise Resort",
+    "fullDisplayName": "Paradise Resort 224/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Trainer",
+    "stage": null,
+    "hp": null,
+    "elementTypes": [],
+    "dexIds": null,
+    "subtypes": [
+      "Stadium"
+    ],
+    "trainerType": "Stadium",
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": null,
+    "artist": "Naoki Saito",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-224-low.jpg",
+    "imageHighSrc": "cards/svp-224-low.jpg"
+  },
+  {
+    "masterCardId": "22537",
+    "externalId": "svp-223",
+    "tcgdex_id": "svp-223",
+    "localId": "223",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "223/0",
+    "cardName": "Professor's Research",
+    "fullDisplayName": "Professor's Research 223/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Trainer",
+    "stage": null,
+    "hp": null,
+    "elementTypes": [],
+    "dexIds": null,
+    "subtypes": [
+      "Supporter"
+    ],
+    "trainerType": "Supporter",
+    "energyType": null,
+    "regulationMark": "G",
+    "evolveFrom": null,
+    "artist": "Taira Akitsu",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-223-low.jpg",
+    "imageHighSrc": "cards/svp-223-low.jpg"
+  },
+  {
+    "masterCardId": "22536",
+    "externalId": "svp-222",
+    "tcgdex_id": "svp-222",
+    "localId": "222",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "222/0",
+    "cardName": "Professor's Research",
+    "fullDisplayName": "Professor's Research 222/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Trainer",
+    "stage": null,
+    "hp": null,
+    "elementTypes": [],
+    "dexIds": null,
+    "subtypes": [
+      "Supporter"
+    ],
+    "trainerType": "Supporter",
+    "energyType": null,
+    "regulationMark": "G",
+    "evolveFrom": null,
+    "artist": "Hideki Ishikawa",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-222-low.jpg",
+    "imageHighSrc": "cards/svp-222-low.jpg"
+  },
+  {
+    "masterCardId": "22535",
+    "externalId": "svp-221",
+    "tcgdex_id": "svp-221",
+    "localId": "221",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "221/0",
+    "cardName": "Professor's Research",
+    "fullDisplayName": "Professor's Research 221/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Trainer",
+    "stage": null,
+    "hp": null,
+    "elementTypes": [],
+    "dexIds": null,
+    "subtypes": [
+      "Supporter"
+    ],
+    "trainerType": "Supporter",
+    "energyType": null,
+    "regulationMark": "G",
+    "evolveFrom": null,
+    "artist": "Hideki Ishikawa",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-221-low.jpg",
+    "imageHighSrc": "cards/svp-221-low.jpg"
+  },
+  {
+    "masterCardId": "22534",
+    "externalId": "svp-220",
+    "tcgdex_id": "svp-220",
+    "localId": "220",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "220/0",
+    "cardName": "Black Belt's Training",
+    "fullDisplayName": "Black Belt's Training 220/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Trainer",
+    "stage": null,
+    "hp": null,
+    "elementTypes": [],
+    "dexIds": null,
+    "subtypes": [
+      "Supporter"
+    ],
+    "trainerType": "Supporter",
+    "energyType": null,
+    "regulationMark": "H",
+    "evolveFrom": null,
+    "artist": "GOSSAN",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-220-low.jpg",
+    "imageHighSrc": "cards/svp-220-low.jpg"
+  },
+  {
+    "masterCardId": "22533",
+    "externalId": "svp-219",
+    "tcgdex_id": "svp-219",
+    "localId": "219",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "219/0",
+    "cardName": "Black Belt's Training",
+    "fullDisplayName": "Black Belt's Training 219/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Trainer",
+    "stage": null,
+    "hp": null,
+    "elementTypes": [],
+    "dexIds": null,
+    "subtypes": [
+      "Supporter"
+    ],
+    "trainerType": "Supporter",
+    "energyType": null,
+    "regulationMark": "H",
+    "evolveFrom": null,
+    "artist": "GOSSAN",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-219-low.jpg",
+    "imageHighSrc": "cards/svp-219-low.jpg"
+  },
+  {
+    "masterCardId": "22532",
+    "externalId": "svp-218",
+    "tcgdex_id": "svp-218",
+    "localId": "218",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "218/0",
+    "cardName": "Team Rocket's Persian ex",
+    "fullDisplayName": "Team Rocket's Persian ex 218/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 1",
+    "hp": 260,
+    "elementTypes": [
+      "Colorless"
+    ],
+    "dexIds": [
+      53
+    ],
+    "subtypes": [
+      "Stage 1",
+      "ex"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": "Team Rocket's Meowth",
+    "artist": "5ban Graphics",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-218-low.jpg",
+    "imageHighSrc": "cards/svp-218-low.jpg"
+  },
+  {
+    "masterCardId": "22531",
+    "externalId": "svp-217",
+    "tcgdex_id": "svp-217",
+    "localId": "217",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "217/0",
+    "cardName": "Team Rocket's Nidoking ex",
+    "fullDisplayName": "Team Rocket's Nidoking ex 217/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 2",
+    "hp": 330,
+    "elementTypes": [
+      "Darkness"
+    ],
+    "dexIds": [
+      34
+    ],
+    "subtypes": [
+      "Stage 2",
+      "ex"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": "Team Rocket's Nidorino",
+    "artist": "5ban Graphics",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-217-low.jpg",
+    "imageHighSrc": "cards/svp-217-low.jpg"
+  },
+  {
+    "masterCardId": "22530",
+    "externalId": "svp-216",
+    "tcgdex_id": "svp-216",
+    "localId": "216",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "216/0",
+    "cardName": "Team Rocket's Mewtwo ex",
+    "fullDisplayName": "Team Rocket's Mewtwo ex 216/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 280,
+    "elementTypes": [
+      "Psychic"
+    ],
+    "dexIds": [
+      150
+    ],
+    "subtypes": [
+      "Basic",
+      "ex"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": null,
+    "artist": "aky CG Works",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-216-low.jpg",
+    "imageHighSrc": "cards/svp-216-low.jpg"
+  },
+  {
+    "masterCardId": "22529",
+    "externalId": "svp-215",
+    "tcgdex_id": "svp-215",
+    "localId": "215",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "215/0",
+    "cardName": "Toxtricity ex",
+    "fullDisplayName": "Toxtricity ex 215/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 1",
+    "hp": 260,
+    "elementTypes": [
+      "Lightning"
+    ],
+    "dexIds": [
+      849
+    ],
+    "subtypes": [
+      "Stage 1",
+      "ex"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": "Toxel",
+    "artist": "Anderson",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-215-low.jpg",
+    "imageHighSrc": "cards/svp-215-low.jpg"
+  },
+  {
+    "masterCardId": "22528",
+    "externalId": "svp-214",
+    "tcgdex_id": "svp-214",
+    "localId": "214",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "214/0",
+    "cardName": "Pikachu",
+    "fullDisplayName": "Pikachu 214/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 60,
+    "elementTypes": [
+      "Lightning"
+    ],
+    "dexIds": [
+      25
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": null,
+    "artist": "Kazuki Minami",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-214-low.jpg",
+    "imageHighSrc": "cards/svp-214-low.jpg"
+  },
+  {
+    "masterCardId": "22527",
+    "externalId": "svp-213",
+    "tcgdex_id": "svp-213",
+    "localId": "213",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "213/0",
+    "cardName": "Feraligatr",
+    "fullDisplayName": "Feraligatr 213/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 2",
+    "hp": 180,
+    "elementTypes": [
+      "Water"
+    ],
+    "dexIds": [
+      160
+    ],
+    "subtypes": [
+      "Stage 2"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": "Croconaw",
+    "artist": "Acorviart",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-213-low.jpg",
+    "imageHighSrc": "cards/svp-213-low.jpg"
+  },
+  {
+    "masterCardId": "22526",
+    "externalId": "svp-212",
+    "tcgdex_id": "svp-212",
+    "localId": "212",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "212/0",
+    "cardName": "Reuniclus",
+    "fullDisplayName": "Reuniclus 212/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 2",
+    "hp": 140,
+    "elementTypes": [
+      "Psychic"
+    ],
+    "dexIds": [
+      579
+    ],
+    "subtypes": [
+      "Stage 2"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": "Duosion",
+    "artist": "satoma",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-212-low.jpg",
+    "imageHighSrc": "cards/svp-212-low.jpg"
+  },
+  {
+    "masterCardId": "22525",
+    "externalId": "svp-211",
+    "tcgdex_id": "svp-211",
+    "localId": "211",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "211/0",
+    "cardName": "Gothitelle",
+    "fullDisplayName": "Gothitelle 211/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 2",
+    "hp": 150,
+    "elementTypes": [
+      "Colorless"
+    ],
+    "dexIds": [
+      576
+    ],
+    "subtypes": [
+      "Stage 2"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": "Gothorita",
+    "artist": "IKEDA Saki",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-211-low.jpg",
+    "imageHighSrc": "cards/svp-211-low.jpg"
+  },
+  {
+    "masterCardId": "22524",
+    "externalId": "svp-210",
+    "tcgdex_id": "svp-210",
+    "localId": "210",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "210/0",
+    "cardName": "Tornadus",
+    "fullDisplayName": "Tornadus 210/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 120,
+    "elementTypes": [
+      "Colorless"
+    ],
+    "dexIds": [
+      641
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": null,
+    "artist": "Kouki Saitou",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-210-low.jpg",
+    "imageHighSrc": "cards/svp-210-low.jpg"
+  },
+  {
+    "masterCardId": "22523",
+    "externalId": "svp-209",
+    "tcgdex_id": "svp-209",
+    "localId": "209",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "209/0",
+    "cardName": "Thundurus",
+    "fullDisplayName": "Thundurus 209/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 120,
+    "elementTypes": [
+      "Lightning"
+    ],
+    "dexIds": [
+      642
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": null,
+    "artist": "Anesaki Dynamic",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-209-low.jpg",
+    "imageHighSrc": "cards/svp-209-low.jpg"
+  },
+  {
+    "masterCardId": "22522",
+    "externalId": "svp-208",
+    "tcgdex_id": "svp-208",
+    "localId": "208",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "208/0",
+    "cardName": "Victini",
+    "fullDisplayName": "Victini 208/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 80,
+    "elementTypes": [
+      "Fire"
+    ],
+    "dexIds": [
+      494
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": null,
+    "artist": "Amelicart",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-208-low.jpg",
+    "imageHighSrc": "cards/svp-208-low.jpg"
+  },
+  {
     "masterCardId": "21014",
     "externalId": null,
     "tcgdex_id": "svp-207",
@@ -66,6 +607,238 @@
     "imageHighSrc": "cards/svp-206-high.webp"
   },
   {
+    "masterCardId": "22521",
+    "externalId": "svp-205",
+    "tcgdex_id": "svp-205",
+    "localId": "205",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "205/0",
+    "cardName": "Team Rocket’s Mewtwo ex",
+    "fullDisplayName": "Team Rocket’s Mewtwo ex 205/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 280,
+    "elementTypes": [
+      "Psychic"
+    ],
+    "dexIds": [
+      150
+    ],
+    "subtypes": [
+      "Basic",
+      "ex"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": null,
+    "artist": "aky CG Works",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-205-low.jpg",
+    "imageHighSrc": "cards/svp-205-low.jpg"
+  },
+  {
+    "masterCardId": "22520",
+    "externalId": "svp-204",
+    "tcgdex_id": "svp-204",
+    "localId": "204",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "204/0",
+    "cardName": "Cynthia’s Garchomp ex",
+    "fullDisplayName": "Cynthia’s Garchomp ex 204/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 2",
+    "hp": 330,
+    "elementTypes": [
+      "Fighting"
+    ],
+    "dexIds": [
+      445
+    ],
+    "subtypes": [
+      "Stage 2"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "I",
+    "evolveFrom": "Cynthia's Gabite",
+    "artist": "PLANETA Igarashi",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-204-low.jpg",
+    "imageHighSrc": "cards/svp-204-low.jpg"
+  },
+  {
+    "masterCardId": "22519",
+    "externalId": "svp-203",
+    "tcgdex_id": "svp-203",
+    "localId": "203",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "203/0",
+    "cardName": "Team Rocket's Wobbuffet",
+    "fullDisplayName": "Team Rocket's Wobbuffet 203/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 110,
+    "elementTypes": [
+      "Psychic"
+    ],
+    "dexIds": [
+      202
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "H",
+    "evolveFrom": null,
+    "artist": "Saboteri",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-203-low.jpg",
+    "imageHighSrc": "cards/svp-203-low.jpg"
+  },
+  {
+    "masterCardId": "22518",
+    "externalId": "svp-202",
+    "tcgdex_id": "svp-202",
+    "localId": "202",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "202/0",
+    "cardName": "Kangaskhan",
+    "fullDisplayName": "Kangaskhan 202/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 130,
+    "elementTypes": [
+      "Colorless"
+    ],
+    "dexIds": [
+      115
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "H",
+    "evolveFrom": null,
+    "artist": "Uta",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-202-low.jpg",
+    "imageHighSrc": "cards/svp-202-low.jpg"
+  },
+  {
+    "masterCardId": "22517",
+    "externalId": "svp-201",
+    "tcgdex_id": "svp-201",
+    "localId": "201",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "201/0",
+    "cardName": "Zebstrika",
+    "fullDisplayName": "Zebstrika 201/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 1",
+    "hp": 120,
+    "elementTypes": [
+      "Lightning"
+    ],
+    "dexIds": [
+      523
+    ],
+    "subtypes": [
+      "Stage 1"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "H",
+    "evolveFrom": "Blitzle",
+    "artist": "Krgc",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-201-low.jpg",
+    "imageHighSrc": "cards/svp-201-low.jpg"
+  },
+  {
+    "masterCardId": "22516",
+    "externalId": "svp-200",
+    "tcgdex_id": "svp-200",
+    "localId": "200",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "200/0",
+    "cardName": "Eevee",
+    "fullDisplayName": "Eevee 200/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 60,
+    "elementTypes": [
+      "Colorless"
+    ],
+    "dexIds": [
+      133
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "G",
+    "evolveFrom": null,
+    "artist": "Kariya",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-200-low.jpg",
+    "imageHighSrc": "cards/svp-200-low.jpg"
+  },
+  {
+    "masterCardId": "22515",
+    "externalId": "svp-199",
+    "tcgdex_id": "svp-199",
+    "localId": "199",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "199/0",
+    "cardName": "Zarude",
+    "fullDisplayName": "Zarude 199/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 120,
+    "elementTypes": [
+      "Grass"
+    ],
+    "dexIds": [
+      893
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "G",
+    "evolveFrom": null,
+    "artist": "Uninori",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-199-low.jpg",
+    "imageHighSrc": "cards/svp-199-low.jpg"
+  },
+  {
     "masterCardId": "21005",
     "externalId": null,
     "tcgdex_id": "svp-198",
@@ -130,6 +903,41 @@
     "noPricing": false,
     "imageLowSrc": "cards/svp-197-low.webp",
     "imageHighSrc": "cards/svp-197-high.webp"
+  },
+  {
+    "masterCardId": "22514",
+    "externalId": "svp-196",
+    "tcgdex_id": "svp-196",
+    "localId": "196",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "196/0",
+    "cardName": "Charizard ex",
+    "fullDisplayName": "Charizard ex 196/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 2",
+    "hp": 330,
+    "elementTypes": [
+      "Darkness"
+    ],
+    "dexIds": [
+      6
+    ],
+    "subtypes": [
+      "Stage 2",
+      "Tera",
+      "ex"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "G",
+    "evolveFrom": "Charmeleon",
+    "artist": "5ban Graphics",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-196-low.jpg",
+    "imageHighSrc": "cards/svp-196-low.jpg"
   },
   {
     "masterCardId": "21002",
@@ -229,6 +1037,103 @@
     "noPricing": false,
     "imageLowSrc": "cards/svp-193-low.webp",
     "imageHighSrc": "cards/svp-193-high.webp"
+  },
+  {
+    "masterCardId": "22513",
+    "externalId": "svp-192",
+    "tcgdex_id": "svp-192",
+    "localId": "192",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "192/0",
+    "cardName": "Fuecoco",
+    "fullDisplayName": "Fuecoco 192/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 80,
+    "elementTypes": [
+      "Fire"
+    ],
+    "dexIds": [
+      909
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "G",
+    "evolveFrom": null,
+    "artist": "Ito Kyoko",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-192-low.jpg",
+    "imageHighSrc": "cards/svp-192-low.jpg"
+  },
+  {
+    "masterCardId": "22512",
+    "externalId": "svp-191",
+    "tcgdex_id": "svp-191",
+    "localId": "191",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "191/0",
+    "cardName": "Sprigatito",
+    "fullDisplayName": "Sprigatito 191/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 70,
+    "elementTypes": [
+      "Grass"
+    ],
+    "dexIds": [
+      906
+    ],
+    "subtypes": null,
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "G",
+    "evolveFrom": null,
+    "artist": "Yamazaki Rei",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-191-low.jpg",
+    "imageHighSrc": "cards/svp-191-low.jpg"
+  },
+  {
+    "masterCardId": "22511",
+    "externalId": "svp-190",
+    "tcgdex_id": "svp-190",
+    "localId": "190",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "190/0",
+    "cardName": "Pikachu",
+    "fullDisplayName": "Pikachu 190/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 50,
+    "elementTypes": [
+      "Lightning"
+    ],
+    "dexIds": [
+      25
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "H",
+    "evolveFrom": null,
+    "artist": "Atsushi Furusawa",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-190-low.jpg",
+    "imageHighSrc": "cards/svp-190-low.jpg"
   },
   {
     "masterCardId": "20996",
@@ -658,6 +1563,76 @@
     "noPricing": false,
     "imageLowSrc": "cards/svp-177-low.webp",
     "imageHighSrc": "cards/svp-177-high.webp"
+  },
+  {
+    "masterCardId": "22510",
+    "externalId": "svp-176",
+    "tcgdex_id": "svp-176",
+    "localId": "176",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "176/0",
+    "cardName": "Umbreon ex",
+    "fullDisplayName": "Umbreon ex 176/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 1",
+    "hp": 280,
+    "elementTypes": [
+      "Darkness"
+    ],
+    "dexIds": [
+      197
+    ],
+    "subtypes": [
+      "Stage 1",
+      "Tera",
+      "ex"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "H",
+    "evolveFrom": "Eevee",
+    "artist": "5ban Graphics",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-176-low.jpg",
+    "imageHighSrc": "cards/svp-176-low.jpg"
+  },
+  {
+    "masterCardId": "22509",
+    "externalId": "svp-175",
+    "tcgdex_id": "svp-175",
+    "localId": "175",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "175/0",
+    "cardName": "Espeon ex",
+    "fullDisplayName": "Espeon ex 175/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Stage 1",
+    "hp": 270,
+    "elementTypes": [
+      "Psychic"
+    ],
+    "dexIds": [
+      196
+    ],
+    "subtypes": [
+      "Stage 1",
+      "Tera",
+      "ex"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "H",
+    "evolveFrom": "Eevee",
+    "artist": "5ban Graphics",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-175-low.jpg",
+    "imageHighSrc": "cards/svp-175-low.jpg"
   },
   {
     "masterCardId": "20983",
@@ -3055,6 +4030,39 @@
     "noPricing": false,
     "imageLowSrc": "cards/svp-103-low.png",
     "imageHighSrc": "cards/svp-103-high.png"
+  },
+  {
+    "masterCardId": "22508",
+    "externalId": "svp-102",
+    "tcgdex_id": "svp-102",
+    "localId": "102",
+    "setCode": "svp",
+    "setTcgdexId": "svp",
+    "cardNumber": "102/0",
+    "cardName": "Oddish",
+    "fullDisplayName": "Oddish 102/0 SVP Black Star Promos",
+    "rarity": "None",
+    "category": "Pokémon",
+    "stage": "Basic",
+    "hp": 60,
+    "elementTypes": [
+      "Grass"
+    ],
+    "dexIds": [
+      43
+    ],
+    "subtypes": [
+      "Basic"
+    ],
+    "trainerType": null,
+    "energyType": null,
+    "regulationMark": "H",
+    "evolveFrom": null,
+    "artist": "Miranda Branley",
+    "isActive": true,
+    "noPricing": false,
+    "imageLowSrc": "cards/svp-102-low.jpg",
+    "imageHighSrc": "cards/svp-102-low.jpg"
   },
   {
     "masterCardId": "15405",

@@ -14,6 +14,8 @@ export type SortOrder =
   | "random"
   | "price-desc"
   | "price-asc"
+  | "change-desc"
+  | "change-asc"
   | "release-desc"
   | "release-asc"
   | "number-desc"
@@ -77,6 +79,7 @@ export function sortCards<T extends { setReleaseDate?: string | null; cardNumber
   cards: T[],
   sort: SortOrder,
   getPriceFn?: (card: T) => number,
+  getTrendFn?: (card: T) => number,
 ): T[] {
   const arr = [...cards];
   switch (sort) {
@@ -86,6 +89,18 @@ export function sortCards<T extends { setReleaseDate?: string | null; cardNumber
       return arr.sort((a, b) => (getPriceFn?.(b) ?? 0) - (getPriceFn?.(a) ?? 0));
     case "price-asc":
       return arr.sort((a, b) => (getPriceFn?.(a) ?? 0) - (getPriceFn?.(b) ?? 0));
+    case "change-desc":
+      return arr.sort(
+        (a, b) =>
+          (getTrendFn?.(b) ?? Number.NEGATIVE_INFINITY) -
+          (getTrendFn?.(a) ?? Number.NEGATIVE_INFINITY),
+      );
+    case "change-asc":
+      return arr.sort(
+        (a, b) =>
+          (getTrendFn?.(a) ?? Number.POSITIVE_INFINITY) -
+          (getTrendFn?.(b) ?? Number.POSITIVE_INFINITY),
+      );
     case "release-desc":
       return arr.sort((a, b) => (b.setReleaseDate ?? "").localeCompare(a.setReleaseDate ?? ""));
     case "release-asc":

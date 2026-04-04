@@ -38,6 +38,8 @@ function parseSortOrder(value: string | undefined): SortOrder {
     case "random":
     case "price-desc":
     case "price-asc":
+    case "change-desc":
+    case "change-asc":
     case "release-desc":
     case "release-asc":
     case "number-desc":

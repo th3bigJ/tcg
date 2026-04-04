@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CardGrid, type CardEntry } from "@/components/CardGrid";
 import { PERSISTED_FILTERS_UPDATED_EVENT, readPersistedFilters, sortCards, DEFAULT_SORT } from "@/lib/persistedFilters";
 import type { SearchCardDataPayload } from "@/lib/searchCardDataServer";
+import type { CardPriceTrendSummary } from "@/lib/staticDataTypes";
 
 type Props = {
   cards: CardEntry[];
@@ -29,11 +30,20 @@ export function PokedexCardGrid({
   const [sort, setSort] = useState(DEFAULT_SORT);
   const [groupBySet, setGroupBySet] = useState(false);
   const [cardPrices, setCardPrices] = useState<Record<string, number> | null>(null);
+  const [cardTrends, setCardTrends] = useState<Record<string, CardPriceTrendSummary> | null>(null);
   const cardData = customerLoggedIn ? initialSearchCardData ?? null : null;
 
   // Fetch prices if needed for sort
   useEffect(() => {
-    if ((sort !== "price-desc" && sort !== "price-asc") || cardPrices) return;
+    if (
+      (sort !== "price-desc" &&
+        sort !== "price-asc" &&
+        sort !== "change-desc" &&
+        sort !== "change-asc") ||
+      (cardPrices && cardTrends)
+    ) {
+      return;
+    }
     const masterCardIds = cards.map((c) => c.masterCardId).filter((id): id is string => Boolean(id));
     if (!masterCardIds.length) return;
     const controller = new AbortController();
@@ -44,7 +54,10 @@ export function PokedexCardGrid({
       signal: controller.signal,
     })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: { prices: Record<string, number> } | null) => { if (data?.prices) setCardPrices(data.prices); })
+      .then((data: { prices: Record<string, number>; trends?: Record<string, CardPriceTrendSummary> } | null) => {
+        if (data?.prices) setCardPrices(data.prices);
+        if (data?.trends) setCardTrends(data.trends);
+      })
       .catch(() => {});
     return () => controller.abort();
   }, [sort, cards, cardPrices]);
@@ -65,8 +78,13 @@ export function PokedexCardGrid({
   }, []);
 
   const sortedCards = useMemo(() => {
-    return sortCards(cards, sort, (c) => cardPrices?.[c.masterCardId ?? ""] ?? 0);
-  }, [cards, sort, cardPrices]);
+    return sortCards(
+      cards,
+      sort,
+      (c) => cardPrices?.[c.masterCardId ?? ""] ?? 0,
+      (c) => cardTrends?.[c.masterCardId ?? ""]?.weekly.changePct ?? Number.NEGATIVE_INFINITY,
+    );
+  }, [cards, sort, cardPrices, cardTrends]);
 
   const effectiveGroupBySet = routeGroupBySet ?? groupBySet;
 
@@ -79,6 +97,8 @@ export function PokedexCardGrid({
       itemConditions={cardData?.itemConditions}
       wishlistEntryIdsByMasterCardId={cardData?.wishlistMap}
       collectionLinesByMasterCardId={cardData?.collectionLines}
+      cardPricesByMasterCardId={cardPrices ?? {}}
+      cardPriceTrendsByMasterCardId={cardTrends ?? {}}
       groupBySet={effectiveGroupBySet}
     />
   );

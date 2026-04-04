@@ -1,6 +1,6 @@
 import { cardMatchesEnergyTypeSelection } from "@/lib/cardEnergyFilter";
 import { isBasicRarity } from "@/lib/cardRarityFilter";
-import { fetchPricesForMasterCardIds } from "@/lib/cardPricingBulk";
+import { fetchPriceSummariesForMasterCardIds, fetchPricesForMasterCardIds } from "@/lib/cardPricingBulk";
 import type { SortOrder } from "@/lib/persistedFilters";
 import type { CardJsonEntry } from "@/lib/staticCards";
 import { getCardsBySet, getAllSets } from "@/lib/staticCards";
@@ -740,6 +740,15 @@ export async function fetchMasterCardsPage(params: {
       const priceA = priceMap[a] ?? 0;
       const priceB = priceMap[b] ?? 0;
       const compare = activeSort === "price-desc" ? priceB - priceA : priceA - priceB;
+      if (compare !== 0) return compare;
+      return compareMasterCardIdsByDefaultOrder(defaultBrowseOrderIndex, a, b);
+    });
+  } else if (activeSort === "change-desc" || activeSort === "change-asc") {
+    const summary = await fetchPriceSummariesForMasterCardIds(defaultSortedFilteredIds);
+    orderedFilteredIds = [...defaultSortedFilteredIds].sort((a, b) => {
+      const changeA = summary.trends[a]?.weekly.changePct ?? Number.NEGATIVE_INFINITY;
+      const changeB = summary.trends[b]?.weekly.changePct ?? Number.NEGATIVE_INFINITY;
+      const compare = activeSort === "change-desc" ? changeB - changeA : changeA - changeB;
       if (compare !== 0) return compare;
       return compareMasterCardIdsByDefaultOrder(defaultBrowseOrderIndex, a, b);
     });

@@ -27,6 +27,7 @@ import type { CollectMergedFlatRow } from "@/lib/collectGridSealed";
 import type { CollectUnifiedSection } from "@/lib/collectGridSealedMerge";
 import { normalizeVariantForStorage, variantLabel } from "@/lib/cardVariantLabels";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
+import type { CardPriceTrendSummary } from "@/lib/staticDataTypes";
 import {
   accountTransactionProductTypeSlugForCollectionLine,
   collectionGroupKeyFromLine,
@@ -194,6 +195,24 @@ function mapWishlistDocsByMasterCardId(
 
 function formatMoneyGbp(n: number): string {
   return gbpFormatter.format(n);
+}
+
+function trendTone(direction: CardPriceTrendSummary["weekly"]["direction"] | undefined): string {
+  if (direction === "up") return "border-emerald-400/22 bg-emerald-400/8 text-emerald-200";
+  if (direction === "down") return "border-rose-400/22 bg-rose-400/8 text-rose-200";
+  return "border-white/10 bg-white/[0.04] text-[var(--foreground)]/58";
+}
+
+function TrendGlyph({ direction }: { direction: CardPriceTrendSummary["weekly"]["direction"] | undefined }) {
+  if (direction === "up") return <span aria-hidden>↑</span>;
+  if (direction === "down") return <span aria-hidden>↓</span>;
+  return <span aria-hidden>→</span>;
+}
+
+function formatTrendPercent(changePct: number | null | undefined): string {
+  if (changePct == null || !Number.isFinite(changePct)) return "";
+  const sign = changePct > 0 ? "+" : "";
+  return `${sign}${changePct.toFixed(1)}%`;
 }
 const ModalCardPricing = dynamic(
   () => import("@/components/card-grid/ModalCardPricing").then((mod) => mod.ModalCardPricing),
@@ -1002,6 +1021,7 @@ const CardGridItem = memo(function CardGridItem({
   index,
   variant,
   unitPrice: unitPriceProp,
+  trendSummary: trendSummaryProp,
   priceLabel,
   owned,
   ownedQuantity,
@@ -1020,6 +1040,7 @@ const CardGridItem = memo(function CardGridItem({
   index: number;
   variant: "browse" | "collection" | "wishlist";
   unitPrice: number | null;
+  trendSummary?: CardPriceTrendSummary | null;
   priceLabel?: string | null;
   owned: boolean;
   ownedQuantity?: number;
@@ -1038,6 +1059,7 @@ const CardGridItem = memo(function CardGridItem({
 }) {
   const liRef = useRef<HTMLLIElement>(null);
   const [lazyPrice, setLazyPrice] = useState<number | null>(null);
+  const [lazyTrend, setLazyTrend] = useState<CardPriceTrendSummary | null>(null);
   const fetchedRef = useRef(false);
 
   // In browse mode, fetch this card's price lazily when it scrolls into view.
@@ -1053,11 +1075,19 @@ const CardGridItem = memo(function CardGridItem({
         if (!entries[0].isIntersecting || fetchedRef.current) return;
         fetchedRef.current = true;
         observer.disconnect();
-        const url = `/api/card-prices/${encodeURIComponent(card.externalId!)}${card.legacyExternalId ? `?fallbackExternalId=${encodeURIComponent(card.legacyExternalId)}` : ""}`;
+        const url = card.masterCardId
+          ? `/api/card-pricing-summary/by-master/${encodeURIComponent(card.masterCardId)}`
+          : `/api/card-prices/${encodeURIComponent(card.externalId!)}${card.legacyExternalId ? `?fallbackExternalId=${encodeURIComponent(card.legacyExternalId)}` : ""}`;
         fetch(url)
           .then((r) => (r.ok ? r.json() : null))
           .then((data) => {
             if (!data) return;
+            if (card.masterCardId) {
+              const summary = data as { price?: number | null; trend?: CardPriceTrendSummary | null };
+              if (typeof summary.price === "number" && Number.isFinite(summary.price)) setLazyPrice(summary.price);
+              if (summary.trend && typeof summary.trend === "object") setLazyTrend(summary.trend);
+              return;
+            }
             const price = extractPriceFromPricingResponse(data as { tcgplayer?: unknown; cardmarket?: unknown });
             if (price !== null) setLazyPrice(price);
           })
@@ -1069,7 +1099,8 @@ const CardGridItem = memo(function CardGridItem({
     return () => observer.disconnect();
   }, [variant, card.externalId, card.legacyExternalId]);
 
-  const unitPrice = variant === "browse" ? lazyPrice : unitPriceProp;
+  const unitPrice = variant === "browse" ? lazyPrice ?? unitPriceProp : unitPriceProp;
+  const unitTrend = variant === "browse" ? lazyTrend ?? trendSummaryProp ?? null : trendSummaryProp ?? null;
   const qtySelected = tradeSelectedQty ?? 0;
   const pickActive = Boolean(tradePickMode && qtySelected > 0);
   const tileOwnedQuantity = ownedQuantity ?? 0;
@@ -1203,6 +1234,15 @@ const CardGridItem = memo(function CardGridItem({
                     ? <span title="Manually set price">✎ </span>
                     : null
                 }{(priceLabel?.trim() ?? "") || formatMoneyGbp(unitPrice!)}
+                {unitTrend ? (
+                  <span
+                    className={`ml-1.5 inline-flex items-center gap-1 rounded-md border px-1.5 py-[3px] align-middle text-[8px] font-semibold tracking-[0.02em] leading-none ${trendTone(unitTrend.weekly.direction)}`}
+                    title={`Weekly trend: ${unitTrend.weekly.changePct == null ? "No change data" : `${unitTrend.weekly.changePct > 0 ? "+" : ""}${unitTrend.weekly.changePct.toFixed(1)}%`}`}
+                  >
+                    <TrendGlyph direction={unitTrend.weekly.direction} />
+                    <span>{formatTrendPercent(unitTrend.weekly.changePct) || "Flat"}</span>
+                  </span>
+                ) : null}
               </>
             ) : (
               <span aria-hidden="true">&nbsp;</span>
@@ -1218,6 +1258,7 @@ const EMPTY_ARRAY: { id: string; name: string }[] = [];
 const EMPTY_WISHLIST: WishlistEntriesByMasterCardId = {};
 const EMPTY_COLLECTION: Record<string, CollectionLineSummary[]> = {};
 const EMPTY_PRICES: Record<string, number> = {};
+const EMPTY_TRENDS: Record<string, CardPriceTrendSummary> = {};
 const EMPTY_TRADE_QTY: Record<string, number> = {};
 
 export function CardGrid({
@@ -1233,6 +1274,7 @@ export function CardGrid({
   wishlistEntryIdsByMasterCardId = EMPTY_WISHLIST,
   collectionLinesByMasterCardId = EMPTY_COLLECTION,
   cardPricesByMasterCardId = EMPTY_PRICES,
+  cardPriceTrendsByMasterCardId = EMPTY_TRENDS,
   manualPriceMasterCardIds,
   gradingByMasterCardId,
   groupBySet = false,
@@ -1264,6 +1306,7 @@ export function CardGrid({
   wishlistEntryIdsByMasterCardId?: WishlistEntriesByMasterCardId;
   collectionLinesByMasterCardId?: Record<string, CollectionLineSummary[]>;
   cardPricesByMasterCardId?: Record<string, number>;
+  cardPriceTrendsByMasterCardId?: Record<string, CardPriceTrendSummary>;
   manualPriceMasterCardIds?: Set<string>;
   gradingByMasterCardId?: Record<string, { company: string; grade: string; imageUrl?: string }>;
   groupBySet?: boolean;
@@ -3725,6 +3768,8 @@ export function CardGrid({
               variant === "collection" && mid && mapKey === mid
                 ? collectionPriceMetaByMasterCardId[mid]
                 : undefined;
+            const cardTrendSummary =
+              cardPriceTrendsByMasterCardId[mapKey] ?? (mid ? cardPriceTrendsByMasterCardId[mid] ?? null : null);
             const owned = Boolean(ownedByMapKey[mapKey] || (card.masterCardId && ownedByMapKey[card.masterCardId]));
             const ownedQuantity = ownedQuantityByMapKey[mapKey] ?? (card.masterCardId ? ownedQuantityByMapKey[card.masterCardId] ?? 0 : 0);
             const isManualPrice =
@@ -3751,6 +3796,7 @@ export function CardGrid({
                 index={index}
                 variant={variant}
                 unitPrice={unitPrice ?? null}
+                trendSummary={cardTrendSummary}
                 priceLabel={collectionPriceMeta?.label ?? null}
                 owned={owned}
                 ownedQuantity={ownedQuantity}
@@ -3851,6 +3897,8 @@ export function CardGrid({
                       variant === "collection" && mid && mapKey === mid
                         ? collectionPriceMetaByMasterCardId[mid]
                         : undefined;
+                    const cardTrendSummary =
+                      cardPriceTrendsByMasterCardId[mapKey] ?? (mid ? cardPriceTrendsByMasterCardId[mid] ?? null : null);
                     const owned = Boolean(ownedByMapKey[mapKey] || (card.masterCardId && ownedByMapKey[card.masterCardId]));
                     const ownedQuantity =
                       ownedQuantityByMapKey[mapKey] ??
@@ -3885,6 +3933,7 @@ export function CardGrid({
                         index={globalIndex}
                         variant={variant}
                         unitPrice={unitPrice ?? null}
+                        trendSummary={cardTrendSummary}
                         priceLabel={collectionPriceMeta?.label ?? null}
                         owned={owned}
                         ownedQuantity={ownedQuantity}
@@ -4003,6 +4052,8 @@ export function CardGrid({
                     variant === "collection" && mid && mapKey === mid
                       ? collectionPriceMetaByMasterCardId[mid]
                       : undefined;
+                  const cardTrendSummary =
+                    cardPriceTrendsByMasterCardId[mapKey] ?? (mid ? cardPriceTrendsByMasterCardId[mid] ?? null : null);
                   const owned = Boolean(ownedByMapKey[mapKey] || (card.masterCardId && ownedByMapKey[card.masterCardId]));
                   const ownedQuantity = ownedQuantityByMapKey[mapKey] ?? (card.masterCardId ? ownedQuantityByMapKey[card.masterCardId] ?? 0 : 0);
                   const isManualPrice =
@@ -4029,6 +4080,7 @@ export function CardGrid({
                       index={globalIndex}
                       variant={variant}
                       unitPrice={unitPrice ?? null}
+                      trendSummary={cardTrendSummary}
                       priceLabel={collectionPriceMeta?.label ?? null}
                       owned={owned}
                       ownedQuantity={ownedQuantity}

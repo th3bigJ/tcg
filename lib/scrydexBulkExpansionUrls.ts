@@ -231,6 +231,9 @@ const BULK_ALIASES: Record<string, string> = {
   "2017sm": "mcd17",
   "2018sm": "mcd18",
   "2019sm": "mcd19",
+  "2022swsh": "mcd22",
+  "2023sv": "mcd23",
+  "2024sv": "mcd24",
   // --- XY ---
   xy01: "xy1",
   xy02: "xy2",
@@ -298,6 +301,7 @@ const BULK_ALIASES: Record<string, string> = {
   ex14: "ex14",
   ex15: "ex15",
   ex16: "ex16",
+  "ex5.5": "wb1",
   "tk-ex-latia": "tk1a",
   "tk-ex-latio": "tk1b",
   "tk-ex-p": "tk2a",

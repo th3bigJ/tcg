@@ -16,7 +16,7 @@ const TCGDEX_SET_PREFIX_NORMALIZATION: Record<string, string> = {
   me3: "me03",
 };
 
-function buildPricingLookupIds(externalId: string): string[] {
+export function buildPricingLookupIds(externalId: string): string[] {
   const id = externalId.trim();
   if (!id) return [];
 
@@ -44,6 +44,11 @@ function buildPricingLookupIds(externalId: string): string[] {
   }
 
   return Array.from(ids);
+}
+
+export function setCodeFromExternalId(id: string): string {
+  const parts = id.trim().split("-");
+  return parts.length > 1 ? parts.slice(0, -1).join("-") : id.trim();
 }
 
 function getPricingBaseUrl(): string {

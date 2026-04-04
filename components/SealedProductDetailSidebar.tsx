@@ -9,6 +9,7 @@ import {
   CollectionRemovalReasonSheet,
   type CollectionRemovalConfirmPayload,
 } from "@/components/CollectionRemovalReasonSheet";
+import { SealedPriceHistoryPanel } from "@/components/SealedPriceHistoryPanel";
 import { suggestedProductTypeIdForSealedProduct, type ShopSealedProduct } from "@/lib/r2SealedProducts";
 
 type SealedProductDetailSidebarProps = {
@@ -509,6 +510,7 @@ export function SealedProductDetailSidebar({
             </div>
           </div>
         </div>
+        <SealedPriceHistoryPanel productId={product.id} />
         {ebayUrl ? (
           <a
             href={ebayUrl}

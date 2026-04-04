@@ -23,6 +23,7 @@ import {
   mergeFlatCardAndSealedRows,
   type CollectUnifiedSection,
 } from "@/lib/collectGridSealedMerge";
+import type { CardPriceTrendSummary } from "@/lib/staticDataTypes";
 
 type SortOrder = "price-desc" | "price-asc" | "release-desc" | "release-asc" | "number-desc" | "number-asc" | "added-desc";
 
@@ -52,6 +53,7 @@ type CollectCardGridWithTagsProps = {
   wishlistEntryIdsByMasterCardId: WishlistEntriesByMasterCardId;
   collectionLinesByMasterCardId: Record<string, CollectionLineSummary[]>;
   cardPricesByMasterCardId: Record<string, number>;
+  cardPriceTrendsByMasterCardId?: Record<string, CardPriceTrendSummary>;
   manualPriceMasterCardIds?: Set<string>;
   gradingByMasterCardId?: Record<string, { company: string; grade: string; imageUrl?: string }>;
   readOnly?: boolean;
@@ -83,6 +85,7 @@ export function CollectCardGridWithTags({
   wishlistEntryIdsByMasterCardId,
   collectionLinesByMasterCardId,
   cardPricesByMasterCardId,
+  cardPriceTrendsByMasterCardId,
   manualPriceMasterCardIds,
   gradingByMasterCardId,
   readOnly = false,
@@ -335,6 +338,7 @@ export function CollectCardGridWithTags({
       wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
       collectionLinesByMasterCardId={collectionLinesByMasterCardId}
       cardPricesByMasterCardId={cardPricesByMasterCardId}
+      cardPriceTrendsByMasterCardId={cardPriceTrendsByMasterCardId}
       manualPriceMasterCardIds={manualPriceMasterCardIds}
       gradingByMasterCardId={gradingByMasterCardId}
       groupBySet={effectiveGroupBySet}
@@ -363,6 +367,7 @@ type VisibleCollectCardGridProps = {
   wishlistEntryIdsByMasterCardId: WishlistEntriesByMasterCardId;
   collectionLinesByMasterCardId: Record<string, CollectionLineSummary[]>;
   cardPricesByMasterCardId: Record<string, number>;
+  cardPriceTrendsByMasterCardId?: Record<string, CardPriceTrendSummary>;
   manualPriceMasterCardIds?: Set<string>;
   gradingByMasterCardId?: Record<string, { company: string; grade: string; imageUrl?: string }>;
   groupBySet: boolean;
@@ -389,6 +394,7 @@ function VisibleCollectCardGrid({
   wishlistEntryIdsByMasterCardId,
   collectionLinesByMasterCardId,
   cardPricesByMasterCardId,
+  cardPriceTrendsByMasterCardId,
   manualPriceMasterCardIds,
   gradingByMasterCardId,
   groupBySet,
@@ -458,6 +464,7 @@ function VisibleCollectCardGrid({
         wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
         collectionLinesByMasterCardId={collectionLinesByMasterCardId}
         cardPricesByMasterCardId={cardPricesByMasterCardId}
+        cardPriceTrendsByMasterCardId={cardPriceTrendsByMasterCardId}
         manualPriceMasterCardIds={manualPriceMasterCardIds}
         gradingByMasterCardId={gradingByMasterCardId}
         groupBySet={groupBySet}

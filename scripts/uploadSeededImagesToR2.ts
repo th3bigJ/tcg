@@ -3,19 +3,26 @@ import path from "path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import type { CardJsonEntry, SetJsonEntry } from "../lib/staticDataTypes";
 
-const TARGET_SET_CODES = ["2014xy", "2015xy", "2017sm", "2018sm", "mee", "sve"] as const;
-
-const TARGET_SET_ASSETS = [
-  {
-    localPath: "public/sets/logo/sve-logo.png",
-    r2Key: "sets/logo/sve-logo.png",
-    contentType: "image/png",
-  },
-  {
-    localPath: "public/sets/symbol/sve-symbol.png",
-    r2Key: "sets/symbol/sve-symbol.png",
-    contentType: "image/png",
-  },
+const TARGET_SET_CODES = [
+  "2014xy",
+  "2015xy",
+  "2017sm",
+  "2018sm",
+  "2022swsh",
+  "2023sv",
+  "2024sv",
+  "cel25c",
+  "clb",
+  "clc",
+  "clv",
+  "ecard2",
+  "ex5.5",
+  "ex5",
+  "hgssp",
+  "mee",
+  "sve",
+  "svp",
+  "xyp",
 ] as const;
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -103,12 +110,31 @@ async function fetchRemoteImage(url: string): Promise<{ body: Buffer; contentTyp
 }
 
 async function uploadSetAssets(s3: S3Client, bucket: string): Promise<void> {
-  for (const asset of TARGET_SET_ASSETS) {
-    const absPath = path.join(process.cwd(), asset.localPath);
-    const body = fs.readFileSync(absPath);
-    await uploadBuffer(s3, bucket, asset.r2Key, body, asset.contentType);
-    console.log(`uploaded ${asset.r2Key}`);
+  const sets = readJson<SetJsonEntry[]>(SETS_FILE);
+  const targets = new Set(TARGET_SET_CODES);
+
+  for (const set of sets) {
+    const setCode = (set.code ?? set.tcgdexId ?? "").trim();
+    if (!targets.has(setCode as (typeof TARGET_SET_CODES)[number])) continue;
+
+    const uploadSetAsset = async (
+      field: "logoSrc" | "symbolSrc",
+      prefix: "logo" | "symbol",
+    ): Promise<void> => {
+      const src = set[field]?.trim();
+      if (!src || !/^https?:\/\//iu.test(src)) return;
+      const { body, contentType, ext } = await fetchRemoteImage(src);
+      const r2Key = `sets/${prefix}/${setCode}-${prefix}${ext}`;
+      await uploadBuffer(s3, bucket, r2Key, body, contentType);
+      set[field] = r2Key;
+      console.log(`uploaded ${r2Key}`);
+    };
+
+    await uploadSetAsset("logoSrc", "logo");
+    await uploadSetAsset("symbolSrc", "symbol");
   }
+
+  writeJson(SETS_FILE, sets);
 }
 
 async function uploadCardsForSet(
@@ -170,8 +196,6 @@ function verifySetAssetsInData(): void {
   const sets = readJson<SetJsonEntry[]>(SETS_FILE);
   const sve = sets.find((set) => set.tcgdexId === "sve");
   if (!sve) throw new Error("Could not find sve in data/sets.json");
-  if (sve.logoSrc !== "sets/logo/sve-logo.png") throw new Error("Unexpected sve logoSrc");
-  if (sve.symbolSrc !== "sets/symbol/sve-symbol.png") throw new Error("Unexpected sve symbolSrc");
 }
 
 async function main(): Promise<void> {

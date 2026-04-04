@@ -1186,6 +1186,8 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     { value: "random", label: "Random" },
     { value: "price-desc", label: "Price" },
     { value: "price-asc", label: "Lowest price" },
+    { value: "change-desc", label: "% change high-low" },
+    { value: "change-asc", label: "% change low-high" },
     { value: "release-desc", label: "Newest" },
     { value: "release-asc", label: "Oldest" },
     { value: "number-desc", label: "Number desc" },

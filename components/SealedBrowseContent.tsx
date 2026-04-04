@@ -2,6 +2,7 @@ import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { SealedProductGrid } from "@/components/SealedProductGrid";
 import { SealedTagFilterRow } from "@/components/SealedTagFilterRow";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
+import { getSealedPriceTrends } from "@/lib/r2SealedPriceTrends";
 import {
   DEFAULT_SEALED_SORT,
   buildSealedBrowseHref,
@@ -13,6 +14,7 @@ import {
   normalizeSealedSortValue,
   type ShopSealedProduct,
 } from "@/lib/r2SealedProducts";
+import type { SealedProductPriceTrendMap } from "@/lib/staticDataTypes";
 
 type SealedBrowseContentProps = {
   params: {
@@ -138,7 +140,11 @@ function buildSeriesOptions(products: ShopSealedProduct[]): Array<{ value: strin
     }));
 }
 
-function sortVisibleProducts(products: ShopSealedProduct[], sort: string): ShopSealedProduct[] {
+function sortVisibleProducts(
+  products: ShopSealedProduct[],
+  sort: string,
+  trendMap: SealedProductPriceTrendMap | null,
+): ShopSealedProduct[] {
   if (sort === DEFAULT_SEALED_SORT) {
     const seed = products.map((product) => String(product.id)).join("|");
     return shuffleProductsWithSeed(products, seed);
@@ -147,6 +153,23 @@ function sortVisibleProducts(products: ShopSealedProduct[], sort: string): ShopS
   return [...products].sort((left, right) => {
     if (sort === "price-desc") {
       return (right.marketValue ?? -1) - (left.marketValue ?? -1);
+    }
+    if (sort === "change-desc" || sort === "change-asc") {
+      const leftTrend = trendMap?.[String(left.id)]?.weekly.changePct;
+      const rightTrend = trendMap?.[String(right.id)]?.weekly.changePct;
+      const leftValue =
+        typeof leftTrend === "number" && Number.isFinite(leftTrend)
+          ? leftTrend
+          : sort === "change-desc"
+            ? Number.NEGATIVE_INFINITY
+            : Number.POSITIVE_INFINITY;
+      const rightValue =
+        typeof rightTrend === "number" && Number.isFinite(rightTrend)
+          ? rightTrend
+          : sort === "change-desc"
+            ? Number.NEGATIVE_INFINITY
+            : Number.POSITIVE_INFINITY;
+      return sort === "change-desc" ? rightValue - leftValue : leftValue - rightValue;
     }
     if (sort === "release-desc") {
       const rightRelease = Date.parse(right.release_date ?? "");
@@ -175,12 +198,16 @@ export async function SealedBrowseContent({
   const requestedTake = parseSealedTake(params.take, params.page);
   const activeSort = normalizeSealedSortValue(params.sort);
 
-  const [catalog, prices, multipliers] = await Promise.all([
+  const [catalog, prices, multipliers, trendMap] = await Promise.all([
     getSealedProductCatalog(),
     getSealedProductPrices(),
     fetchGbpConversionMultipliers(),
+    getSealedPriceTrends(),
   ]);
-  const mergedProducts = mergeSealedProductsWithPrices(catalog, prices);
+  const mergedProducts = mergeSealedProductsWithPrices(catalog, prices).map((product) => ({
+    ...product,
+    trend: trendMap?.[String(product.id)] ?? null,
+  }));
 
   const typeOptions = buildFilterOptions(mergedProducts.map((product) => product.type)).map((option) => ({
     value: option.name,
@@ -198,6 +225,7 @@ export async function SealedBrowseContent({
       series: activeSeries,
     }),
     activeSort,
+    trendMap,
   );
 
   const visibleProducts = filteredProducts.slice(0, requestedTake);

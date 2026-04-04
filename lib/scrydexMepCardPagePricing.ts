@@ -10,6 +10,8 @@
 
 import { SCRYDEX_DEFAULT_UA } from "@/lib/scrydexExpansionListParsing";
 
+export type ScrydexHistoryPoint = [string, number];
+
 function extractNamedSeriesDataBody(chartBlock: string, seriesName: string): string | null {
   const marker = `"name":"${seriesName}","data":`;
   const i = chartBlock.indexOf(marker);
@@ -43,6 +45,52 @@ function lastFiniteUsdFromNmDataBody(dataBody: string): number | null {
     if (Number.isFinite(v)) last = v;
   }
   return last;
+}
+
+function finiteUsdPointsFromDataBody(dataBody: string): ScrydexHistoryPoint[] {
+  const points: ScrydexHistoryPoint[] = [];
+  const re = /\["([^"]+)",([\d.]+|null)\]/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(dataBody)) !== null) {
+    if (m[2] === "null") continue;
+    const usd = Number.parseFloat(m[2]);
+    if (!Number.isFinite(usd)) continue;
+    points.push([m[1], usd]);
+  }
+  return points;
+}
+
+function extractFirstAvailableNamedSeriesDataBody(
+  chartBlock: string,
+  seriesNames: readonly string[],
+): string | null {
+  for (const seriesName of seriesNames) {
+    const dataBody = extractNamedSeriesDataBody(chartBlock, seriesName);
+    if (dataBody) return dataBody;
+  }
+  return null;
+}
+
+function extractHighestNumericSeriesUsd(
+  chartBlock: string,
+  prefix: string,
+): number | null {
+  const gradeMatches = [...chartBlock.matchAll(new RegExp(`"name":"${prefix} (\\d+(?:\\.\\d+)?)"`, "g"))];
+  let bestGrade = -1;
+  let bestUsd: number | null = null;
+  for (const gm of gradeMatches) {
+    const grade = Number.parseFloat(gm[1]);
+    if (!Number.isFinite(grade)) continue;
+    const dataBody = extractNamedSeriesDataBody(chartBlock, `${prefix} ${gm[1]}`);
+    if (!dataBody) continue;
+    const usd = lastFiniteUsdFromNmDataBody(dataBody);
+    if (usd === null) continue;
+    if (grade > bestGrade) {
+      bestGrade = grade;
+      bestUsd = usd;
+    }
+  }
+  return bestUsd;
 }
 
 /** Map Chartkick Raw slug (holofoil, staffStamp) to a stable external_price key. */
@@ -134,14 +182,60 @@ export function parseScrydexCardPagePsa10Usd(html: string): Record<string, numbe
 
   if (Object.keys(out).length > 0) return out;
 
+  // Compatibility fallback: some Scrydex cards only expose lower PSA grades.
+  for (const part of parts) {
+    const idM = part.match(/^"([^"]*PSA_(\w+)_history)"/);
+    if (!idM) continue;
+    const variantSlug = idM[2];
+    const usd = extractHighestNumericSeriesUsd(part, "PSA");
+    if (usd === null) continue;
+    const label = scrydexRawVariantSlugToLabel(variantSlug);
+    out[scrydexPsa10VariantKey(label)] = usd;
+  }
+
+  if (Object.keys(out).length > 0) return out;
+
   const domPrice = extractSingleDomGradePriceUsd(html, "PSA", 10);
-  if (domPrice === null) return out;
+  if (domPrice !== null) {
+    const slug = inferFirstRawVariantSlugFromHtml(html);
+    if (!slug) return out;
+    const label = scrydexRawVariantSlugToLabel(slug);
+    out[scrydexPsa10VariantKey(label)] = domPrice;
+    return out;
+  }
 
-  const slug = inferFirstRawVariantSlugFromHtml(html);
-  if (!slug) return out;
+  const psaLabels = [...html.matchAll(/>\s*PSA\s*(\d+(?:\.\d+)?)\s*<\/span>/g)]
+    .map((m) => Number.parseFloat(m[1]))
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => b - a);
+  for (const grade of psaLabels) {
+    const maybe = extractSingleDomGradePriceUsd(html, "PSA", grade);
+    if (maybe === null) continue;
+    const slug = inferFirstRawVariantSlugFromHtml(html);
+    if (!slug) return out;
+    const label = scrydexRawVariantSlugToLabel(slug);
+    out[scrydexPsa10VariantKey(label)] = maybe;
+    return out;
+  }
+  return out;
+}
 
-  const label = scrydexRawVariantSlugToLabel(slug);
-  out[scrydexPsa10VariantKey(label)] = domPrice;
+export function parseScrydexCardPagePsa10HistoryUsd(
+  html: string,
+): Record<string, ScrydexHistoryPoint[]> {
+  const out: Record<string, ScrydexHistoryPoint[]> = {};
+  const parts = html.split(/new Chartkick\[["']LineChart["']\]\(/);
+  for (const part of parts) {
+    const idM = part.match(/^"([^"]*PSA_(\w+)_history)"/);
+    if (!idM) continue;
+    const variantSlug = idM[2];
+    const dataBody = extractNamedSeriesDataBody(part, "PSA 10");
+    if (!dataBody) continue;
+    const points = finiteUsdPointsFromDataBody(dataBody);
+    if (points.length === 0) continue;
+    const label = scrydexRawVariantSlugToLabel(variantSlug);
+    out[scrydexPsa10VariantKey(label)] = points;
+  }
   return out;
 }
 
@@ -204,6 +298,25 @@ export function parseScrydexCardPageAce10Usd(html: string): Record<string, numbe
   return out;
 }
 
+export function parseScrydexCardPageAce10HistoryUsd(
+  html: string,
+): Record<string, ScrydexHistoryPoint[]> {
+  const out: Record<string, ScrydexHistoryPoint[]> = {};
+  const parts = html.split(/new Chartkick\[["']LineChart["']\]\(/);
+  for (const part of parts) {
+    const idM = part.match(/^"([^"]*ACE_(\w+)_history)"/);
+    if (!idM) continue;
+    const variantSlug = idM[2];
+    const dataBody = extractNamedSeriesDataBody(part, "ACE 10");
+    if (!dataBody) continue;
+    const points = finiteUsdPointsFromDataBody(dataBody);
+    if (points.length === 0) continue;
+    const label = scrydexRawVariantSlugToLabel(variantSlug);
+    out[scrydexAce10VariantKey(label)] = points;
+  }
+  return out;
+}
+
 /**
  * Merge expansion-list USD (variant query keys) with card-page USD (title-case labels).
  * Detail entries overwrite list when they refer to the same print (e.g. Holofoil).
@@ -232,12 +345,49 @@ export function parseScrydexCardPageRawNearMintUsd(html: string): Record<string,
     const idM = part.match(/^"([^"]*Raw_(\w+)_history)"/);
     if (!idM) continue;
     const variantSlug = idM[2];
-    const dataBody = extractNmSeriesDataBody(part);
+    const dataBody = extractFirstAvailableNamedSeriesDataBody(part, [
+      "NM",
+      "LP",
+      "Lightly Played",
+      "MP",
+      "Moderately Played",
+      "HP",
+      "Heavily Played",
+      "Damaged",
+    ]);
     if (!dataBody) continue;
     const usd = lastFiniteUsdFromNmDataBody(dataBody);
     if (usd === null) continue;
     const label = scrydexRawVariantSlugToLabel(variantSlug);
     out[label] = usd;
+  }
+  return out;
+}
+
+export function parseScrydexCardPageRawNearMintHistoryUsd(
+  html: string,
+): Record<string, ScrydexHistoryPoint[]> {
+  const out: Record<string, ScrydexHistoryPoint[]> = {};
+  const parts = html.split(/new Chartkick\[["']LineChart["']\]\(/);
+  for (const part of parts) {
+    const idM = part.match(/^"([^"]*Raw_(\w+)_history)"/);
+    if (!idM) continue;
+    const variantSlug = idM[2];
+    const dataBody = extractFirstAvailableNamedSeriesDataBody(part, [
+      "NM",
+      "LP",
+      "Lightly Played",
+      "MP",
+      "Moderately Played",
+      "HP",
+      "Heavily Played",
+      "Damaged",
+    ]);
+    if (!dataBody) continue;
+    const points = finiteUsdPointsFromDataBody(dataBody);
+    if (points.length === 0) continue;
+    const label = scrydexRawVariantSlugToLabel(variantSlug);
+    out[label] = points;
   }
   return out;
 }

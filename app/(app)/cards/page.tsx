@@ -16,7 +16,7 @@ import {
   getCachedSetFilterOptions,
 } from "@/lib/cardsFilterOptionsServer";
 import { getCurrentCustomer } from "@/lib/auth";
-import { fetchPricesForMasterCardIds } from "@/lib/cardPricingBulk";
+import { fetchPriceSummariesForMasterCardIds } from "@/lib/cardPricingBulk";
 import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
 import { getMasterCardIdsWithMinCopies } from "@/lib/storefrontCardMaps";
 import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
@@ -127,9 +127,9 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     .slice(0, 105)
     .map((c) => c.masterCardId)
     .filter((id): id is string => Boolean(id));
-  const initialCardPrices = initialCardPriceIds.length > 0
-    ? await fetchPricesForMasterCardIds(initialCardPriceIds)
-    : {};
+  const initialCardSummary = initialCardPriceIds.length > 0
+    ? await fetchPriceSummariesForMasterCardIds(initialCardPriceIds)
+    : { prices: {}, trends: {} };
 
   const cardsForClient = cardsForGrid;
 
@@ -295,7 +295,8 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
             >
               <SearchCardGrid
                 cards={cardsForClient}
-                initialCardPrices={initialCardPrices}
+                initialCardPrices={initialCardSummary.prices}
+                initialCardTrends={initialCardSummary.trends}
                 initialSearchCardData={initialSearchCardData}
                 setLogosByCode={setLogosByCode}
                 setSymbolsByCode={setSymbolsByCode}

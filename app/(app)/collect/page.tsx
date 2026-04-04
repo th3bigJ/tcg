@@ -4,11 +4,13 @@ import { CollectCardGridWithTags } from "@/components/CollectCardGridWithTags";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
 import { CollectWishlistValueBreakdown } from "@/components/CollectWishlistValueBreakdown";
 import { getCurrentCustomer } from "@/lib/auth";
+import { fetchPriceSummariesForMasterCardIds } from "@/lib/cardPricingBulk";
 import type { CollectGridSealedRow } from "@/lib/collectGridSealed";
 import { getCachedFilterFacets } from "@/lib/cardsPageQueries";
 import { getCachedSetFilterOptions } from "@/lib/cardsFilterOptionsServer";
 import { estimateCollectionMarketValueGbp, estimateCardUnitPricesGbp } from "@/lib/collectionMarketValueGbp";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
+import { getSealedPriceTrends } from "@/lib/r2SealedPriceTrends";
 import { estimateSealedMarketValueGbp, formatSealedUnitPriceGbp, sealedUnitPriceSortGbp } from "@/lib/sealedMarketValueGbp";
 import {
   collectionGroupKeyFromEntry,
@@ -64,6 +66,7 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
   const sealedProductMap = await resolveSealedProductsByIds(sealedProductIds);
   const sealedForGrid = mergeSealedCollectionForGrid(sealedLines, sealedProductMap);
   const multipliers = await fetchGbpConversionMultipliers();
+  const sealedTrendMap = await getSealedPriceTrends();
   const sealedCollectGridRows: CollectGridSealedRow[] = sealedForGrid.map((g) => ({
     sealedProductId: g.sealedProductId,
     source: "collection",
@@ -77,6 +80,7 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
     series: g.product?.series?.trim() || null,
     priceLabel: formatSealedUnitPriceGbp(g.product ?? null, multipliers.usdToGbp),
     priceSortGbp: sealedUnitPriceSortGbp(g.product ?? null, multipliers.usdToGbp),
+    trend: sealedTrendMap?.[String(g.sealedProductId)] ?? null,
     releaseDate: g.product?.release_date ?? null,
     addedAt: g.newestAddedAt,
   }));
@@ -99,11 +103,21 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
     }
   }
   const allCardsForGrid = mergeCollectionEntriesForGrid(entries);
+  const uniqueMasterCardIds = [
+    ...new Set(
+      allCardsForGrid
+        .map((card) => card.masterCardId)
+        .filter((value): value is string => typeof value === "string" && value.length > 0),
+    ),
+  ];
 
-  const [setFilterOptions, collectionValue, pricesResult, sealedValueGbp] = await Promise.all([
+  const [setFilterOptions, collectionValue, pricesResult, priceSummaryResult, sealedValueGbp] = await Promise.all([
     getCachedSetFilterOptions((facets ?? {}).setCodes ?? []),
     entries.length > 0 ? estimateCollectionMarketValueGbp(entries) : Promise.resolve(null),
     entries.length > 0 ? estimateCardUnitPricesGbp(entries) : Promise.resolve({ prices: {}, manualPriceIds: new Set<string>() }),
+    uniqueMasterCardIds.length > 0
+      ? fetchPriceSummariesForMasterCardIds(uniqueMasterCardIds)
+      : Promise.resolve({ prices: {}, trends: {} }),
     sealedForGrid.length > 0
       ? estimateSealedMarketValueGbp(
           sealedForGrid.map((g) => ({ product: g.product, quantity: g.sealedQuantity })),
@@ -140,6 +154,7 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
     if (highest !== null) cardPricesByMasterCardId[mid] = highest;
   }
   const manualPriceMasterCardIds = pricesResult.manualPriceIds;
+  const cardPriceTrendsByMasterCardId = priceSummaryResult.trends;
 
   const cardValueGbp = collectionValue?.totalGbp ?? 0;
 
@@ -200,6 +215,7 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
                   wishlistEntryIdsByMasterCardId={wishlistEntryIdsByMasterCardId}
                   collectionLinesByMasterCardId={collectionLinesByMasterCardId}
                   cardPricesByMasterCardId={cardPricesByMasterCardId}
+                  cardPriceTrendsByMasterCardId={cardPriceTrendsByMasterCardId}
                   manualPriceMasterCardIds={manualPriceMasterCardIds}
                   gradingByMasterCardId={gradingByMasterCardId}
                   sealedRows={sealedCollectGridRows}

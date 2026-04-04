@@ -1,9 +1,9 @@
-import { fetchPricesForMasterCardIds } from "@/lib/cardPricingBulk";
+import { fetchPriceSummariesForMasterCardIds } from "@/lib/cardPricingBulk";
 
 /**
  * POST /api/card-pricing/bulk
  * Body: { masterCardIds: string[] }
- * Returns: { prices: Record<string, number> }  — masterCardId → GBP price (only priced cards included)
+ * Returns: { prices, trends }  — compact per-card grid pricing/trend summaries
  */
 export async function POST(request: Request) {
   let body: unknown;
@@ -22,12 +22,12 @@ export async function POST(request: Request) {
       : [];
 
   if (ids.length === 0) {
-    return Response.json({ prices: {} });
+    return Response.json({ prices: {}, trends: {} });
   }
 
-  const prices = await fetchPricesForMasterCardIds(ids);
+  const summary = await fetchPriceSummariesForMasterCardIds(ids);
 
-  return Response.json({ prices }, {
+  return Response.json(summary, {
     headers: { "Cache-Control": "s-maxage=3600, stale-while-revalidate" },
   });
 }

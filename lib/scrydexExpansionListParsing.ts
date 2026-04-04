@@ -31,7 +31,7 @@ export function parseScrydexExpansionListPrices(
   const out = new Map<string, Record<string, number>>();
   const escaped = escapeRegExp(listPrefix.trim());
   const anchorRe = new RegExp(
-    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escaped}-[a-z0-9]+))(\\?[^"]*)?"`,
+    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escaped}-[a-z0-9_]+))(\\?[^"]*)?"`,
     "gi",
   );
   let m: RegExpExecArray | null;
@@ -80,7 +80,7 @@ export function parseScrydexExpansionListPaths(
   const out = new Map<string, string>();
   const escaped = escapeRegExp(listPrefix.trim());
   const anchorRe = new RegExp(
-    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escaped}-[a-z0-9]+))(\\?[^"]*)?"`,
+    `<a[^>]+href="(\\/pokemon\\/cards\\/[^"]+\\/(${escaped}-[a-z0-9_]+))(\\?[^"]*)?"`,
     "gi",
   );
   let m: RegExpExecArray | null;
@@ -163,20 +163,37 @@ export function buildScrydexPriceMapLookupKeys(
   const keys = new Set<string>([e]);
   const di = e.lastIndexOf("-");
   if (di <= 0) return [...keys];
-  const suff = e.slice(di + 1);
-  const normalizedSuffix = suff.toLowerCase();
-  const n = Number.parseInt(suff, 10);
-  const lp = listPrefix.trim().toLowerCase();
-  keys.add(`${lp}-${normalizedSuffix}`);
-  if (Number.isFinite(n) && !/[a-z]/i.test(normalizedSuffix)) {
-    keys.add(`${lp}-${n}`);
+  const suff = e.slice(di + 1).trim().toLowerCase();
+  const numericSuffix = Number.parseInt(suff, 10);
+
+  const suffixes = new Set<string>([suff]);
+  if (Number.isFinite(numericSuffix) && !/[a-z]/i.test(suff)) {
+    suffixes.add(String(numericSuffix));
   }
+
+  // Scrydex uses compacted ids for some e-Reader holos, e.g. `H9` while local data may use `H09`.
+  const compactLeadingZeroAlphaNumeric = suff.match(/^([a-z]+)0+(\d+)$/i);
+  if (compactLeadingZeroAlphaNumeric) {
+    suffixes.add(
+      `${compactLeadingZeroAlphaNumeric[1].toLowerCase()}${Number.parseInt(compactLeadingZeroAlphaNumeric[2], 10)}`,
+    );
+  }
+
+  // Some variants in local data are letter-suffixed, while Scrydex prices the base numeric page.
+  const numericBaseVariant = suff.match(/^(\d+)[a-z]+$/i);
+  if (numericBaseVariant) {
+    suffixes.add(String(Number.parseInt(numericBaseVariant[1], 10)));
+  }
+
+  const prefixes = new Set<string>([listPrefix.trim().toLowerCase()]);
   for (const tp of tcgPrefixes) {
     const t = tp.trim().toLowerCase();
-    if (!t) continue;
-    keys.add(`${t}-${normalizedSuffix}`);
-    if (Number.isFinite(n) && !/[a-z]/i.test(normalizedSuffix)) {
-      keys.add(`${t}-${n}`);
+    if (t) prefixes.add(t);
+  }
+
+  for (const prefix of prefixes) {
+    for (const suffix of suffixes) {
+      keys.add(`${prefix}-${suffix}`);
     }
   }
   return [...keys];

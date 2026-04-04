@@ -1,4 +1,5 @@
 import { resolveMediaURL } from "@/lib/media";
+import type { SealedProductPriceTrendSummary } from "@/lib/staticDataTypes";
 
 export type SealedProductCatalogEntry = {
   id: number;
@@ -61,6 +62,7 @@ export type ShopSealedProduct = SealedProductCatalogEntry & {
   imageUrl: string;
   marketValue: number | null;
   marketValueCurrency: "USD";
+  trend?: SealedProductPriceTrendSummary | null;
 };
 
 export type ShopSealedProductFilters = {
@@ -79,6 +81,8 @@ export function normalizeSealedSortValue(value: string | null | undefined): stri
     case DEFAULT_SEALED_SORT:
       return DEFAULT_SEALED_SORT;
     case "price-desc":
+    case "change-desc":
+    case "change-asc":
     case "release-desc":
     case "name-asc":
       return value!.trim();

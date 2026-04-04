@@ -129,3 +129,21 @@ Approx. 4,587 cards.
 ```bash
 npm run scrape:pricing -- --series="XY,EX,Platinum,HeartGold & SoulSilver"
 ```
+
+### Batch sealed pricing
+
+npm run scrape:pokedata-products:prices
+
+### Backfill sealed price history
+
+```bash
+npm run backfill:sealed-price-history
+```
+
+```bash
+npm run backfill:sealed-price-history -- --series="Mega Evolution"
+```
+
+```bash
+npm run backfill:sealed-price-history -- --product-id=7419
+```
