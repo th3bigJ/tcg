@@ -232,31 +232,42 @@ export function getSealedProductsPublicUrl(fileName: string): string | null {
   return getSealedProductsUrl(fileName);
 }
 
+type CacheEntry<T> = { value: T; expiresAt: number };
+
+let _catalogCache: CacheEntry<SealedProductCatalogPayload | null> | null = null;
+let _pricesCache: CacheEntry<SealedProductPricesPayload | null> | null = null;
+
 export async function getSealedProductCatalog(): Promise<SealedProductCatalogPayload | null> {
+  if (_catalogCache && Date.now() < _catalogCache.expiresAt) return _catalogCache.value;
+
   const url = getSealedProductsUrl("pokedata-english-pokemon-products.json");
   if (!url) return null;
 
+  const ttlMs = process.env.NODE_ENV === "development" ? 0 : 7 * 24 * 60 * 60 * 1000;
   try {
-    const res = await fetch(url, {
-      next: { revalidate: process.env.NODE_ENV === "development" ? 0 : 604800 },
-    });
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return null;
-    return (await res.json()) as SealedProductCatalogPayload;
+    const value = (await res.json()) as SealedProductCatalogPayload;
+    _catalogCache = { value, expiresAt: Date.now() + ttlMs };
+    return value;
   } catch {
     return null;
   }
 }
 
 export async function getSealedProductPrices(): Promise<SealedProductPricesPayload | null> {
+  if (_pricesCache && Date.now() < _pricesCache.expiresAt) return _pricesCache.value;
+
   const url = getSealedProductsUrl("pokedata-english-pokemon-prices.json");
   if (!url) return null;
 
+  const ttlMs = process.env.NODE_ENV === "development" ? 0 : 24 * 60 * 60 * 1000;
   try {
-    const res = await fetch(url, {
-      next: { revalidate: process.env.NODE_ENV === "development" ? 0 : 86400 },
-    });
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return null;
-    return (await res.json()) as SealedProductPricesPayload;
+    const value = (await res.json()) as SealedProductPricesPayload;
+    _pricesCache = { value, expiresAt: Date.now() + ttlMs };
+    return value;
   } catch {
     return null;
   }

@@ -168,16 +168,22 @@ function upsertAverageForBucket(
   return upsertAndTrim(points, bucketKey, average, maxLen);
 }
 
+type CacheEntry<T> = { value: T; expiresAt: number };
+let _priceHistoryCache: CacheEntry<SealedProductPriceHistoryMap | null> | null = null;
+
 export async function getSealedPriceHistory(): Promise<SealedProductPriceHistoryMap | null> {
+  if (_priceHistoryCache && Date.now() < _priceHistoryCache.expiresAt) return _priceHistoryCache.value;
+
   const base = getPriceHistoryBaseUrl();
   if (base) {
     const url = `${base}/${SEALED_PRICE_HISTORY_FILE}`;
+    const ttlMs = process.env.NODE_ENV === "development" ? 0 : 24 * 60 * 60 * 1000;
     try {
-      const res = await fetch(url, {
-        next: { revalidate: process.env.NODE_ENV === "development" ? 0 : 86400 },
-      });
+      const res = await fetch(url, { cache: "no-store" });
       if (res.ok) {
-        return (await res.json()) as SealedProductPriceHistoryMap;
+        const value = (await res.json()) as SealedProductPriceHistoryMap;
+        _priceHistoryCache = { value, expiresAt: Date.now() + ttlMs };
+        return value;
       }
     } catch {}
   }
