@@ -1,6 +1,6 @@
 /**
  * Single place for TCG pricing variant keys used across TCGdex `pricing.tcgplayer`, Scrydex JSON,
- * and `customer_collections.printing` (Postgres enum).
+ * and `customer_collections.printing` (plain text in Postgres).
  *
  * @see https://tcgdex.dev/reference/card — TCGPlayer pricing keys
  */

@@ -17,9 +17,15 @@ import {
 } from "@/lib/cardsFilterOptionsServer";
 import { getCurrentCustomer } from "@/lib/auth";
 import { fetchPriceSummariesForMasterCardIds } from "@/lib/cardPricingBulk";
-import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
-import { getMasterCardIdsWithMinCopies } from "@/lib/storefrontCardMaps";
-import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
+import {
+  fetchItemConditionOptions,
+  getMasterCardIdsWithMinCopies,
+  groupCollectionLinesByMasterCardId,
+} from "@/lib/storefrontCardMaps";
+import {
+  fetchCollectionCardEntries,
+  fetchWishlistIdsByMasterCard,
+} from "@/lib/storefrontCardMapsServer";
 
 function parseExcludeCommonUncommon(value: string | undefined): boolean {
   const v = (value ?? "").trim().toLowerCase();
@@ -54,7 +60,13 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const duplicatesOnly = parseExcludeCommonUncommon(resolvedSearchParams.duplicates_only);
   const selectedCategory = (resolvedSearchParams.category ?? "").trim();
   const activeArtist = (resolvedSearchParams.artist ?? "").trim();
-  const facets = (await getCachedFilterFacets()) ?? {};
+  // Run auth + facets + pokemon options in parallel — none depend on each other
+  const [facetsRaw, pokemonFilterOptions, customer] = await Promise.all([
+    getCachedFilterFacets(),
+    getCachedPokemonFilterOptions(),
+    getCurrentCustomer(),
+  ]);
+  const facets = facetsRaw ?? {};
   const availableSetCodes = facets.setCodes ?? [];
   const rarityOptions = facets.rarityDisplayValues ?? [];
   const energyOptions = facets.energyTypeDisplayValues ?? [];
@@ -62,10 +74,8 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const categoryMatchGroups = facets.categoryMatchGroups ?? {};
   const { canonicalLabel: activeCategory, queryVariants: categoryQueryVariants } =
     resolveCardsCategoryFilter(selectedCategory, categoryOptions, categoryMatchGroups);
-  const [setFilterOptions, pokemonFilterOptions] = await Promise.all([
-    getCachedSetFilterOptions(availableSetCodes),
-    getCachedPokemonFilterOptions(),
-  ]);
+  // setFilterOptions depends on availableSetCodes from facets, run after
+  const setFilterOptions = await getCachedSetFilterOptions(availableSetCodes);
   const setLogosByCode = Object.fromEntries(
     setFilterOptions.map((option) => [option.code, option.logoSrc]),
   );
@@ -98,13 +108,31 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
 
   const setOrder = generateShuffledSetOrder();
 
-  const customer = await getCurrentCustomer();
-  const collectionEntries =
-    customer && (excludeOwned || duplicatesOnly) ? await fetchCollectionCardEntries(customer.id) : [];
+  // Fetch collection (needed for exclude/duplicates filters AND search card data) +
+  // wishlist + item conditions all in parallel, alongside the card grid.
+  // We start the card grid fetch with unknown collection state when no collection
+  // filters are active, so we can run everything concurrently.
+  const needsCollection = Boolean(customer) && (excludeOwned || duplicatesOnly);
+
+  const [
+    collectionEntries,
+    itemConditions,
+    wishlistMap,
+  ] = await Promise.all([
+    customer ? fetchCollectionCardEntries(customer.id) : Promise.resolve([]),
+    customer ? fetchItemConditionOptions() : Promise.resolve([]),
+    customer ? fetchWishlistIdsByMasterCard(customer.id) : Promise.resolve({} as import("@/lib/storefrontCardMaps").WishlistEntriesByMasterCardId),
+  ]);
+
   const excludedMasterCardIds = new Set(
-    collectionEntries.map((entry) => entry.masterCardId?.trim() ?? "").filter((value) => value.length > 0),
+    needsCollection
+      ? collectionEntries.map((entry) => entry.masterCardId?.trim() ?? "").filter((value) => value.length > 0)
+      : [],
   );
-  const duplicateOwnedMasterCardIds = getMasterCardIdsWithMinCopies(collectionEntries, 2);
+  const duplicateOwnedMasterCardIds = needsCollection
+    ? getMasterCardIdsWithMinCopies(collectionEntries, 2)
+    : new Set<string>();
+
   const { entries: cardsForGrid, totalDocs: filteredCount } = await fetchMasterCardsPage({
     activeSet,
     activePokemonDex,
@@ -121,7 +149,14 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
     perPage: requestedTake,
     setOrder,
   });
-  const initialSearchCardData = customer ? await getSearchCardDataForCustomer(customer.id) : null;
+
+  const initialSearchCardData = customer
+    ? {
+        itemConditions,
+        wishlistMap,
+        collectionLines: groupCollectionLinesByMasterCardId(collectionEntries),
+      }
+    : null;
 
   const initialCardPriceIds = cardsForGrid
     .slice(0, 105)

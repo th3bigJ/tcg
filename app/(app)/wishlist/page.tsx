@@ -57,17 +57,31 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   const resolvedSearchParams = (await searchParams) ?? {};
   const groupBySet = resolvedSearchParams.group_by_set === "1";
 
-  const [entries, sealedWishlistLines, sealedCollectionLines] = await Promise.all([
+  const [
+    entries,
+    sealedWishlistLines,
+    sealedCollectionLines,
+    multipliers,
+    sealedTrendMap,
+    collectionEntries,
+    itemConditions,
+    wishlistEntryIdsByMasterCardId,
+    facets,
+  ] = await Promise.all([
     fetchWishlistCardEntries(customer.id),
     fetchSealedWishlistLines(customer.id),
     fetchSealedCollectionLines(customer.id),
+    fetchGbpConversionMultipliers(),
+    getSealedPriceTrends(),
+    fetchCollectionCardEntries(customer.id),
+    fetchItemConditionOptions(),
+    fetchWishlistIdsByMasterCard(customer.id),
+    getCachedFilterFacets().then((r) => r ?? {}),
   ]);
   const collectionSealedProductIds = new Set(sealedCollectionLines.map((l) => l.sealedProductId));
   const sealedWishIds = [...new Set(sealedWishlistLines.map((l) => l.sealedProductId))];
   const sealedWishProductMap = await resolveSealedProductsByIds(sealedWishIds);
   const sealedWishGrid = mapSealedWishlistLinesToGrid(sealedWishlistLines, sealedWishProductMap);
-  const multipliers = await fetchGbpConversionMultipliers();
-  const sealedTrendMap = await getSealedPriceTrends();
   const sealedWishItems: CollectGridSealedRow[] = sealedWishGrid.map((g) => ({
     sealedProductId: g.sealedProductId,
     source: "wishlist",
@@ -97,18 +111,6 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
         .filter((value): value is string => typeof value === "string" && value.length > 0),
     ),
   ];
-
-  const [
-    collectionEntries,
-    itemConditions,
-    wishlistEntryIdsByMasterCardId,
-    facets,
-  ] = await Promise.all([
-    fetchCollectionCardEntries(customer.id),
-    fetchItemConditionOptions(),
-    fetchWishlistIdsByMasterCard(customer.id),
-    getCachedFilterFacets().then((r) => r ?? {}),
-  ]);
 
   const collectionLinesByMasterCardId = {
     ...groupCollectionLinesByMasterCardId(collectionEntries),

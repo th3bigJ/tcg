@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
-import { customerCollectionPrintingFromVariant } from "@/lib/cardVariantLabels";
+import { collectionPrintingForStorage } from "@/lib/cardVariantLabels";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
 import { getCardMapById } from "@/lib/staticCardIndex";
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       ? Math.floor(body.quantity)
       : 1;
   const printingRaw = typeof body.printing === "string" ? body.printing : "Standard";
-  const printing = customerCollectionPrintingFromVariant(printingRaw);
+  const printing = collectionPrintingForStorage(printingRaw);
   const language = typeof body.language === "string" ? body.language : "English";
   const conditionId =
     typeof body.conditionId === "string" && body.conditionId.trim() ? body.conditionId.trim() : null;
@@ -245,7 +245,7 @@ export async function PATCH(request: NextRequest) {
   if ("conditionId" in body) updates.condition_id = body.conditionId?.trim() || null;
   if ("printing" in body) {
     const raw = body.printing?.trim();
-    updates.printing = raw ? customerCollectionPrintingFromVariant(raw) : null;
+    updates.printing = raw ? collectionPrintingForStorage(raw) : null;
   }
   if ("purchaseDate" in body) {
     const raw = body.purchaseDate?.trim();

@@ -209,13 +209,7 @@ export function BottomNav() {
               <Link
                 key={`${item.href}-${item.label}`}
                 href={item.href}
-                prefetch={
-                  item.href === "/dashboard" ||
-                  item.href === "/search" ||
-                  item.href === "/collect" ||
-                  item.href === "/wishlist" ||
-                  item.href === "/collect/shared"
-                }
+                prefetch={true}
                 onClick={(event) => {
                   if (item.href === "/search" && pathname === "/search") {
                     event.preventDefault();

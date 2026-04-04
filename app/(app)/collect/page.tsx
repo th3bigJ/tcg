@@ -55,18 +55,18 @@ export default async function CollectPage({ searchParams }: CollectPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const groupBySet = resolvedSearchParams.group_by_set === "1";
 
-  const [entries, itemConditions, wishlistEntryIdsByMasterCardId, facets, sealedLines] = await Promise.all([
+  const [entries, itemConditions, wishlistEntryIdsByMasterCardId, facets, sealedLines, multipliers, sealedTrendMap] = await Promise.all([
     fetchCollectionCardEntries(customer.id),
     fetchItemConditionOptions(),
     fetchWishlistIdsByMasterCard(customer.id),
     getCachedFilterFacets(),
     fetchSealedCollectionLines(customer.id),
+    fetchGbpConversionMultipliers(),
+    getSealedPriceTrends(),
   ]);
   const sealedProductIds = [...new Set(sealedLines.map((l) => l.sealedProductId))];
   const sealedProductMap = await resolveSealedProductsByIds(sealedProductIds);
   const sealedForGrid = mergeSealedCollectionForGrid(sealedLines, sealedProductMap);
-  const multipliers = await fetchGbpConversionMultipliers();
-  const sealedTrendMap = await getSealedPriceTrends();
   const sealedCollectGridRows: CollectGridSealedRow[] = sealedForGrid.map((g) => ({
     sealedProductId: g.sealedProductId,
     source: "collection",

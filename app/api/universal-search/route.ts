@@ -46,16 +46,16 @@ export async function GET(request: NextRequest) {
   const q = (url.searchParams.get("q") ?? "").trim();
 
   // Return filter facets when requested (no query needed)
+  // Facets are static build-time data — safe to cache publicly for 24h.
   if (url.searchParams.get("facets") === "1") {
     const facets = getFilterFacets();
-    return jsonResponseWithAuthCookies(
-      {
-        rarityOptions: facets.rarityDisplayValues,
-        energyOptions: facets.energyTypeDisplayValues,
-        categoryOptions: facets.categoryDisplayValues,
-      },
-      authCookieResponse,
-    );
+    const res = Response.json({
+      rarityOptions: facets.rarityDisplayValues,
+      energyOptions: facets.energyTypeDisplayValues,
+      categoryOptions: facets.categoryDisplayValues,
+    });
+    res.headers.set("Cache-Control", "public, max-age=86400, stale-while-revalidate=86400");
+    return res;
   }
 
   if (q.length < 2) {

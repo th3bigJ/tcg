@@ -56,17 +56,16 @@ export async function loadSharedCollectionData(
   const otherName = displayCustomerName(resolved.otherParty);
   const pageTitle = resolved.viewerIsOwner ? `Shared with ${otherName}` : `${ownerName}'s collection`;
 
-  const [collectionEntries, wishlistEntries, ownerCollectionEntries, recipientCollectionEntries, itemConditions, facets] =
+  const [collectionEntries, wishlistEntries, recipientCollectionEntries, itemConditions, facets] =
     await Promise.all([
       fetchCollectionCardEntries(ownerId),
       fetchWishlistCardEntries(ownerId),
-      fetchCollectionCardEntries(ownerId),
       fetchCollectionCardEntries(recipientId),
       fetchItemConditionOptions(),
       getCachedFilterFacets(),
     ]);
 
-  const viewerCollectionEntries = resolved.viewerIsOwner ? ownerCollectionEntries : recipientCollectionEntries;
+  const viewerCollectionEntries = resolved.viewerIsOwner ? collectionEntries : recipientCollectionEntries;
 
   const wishlistEntryIdsByMasterCardId = await fetchWishlistIdsByMasterCard(ownerId);
   const collectionLinesByMasterCardId = {

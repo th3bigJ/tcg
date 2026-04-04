@@ -49,13 +49,15 @@ export default async function DashboardPage() {
           fetchPortfolioSnapshotDocumentForServer(customer.id),
         ]);
 
-        const cardBuckets =
-          collectionEntries.length > 0
-            ? await estimateCardCollectionBucketsGbp(collectionEntries)
-            : { singleCardsGbp: 0, gradedCardsGbp: 0, rippedGbp: 0 };
-
         const sealedProductIds = [...new Set(sealedLines.map((l) => l.sealedProductId))];
-        const sealedProductMap = await resolveSealedProductsByIds(sealedProductIds);
+
+        const [cardBuckets, sealedProductMap] = await Promise.all([
+          collectionEntries.length > 0
+            ? estimateCardCollectionBucketsGbp(collectionEntries)
+            : Promise.resolve({ singleCardsGbp: 0, gradedCardsGbp: 0, rippedGbp: 0 }),
+          resolveSealedProductsByIds(sealedProductIds),
+        ]);
+
         const sealedForGrid = mergeSealedCollectionForGrid(sealedLines, sealedProductMap);
         const sealedCopyCount = sealedForGrid.reduce((sum, g) => sum + g.sealedQuantity, 0);
 

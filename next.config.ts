@@ -25,16 +25,23 @@ const nextConfig: NextConfig = {
   // Allow both hostnames — dev blocks cross-origin fetches; localhost ≠ 127.0.0.1 as an origin.
   allowedDevOrigins: ["127.0.0.1", "localhost", ...extraAllowedDevOrigins],
   transpilePackages: ["@supabase/ssr", "@supabase/supabase-js"],
-  images: r2Hostname
-    ? {
-        remotePatterns: [
-          {
-            protocol: "https",
-            hostname: r2Hostname,
-          },
-        ],
-      }
-    : undefined,
+  images: {
+    // Only generate WebP — AVIF is slower to encode with marginal gains for card images
+    formats: ["image/webp"],
+    // Tuned breakpoints for card grid tiles (~150px) and modal (~480px)
+    imageSizes: [96, 128, 160, 256, 384, 480],
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    ...(r2Hostname
+      ? {
+          remotePatterns: [
+            {
+              protocol: "https",
+              hostname: r2Hostname,
+            },
+          ],
+        }
+      : {}),
+  },
 };
 
 export default nextConfig;

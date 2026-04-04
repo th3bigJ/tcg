@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import NextImage from "next/image";
 import {
   memo,
   useCallback,
@@ -26,7 +27,7 @@ import { useCardGridPreferences } from "@/components/CardGridPreferencesProvider
 import type { CollectMergedFlatRow } from "@/lib/collectGridSealed";
 import type { CollectUnifiedSection } from "@/lib/collectGridSealedMerge";
 import {
-  customerCollectionPrintingFromVariant,
+  collectionPrintingForStorage,
   normalizeVariantForStorage,
   variantLabel,
 } from "@/lib/cardVariantLabels";
@@ -41,6 +42,20 @@ import {
   type WishlistEntrySummary,
 } from "@/lib/storefrontCardMaps";
 import { getItemConditionName, isGradedConditionId, isGradedConditionLabel } from "@/lib/referenceData";
+
+const ELEMENT_TYPE_IMAGE_MAP: Record<string, string> = {
+  Colorless: "/media/images/40px-Colorless-attack.png",
+  Darkness: "/media/images/40px-Darkness-attack.png",
+  Dragon: "/media/images/dragon_type_symbol_tcg_by_jormxdos_dfgddc1-fullview.png",
+  Fairy: "/media/images/Pokémon_Fairy_Type_Icon.svg.png",
+  Fighting: "/media/images/40px-Fighting-attack.png",
+  Fire: "/media/images/40px-Fire-attack.png",
+  Grass: "/media/images/40px-Grass-attack.png",
+  Lightning: "/media/images/40px-Lightning-attack.png",
+  Metal: "/media/images/40px-Metal-attack.png",
+  Psychic: "/media/images/40px-Psychic-attack.png",
+  Water: "/media/images/40px-Water-attack.png",
+};
 
 export type CardEntry = CardsPageCardEntry & {
   /** When set (collection grid), {@link collectionGroupKeyFromEntry} — indexes line maps and graded image lookup. */
@@ -583,38 +598,50 @@ function ModalCardHeadline({
             className="inline-flex flex-wrap items-center justify-center gap-2 rounded-full px-1 py-0.5 text-sm leading-snug text-white/75 transition hover:text-white"
           >
             {modalSetLogoSrc ? (
-              <img
+              <NextImage
                 src={modalSetLogoSrc}
                 alt={`${modalSetLabel} set logo`}
+                width={140}
+                height={28}
                 className="h-7 max-h-8 w-auto max-w-[140px] object-contain"
+                style={{ width: "auto" }}
               />
             ) : null}
             <span className="min-w-0 font-medium text-white/85 underline decoration-white/30 underline-offset-2">
               {modalSetLabel}
             </span>
             {modalSetSymbolSrc ? (
-              <img
+              <NextImage
                 src={modalSetSymbolSrc}
                 alt={`${modalSetLabel} symbol`}
+                width={36}
+                height={32}
                 className="h-8 w-auto max-w-[36px] shrink-0 object-contain opacity-80"
+                style={{ width: "auto" }}
               />
             ) : null}
           </button>
         ) : (
           <>
             {modalSetLogoSrc ? (
-              <img
+              <NextImage
                 src={modalSetLogoSrc}
                 alt={`${modalSetLabel} set logo`}
+                width={140}
+                height={28}
                 className="h-7 max-h-8 w-auto max-w-[140px] object-contain"
+                style={{ width: "auto" }}
               />
             ) : null}
             <span className="min-w-0 font-medium text-white/85">{modalSetLabel}</span>
             {modalSetSymbolSrc ? (
-              <img
+              <NextImage
                 src={modalSetSymbolSrc}
                 alt={`${modalSetLabel} symbol`}
+                width={36}
+                height={32}
                 className="h-8 w-auto max-w-[36px] shrink-0 object-contain opacity-80"
+                style={{ width: "auto" }}
               />
             ) : null}
           </>
@@ -651,11 +678,16 @@ function ModalCarouselSlide({
     >
       <div className="relative flex min-h-[50vh] w-full items-end justify-center pb-0 sm:min-h-[50vh] md:min-h-0 md:max-h-[min(78vh,calc(100dvh-8.5rem))] md:flex-1 md:items-center md:justify-center md:pb-0">
         {card ? (
-          <img
+          <NextImage
             src={card.highSrc || card.lowSrc || ""}
             alt={`${card.set} ${card.filename}`}
+            width={480}
+            height={640}
             className="block max-h-[min(64vh,640px)] w-auto max-w-full rounded-[var(--card-viewer-image-radius)] object-contain shadow-2xl md:mx-auto md:max-h-full md:max-w-full md:self-center"
             draggable={false}
+            priority
+            style={{ width: "auto", height: "auto" }}
+            sizes="(max-width: 768px) 85vw, 480px"
           />
         ) : (
           <div
@@ -1121,13 +1153,14 @@ const CardGridItem = memo(function CardGridItem({
         }`}
       >
         <div className="pointer-events-none absolute inset-0">
-          <img
+          <NextImage
             src={gradedImageSrc ?? card.lowSrc}
             alt={`${card.set} ${card.filename}`}
-            className="h-full w-full object-contain object-center"
+            fill
+            className="object-contain object-center"
             loading={index < 12 ? "eager" : "lazy"}
-            decoding="async"
-            fetchPriority={index < 6 ? "high" : "auto"}
+            priority={index < 6}
+            sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 160px"
           />
         </div>
         {pickActive ? (
@@ -1833,7 +1866,7 @@ export function CardGrid({
           masterCardId: selectedCard.masterCardId,
           conditionId: "graded-card",
           quantity: 1,
-          printing: customerCollectionPrintingFromVariant(addPrinting),
+          printing: collectionPrintingForStorage(addPrinting),
           language: "English",
           purchaseType: gradedPurchaseType,
           pricePaid:
@@ -1860,7 +1893,7 @@ export function CardGrid({
           await fetch("/api/collection/upload-image", { method: "POST", body: fd }).catch(() => {});
         }
         const gradedConditionLabel = getItemConditionName("graded-card").trim() || "Graded";
-        const resolvedPrinting = customerCollectionPrintingFromVariant(addPrinting);
+        const resolvedPrinting = collectionPrintingForStorage(addPrinting);
         const line: CollectionLineSummary = {
           entryId: String(rawId),
           quantity: 1,
@@ -1916,7 +1949,7 @@ export function CardGrid({
           masterCardId: selectedCard.masterCardId,
           conditionId: addConditionId || undefined,
           quantity: Math.max(1, Math.floor(addQuantity) || 1),
-          printing: customerCollectionPrintingFromVariant(addPrinting),
+          printing: collectionPrintingForStorage(addPrinting),
           language: "English",
           purchaseType: addPurchaseType,
           pricePaid: addPurchaseType === "bought" && addPricePaid !== "" ? parseFloat(addPricePaid) : undefined,
@@ -1944,7 +1977,7 @@ export function CardGrid({
         const conditionName = addConditionId
           ? itemConditions.find((c) => c.id === addConditionId)?.name?.trim() || "—"
           : "—";
-        const resolvedPrinting = customerCollectionPrintingFromVariant(addPrinting);
+        const resolvedPrinting = collectionPrintingForStorage(addPrinting);
         setLocalCollectionLinesByMasterCardId((prev) => {
           let next = prev ?? effectiveCollectionLinesByMasterCardId;
           for (const id of createdIds) {
@@ -2090,7 +2123,7 @@ export function CardGrid({
       const patchBody: Record<string, unknown> = { id: editEntryId };
       patchBody.quantity = Number.isFinite(editQuantity) && editQuantity >= 1 ? Math.floor(editQuantity) : 1;
       patchBody.conditionId = editConditionId.trim() || null;
-      patchBody.printing = editPrinting.trim() ? customerCollectionPrintingFromVariant(editPrinting) : null;
+      patchBody.printing = editPrinting.trim() ? collectionPrintingForStorage(editPrinting) : null;
       patchBody.purchaseDate = editPurchaseDate.trim() || null;
       if (editGradingCompany !== "") patchBody.gradingCompany = editGradingCompany;
       if (editGradeValue !== "") patchBody.gradeValue = editGradeValue;
@@ -2956,20 +2989,7 @@ export function CardGrid({
                           <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Energy type</div>
                           <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                             {selectedCard.elementTypes.map((type: string) => {
-                              const elementTypeImageMap: Record<string, string> = {
-                                Colorless: "/media/images/40px-Colorless-attack.png",
-                                Darkness: "/media/images/40px-Darkness-attack.png",
-                                Dragon: "/media/images/dragon_type_symbol_tcg_by_jormxdos_dfgddc1-fullview.png",
-                                Fairy: "/media/images/Pokémon_Fairy_Type_Icon.svg.png",
-                                Fighting: "/media/images/40px-Fighting-attack.png",
-                                Fire: "/media/images/40px-Fire-attack.png",
-                                Grass: "/media/images/40px-Grass-attack.png",
-                                Lightning: "/media/images/40px-Lightning-attack.png",
-                                Metal: "/media/images/40px-Metal-attack.png",
-                                Psychic: "/media/images/40px-Psychic-attack.png",
-                                Water: "/media/images/40px-Water-attack.png",
-                              };
-                              const src = elementTypeImageMap[type];
+                              const src = ELEMENT_TYPE_IMAGE_MAP[type];
                               return (
                                 <span key={type} className="flex items-center gap-1 text-sm font-medium leading-snug text-white underline decoration-white/30 underline-offset-2 md:text-xs">
                                   {src && <img src={src} alt={type} className="h-4 w-4 object-contain" />}
@@ -3737,7 +3757,7 @@ export function CardGrid({
       document.body,
     );
 
-  const gridContent = (() => {
+  const gridContent = useMemo(() => {
     if (hideGrid) return null;
     const sealedTileVariant = variant === "wishlist" ? "wishlist" : "collection";
     if (!groupBySet) {
@@ -3862,10 +3882,13 @@ export function CardGrid({
               <section key={setCode}>
                 <div className="mb-3 flex items-center gap-2.5">
                   {logoSrc ? (
-                    <img
+                    <NextImage
                       src={logoSrc}
                       alt=""
+                      width={80}
+                      height={28}
                       className="h-7 w-auto max-w-[80px] shrink-0 object-contain object-left"
+                      style={{ width: "auto" }}
                     />
                   ) : (
                     <span className="text-sm font-semibold text-[var(--foreground)]">{setName}</span>
@@ -4104,7 +4127,32 @@ export function CardGrid({
         })}
       </div>
     );
-  })();
+  }, [
+    hideGrid,
+    collectMergedFlatRows,
+    normalizedCards,
+    variant,
+    cardPricesByMasterCardId,
+    cardPriceTrendsByMasterCardId,
+    ownedByMapKey,
+    ownedQuantityByMapKey,
+    manualPriceMasterCardIds,
+    gradingByMasterCardId,
+    effectiveWishlistMap,
+    openModal,
+    setSymbolsByCode,
+    setLogosByCode,
+    viewerOwnedMasterCardIds,
+    tradePickMode,
+    tradeSelectedQtyByEntryId,
+    onTradePickEntry,
+    groupBySet,
+    collectUnifiedGroups,
+    collectionPriceMetaByMasterCardId,
+    collectedCountBySetCode,
+    groupShuffleSeed,
+    gridColumnStyle,
+  ]);
 
   return (
     <>

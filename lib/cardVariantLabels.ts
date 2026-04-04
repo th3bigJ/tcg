@@ -1,8 +1,3 @@
-import {
-  CANONICAL_VARIANT_KEY_TO_DB_PRINTING,
-  CUSTOMER_COLLECTION_PRINTING_ENUM_VALUES,
-} from "@/lib/customerCollectionPrintingEnum";
-
 const VARIANT_LABELS: Record<string, string> = {
   normal: "Standard",
   holofoil: "Holo",
@@ -86,9 +81,21 @@ function resolveCanonicalVariant(value: string): { key: string; label: string } 
   return null;
 }
 
+function camelCaseToTitleCase(value: string): string {
+  return value
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (c) => c.toUpperCase())
+    .trim();
+}
+
 export function variantLabel(value: string): string {
   const trimmed = value.trim();
-  return resolveCanonicalVariant(trimmed)?.label ?? trimmed;
+  const resolved = resolveCanonicalVariant(trimmed);
+  if (resolved) return resolved.label;
+  // For unrecognised camelCase variant keys (e.g. energyReverseHolofoil), produce a
+  // readable label rather than returning the raw key.
+  if (/[a-z][A-Z]/.test(trimmed)) return camelCaseToTitleCase(trimmed);
+  return trimmed;
 }
 
 export function normalizeVariantForStorage(value: string | null | undefined): string | null {
@@ -98,25 +105,19 @@ export function normalizeVariantForStorage(value: string | null | undefined): st
   return resolveCanonicalVariant(trimmed)?.label ?? trimmed;
 }
 
-const CUSTOMER_COLLECTION_PRINTING_ALLOWED = new Set<string>(CUSTOMER_COLLECTION_PRINTING_ENUM_VALUES);
-
 /**
- * Maps TCG/catalog variant keys (e.g. `pokemonDayStamp`) to values accepted by Postgres
- * `enum_customer_collections_printing`. Requires stamp values added via the Supabase migration
- * `supabase/migrations/20260404120000_extend_customer_collections_printing.sql`.
+ * Value persisted on `customer_collections.printing` / wishlist printing fields.
+ * Known catalog variants map to stable display labels; any other string (e.g. `energyReverseHolofoil`)
+ * is stored **exactly** so distinct pricing variants are not merged into "Reverse Holo" / "Holo".
  */
-export function customerCollectionPrintingFromVariant(value: string | null | undefined): string {
+export function collectionPrintingForStorage(value: string | null | undefined): string {
   const trimmed = typeof value === "string" ? value.trim() : "";
   if (!trimmed || trimmed === "Unlisted") return "Standard";
-  if (CUSTOMER_COLLECTION_PRINTING_ALLOWED.has(trimmed)) return trimmed;
 
   const resolved = resolveCanonicalVariant(trimmed);
-  if (resolved) {
-    const mapped = CANONICAL_VARIANT_KEY_TO_DB_PRINTING[resolved.key];
-    if (mapped && CUSTOMER_COLLECTION_PRINTING_ALLOWED.has(mapped)) return mapped;
-  }
+  if (resolved) return resolved.label;
 
-  return "other";
+  return trimmed;
 }
 
 /**

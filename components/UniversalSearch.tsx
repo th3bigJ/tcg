@@ -610,10 +610,10 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
     sort: defaultSortForPage,
   });
 
-  const setFiltersAndPersist = (next: Filters) => {
+  const setFiltersAndPersist = useCallback((next: Filters) => {
     setFilters(next);
     persistFilters(next, filterScope);
-  };
+  }, [filterScope]);
 
   const filtersRef = useRef(filters);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
