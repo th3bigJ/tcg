@@ -394,6 +394,8 @@ export function ModalCardPricing({
   onWishlist,
   wishlisted,
   wishlistedVariants,
+  /** When true, + / wishlist controls are shown on the card image instead of each variant row. */
+  hidePerVariantActions,
 }: {
   masterCardId?: string;
   externalId?: string;
@@ -404,6 +406,7 @@ export function ModalCardPricing({
   onWishlist?: (variant: string) => void;
   wishlisted?: boolean;
   wishlistedVariants?: string[] | null;
+  hidePerVariantActions?: boolean;
 }) {
   const mid = masterCardId?.trim() ?? "";
   const ext = externalId?.trim() ?? "";
@@ -589,6 +592,7 @@ export function ModalCardPricing({
     [history, selectedGrade, selectedVariant],
   );
 
+  const showRowActions = !hidePerVariantActions && (onAdd ?? onWishlist);
   const showUnlistedRow = pricingLoaded && allVariantKeys.length === 0 && (onAdd ?? onWishlist);
   const unlistedWishlisted = Boolean(
     showUnlistedRow &&
@@ -646,7 +650,7 @@ export function ModalCardPricing({
                 >
                   <div className="flex items-center gap-2">
                     <span className="flex-1 text-sm font-medium text-white">{variantLabel(key)}</span>
-                    {onAdd ? (
+                    {showRowActions && onAdd ? (
                       <button
                         type="button"
                         onClick={() => onAdd(key)}
@@ -656,7 +660,7 @@ export function ModalCardPricing({
                         +
                       </button>
                     ) : null}
-                    {onWishlist ? (
+                    {showRowActions && onWishlist ? (
                       <button
                         type="button"
                         onClick={() => onWishlist(key)}
@@ -720,7 +724,7 @@ export function ModalCardPricing({
             <div className="flex flex-1 items-center justify-evenly">
               <span className="text-xs text-white/40">No price data</span>
             </div>
-            {onAdd ? (
+            {showRowActions && onAdd ? (
               <button
                 type="button"
                 onClick={() => onAdd("Unlisted")}
@@ -730,7 +734,7 @@ export function ModalCardPricing({
                 +
               </button>
             ) : null}
-            {onWishlist ? (
+            {showRowActions && onWishlist ? (
               <button
                 type="button"
                 onClick={() => onWishlist("Unlisted")}

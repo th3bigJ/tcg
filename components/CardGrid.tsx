@@ -535,6 +535,9 @@ function cardEntryIdentity(card: CardEntry | null): string | null {
 
 /** Keep in sync with `globals.css` `.card-viewer-overlay` `--card-viewer-carousel-gap` (used in transform math). */
 const MODAL_CAROUSEL_GAP_PX = 32;
+
+/** Static artwork for the flip side of the modal card (classic Pokémon card back). */
+const CARD_MODAL_REVERSE_BG = "/card-reverse-bg.png";
 const CARD_MODAL_RETURN_STATE_KEY = "tcg:card-modal-return";
 
 function persistCardModalReturnState(card: CardEntry, currentUrl: string) {
@@ -651,6 +654,139 @@ function ModalCardHeadline({
   );
 }
 
+const MODAL_CORNER_BTN_CLASS =
+  "inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/30 bg-black/55 shadow-[0_8px_24px_rgba(0,0,0,0.45)] backdrop-blur-sm transition hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50";
+
+function ModalCardCornerAddButton({
+  onAdd,
+  className,
+}: {
+  onAdd: () => void;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      className={`${MODAL_CORNER_BTN_CLASS} text-[1.625rem] font-semibold leading-none text-white ${className ?? ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onAdd();
+      }}
+      aria-label="Add to collection, choose version"
+    >
+      +
+    </button>
+  );
+}
+
+function ModalCardCornerWishlistButton({
+  onWishlist,
+  wishlistHeartFilled,
+  className,
+}: {
+  onWishlist: () => void;
+  wishlistHeartFilled: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      className={`${MODAL_CORNER_BTN_CLASS} ${wishlistHeartFilled ? "" : "text-white"} ${className ?? ""}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onWishlist();
+      }}
+      aria-label="Wishlist, choose version"
+    >
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill={wishlistHeartFilled ? "currentColor" : "none"}
+        stroke={wishlistHeartFilled ? "none" : "currentColor"}
+        strokeWidth={wishlistHeartFilled ? undefined : 2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={wishlistHeartFilled ? "text-red-500" : "text-white"}
+        aria-hidden
+      >
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z" />
+      </svg>
+    </button>
+  );
+}
+
+function ModalCardFlipInteractive({
+  card,
+  closeModal,
+  modalNationalDexIds,
+  imgClass,
+  flipped,
+  onFlippedChange,
+}: {
+  card: CardEntry;
+  closeModal: () => void;
+  modalNationalDexIds?: number[] | null;
+  imgClass: string;
+  flipped: boolean;
+  onFlippedChange: (next: boolean) => void;
+}) {
+  /**
+   * Stacked faces (absolute back over in-flow front), not preserve-3d rotateY.
+   * Ancestors use overflow-x-hidden for the carousel; that flattens 3D and
+   * drew both faces at once. Opacity + pointer-events keeps a single visible face
+   * at the same box as the front image.
+   */
+  return (
+    <div className="relative w-max max-w-full">
+      <div
+        className={`relative z-10 transition-opacity duration-500 ease-out ${flipped ? "pointer-events-none opacity-0" : "opacity-100"}`}
+        aria-hidden={flipped}
+      >
+        <button
+          type="button"
+          className="block cursor-pointer border-0 bg-transparent p-0"
+          onClick={() => onFlippedChange(true)}
+          aria-label="Show card details"
+        >
+          <img
+            src={card.highSrc || card.lowSrc || ""}
+            alt={`${card.set} ${card.filename}`}
+            className={imgClass}
+            draggable={false}
+            fetchPriority="high"
+            decoding="async"
+          />
+        </button>
+      </div>
+
+      <div
+        className={`absolute inset-0 flex flex-col overflow-hidden rounded-[var(--card-viewer-image-radius)] shadow-2xl transition-opacity duration-500 ease-out ${flipped ? "z-20 cursor-default opacity-100" : "pointer-events-none z-[5] opacity-0"}`}
+        style={{
+          backgroundImage: `url(${CARD_MODAL_REVERSE_BG})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+        aria-hidden={!flipped}
+        onClick={flipped ? () => onFlippedChange(false) : undefined}
+      >
+        <div className="relative flex min-h-0 flex-1 flex-col bg-black/60 p-2 sm:p-3">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-0.5 [scrollbar-gutter:stable]">
+            <ModalCardAttributesSection
+              selectedCard={card}
+              modalNationalDexIds={modalNationalDexIds}
+              closeModal={closeModal}
+              density="compact"
+              showHeading={false}
+              opaqueCardBack
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ModalCarouselSlide({
   card,
   slotWidth,
@@ -660,6 +796,11 @@ function ModalCarouselSlide({
   onOpenSet,
   setLogosByCode,
   setSymbolsByCode,
+  closeModal,
+  modalNationalDexIds,
+  cornerActions,
+  cardBackFlipped,
+  onCardBackFlippedChange,
 }: {
   card: CardEntry | null;
   slotWidth: number;
@@ -669,8 +810,35 @@ function ModalCarouselSlide({
   onOpenSet?: () => void;
   setLogosByCode?: Record<string, string>;
   setSymbolsByCode?: Record<string, string>;
+  closeModal?: () => void;
+  modalNationalDexIds?: number[] | null;
+  cornerActions?: {
+    onAdd: () => void;
+    onWishlist: () => void;
+    wishlistHeartFilled: boolean;
+  } | null;
+  /** When set, flip state is controlled (active carousel slide). */
+  cardBackFlipped?: boolean;
+  onCardBackFlippedChange?: (next: boolean) => void;
 }) {
   const w = Math.max(1, slotWidth);
+  const showFlipCard = Boolean(showMeta && card && closeModal);
+  const imgClass =
+    "block max-h-[min(64vh,640px)] w-auto max-w-full rounded-[var(--card-viewer-image-radius)] object-contain shadow-2xl md:mx-auto md:max-h-full md:max-w-full md:self-center";
+
+  const showCornerBesideHeadline = Boolean(cornerActions);
+
+  const headlineEl = card ? (
+    <ModalCardHeadline
+      card={card}
+      primaryDexId={primaryDexId}
+      onOpenPokedex={onOpenPokedex}
+      onOpenSet={onOpenSet}
+      setLogosByCode={setLogosByCode}
+      setSymbolsByCode={setSymbolsByCode}
+    />
+  ) : null;
+
   return (
     <div
       className="flex shrink-0 flex-col items-center gap-3 md:h-full md:min-h-0 md:gap-2"
@@ -678,14 +846,28 @@ function ModalCarouselSlide({
     >
       <div className="relative flex min-h-[50vh] w-full items-end justify-center pb-0 sm:min-h-[50vh] md:min-h-0 md:max-h-[min(78vh,calc(100dvh-8.5rem))] md:flex-1 md:items-center md:justify-center md:pb-0">
         {card ? (
-          <img
-            src={card.highSrc || card.lowSrc || ""}
-            alt={`${card.set} ${card.filename}`}
-            className="block max-h-[min(64vh,640px)] w-auto max-w-full rounded-[var(--card-viewer-image-radius)] object-contain shadow-2xl md:mx-auto md:max-h-full md:max-w-full md:self-center"
-            draggable={false}
-            fetchPriority="high"
-            decoding="async"
-          />
+          showFlipCard ? (
+            <ModalCardFlipInteractive
+              key={`${card.set}/${card.filename}`}
+              card={card}
+              closeModal={closeModal!}
+              modalNationalDexIds={modalNationalDexIds}
+              imgClass={imgClass}
+              flipped={cardBackFlipped ?? false}
+              onFlippedChange={onCardBackFlippedChange ?? (() => {})}
+            />
+          ) : (
+            <div className="relative w-max max-w-full">
+              <img
+                src={card.highSrc || card.lowSrc || ""}
+                alt={`${card.set} ${card.filename}`}
+                className={imgClass}
+                draggable={false}
+                fetchPriority="high"
+                decoding="async"
+              />
+            </div>
+          )
         ) : (
           <div
             className="aspect-[3/4] max-h-[min(64vh,640px)] w-[min(85%,240px)] rounded-[var(--card-viewer-image-radius)] bg-white/[0.06] md:mx-auto md:max-h-full md:max-w-full md:self-center"
@@ -693,16 +875,26 @@ function ModalCarouselSlide({
           />
         )}
       </div>
+      {showMeta && card && showFlipCard ? (
+        <p className="mb-0 w-full text-center text-[11px] text-white/65 md:hidden">
+          {cardBackFlipped ? "Tap card for Image" : "Tap for card details"}
+        </p>
+      ) : null}
       {showMeta && card ? (
         <div className="w-full min-w-0 max-w-full md:hidden">
-          <ModalCardHeadline
-            card={card}
-            primaryDexId={primaryDexId}
-            onOpenPokedex={onOpenPokedex}
-            onOpenSet={onOpenSet}
-            setLogosByCode={setLogosByCode}
-            setSymbolsByCode={setSymbolsByCode}
-          />
+          {showCornerBesideHeadline && cornerActions ? (
+            <div className="flex w-full items-center gap-1.5">
+              <ModalCardCornerAddButton onAdd={cornerActions.onAdd} className="translate-x-1.5" />
+              <div className="min-w-0 flex-1">{headlineEl}</div>
+              <ModalCardCornerWishlistButton
+                onWishlist={cornerActions.onWishlist}
+                wishlistHeartFilled={cornerActions.wishlistHeartFilled}
+                className="-translate-x-1.5"
+              />
+            </div>
+          ) : (
+            headlineEl
+          )}
         </div>
       ) : null}
     </div>
@@ -1014,6 +1206,261 @@ function ModalAttributeRow({
         <div className="mt-0.5 text-sm font-medium leading-snug text-white md:text-xs">{display}</div>
       </div>
     </div>
+  );
+}
+
+function ModalAttributeRowCompact({
+  icon,
+  label,
+  value,
+  solid,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  /** Darker panels on the card-back flip (busier background). */
+  solid?: boolean;
+}) {
+  const display = value.trim() ? value.trim() : "—";
+  return (
+    <div
+      className={
+        solid
+          ? "flex items-center gap-2 rounded-lg border border-white/28 bg-black/82 px-2.5 py-2"
+          : "flex items-center gap-2 rounded-lg border border-white/12 bg-white/[0.06] px-2.5 py-2"
+      }
+    >
+      {icon}
+      <div className="min-w-0 flex-1">
+        <div
+          className={`text-[10px] font-medium uppercase tracking-wide ${solid ? "text-white/75" : "text-white/50"}`}
+        >
+          {label}
+        </div>
+        <div className="mt-0.5 text-xs font-medium leading-snug text-white">{display}</div>
+      </div>
+    </div>
+  );
+}
+
+function ModalAttributeRowPick({
+  icon,
+  label,
+  value,
+  compact,
+  solid,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  compact: boolean;
+  solid: boolean;
+}) {
+  if (compact) {
+    return <ModalAttributeRowCompact icon={icon} label={label} value={value} solid={solid} />;
+  }
+  return <ModalAttributeRow icon={icon} label={label} value={value} />;
+}
+
+function ModalCardAttributesSection({
+  selectedCard,
+  modalNationalDexIds,
+  closeModal,
+  density = "comfortable",
+  showHeading = true,
+  className,
+  opaqueCardBack,
+}: {
+  selectedCard: CardEntry;
+  modalNationalDexIds?: number[] | null;
+  closeModal: () => void;
+  density?: "comfortable" | "compact";
+  showHeading?: boolean;
+  className?: string;
+  /** Stronger row contrast on the modal card reverse (compact). */
+  opaqueCardBack?: boolean;
+}) {
+  const router = useRouter();
+  const compact = density === "compact";
+  const solidBack = Boolean(compact && opaqueCardBack);
+
+  const interactiveRowClass = compact
+    ? solidBack
+      ? "flex items-center gap-2 rounded-lg border border-white/28 bg-black/82 px-2.5 py-2 transition hover:bg-black/90"
+      : "flex items-center gap-2 rounded-lg border border-white/12 bg-white/[0.06] px-2.5 py-2 transition hover:bg-white/[0.10]"
+    : "flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 transition hover:bg-white/[0.10] md:gap-2 md:px-2.5 md:py-2";
+  const labelClass = compact
+    ? solidBack
+      ? "text-[10px] font-medium uppercase tracking-wide text-white/75"
+      : "text-[10px] font-medium uppercase tracking-wide text-white/50"
+    : "text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]";
+  const valueClass = compact
+    ? "mt-0.5 text-xs font-medium leading-snug text-white underline decoration-white/30 underline-offset-2"
+    : "mt-0.5 text-sm font-medium leading-snug text-white underline decoration-white/30 underline-offset-2 md:text-xs";
+
+  return (
+    <section className={`flex flex-col gap-2 ${className ?? ""}`}>
+      {showHeading ? (
+        <h4 className="text-base font-bold tracking-tight text-white md:text-sm">Attributes</h4>
+      ) : null}
+      <div className={compact ? "flex flex-col gap-1.5" : "flex flex-col gap-2 md:gap-1.5"}>
+        {selectedCard.artist ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              if (solidBack) e.stopPropagation();
+              closeModal();
+              router.push(`/search?tab=cards&artist=${encodeURIComponent(selectedCard.artist ?? "")}`);
+            }}
+            className="w-full text-left"
+          >
+            <div className={interactiveRowClass}>
+              <AttributeIconIllustrator />
+              <div className="min-w-0 flex-1">
+                <div className={labelClass}>Illustrator</div>
+                <div className={valueClass}>{selectedCard.artist}</div>
+              </div>
+              <span className="shrink-0 text-white/40">›</span>
+            </div>
+          </button>
+        ) : (
+          <ModalAttributeRowPick
+            compact={compact}
+            solid={solidBack}
+            icon={<AttributeIconIllustrator />}
+            label="Illustrator"
+            value=""
+          />
+        )}
+        <ModalAttributeRowPick
+          compact={compact}
+          solid={solidBack}
+          icon={<AttributeIconCalendar />}
+          label="Release date"
+          value={formatSetReleaseDate(selectedCard.setReleaseDate)}
+        />
+        {selectedCard.rarity ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              if (solidBack) e.stopPropagation();
+              closeModal();
+              router.push(`/search?tab=cards&rarity=${encodeURIComponent(selectedCard.rarity ?? "")}`);
+            }}
+            className="w-full text-left"
+          >
+            <div className={interactiveRowClass}>
+              <AttributeIconStar />
+              <div className="min-w-0 flex-1">
+                <div className={labelClass}>Rarity</div>
+                <div className={valueClass}>{selectedCard.rarity}</div>
+              </div>
+              <span className="shrink-0 text-white/40">›</span>
+            </div>
+          </button>
+        ) : (
+          <ModalAttributeRowPick
+            compact={compact}
+            solid={solidBack}
+            icon={<AttributeIconStar />}
+            label="Rarity"
+            value=""
+          />
+        )}
+        <ModalAttributeRowPick
+          compact={compact}
+          solid={solidBack}
+          icon={<AttributeIconHash />}
+          label="National Dex ID"
+          value={
+            modalNationalDexIds && modalNationalDexIds.length > 0 ? modalNationalDexIds.join(", ") : ""
+          }
+        />
+        {selectedCard.elementTypes && selectedCard.elementTypes.length > 0 ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              if (solidBack) e.stopPropagation();
+              closeModal();
+              router.push(`/search?tab=cards&energy=${encodeURIComponent(selectedCard.elementTypes?.[0] ?? "")}`);
+            }}
+            className="w-full text-left"
+          >
+            <div className={interactiveRowClass}>
+              <AttributeIconBolt />
+              <div className="min-w-0 flex-1">
+                <div className={labelClass}>Energy type</div>
+                <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                  {selectedCard.elementTypes.map((type: string) => {
+                    const src = ELEMENT_TYPE_IMAGE_MAP[type];
+                    return (
+                      <span
+                        key={type}
+                        className={
+                          compact
+                            ? "flex items-center gap-1 text-xs font-medium leading-snug text-white underline decoration-white/30 underline-offset-2"
+                            : "flex items-center gap-1 text-sm font-medium leading-snug text-white underline decoration-white/30 underline-offset-2 md:text-xs"
+                        }
+                      >
+                        {src && <img src={src} alt={type} className={compact ? "h-3.5 w-3.5 object-contain" : "h-4 w-4 object-contain"} />}
+                        {type}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+              <span className="shrink-0 text-white/40">›</span>
+            </div>
+          </button>
+        ) : (
+          <div className={interactiveRowClass}>
+            <AttributeIconBolt />
+            <div className="min-w-0 flex-1">
+              <div className={labelClass}>Energy type</div>
+              <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                <span className={compact ? "text-xs font-medium leading-snug text-white" : "text-sm font-medium leading-snug text-white md:text-xs"}>
+                  —
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        <ModalAttributeRowPick
+          compact={compact}
+          solid={solidBack}
+          icon={<AttributeIconBadge />}
+          label="Regulation mark"
+          value={selectedCard.regulationMark ?? ""}
+        />
+        {selectedCard.category ? (
+          <ModalAttributeRowPick
+            compact={compact}
+            solid={solidBack}
+            icon={<AttributeIconLayers />}
+            label="Category"
+            value={selectedCard.category}
+          />
+        ) : null}
+        {selectedCard.stage ? (
+          <ModalAttributeRowPick
+            compact={compact}
+            solid={solidBack}
+            icon={<AttributeIconBadge />}
+            label="Stage"
+            value={selectedCard.stage}
+          />
+        ) : null}
+        {typeof selectedCard.hp === "number" ? (
+          <ModalAttributeRowPick
+            compact={compact}
+            solid={solidBack}
+            icon={<AttributeIconHeart />}
+            label="HP"
+            value={String(selectedCard.hp)}
+          />
+        ) : null}
+      </div>
+    </section>
   );
 }
 
@@ -1384,6 +1831,9 @@ export function CardGrid({
   const [wishVariant, setWishVariant] = useState<string>("");
   /** Pricing variant keys loaded for the currently selected card (from ModalCardPricing). */
   const [pricingVariants, setPricingVariants] = useState<string[]>([]);
+  /** Card modal: bottom sheet to pick printing before add / wishlist from corner buttons. */
+  const [variantPickerOpen, setVariantPickerOpen] = useState(false);
+  const [variantPickerIntent, setVariantPickerIntent] = useState<"add" | "wishlist" | null>(null);
   const [adjustingCollectionEntryId, setAdjustingCollectionEntryId] = useState<string | null>(null);
 
   const [addUnlistedPrice, setAddUnlistedPrice] = useState<string>("");
@@ -1553,9 +2003,22 @@ export function CardGrid({
   const [nationalDexStripLoading, setNationalDexStripLoading] = useState(false);
   const [nationalDexStripError, setNationalDexStripError] = useState(false);
 
-  const selectedCard =
-    standaloneModalCard ??
-    (selectedIndex !== null ? (normalizedCards[selectedIndex] ?? null) : null);
+  const activeModalCard = useMemo(
+    () =>
+      standaloneModalCard ??
+      (selectedIndex !== null ? (normalizedCards[selectedIndex] ?? null) : null),
+    [standaloneModalCard, selectedIndex, normalizedCards],
+  );
+
+  useEffect(() => {
+    setVariantPickerOpen(false);
+    setVariantPickerIntent(null);
+  }, [activeModalCard?.masterCardId, activeModalCard?.set, activeModalCard?.filename]);
+
+  const [modalCardBackFlipped, setModalCardBackFlipped] = useState(false);
+  useEffect(() => {
+    setModalCardBackFlipped(false);
+  }, [activeModalCard?.masterCardId, activeModalCard?.set, activeModalCard?.filename]);
 
   const selectedIndexRef = useRef<number | null>(null);
   const standaloneModalCardRef = useRef<CardEntry | null>(null);
@@ -1569,7 +2032,7 @@ export function CardGrid({
     selectedIndex !== null && selectedIndex < normalizedCards.length - 1;
 
   const modalAdjacentCards = useMemo(() => {
-    if (!selectedCard) {
+    if (!activeModalCard) {
       return { prev: null as CardEntry | null, next: null as CardEntry | null };
     }
 
@@ -1584,7 +2047,7 @@ export function CardGrid({
     }
 
     return { prev: null as CardEntry | null, next: null as CardEntry | null };
-  }, [normalizedCards, selectedCard, selectedIndex, standaloneModalCard]);
+  }, [normalizedCards, activeModalCard, selectedIndex, standaloneModalCard]);
 
   // Re-sync the selected index when the cards array changes (e.g. after router.refresh()).
   // Does NOT depend on selectedIndex — that would cause a bounce-back when viewNext/viewPrevious
@@ -1626,8 +2089,8 @@ export function CardGrid({
   }, [normalizedCards, selectedIndex, standaloneModalCard]);
 
   const collectionLinesForSelected = useMemo(() => {
-    return selectedCollectionLines(selectedCard, effectiveCollectionLinesByMasterCardId);
-  }, [effectiveCollectionLinesByMasterCardId, selectedCard]);
+    return selectedCollectionLines(activeModalCard, effectiveCollectionLinesByMasterCardId);
+  }, [effectiveCollectionLinesByMasterCardId, activeModalCard]);
 
   const [carouselSlotWidth, setCarouselSlotWidth] = useState(0);
   const carouselSlotWidthRef = useRef(360);
@@ -1640,10 +2103,10 @@ export function CardGrid({
   // Reset pricing variants when the selected card changes
   useEffect(() => {
     setPricingVariants([]);
-  }, [selectedCard?.masterCardId]);
+  }, [activeModalCard?.masterCardId]);
 
   useLayoutEffect(() => {
-    if (!selectedCard) {
+    if (!activeModalCard) {
       setCarouselSlotWidth(0);
       return;
     }
@@ -1658,7 +2121,7 @@ export function CardGrid({
     const ro = new ResizeObserver(() => measure());
     ro.observe(el);
     return () => ro.disconnect();
-  }, [selectedCard?.filename, selectedCard?.set, selectedIndex, standaloneModalCard]);
+  }, [activeModalCard?.filename, activeModalCard?.set, selectedIndex, standaloneModalCard]);
 
   const openModal = useCallback((index: number) => {
     setStandaloneModalCard(null);
@@ -1680,6 +2143,8 @@ export function CardGrid({
 
   const closeModal = useCallback(() => {
     setAddSheetOpen(false);
+    setVariantPickerOpen(false);
+    setVariantPickerIntent(null);
     setSelectedIndex(null);
     setSelectedCardIdentity(null);
     setStandaloneModalCard(null);
@@ -1695,9 +2160,9 @@ export function CardGrid({
   }, []);
 
   useEffect(() => {
-    if (!selectedCard) return;
+    if (!activeModalCard) return;
     scrollModalToTop();
-  }, [scrollModalToTop, selectedCard?.masterCardId, selectedCard?.set, selectedCard?.filename]);
+  }, [scrollModalToTop, activeModalCard?.masterCardId, activeModalCard?.set, activeModalCard?.filename]);
 
   useEffect(() => {
     if (selectedIndex !== null || standaloneModalCard !== null) return;
@@ -1747,16 +2212,16 @@ export function CardGrid({
   }, [initialOpenCardMasterCardId, normalizedCards, openModal, selectedIndex, standaloneModalCard]);
 
   const openPokedexForSelectedCard = useCallback((dexId: number) => {
-    if (!selectedCard) return;
-    persistCardModalReturnState(selectedCard, currentUrl);
+    if (!activeModalCard) return;
+    persistCardModalReturnState(activeModalCard, currentUrl);
     router.push(`/pokedex/${encodeURIComponent(String(dexId))}`);
-  }, [currentUrl, router, selectedCard]);
+  }, [currentUrl, router, activeModalCard]);
 
   const openSetForSelectedCard = useCallback(() => {
-    if (!selectedCard?.set) return;
-    persistCardModalReturnState(selectedCard, currentUrl);
-    router.push(`/expansions/${encodeURIComponent(selectedCard.set)}`);
-  }, [currentUrl, router, selectedCard]);
+    if (!activeModalCard?.set) return;
+    persistCardModalReturnState(activeModalCard, currentUrl);
+    router.push(`/expansions/${encodeURIComponent(activeModalCard.set)}`);
+  }, [currentUrl, router, activeModalCard]);
 
   const goLogin = useCallback(() => {
     router.push("/login");
@@ -1767,7 +2232,7 @@ export function CardGrid({
       if (!readOnly && !customerLoggedIn) goLogin();
       return;
     }
-    if (!selectedCard?.masterCardId) return;
+    if (!activeModalCard?.masterCardId) return;
     const nearMint = itemConditions.find((c) => /near\s*mint/i.test(c.name));
     setAddConditionId(nearMint?.id ?? itemConditions[0]?.id ?? "");
     setAddQuantity(1);
@@ -1786,14 +2251,14 @@ export function CardGrid({
     setGradedPurchaseDate(new Date().toISOString().slice(0, 10));
     setGradedPurchaseType("packed");
     setAddSheetOpen(true);
-  }, [allowMutations, customerLoggedIn, goLogin, itemConditions, pricingVariants, readOnly, selectedCard?.masterCardId]);
+  }, [allowMutations, customerLoggedIn, goLogin, itemConditions, pricingVariants, readOnly, activeModalCard?.masterCardId]);
 
   const onOpenAddSheetForLine = useCallback((line?: CollectionLineSummary) => {
     if (!allowMutations) {
       if (!readOnly && !customerLoggedIn) goLogin();
       return;
     }
-    if (!selectedCard?.masterCardId) return;
+    if (!activeModalCard?.masterCardId) return;
 
     const isGraded =
       isGradedConditionId(line?.conditionId) ||
@@ -1849,18 +2314,18 @@ export function CardGrid({
     itemConditions,
     pricingVariants,
     readOnly,
-    selectedCard?.masterCardId,
+    activeModalCard?.masterCardId,
   ]);
 
   const submitGradedCollection = useCallback(async () => {
-    if (!selectedCard?.masterCardId) return;
+    if (!activeModalCard?.masterCardId) return;
     setAddPending(true);
     try {
       const res = await fetch("/api/collection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          masterCardId: selectedCard.masterCardId,
+          masterCardId: activeModalCard.masterCardId,
           conditionId: "graded-card",
           quantity: 1,
           printing: collectionPrintingForStorage(addPrinting),
@@ -1881,7 +2346,7 @@ export function CardGrid({
         return;
       }
       const rawId = j.doc?.id;
-      const mid = selectedCard.masterCardId;
+      const mid = activeModalCard.masterCardId;
       if (rawId !== undefined && mid) {
         if (gradedImageFile) {
           const fd = new FormData();
@@ -1932,18 +2397,18 @@ export function CardGrid({
     gradedSerial,
     gradedValue,
     router,
-    selectedCard?.masterCardId,
+    activeModalCard?.masterCardId,
   ]);
 
   const submitAddCollection = useCallback(async () => {
-    if (!selectedCard?.masterCardId) return;
+    if (!activeModalCard?.masterCardId) return;
     setAddPending(true);
     try {
       const res = await fetch("/api/collection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          masterCardId: selectedCard.masterCardId,
+          masterCardId: activeModalCard.masterCardId,
           conditionId: addConditionId || undefined,
           quantity: Math.max(1, Math.floor(addQuantity) || 1),
           printing: collectionPrintingForStorage(addPrinting),
@@ -1964,7 +2429,7 @@ export function CardGrid({
         console.error("[collection add]", res.status, j.error);
         return;
       }
-      const mid = selectedCard.masterCardId;
+      const mid = activeModalCard.masterCardId;
       const createdIds = Array.isArray(j.docs)
         ? j.docs.map((d) => d?.id).filter((id): id is string | number => id !== undefined)
         : j.doc?.id !== undefined
@@ -2017,14 +2482,14 @@ export function CardGrid({
     addUnlistedPrice,
     itemConditions,
     router,
-    selectedCard?.masterCardId,
+    activeModalCard?.masterCardId,
   ]);
 
   const adjustCollectionQuantity = useCallback(
     async (entryId: string, delta: -1 | 1) => {
-      const mid = selectedCard?.masterCardId;
+      const mid = activeModalCard?.masterCardId;
       if (!mid || !allowMutations) return;
-      const mapKey = cardCollectionMapKey(selectedCard);
+      const mapKey = cardCollectionMapKey(activeModalCard);
       const lines = effectiveCollectionLinesByMasterCardId[mapKey];
       const line = lines?.find((l) => l.entryId === entryId);
       if (!line) return;
@@ -2032,7 +2497,7 @@ export function CardGrid({
 
       if (nextQty < 1) {
         // Intercept deletion — show removal reason sheet instead
-        const cardName = selectedCard?.cardName ?? "";
+        const cardName = activeModalCard?.cardName ?? "";
         setPendingRemovalEntryId(entryId);
         setPendingRemovalMasterCardId(mid);
         setPendingRemovalLinesMapKey(mapKey);
@@ -2061,13 +2526,13 @@ export function CardGrid({
         setAdjustingCollectionEntryId(null);
       }
     },
-    [allowMutations, effectiveCollectionLinesByMasterCardId, router, selectedCard, selectedCard?.cardName, selectedCard?.masterCardId],
+    [allowMutations, effectiveCollectionLinesByMasterCardId, router, activeModalCard, activeModalCard?.cardName, activeModalCard?.masterCardId],
   );
 
   const populateEditFormFromLine = useCallback((line: CollectionLineSummary) => {
     setEditLine(line);
     setEditEntryId(line.entryId);
-    setEditCardName(selectedCard?.cardName ?? "");
+    setEditCardName(activeModalCard?.cardName ?? "");
     setEditConditionId(line.conditionId ?? "");
     setEditQuantity(line.quantity ?? 1);
     setEditPrinting(line.printing ?? "");
@@ -2080,7 +2545,7 @@ export function CardGrid({
     setEditGradedSerial(line.gradedSerial ?? "");
     setEditImageFile(null);
     setEditImagePreview(line.gradedImageUrl ?? "");
-  }, [selectedCard?.cardName]);
+  }, [activeModalCard?.cardName]);
 
   const openEditSheet = useCallback(
     (line: CollectionLineSummary) => {
@@ -2272,12 +2737,12 @@ export function CardGrid({
   );
 
   const toggleWishlist = useCallback(async (targetVariant?: string) => {
-    if (!selectedCard?.masterCardId) return;
+    if (!activeModalCard?.masterCardId) return;
     if (!allowMutations) {
       if (!readOnly && !customerLoggedIn) goLogin();
       return;
     }
-    const mid = selectedCard.masterCardId;
+    const mid = activeModalCard.masterCardId;
     const existing = findMatchingWishlistEntry(effectiveWishlistMap[mid], targetVariant);
     if (existing && wishlistVariantMatches(existing.printing, targetVariant)) {
       // Already wishlisted — remove immediately
@@ -2338,11 +2803,74 @@ export function CardGrid({
       setWishVariant(pricingVariants[0] ?? "");
       setWishSheetOpen(true);
     }
-  }, [allowMutations, customerLoggedIn, effectiveWishlistMap, goLogin, pricingVariants, readOnly, router, selectedCard?.masterCardId]);
+  }, [allowMutations, customerLoggedIn, effectiveWishlistMap, goLogin, pricingVariants, readOnly, router, activeModalCard?.masterCardId]);
+
+  const confirmModalVariantPicker = useCallback(
+    (printing: string) => {
+      const intent = variantPickerIntent;
+      setVariantPickerOpen(false);
+      setVariantPickerIntent(null);
+      if (intent === "add") {
+        onOpenAddSheet(printing);
+      } else if (intent === "wishlist") {
+        void toggleWishlist(printing);
+      }
+    },
+    [variantPickerIntent, onOpenAddSheet, toggleWishlist],
+  );
+
+  const modalVariantPickerOptionList = useMemo(
+    () => (pricingVariants.length > 0 ? pricingVariants : [...PRINTING_OPTIONS]),
+    [pricingVariants],
+  );
+
+  const openModalVariantPickerForAdd = useCallback(() => {
+    if (!allowMutations) {
+      if (!readOnly && !customerLoggedIn) goLogin();
+      return;
+    }
+    if (!activeModalCard?.masterCardId) return;
+    if (modalVariantPickerOptionList.length === 1) {
+      onOpenAddSheet(modalVariantPickerOptionList[0]);
+      return;
+    }
+    setVariantPickerIntent("add");
+    setVariantPickerOpen(true);
+  }, [
+    allowMutations,
+    customerLoggedIn,
+    goLogin,
+    readOnly,
+    activeModalCard?.masterCardId,
+    modalVariantPickerOptionList,
+    onOpenAddSheet,
+  ]);
+
+  const openModalVariantPickerForWishlist = useCallback(() => {
+    if (!allowMutations) {
+      if (!readOnly && !customerLoggedIn) goLogin();
+      return;
+    }
+    if (!activeModalCard?.masterCardId) return;
+    if (modalVariantPickerOptionList.length === 1) {
+      void toggleWishlist(modalVariantPickerOptionList[0]);
+      return;
+    }
+    setVariantPickerIntent("wishlist");
+    setVariantPickerOpen(true);
+  }, [
+    allowMutations,
+    customerLoggedIn,
+    goLogin,
+    readOnly,
+    activeModalCard?.masterCardId,
+    modalVariantPickerOptionList,
+    toggleWishlist,
+  ]);
 
   const submitAddWishlist = useCallback(async () => {
-    if (!selectedCard?.masterCardId) return;
-    const mid = selectedCard.masterCardId;
+    if (!activeModalCard?.masterCardId) return;
+    const mid = activeModalCard.masterCardId;
     setWishPending(true);
     try {
       const res = await fetch("/api/wishlist", {
@@ -2379,7 +2907,7 @@ export function CardGrid({
       setWishPending(false);
       setWishSheetOpen(false);
     }
-  }, [router, selectedCard?.masterCardId, wishVariant]);
+  }, [router, activeModalCard?.masterCardId, wishVariant]);
 
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const touchDeltaRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -2547,7 +3075,7 @@ export function CardGrid({
     setDragOffsetX(0);
     setSlideTransition(false);
     pendingNavRef.current = null;
-  }, [selectedCard?.set, selectedCard?.filename, selectedIndex, standaloneModalCard]);
+  }, [activeModalCard?.set, activeModalCard?.filename, selectedIndex, standaloneModalCard]);
 
   const isModalOpen = selectedIndex !== null || standaloneModalCard !== null;
 
@@ -2586,12 +3114,12 @@ export function CardGrid({
     };
   }, [isModalOpen]);
 
-  const modalNationalDexIds = selectedCard ? normalizedNationalDexIds(selectedCard) : undefined;
+  const modalNationalDexIds = activeModalCard ? normalizedNationalDexIds(activeModalCard) : undefined;
   const otherCardsMatchMode: "dex" | "name" =
     modalNationalDexIds && modalNationalDexIds.length > 0 ? "dex" : "name";
   const similarNameFetchKey =
-    selectedCard && otherCardsMatchMode === "name"
-      ? normalizeCardNameForSimilarity(selectedCard.cardName)
+    activeModalCard && otherCardsMatchMode === "name"
+      ? normalizeCardNameForSimilarity(activeModalCard.cardName)
       : "";
   const otherCardsFetchKey =
     modalNationalDexIds && modalNationalDexIds.length > 0
@@ -2615,7 +3143,7 @@ export function CardGrid({
         const res = await fetch(
           otherCardsMatchMode === "dex"
             ? `/api/cards/by-national-dex?ids=${encodeURIComponent(otherCardsFetchKey)}`
-            : `/api/cards/by-name?name=${encodeURIComponent(selectedCard?.cardName ?? "")}`,
+            : `/api/cards/by-name?name=${encodeURIComponent(activeModalCard?.cardName ?? "")}`,
         );
         if (cancelled) return;
         if (!res.ok) throw new Error("request failed");
@@ -2658,7 +3186,7 @@ export function CardGrid({
     return () => {
       cancelled = true;
     };
-  }, [otherCardsFetchKey, otherCardsMatchMode, selectedCard?.cardName, similarNameFetchKey]);
+  }, [otherCardsFetchKey, otherCardsMatchMode, activeModalCard?.cardName, similarNameFetchKey]);
 
   const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 400;
   const fallbackCarouselWidth = Math.max(280, viewportWidth - 32);
@@ -2676,7 +3204,26 @@ export function CardGrid({
       : "none",
   };
 
-  const modal = selectedCard && typeof document !== "undefined" && (
+  const modalCardCornerWishlistHeartFilled = Boolean(
+    activeModalCard &&
+      (variant === "wishlist"
+        ? Boolean(activeModalCard.wishlistEntryId) ||
+          (activeModalCard.masterCardId ? hasWishlistEntry(effectiveWishlistMap[activeModalCard.masterCardId]) : false)
+        : activeModalCard.masterCardId
+          ? hasWishlistEntry(effectiveWishlistMap[activeModalCard.masterCardId])
+          : false),
+  );
+
+  const modalCardCornerActions =
+    allowMutations && activeModalCard?.masterCardId
+      ? {
+          onAdd: openModalVariantPickerForAdd,
+          onWishlist: openModalVariantPickerForWishlist,
+          wishlistHeartFilled: modalCardCornerWishlistHeartFilled,
+        }
+      : null;
+
+  const modal = activeModalCard && typeof document !== "undefined" && (
     <div
       ref={modalScrollContainerRef}
       className="card-viewer-overlay fixed inset-0 z-[9999] overflow-x-hidden overflow-y-auto overscroll-y-contain md:overflow-hidden"
@@ -2770,9 +3317,11 @@ export function CardGrid({
                   showMeta={false}
                   setLogosByCode={setLogosByCode}
                   setSymbolsByCode={setSymbolsByCode}
+                  closeModal={closeModal}
+                  modalNationalDexIds={modalNationalDexIds}
                 />
                 <ModalCarouselSlide
-                  card={selectedCard}
+                  card={activeModalCard}
                   slotWidth={carouselSlideWidth}
                   showMeta
                   primaryDexId={modalNationalDexIds?.[0]}
@@ -2780,6 +3329,11 @@ export function CardGrid({
                   onOpenSet={openSetForSelectedCard}
                   setLogosByCode={setLogosByCode}
                   setSymbolsByCode={setSymbolsByCode}
+                  closeModal={closeModal}
+                  modalNationalDexIds={modalNationalDexIds}
+                  cornerActions={modalCardCornerActions}
+                  cardBackFlipped={modalCardBackFlipped}
+                  onCardBackFlippedChange={setModalCardBackFlipped}
                 />
                 <ModalCarouselSlide
                   card={modalAdjacentCards.next}
@@ -2787,6 +3341,8 @@ export function CardGrid({
                   showMeta={false}
                   setLogosByCode={setLogosByCode}
                   setSymbolsByCode={setSymbolsByCode}
+                  closeModal={closeModal}
+                  modalNationalDexIds={modalNationalDexIds}
                 />
               </div>
             </div>
@@ -2797,21 +3353,21 @@ export function CardGrid({
                 nationalDexStrip={nationalDexStrip}
                 nationalDexStripLoading={nationalDexStripLoading}
                 nationalDexStripError={nationalDexStripError}
-                selectedCard={selectedCard}
+                selectedCard={activeModalCard}
                 normalizedCards={normalizedCards}
                 onOpenCard={scrollModalToTop}
                 setSelectedIndex={setSelectedIndex}
                 setSelectedCardIdentity={setSelectedCardIdentity}
                 setStandaloneModalCard={setStandaloneModalCard}
               />
-            ) : selectedCard?.cardName ? (
+            ) : activeModalCard?.cardName ? (
               <ModalDexOtherCardsSection
                 variant="desktop"
                 matchMode={otherCardsMatchMode}
                 nationalDexStrip={nationalDexStrip}
                 nationalDexStripLoading={nationalDexStripLoading}
                 nationalDexStripError={nationalDexStripError}
-                selectedCard={selectedCard}
+                selectedCard={activeModalCard}
                 normalizedCards={normalizedCards}
                 onOpenCard={scrollModalToTop}
                 setSelectedIndex={setSelectedIndex}
@@ -2827,14 +3383,38 @@ export function CardGrid({
               className="flex w-full min-w-0 flex-col gap-6 sm:gap-8 md:min-h-0 md:gap-3 md:overflow-y-auto md:rounded-xl md:border md:border-white/15 md:bg-black/35 md:p-4 md:shadow-[0_20px_60px_rgba(0,0,0,0.45)] md:backdrop-blur-md"
             >
               <div className="hidden md:block">
-                <ModalCardHeadline
-                  card={selectedCard}
-                  primaryDexId={modalNationalDexIds?.[0]}
-                  onOpenPokedex={openPokedexForSelectedCard}
-                  onOpenSet={openSetForSelectedCard}
-                  setLogosByCode={setLogosByCode}
-                  setSymbolsByCode={setSymbolsByCode}
-                />
+                {modalCardCornerActions ? (
+                  <div className="flex items-center gap-2">
+                    <ModalCardCornerAddButton
+                      onAdd={modalCardCornerActions.onAdd}
+                      className="translate-x-1.5"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <ModalCardHeadline
+                        card={activeModalCard}
+                        primaryDexId={modalNationalDexIds?.[0]}
+                        onOpenPokedex={openPokedexForSelectedCard}
+                        onOpenSet={openSetForSelectedCard}
+                        setLogosByCode={setLogosByCode}
+                        setSymbolsByCode={setSymbolsByCode}
+                      />
+                    </div>
+                    <ModalCardCornerWishlistButton
+                      onWishlist={modalCardCornerActions.onWishlist}
+                      wishlistHeartFilled={modalCardCornerActions.wishlistHeartFilled}
+                      className="-translate-x-1.5"
+                    />
+                  </div>
+                ) : (
+                  <ModalCardHeadline
+                    card={activeModalCard}
+                    primaryDexId={modalNationalDexIds?.[0]}
+                    onOpenPokedex={openPokedexForSelectedCard}
+                    onOpenSet={openSetForSelectedCard}
+                    setLogosByCode={setLogosByCode}
+                    setSymbolsByCode={setSymbolsByCode}
+                  />
+                )}
               </div>
               <ModalYourCollectionSection
                 lines={collectionLinesForSelected}
@@ -2845,200 +3425,63 @@ export function CardGrid({
                     : customerLoggedIn || variant === "collection" || variant === "wishlist"
                 }
                 readOnly={readOnly}
-                masterCardId={selectedCard.masterCardId}
+                masterCardId={activeModalCard.masterCardId}
                 sectionTitle={collectionSectionTitle}
                 onAdjustQuantity={
-                  allowMutations && selectedCard.masterCardId ? adjustCollectionQuantity : undefined
+                  allowMutations && activeModalCard.masterCardId ? adjustCollectionQuantity : undefined
                 }
                 onAddCopy={
-                  allowMutations && selectedCard.masterCardId ? onOpenAddSheetForLine : undefined
+                  allowMutations && activeModalCard.masterCardId ? onOpenAddSheetForLine : undefined
                 }
                 adjustingEntryId={adjustingCollectionEntryId}
                 onEditLine={allowMutations ? openEditSheet : undefined}
               />
               <ModalCardPricing
-                key={selectedCard.masterCardId ?? `${selectedCard.set}/${selectedCard.filename}`}
-                masterCardId={selectedCard.masterCardId}
-                externalId={selectedCard.externalId}
-                legacyExternalId={selectedCard.legacyExternalId}
+                key={activeModalCard.masterCardId ?? `${activeModalCard.set}/${activeModalCard.filename}`}
+                masterCardId={activeModalCard.masterCardId}
+                externalId={activeModalCard.externalId}
+                legacyExternalId={activeModalCard.legacyExternalId}
                 onVariantsLoaded={setPricingVariants}
-                onAdd={allowMutations && selectedCard.masterCardId ? (v) => onOpenAddSheet(v) : undefined}
-                onWishlist={allowMutations && selectedCard.masterCardId ? (v) => void toggleWishlist(v) : undefined}
+                hidePerVariantActions={Boolean(allowMutations && activeModalCard.masterCardId)}
+                onAdd={allowMutations && activeModalCard.masterCardId ? (v) => onOpenAddSheet(v) : undefined}
+                onWishlist={allowMutations && activeModalCard.masterCardId ? (v) => void toggleWishlist(v) : undefined}
                 wishlisted={
                   variant === "wishlist"
-                    ? Boolean(selectedCard.wishlistEntryId) ||
-                      (selectedCard.masterCardId
-                        ? hasWishlistEntry(effectiveWishlistMap[selectedCard.masterCardId])
+                    ? Boolean(activeModalCard.wishlistEntryId) ||
+                      (activeModalCard.masterCardId
+                        ? hasWishlistEntry(effectiveWishlistMap[activeModalCard.masterCardId])
                         : false)
-                    : selectedCard.masterCardId
-                      ? hasWishlistEntry(effectiveWishlistMap[selectedCard.masterCardId])
+                    : activeModalCard.masterCardId
+                      ? hasWishlistEntry(effectiveWishlistMap[activeModalCard.masterCardId])
                       : false
                 }
                 wishlistedVariants={
                   variant === "wishlist"
                     ? collectWishlistedVariants(
-                        selectedCard.targetPrinting ?? selectedCard.printing,
-                        selectedCard.masterCardId
-                          ? effectiveWishlistMap[selectedCard.masterCardId]
+                        activeModalCard.targetPrinting ?? activeModalCard.printing,
+                        activeModalCard.masterCardId
+                          ? effectiveWishlistMap[activeModalCard.masterCardId]
                           : undefined,
                       )
-                    : selectedCard.masterCardId
-                      ? (effectiveWishlistMap[selectedCard.masterCardId] ?? []).map(
+                    : activeModalCard.masterCardId
+                      ? (effectiveWishlistMap[activeModalCard.masterCardId] ?? []).map(
                           (entry) => entry.printing ?? "Unlisted",
                         )
                       : []
                 }
                 ebayCardContext={{
-                  setName: selectedCard.setName,
-                  setSlug: selectedCard.setSlug,
-                  setTcgdexId: selectedCard.setTcgdexId,
-                  setCardCountOfficial: selectedCard.setCardCountOfficial,
-                  setCode: selectedCard.set,
-                  cardName: selectedCard.cardName,
-                  cardNumber: selectedCard.cardNumber,
+                  setName: activeModalCard.setName,
+                  setSlug: activeModalCard.setSlug,
+                  setTcgdexId: activeModalCard.setTcgdexId,
+                  setCardCountOfficial: activeModalCard.setCardCountOfficial,
+                  setCode: activeModalCard.set,
+                  cardName: activeModalCard.cardName,
+                  cardNumber: activeModalCard.cardNumber,
                 }}
               />
             </div>
 
             <div className="flex w-full min-w-0 flex-col gap-6 sm:gap-8 md:min-h-0 md:gap-2 md:overflow-y-auto md:rounded-xl md:border md:border-white/15 md:bg-black/35 md:p-4 md:shadow-[0_20px_60px_rgba(0,0,0,0.45)] md:backdrop-blur-md">
-              <section className="flex flex-col gap-2">
-                <h4 className="text-base font-bold tracking-tight text-white md:text-sm">Attributes</h4>
-                <div className="flex flex-col gap-2 md:gap-1.5">
-                  {selectedCard.artist ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        closeModal();
-                        router.push(`/search?tab=cards&artist=${encodeURIComponent(selectedCard.artist ?? "")}`);
-                      }}
-                      className="w-full text-left"
-                    >
-                      <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 transition hover:bg-white/[0.10] md:gap-2 md:px-2.5 md:py-2">
-                        <AttributeIconIllustrator />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Illustrator</div>
-                          <div className="mt-0.5 text-sm font-medium leading-snug text-white underline decoration-white/30 underline-offset-2 md:text-xs">{selectedCard.artist}</div>
-                        </div>
-                        <span className="shrink-0 text-white/40">›</span>
-                      </div>
-                    </button>
-                  ) : (
-                    <ModalAttributeRow
-                      icon={<AttributeIconIllustrator />}
-                      label="Illustrator"
-                      value=""
-                    />
-                  )}
-                  <ModalAttributeRow
-                    icon={<AttributeIconCalendar />}
-                    label="Release date"
-                    value={formatSetReleaseDate(selectedCard.setReleaseDate)}
-                  />
-                  {selectedCard.rarity ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        closeModal();
-                        router.push(`/search?tab=cards&rarity=${encodeURIComponent(selectedCard.rarity ?? "")}`);
-                      }}
-                      className="w-full text-left"
-                    >
-                      <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 transition hover:bg-white/[0.10] md:gap-2 md:px-2.5 md:py-2">
-                        <AttributeIconStar />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Rarity</div>
-                          <div className="mt-0.5 text-sm font-medium leading-snug text-white underline decoration-white/30 underline-offset-2 md:text-xs">
-                            {selectedCard.rarity}
-                          </div>
-                        </div>
-                        <span className="shrink-0 text-white/40">›</span>
-                      </div>
-                    </button>
-                  ) : (
-                    <ModalAttributeRow
-                      icon={<AttributeIconStar />}
-                      label="Rarity"
-                      value=""
-                    />
-                  )}
-                  <ModalAttributeRow
-                    icon={<AttributeIconHash />}
-                    label="National Dex ID"
-                    value={
-                      modalNationalDexIds && modalNationalDexIds.length > 0
-                        ? modalNationalDexIds.join(", ")
-                        : ""
-                    }
-                  />
-                  {/* Energy type with symbols */}
-                  {selectedCard.elementTypes && selectedCard.elementTypes.length > 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        closeModal();
-                        router.push(`/search?tab=cards&energy=${encodeURIComponent(selectedCard.elementTypes?.[0] ?? "")}`);
-                      }}
-                      className="w-full text-left"
-                    >
-                      <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 transition hover:bg-white/[0.10] md:gap-2 md:px-2.5 md:py-2">
-                        <AttributeIconBolt />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Energy type</div>
-                          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                            {selectedCard.elementTypes.map((type: string) => {
-                              const src = ELEMENT_TYPE_IMAGE_MAP[type];
-                              return (
-                                <span key={type} className="flex items-center gap-1 text-sm font-medium leading-snug text-white underline decoration-white/30 underline-offset-2 md:text-xs">
-                                  {src && <img src={src} alt={type} className="h-4 w-4 object-contain" />}
-                                  {type}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <span className="shrink-0 text-white/40">›</span>
-                      </div>
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-3 md:gap-2 md:px-2.5 md:py-2">
-                      <AttributeIconBolt />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[11px] font-medium uppercase tracking-wide text-white/50 md:text-[10px]">Energy type</div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                          <span className="text-sm font-medium leading-snug text-white md:text-xs">—</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <ModalAttributeRow
-                    icon={<AttributeIconBadge />}
-                    label="Regulation mark"
-                    value={selectedCard.regulationMark ?? ""}
-                  />
-                  {selectedCard.category ? (
-                    <ModalAttributeRow
-                      icon={<AttributeIconLayers />}
-                      label="Category"
-                      value={selectedCard.category}
-                    />
-                  ) : null}
-                  {selectedCard.stage ? (
-                    <ModalAttributeRow
-                      icon={<AttributeIconBadge />}
-                      label="Stage"
-                      value={selectedCard.stage}
-                    />
-                  ) : null}
-                  {typeof selectedCard.hp === "number" ? (
-                    <ModalAttributeRow
-                      icon={<AttributeIconHeart />}
-                      label="HP"
-                      value={String(selectedCard.hp)}
-                    />
-                  ) : null}
-                </div>
-              </section>
-
               {modalNationalDexIds && modalNationalDexIds.length > 0 ? (
                 <ModalDexOtherCardsSection
                   variant="mobile"
@@ -3046,21 +3489,21 @@ export function CardGrid({
                   nationalDexStrip={nationalDexStrip}
                   nationalDexStripLoading={nationalDexStripLoading}
                   nationalDexStripError={nationalDexStripError}
-                  selectedCard={selectedCard}
+                  selectedCard={activeModalCard}
                   normalizedCards={normalizedCards}
                   onOpenCard={scrollModalToTop}
                   setSelectedIndex={setSelectedIndex}
                   setSelectedCardIdentity={setSelectedCardIdentity}
                   setStandaloneModalCard={setStandaloneModalCard}
                 />
-              ) : selectedCard?.cardName ? (
+              ) : activeModalCard?.cardName ? (
                 <ModalDexOtherCardsSection
                   variant="mobile"
                   matchMode={otherCardsMatchMode}
                   nationalDexStrip={nationalDexStrip}
                   nationalDexStripLoading={nationalDexStripLoading}
                   nationalDexStripError={nationalDexStripError}
-                  selectedCard={selectedCard}
+                  selectedCard={activeModalCard}
                   normalizedCards={normalizedCards}
                   onOpenCard={scrollModalToTop}
                   setSelectedIndex={setSelectedIndex}
@@ -3095,7 +3538,7 @@ export function CardGrid({
           aria-label="Add to collection"
         >
           <h2 className="text-lg font-semibold">Add to collection</h2>
-          <p className="mt-1 text-sm text-[var(--foreground)]/65">{selectedCard?.cardName}</p>
+          <p className="mt-1 text-sm text-[var(--foreground)]/65">{activeModalCard?.cardName}</p>
           <div className="mt-4 flex flex-col gap-3">
             <div className="flex rounded-md border border-[var(--foreground)]/20 overflow-hidden">
               <button
@@ -3396,6 +3839,56 @@ export function CardGrid({
       document.body,
     );
 
+  const variantPickerSheet =
+    variantPickerOpen &&
+    typeof document !== "undefined" &&
+    createPortal(
+      <div
+        className="fixed inset-0 z-[10001] flex flex-col justify-end bg-black/60"
+        onClick={() => {
+          setVariantPickerOpen(false);
+          setVariantPickerIntent(null);
+        }}
+        role="presentation"
+      >
+        <div
+          className="max-h-[55dvh] overflow-y-auto rounded-t-2xl border border-[var(--foreground)]/15 bg-[var(--background)] px-4 pb-[max(1.5rem,calc(env(safe-area-inset-bottom,0px)+1rem))] pt-4 text-[var(--foreground)] shadow-xl"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-label={variantPickerIntent === "wishlist" ? "Choose version for wishlist" : "Choose version to add"}
+        >
+          <h2 className="text-lg font-semibold">
+            {variantPickerIntent === "wishlist" ? "Wishlist" : "Add to collection"}
+          </h2>
+          <p className="mt-1 text-sm text-[var(--foreground)]/65">{activeModalCard?.cardName}</p>
+          <p className="mt-2 text-xs font-medium uppercase tracking-wide text-[var(--foreground)]/45">Choose version</p>
+          <ul className="mt-3 flex flex-col gap-2">
+            {modalVariantPickerOptionList.map((v) => (
+              <li key={v}>
+                <button
+                  type="button"
+                  onClick={() => confirmModalVariantPicker(v)}
+                  className="w-full rounded-xl border border-[var(--foreground)]/20 bg-[var(--foreground)]/5 px-4 py-3 text-left text-sm font-medium transition hover:bg-[var(--foreground)]/10"
+                >
+                  {variantLabel(v)}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={() => {
+              setVariantPickerOpen(false);
+              setVariantPickerIntent(null);
+            }}
+            className="mt-4 w-full rounded-md border border-[var(--foreground)]/25 px-4 py-2 text-sm font-medium"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      document.body,
+    );
 
   const EDIT_GRADING_COMPANIES = ["PSA", "ACE"];
 
@@ -3713,7 +4206,7 @@ export function CardGrid({
           aria-label="Add to wishlist"
         >
           <h2 className="text-lg font-semibold">Add to wishlist</h2>
-          <p className="mt-1 text-sm text-[var(--foreground)]/65">{selectedCard?.cardName}</p>
+          <p className="mt-1 text-sm text-[var(--foreground)]/65">{activeModalCard?.cardName}</p>
           {pricingVariants.length > 0 ? (
             <div className="mt-4 flex flex-col gap-3">
               <label className="flex flex-col gap-1 text-sm">
@@ -4156,6 +4649,7 @@ export function CardGrid({
       {gridContent}
       {modal && createPortal(modal, document.body)}
       {addSheet}
+      {variantPickerSheet}
       {editSheet}
       {wishSheet}
       <CollectionRemovalReasonSheet
