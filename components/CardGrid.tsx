@@ -678,16 +678,13 @@ function ModalCarouselSlide({
     >
       <div className="relative flex min-h-[50vh] w-full items-end justify-center pb-0 sm:min-h-[50vh] md:min-h-0 md:max-h-[min(78vh,calc(100dvh-8.5rem))] md:flex-1 md:items-center md:justify-center md:pb-0">
         {card ? (
-          <NextImage
+          <img
             src={card.highSrc || card.lowSrc || ""}
             alt={`${card.set} ${card.filename}`}
-            width={480}
-            height={640}
             className="block max-h-[min(64vh,640px)] w-auto max-w-full rounded-[var(--card-viewer-image-radius)] object-contain shadow-2xl md:mx-auto md:max-h-full md:max-w-full md:self-center"
             draggable={false}
-            priority
-            style={{ width: "auto", height: "auto" }}
-            sizes="(max-width: 768px) 85vw, 480px"
+            fetchPriority="high"
+            decoding="async"
           />
         ) : (
           <div
