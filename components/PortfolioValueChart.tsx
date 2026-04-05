@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useRef, useState } from "react";
 
 import type { PortfolioSnapshotPoint } from "@/lib/portfolioSnapshotTypes";
 
@@ -23,6 +23,7 @@ type PortfolioValueChartProps = {
 
 export function PortfolioValueChart({ points }: PortfolioValueChartProps) {
   const gradientId = useId().replace(/:/g, "");
+  const svgRef = useRef<SVGSVGElement>(null);
   const sorted = useMemo(
     () => [...points].sort((a, b) => a.date.localeCompare(b.date)),
     [points],
@@ -72,6 +73,27 @@ export function PortfolioValueChart({ points }: PortfolioValueChartProps) {
     ? `${path} L ${padding.left + innerWidth} ${padding.top + innerHeight} L ${padding.left} ${padding.top + innerHeight} Z`
     : "";
 
+  // Map a clientX position to the nearest data index
+  const indexFromClientX = useCallback((clientX: number): number => {
+    const svg = svgRef.current;
+    if (!svg || plotted.length === 0) return lastIndex;
+    const rect = svg.getBoundingClientRect();
+    const relX = clientX - rect.left;
+    const svgX = (relX / rect.width) * width;
+    let nearest = 0;
+    let nearestDist = Infinity;
+    for (const p of plotted) {
+      const dist = Math.abs(p.x - svgX);
+      if (dist < nearestDist) { nearestDist = dist; nearest = p.index; }
+    }
+    return nearest;
+  }, [plotted, lastIndex, width]);
+
+  const handleScrub = useCallback((clientX: number) => {
+    const i = indexFromClientX(clientX);
+    setSelection({ mode: "index", i });
+  }, [indexFromClientX]);
+
   const active = plotted[selectedIndex] ?? plotted[plotted.length - 1];
   const yTicks = [chartMax, chartMin + chartRange / 2, chartMin].map((value) => ({
     value,
@@ -106,7 +128,16 @@ export function PortfolioValueChart({ points }: PortfolioValueChartProps) {
         </div>
       </div>
 
-      <svg viewBox={`0 0 ${width} ${height}`} className="mx-auto block h-56 w-full overflow-visible">
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${width} ${height}`}
+        className="mx-auto block h-56 w-full touch-none overflow-visible"
+        onMouseMove={(e) => handleScrub(e.clientX)}
+        onMouseLeave={() => setSelection({ mode: "end" })}
+        onTouchStart={(e) => { e.preventDefault(); handleScrub(e.touches[0]!.clientX); }}
+        onTouchMove={(e) => { e.preventDefault(); handleScrub(e.touches[0]!.clientX); }}
+        onTouchEnd={() => setSelection({ mode: "end" })}
+      >
         <defs>
           <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="rgba(56, 189, 248, 0.35)" />
@@ -132,19 +163,64 @@ export function PortfolioValueChart({ points }: PortfolioValueChartProps) {
         {path ? (
           <path d={path} fill="none" stroke="rgba(56, 189, 248, 0.95)" strokeWidth="2.5" strokeLinejoin="round" />
         ) : null}
-        {plotted.map((p) => (
+
+        {/* Inactive data points */}
+        {plotted.map((p) => p.index !== selectedIndex && (
           <circle
             key={p.date}
             cx={p.x}
             cy={p.y}
-            r={p.index === selectedIndex ? 5 : 3.5}
-            fill={p.index === selectedIndex ? "rgba(125, 211, 252, 0.95)" : "rgba(56, 189, 248, 0.55)"}
+            r={3.5}
+            fill="rgba(56, 189, 248, 0.55)"
             stroke="rgba(0,0,0,0.35)"
             strokeWidth="1"
-            className="cursor-pointer"
-            onClick={() => setSelection({ mode: "index", i: p.index })}
+            style={{ pointerEvents: "none" }}
           />
         ))}
+
+        {/* Active point — vertical crosshair + highlighted dot */}
+        {active ? (
+          <g style={{ pointerEvents: "none" }}>
+            <line
+              x1={active.x}
+              y1={padding.top}
+              x2={active.x}
+              y2={padding.top + innerHeight}
+              stroke="rgba(125, 211, 252, 0.35)"
+              strokeWidth="1"
+              strokeDasharray="3 3"
+            />
+            <circle
+              cx={active.x}
+              cy={active.y}
+              r={5}
+              fill="rgba(125, 211, 252, 0.95)"
+              stroke="rgba(0,0,0,0.35)"
+              strokeWidth="1"
+            />
+          </g>
+        ) : null}
+
+        {/* Full-height invisible hit strips — one per data point */}
+        {plotted.map((p, i) => {
+          const prev = plotted[i - 1];
+          const next = plotted[i + 1];
+          const halfLeft = prev ? (p.x - prev.x) / 2 : 0;
+          const halfRight = next ? (next.x - p.x) / 2 : 0;
+          const stripX = p.x - halfLeft;
+          const stripW = halfLeft + halfRight;
+          return (
+            <rect
+              key={`hit-${p.date}`}
+              x={stripX}
+              y={padding.top}
+              width={stripW || innerWidth}
+              height={innerHeight}
+              fill="transparent"
+              style={{ cursor: "crosshair" }}
+            />
+          );
+        })}
       </svg>
 
       {sorted.length === 1 ? (
