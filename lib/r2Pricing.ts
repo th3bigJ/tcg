@@ -1,10 +1,11 @@
 /**
- * Fetches per-set pricing JSON from R2.
- * Files are uploaded by scripts/exportPricingJson.ts and updated daily.
+ * Fetches per-set pricing JSON from R2 (`pricing/card-pricing/{setCode}.json`).
+ * Updated by the pricing scrape job (`jobScrapePricing` / `scrape:pricing`).
  *
  * Each file shape: { [externalId]: { scrydex, tcgplayer, cardmarket } }
  */
 
+import { r2SinglesCardPricingPrefix } from "@/lib/r2BucketLayout";
 import type { CardPricingEntry, SetPricingMap } from "@/lib/staticDataTypes";
 
 export type { CardPricingEntry, SetPricingMap };
@@ -69,7 +70,7 @@ export async function getPricingForSet(setCode: string): Promise<SetPricingMap |
   const base = getPricingBaseUrl();
   if (!base) return null;
 
-  const url = `${base}/pricing/${setCode}.json`;
+  const url = `${base}/${r2SinglesCardPricingPrefix}/${setCode}.json`;
 
   try {
     const res = await fetch(url, {

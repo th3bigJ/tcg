@@ -1,6 +1,10 @@
 import fs from "fs";
 import path from "path";
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  r2SealedPokedataCatalogKey,
+  r2SealedPokedataPricesSnapshotKey,
+} from "@/lib/r2BucketLayout";
 import { fetchGbpConversionMultipliers } from "../marketPriceExchange";
 import { updateSealedPriceHistory } from "../r2SealedPriceHistory";
 import { uploadSealedPriceTrends } from "../r2SealedPriceTrends";
@@ -466,8 +470,8 @@ export async function runScrapePokedataProducts(opts: ScrapePokedataProductsOpti
   const s3 = buildS3Client();
   const bucket = getBucket();
 
-  const productsKey = `sealed-products/pokedata/${slug}-products.json`;
-  const pricesKey = `sealed-products/pokedata/${slug}-prices.json`;
+  const productsKey = r2SealedPokedataCatalogKey(slug);
+  const pricesKey = r2SealedPokedataPricesSnapshotKey(slug);
 
   if (mode === "all" || mode === "products") {
     const imageUploadResult = await uploadProductImages(s3, bucket, filteredProducts, imageConcurrency, skipExistingImages, slugParts);

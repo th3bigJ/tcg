@@ -1,4 +1,5 @@
 import { PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
+import { r2SinglesPriceHistoryPrefix } from "@/lib/r2BucketLayout";
 import { buildPricingLookupIds } from "@/lib/r2Pricing";
 import type {
   CardPriceHistory,
@@ -192,7 +193,7 @@ export async function getPriceHistoryForSet(setCode: string): Promise<SetPriceHi
   const base = getPriceHistoryBaseUrl();
   if (!base) return null;
 
-  const url = `${base}/price-history/${setCode}.json`;
+  const url = `${base}/${r2SinglesPriceHistoryPrefix}/${setCode}.json`;
   try {
     const res = await fetch(url, {
       next: { revalidate: process.env.NODE_ENV === "development" ? 0 : 86400 },
@@ -269,7 +270,7 @@ export async function updatePriceHistory(
   await s3.send(
     new PutObjectCommand({
       Bucket: getR2Bucket(),
-      Key: `price-history/${setCode}.json`,
+      Key: `${r2SinglesPriceHistoryPrefix}/${setCode}.json`,
       Body: JSON.stringify(historyMap),
       ContentType: "application/json",
     }),

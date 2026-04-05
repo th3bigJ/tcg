@@ -11,6 +11,10 @@
 import fs from "fs";
 import path from "path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  R2_SEALED_POKEDATA_DEFAULT_SLUG,
+  r2SealedPokedataPriceHistoryKey,
+} from "../lib/r2BucketLayout";
 import { fetchGbpConversionMultipliers } from "../lib/marketPriceExchange";
 import {
   mergeDailySeriesIntoWindow,
@@ -46,7 +50,7 @@ const OUTPUT_DIR = path.join(process.cwd(), "data", "sealed-products");
 const ENV_FILE = path.join(process.cwd(), ".env.local");
 const DEFAULT_TCG = "Pokemon";
 const DEFAULT_LANGUAGE = "ENGLISH";
-const HISTORY_KEY = "sealed-products/pokedata/pokedata-english-pokemon-price-history.json";
+const HISTORY_KEY = r2SealedPokedataPriceHistoryKey(R2_SEALED_POKEDATA_DEFAULT_SLUG);
 
 const dryRun = process.argv.includes("--dry-run");
 const requestedSeriesRaw = readArgValue("--series=");

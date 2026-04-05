@@ -11,7 +11,7 @@
     "cardCountOfficial": 88,
     "seriesName": "Mega Evolution",
     "seriesSlug": "mega-evolution-me",
-    "logoSrc": "sets/logo/logo.png",
+    "logoSrc": "images/sets/logo/logo.png",
     "symbolSrc": null
   },
   {
@@ -26,8 +26,8 @@
     "cardCountOfficial": 217,
     "seriesName": "Mega Evolution",
     "seriesSlug": "mega-evolution-me",
-    "logoSrc": "sets/logo/me02.5.webp",
-    "symbolSrc": "sets/symbol/me02.5.webp"
+    "logoSrc": "images/sets/logo/me02.5.webp",
+    "symbolSrc": "images/sets/symbol/me02.5.webp"
   },
   {
     "id": "571",
@@ -41,8 +41,8 @@
     "cardCountOfficial": 94,
     "seriesName": "Mega Evolution",
     "seriesSlug": "mega-evolution-me",
-    "logoSrc": "sets/logo/me02.webp",
-    "symbolSrc": "sets/symbol/me2-symbol.png"
+    "logoSrc": "images/sets/logo/me02.webp",
+    "symbolSrc": "images/sets/symbol/me2-symbol.png"
   },
   {
     "id": "569",
@@ -56,8 +56,8 @@
     "cardCountOfficial": 0,
     "seriesName": "Mega Evolution",
     "seriesSlug": "mega-evolution-me",
-    "logoSrc": "sets/logo/hgssp.webp",
-    "symbolSrc": "sets/symbol/hgssp.webp"
+    "logoSrc": "images/sets/logo/hgssp.webp",
+    "symbolSrc": "images/sets/symbol/hgssp.webp"
   },
   {
     "id": "568",
@@ -71,8 +71,8 @@
     "cardCountOfficial": 132,
     "seriesName": "Mega Evolution",
     "seriesSlug": "mega-evolution-me",
-    "logoSrc": "sets/logo/me01.webp",
-    "symbolSrc": "sets/symbol/me01.webp"
+    "logoSrc": "images/sets/logo/me01.webp",
+    "symbolSrc": "images/sets/symbol/me01.webp"
   },
   {
     "id": "575",
@@ -86,8 +86,8 @@
     "cardCountOfficial": 8,
     "seriesName": "Mega Evolution",
     "seriesSlug": "mega-evolution-me",
-    "logoSrc": "sets/logo/mee-logo.webp",
-    "symbolSrc": "sets/symbol/mee-symbol.png"
+    "logoSrc": "images/sets/logo/mee-logo.webp",
+    "symbolSrc": "images/sets/symbol/mee-symbol.png"
   },
   {
     "id": "565",
@@ -101,8 +101,8 @@
     "cardCountOfficial": 86,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv10.5w.webp",
-    "symbolSrc": "sets/symbol/sv10.5w.webp"
+    "logoSrc": "images/sets/logo/sv10.5w.webp",
+    "symbolSrc": "images/sets/symbol/sv10.5w.webp"
   },
   {
     "id": "564",
@@ -116,8 +116,8 @@
     "cardCountOfficial": 86,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv10.5b.webp",
-    "symbolSrc": "sets/symbol/sv10.5b.webp"
+    "logoSrc": "images/sets/logo/sv10.5b.webp",
+    "symbolSrc": "images/sets/symbol/sv10.5b.webp"
   },
   {
     "id": "562",
@@ -131,8 +131,8 @@
     "cardCountOfficial": 182,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv10.webp",
-    "symbolSrc": "sets/symbol/sv10.webp"
+    "logoSrc": "images/sets/logo/sv10.webp",
+    "symbolSrc": "images/sets/symbol/sv10.webp"
   },
   {
     "id": "559",
@@ -146,8 +146,8 @@
     "cardCountOfficial": 159,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv09.webp",
-    "symbolSrc": "sets/symbol/sv09.webp"
+    "logoSrc": "images/sets/logo/sv09.webp",
+    "symbolSrc": "images/sets/symbol/sv09.webp"
   },
   {
     "id": "555",
@@ -161,8 +161,8 @@
     "cardCountOfficial": 131,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv08.5.webp",
-    "symbolSrc": "sets/symbol/sv8pt5-symbol.png"
+    "logoSrc": "images/sets/logo/sv08.5.webp",
+    "symbolSrc": "images/sets/symbol/sv8pt5-symbol.png"
   },
   {
     "id": "580",
@@ -176,8 +176,8 @@
     "cardCountOfficial": 15,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/2024sv-logo.jpg",
-    "symbolSrc": "sets/symbol/2024sv-symbol.jpg"
+    "logoSrc": "images/sets/logo/2024sv-logo.jpg",
+    "symbolSrc": "images/sets/symbol/2024sv-symbol.jpg"
   },
   {
     "id": "553",
@@ -191,8 +191,8 @@
     "cardCountOfficial": 191,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv08.webp",
-    "symbolSrc": "sets/symbol/sv8-symbol.png"
+    "logoSrc": "images/sets/logo/sv08.webp",
+    "symbolSrc": "images/sets/symbol/sv8-symbol.png"
   },
   {
     "id": "550",
@@ -206,8 +206,8 @@
     "cardCountOfficial": 142,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv07.webp",
-    "symbolSrc": "sets/symbol/sv7-symbol.png"
+    "logoSrc": "images/sets/logo/sv07.webp",
+    "symbolSrc": "images/sets/symbol/sv7-symbol.png"
   },
   {
     "id": "549",
@@ -221,8 +221,8 @@
     "cardCountOfficial": 64,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv06.5.webp",
-    "symbolSrc": "sets/symbol/sv06.5.webp"
+    "logoSrc": "images/sets/logo/sv06.5.webp",
+    "symbolSrc": "images/sets/symbol/sv06.5.webp"
   },
   {
     "id": "548",
@@ -236,8 +236,8 @@
     "cardCountOfficial": 167,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv06.webp",
-    "symbolSrc": "sets/symbol/sv06.webp"
+    "logoSrc": "images/sets/logo/sv06.webp",
+    "symbolSrc": "images/sets/symbol/sv06.webp"
   },
   {
     "id": "547",
@@ -251,8 +251,8 @@
     "cardCountOfficial": 162,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv5-logo.png",
-    "symbolSrc": "sets/symbol/sv05.webp"
+    "logoSrc": "images/sets/logo/sv5-logo.png",
+    "symbolSrc": "images/sets/symbol/sv05.webp"
   },
   {
     "id": "546",
@@ -266,8 +266,8 @@
     "cardCountOfficial": 91,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv04.5.webp",
-    "symbolSrc": "sets/symbol/sv04.5.webp"
+    "logoSrc": "images/sets/logo/sv04.5.webp",
+    "symbolSrc": "images/sets/symbol/sv04.5.webp"
   },
   {
     "id": "545",
@@ -281,8 +281,8 @@
     "cardCountOfficial": 182,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv04.webp",
-    "symbolSrc": "sets/symbol/sv04.webp"
+    "logoSrc": "images/sets/logo/sv04.webp",
+    "symbolSrc": "images/sets/symbol/sv04.webp"
   },
   {
     "id": "544",
@@ -296,8 +296,8 @@
     "cardCountOfficial": 165,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv03.5.webp",
-    "symbolSrc": "sets/symbol/sv03.5.webp"
+    "logoSrc": "images/sets/logo/sv03.5.webp",
+    "symbolSrc": "images/sets/symbol/sv03.5.webp"
   },
   {
     "id": "543",
@@ -311,8 +311,8 @@
     "cardCountOfficial": 197,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv03.webp",
-    "symbolSrc": "sets/symbol/sv03.webp"
+    "logoSrc": "images/sets/logo/sv03.webp",
+    "symbolSrc": "images/sets/symbol/sv03.webp"
   },
   {
     "id": "579",
@@ -326,8 +326,8 @@
     "cardCountOfficial": 15,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/2023sv-logo.jpg",
-    "symbolSrc": "sets/symbol/2023sv-symbol.jpg"
+    "logoSrc": "images/sets/logo/2023sv-logo.jpg",
+    "symbolSrc": "images/sets/symbol/2023sv-symbol.jpg"
   },
   {
     "id": "542",
@@ -341,8 +341,8 @@
     "cardCountOfficial": 193,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv02.webp",
-    "symbolSrc": "sets/symbol/sv02.webp"
+    "logoSrc": "images/sets/logo/sv02.webp",
+    "symbolSrc": "images/sets/symbol/sv02.webp"
   },
   {
     "id": "577",
@@ -356,8 +356,8 @@
     "cardCountOfficial": 24,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sve-logo.png",
-    "symbolSrc": "sets/symbol/sve-symbol.png"
+    "logoSrc": "images/sets/logo/sve-logo.png",
+    "symbolSrc": "images/sets/symbol/sve-symbol.png"
   },
   {
     "id": "541",
@@ -371,8 +371,8 @@
     "cardCountOfficial": 198,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/sv01.webp",
-    "symbolSrc": "sets/symbol/sv01.webp"
+    "logoSrc": "images/sets/logo/sv01.webp",
+    "symbolSrc": "images/sets/symbol/sv01.webp"
   },
   {
     "id": "540",
@@ -386,8 +386,8 @@
     "cardCountOfficial": 0,
     "seriesName": "Scarlet & Violet",
     "seriesSlug": "scarlet-violet-sv",
-    "logoSrc": "sets/logo/svp-logo.png",
-    "symbolSrc": "sets/symbol/svp-symbol.png"
+    "logoSrc": "images/sets/logo/svp-logo.png",
+    "symbolSrc": "images/sets/symbol/svp-symbol.png"
   },
   {
     "id": "539",
@@ -401,8 +401,8 @@
     "cardCountOfficial": 159,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh12.5.webp",
-    "symbolSrc": "sets/symbol/swsh12.5.webp"
+    "logoSrc": "images/sets/logo/swsh12.5.webp",
+    "symbolSrc": "images/sets/symbol/swsh12.5.webp"
   },
   {
     "id": "538",
@@ -416,8 +416,8 @@
     "cardCountOfficial": 195,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh12.webp",
-    "symbolSrc": "sets/symbol/swsh12.webp"
+    "logoSrc": "images/sets/logo/swsh12.webp",
+    "symbolSrc": "images/sets/symbol/swsh12.webp"
   },
   {
     "id": "537",
@@ -431,8 +431,8 @@
     "cardCountOfficial": 196,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh11.webp",
-    "symbolSrc": "sets/symbol/swsh11.webp"
+    "logoSrc": "images/sets/logo/swsh11.webp",
+    "symbolSrc": "images/sets/symbol/swsh11.webp"
   },
   {
     "id": "578",
@@ -446,8 +446,8 @@
     "cardCountOfficial": 15,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/2022swsh-logo.jpg",
-    "symbolSrc": "sets/symbol/2022swsh-symbol.jpg"
+    "logoSrc": "images/sets/logo/2022swsh-logo.jpg",
+    "symbolSrc": "images/sets/symbol/2022swsh-symbol.jpg"
   },
   {
     "id": "536",
@@ -461,8 +461,8 @@
     "cardCountOfficial": 78,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh10.5.webp",
-    "symbolSrc": "sets/symbol/swsh10.5.webp"
+    "logoSrc": "images/sets/logo/swsh10.5.webp",
+    "symbolSrc": "images/sets/symbol/swsh10.5.webp"
   },
   {
     "id": "535",
@@ -476,8 +476,8 @@
     "cardCountOfficial": 189,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh10.webp",
-    "symbolSrc": "sets/symbol/swsh10.webp"
+    "logoSrc": "images/sets/logo/swsh10.webp",
+    "symbolSrc": "images/sets/symbol/swsh10.webp"
   },
   {
     "id": "534",
@@ -491,8 +491,8 @@
     "cardCountOfficial": 172,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh9.webp",
-    "symbolSrc": "sets/symbol/swsh9.webp"
+    "logoSrc": "images/sets/logo/swsh9.webp",
+    "symbolSrc": "images/sets/symbol/swsh9.webp"
   },
   {
     "id": "533",
@@ -506,8 +506,8 @@
     "cardCountOfficial": 264,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh8.webp",
-    "symbolSrc": "sets/symbol/swsh8.webp"
+    "logoSrc": "images/sets/logo/swsh8.webp",
+    "symbolSrc": "images/sets/symbol/swsh8.webp"
   },
   {
     "id": "532",
@@ -521,8 +521,8 @@
     "cardCountOfficial": 25,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/cel25.webp",
-    "symbolSrc": "sets/symbol/cel25.webp"
+    "logoSrc": "images/sets/logo/cel25.webp",
+    "symbolSrc": "images/sets/symbol/cel25.webp"
   },
   {
     "id": "531",
@@ -536,8 +536,8 @@
     "cardCountOfficial": 203,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh7.webp",
-    "symbolSrc": "sets/symbol/swsh7.webp"
+    "logoSrc": "images/sets/logo/swsh7.webp",
+    "symbolSrc": "images/sets/symbol/swsh7.webp"
   },
   {
     "id": "530",
@@ -551,8 +551,8 @@
     "cardCountOfficial": 198,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh6.webp",
-    "symbolSrc": "sets/symbol/swsh6.webp"
+    "logoSrc": "images/sets/logo/swsh6.webp",
+    "symbolSrc": "images/sets/symbol/swsh6.webp"
   },
   {
     "id": "529",
@@ -566,8 +566,8 @@
     "cardCountOfficial": 163,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh5.webp",
-    "symbolSrc": "sets/symbol/swsh5.webp"
+    "logoSrc": "images/sets/logo/swsh5.webp",
+    "symbolSrc": "images/sets/symbol/swsh5.webp"
   },
   {
     "id": "528",
@@ -581,8 +581,8 @@
     "cardCountOfficial": 72,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh4.5.webp",
-    "symbolSrc": "sets/symbol/swsh4.5.webp"
+    "logoSrc": "images/sets/logo/swsh4.5.webp",
+    "symbolSrc": "images/sets/symbol/swsh4.5.webp"
   },
   {
     "id": "527",
@@ -596,8 +596,8 @@
     "cardCountOfficial": 25,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/mcd21-logo.png",
-    "symbolSrc": "sets/symbol/2021swsh.webp"
+    "logoSrc": "images/sets/logo/mcd21-logo.png",
+    "symbolSrc": "images/sets/symbol/2021swsh.webp"
   },
   {
     "id": "526",
@@ -611,8 +611,8 @@
     "cardCountOfficial": 185,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh4.webp",
-    "symbolSrc": "sets/symbol/swsh4.webp"
+    "logoSrc": "images/sets/logo/swsh4.webp",
+    "symbolSrc": "images/sets/symbol/swsh4.webp"
   },
   {
     "id": "525",
@@ -626,8 +626,8 @@
     "cardCountOfficial": 73,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh3.5.webp",
-    "symbolSrc": "sets/symbol/swsh3.5.webp"
+    "logoSrc": "images/sets/logo/swsh3.5.webp",
+    "symbolSrc": "images/sets/symbol/swsh3.5.webp"
   },
   {
     "id": "524",
@@ -641,8 +641,8 @@
     "cardCountOfficial": 5,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/fut2020.webp",
-    "symbolSrc": "sets/symbol/fut2020.webp"
+    "logoSrc": "images/sets/logo/fut2020.webp",
+    "symbolSrc": "images/sets/symbol/fut2020.webp"
   },
   {
     "id": "523",
@@ -656,8 +656,8 @@
     "cardCountOfficial": 189,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh3.webp",
-    "symbolSrc": "sets/symbol/swsh3.webp"
+    "logoSrc": "images/sets/logo/swsh3.webp",
+    "symbolSrc": "images/sets/symbol/swsh3.webp"
   },
   {
     "id": "522",
@@ -671,8 +671,8 @@
     "cardCountOfficial": 192,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh2.webp",
-    "symbolSrc": "sets/symbol/swsh2.webp"
+    "logoSrc": "images/sets/logo/swsh2.webp",
+    "symbolSrc": "images/sets/symbol/swsh2.webp"
   },
   {
     "id": "521",
@@ -686,8 +686,8 @@
     "cardCountOfficial": 202,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swsh1.webp",
-    "symbolSrc": "sets/symbol/swsh1.webp"
+    "logoSrc": "images/sets/logo/swsh1.webp",
+    "symbolSrc": "images/sets/symbol/swsh1.webp"
   },
   {
     "id": "520",
@@ -701,8 +701,8 @@
     "cardCountOfficial": 107,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/swshp.webp",
-    "symbolSrc": "sets/symbol/swshp.webp"
+    "logoSrc": "images/sets/logo/swshp.webp",
+    "symbolSrc": "images/sets/symbol/swshp.webp"
   },
   {
     "id": "519",
@@ -716,8 +716,8 @@
     "cardCountOfficial": 236,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm12.webp",
-    "symbolSrc": "sets/symbol/sm12.webp"
+    "logoSrc": "images/sets/logo/sm12.webp",
+    "symbolSrc": "images/sets/symbol/sm12.webp"
   },
   {
     "id": "518",
@@ -731,8 +731,8 @@
     "cardCountOfficial": 12,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/mcd19-logo.png",
-    "symbolSrc": "sets/symbol/mcd19-symbol.png"
+    "logoSrc": "images/sets/logo/mcd19-logo.png",
+    "symbolSrc": "images/sets/symbol/mcd19-symbol.png"
   },
   {
     "id": "517",
@@ -746,8 +746,8 @@
     "cardCountOfficial": 94,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sma-logo.png",
-    "symbolSrc": "sets/symbol/sma.webp"
+    "logoSrc": "images/sets/logo/sma-logo.png",
+    "symbolSrc": "images/sets/symbol/sma.webp"
   },
   {
     "id": "516",
@@ -761,8 +761,8 @@
     "cardCountOfficial": 68,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm115.webp",
-    "symbolSrc": "sets/symbol/sm115.webp"
+    "logoSrc": "images/sets/logo/sm115.webp",
+    "symbolSrc": "images/sets/symbol/sm115.webp"
   },
   {
     "id": "515",
@@ -776,8 +776,8 @@
     "cardCountOfficial": 236,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm11.webp",
-    "symbolSrc": "sets/symbol/sm11.webp"
+    "logoSrc": "images/sets/logo/sm11.webp",
+    "symbolSrc": "images/sets/symbol/sm11.webp"
   },
   {
     "id": "514",
@@ -791,8 +791,8 @@
     "cardCountOfficial": 214,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm10.webp",
-    "symbolSrc": "sets/symbol/sm10.webp"
+    "logoSrc": "images/sets/logo/sm10.webp",
+    "symbolSrc": "images/sets/symbol/sm10.webp"
   },
   {
     "id": "513",
@@ -806,8 +806,8 @@
     "cardCountOfficial": 18,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/det1.webp",
-    "symbolSrc": "sets/symbol/det1.webp"
+    "logoSrc": "images/sets/logo/det1.webp",
+    "symbolSrc": "images/sets/symbol/det1.webp"
   },
   {
     "id": "512",
@@ -821,8 +821,8 @@
     "cardCountOfficial": 181,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm9.webp",
-    "symbolSrc": "sets/symbol/sm9.webp"
+    "logoSrc": "images/sets/logo/sm9.webp",
+    "symbolSrc": "images/sets/symbol/sm9.webp"
   },
   {
     "id": "511",
@@ -836,8 +836,8 @@
     "cardCountOfficial": 214,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm8.webp",
-    "symbolSrc": "sets/symbol/sm8.webp"
+    "logoSrc": "images/sets/logo/sm8.webp",
+    "symbolSrc": "images/sets/symbol/sm8.webp"
   },
   {
     "id": "510",
@@ -851,8 +851,8 @@
     "cardCountOfficial": 12,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/mcd18-logo.png",
-    "symbolSrc": "sets/symbol/mcd18-symbol.png"
+    "logoSrc": "images/sets/logo/mcd18-logo.png",
+    "symbolSrc": "images/sets/symbol/mcd18-symbol.png"
   },
   {
     "id": "509",
@@ -866,8 +866,8 @@
     "cardCountOfficial": 70,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm75-logo.png",
-    "symbolSrc": "sets/symbol/sm75-symbol.png"
+    "logoSrc": "images/sets/logo/sm75-logo.png",
+    "symbolSrc": "images/sets/symbol/sm75-symbol.png"
   },
   {
     "id": "508",
@@ -881,8 +881,8 @@
     "cardCountOfficial": 168,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm7.webp",
-    "symbolSrc": "sets/symbol/sm7.webp"
+    "logoSrc": "images/sets/logo/sm7.webp",
+    "symbolSrc": "images/sets/symbol/sm7.webp"
   },
   {
     "id": "507",
@@ -896,8 +896,8 @@
     "cardCountOfficial": 131,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm6.webp",
-    "symbolSrc": "sets/symbol/sm6.webp"
+    "logoSrc": "images/sets/logo/sm6.webp",
+    "symbolSrc": "images/sets/symbol/sm6.webp"
   },
   {
     "id": "506",
@@ -911,8 +911,8 @@
     "cardCountOfficial": 156,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm5.webp",
-    "symbolSrc": "sets/symbol/sm5.webp"
+    "logoSrc": "images/sets/logo/sm5.webp",
+    "symbolSrc": "images/sets/symbol/sm5.webp"
   },
   {
     "id": "505",
@@ -926,8 +926,8 @@
     "cardCountOfficial": 111,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm4.webp",
-    "symbolSrc": "sets/symbol/sm4.webp"
+    "logoSrc": "images/sets/logo/sm4.webp",
+    "symbolSrc": "images/sets/symbol/sm4.webp"
   },
   {
     "id": "504",
@@ -941,8 +941,8 @@
     "cardCountOfficial": 73,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm35-logo.png",
-    "symbolSrc": "sets/symbol/sm35-symbol.png"
+    "logoSrc": "images/sets/logo/sm35-logo.png",
+    "symbolSrc": "images/sets/symbol/sm35-symbol.png"
   },
   {
     "id": "503",
@@ -956,8 +956,8 @@
     "cardCountOfficial": 147,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm3.webp",
-    "symbolSrc": "sets/symbol/sm3.webp"
+    "logoSrc": "images/sets/logo/sm3.webp",
+    "symbolSrc": "images/sets/symbol/sm3.webp"
   },
   {
     "id": "502",
@@ -971,8 +971,8 @@
     "cardCountOfficial": 12,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/mcd17-logo.png",
-    "symbolSrc": "sets/symbol/mcd17-symbol.png"
+    "logoSrc": "images/sets/logo/mcd17-logo.png",
+    "symbolSrc": "images/sets/symbol/mcd17-symbol.png"
   },
   {
     "id": "501",
@@ -986,8 +986,8 @@
     "cardCountOfficial": 145,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm2.webp",
-    "symbolSrc": "sets/symbol/sm2.webp"
+    "logoSrc": "images/sets/logo/sm2.webp",
+    "symbolSrc": "images/sets/symbol/sm2.webp"
   },
   {
     "id": "498",
@@ -1001,8 +1001,8 @@
     "cardCountOfficial": 236,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/smp.webp",
-    "symbolSrc": "sets/symbol/smp.webp"
+    "logoSrc": "images/sets/logo/smp.webp",
+    "symbolSrc": "images/sets/symbol/smp.webp"
   },
   {
     "id": "497",
@@ -1016,8 +1016,8 @@
     "cardCountOfficial": 149,
     "seriesName": "Sun & Moon",
     "seriesSlug": "sun-moon-sm",
-    "logoSrc": "sets/logo/sm1.webp",
-    "symbolSrc": "sets/symbol/sm1.webp"
+    "logoSrc": "images/sets/logo/sm1.webp",
+    "symbolSrc": "images/sets/symbol/sm1.webp"
   },
   {
     "id": "496",
@@ -1031,8 +1031,8 @@
     "cardCountOfficial": 108,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy12.webp",
-    "symbolSrc": "sets/symbol/xy12.webp"
+    "logoSrc": "images/sets/logo/xy12.webp",
+    "symbolSrc": "images/sets/symbol/xy12.webp"
   },
   {
     "id": "495",
@@ -1046,8 +1046,8 @@
     "cardCountOfficial": 12,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/mcd16-logo.png",
-    "symbolSrc": "sets/symbol/mcd16-symbol.png"
+    "logoSrc": "images/sets/logo/mcd16-logo.png",
+    "symbolSrc": "images/sets/symbol/mcd16-symbol.png"
   },
   {
     "id": "494",
@@ -1061,8 +1061,8 @@
     "cardCountOfficial": 114,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy11.webp",
-    "symbolSrc": "sets/symbol/xy11.webp"
+    "logoSrc": "images/sets/logo/xy11.webp",
+    "symbolSrc": "images/sets/symbol/xy11.webp"
   },
   {
     "id": "493",
@@ -1076,8 +1076,8 @@
     "cardCountOfficial": 124,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy10.webp",
-    "symbolSrc": "sets/symbol/xy10.webp"
+    "logoSrc": "images/sets/logo/xy10.webp",
+    "symbolSrc": "images/sets/symbol/xy10.webp"
   },
   {
     "id": "490",
@@ -1091,8 +1091,8 @@
     "cardCountOfficial": 83,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/g1.webp",
-    "symbolSrc": "sets/symbol/g1.webp"
+    "logoSrc": "images/sets/logo/g1.webp",
+    "symbolSrc": "images/sets/symbol/g1.webp"
   },
   {
     "id": "489",
@@ -1106,8 +1106,8 @@
     "cardCountOfficial": 122,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy9.webp",
-    "symbolSrc": "sets/symbol/xy9.webp"
+    "logoSrc": "images/sets/logo/xy9.webp",
+    "symbolSrc": "images/sets/symbol/xy9.webp"
   },
   {
     "id": "488",
@@ -1121,8 +1121,8 @@
     "cardCountOfficial": 12,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/mcd15-logo.png",
-    "symbolSrc": "sets/symbol/mcd15-symbol.png"
+    "logoSrc": "images/sets/logo/mcd15-logo.png",
+    "symbolSrc": "images/sets/symbol/mcd15-symbol.png"
   },
   {
     "id": "487",
@@ -1136,8 +1136,8 @@
     "cardCountOfficial": 162,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy8.webp",
-    "symbolSrc": "sets/symbol/xy8.webp"
+    "logoSrc": "images/sets/logo/xy8.webp",
+    "symbolSrc": "images/sets/symbol/xy8.webp"
   },
   {
     "id": "486",
@@ -1151,8 +1151,8 @@
     "cardCountOfficial": 98,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy7.webp",
-    "symbolSrc": "sets/symbol/xy7.webp"
+    "logoSrc": "images/sets/logo/xy7.webp",
+    "symbolSrc": "images/sets/symbol/xy7.webp"
   },
   {
     "id": "485",
@@ -1166,8 +1166,8 @@
     "cardCountOfficial": 108,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy6.webp",
-    "symbolSrc": "sets/symbol/xy6.webp"
+    "logoSrc": "images/sets/logo/xy6.webp",
+    "symbolSrc": "images/sets/symbol/xy6.webp"
   },
   {
     "id": "482",
@@ -1181,8 +1181,8 @@
     "cardCountOfficial": 34,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/dc1.webp",
-    "symbolSrc": "sets/symbol/dc1.webp"
+    "logoSrc": "images/sets/logo/dc1.webp",
+    "symbolSrc": "images/sets/symbol/dc1.webp"
   },
   {
     "id": "481",
@@ -1196,8 +1196,8 @@
     "cardCountOfficial": 160,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy5.webp",
-    "symbolSrc": "sets/symbol/xy5.webp"
+    "logoSrc": "images/sets/logo/xy5.webp",
+    "symbolSrc": "images/sets/symbol/xy5.webp"
   },
   {
     "id": "480",
@@ -1211,8 +1211,8 @@
     "cardCountOfficial": 119,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy4.webp",
-    "symbolSrc": "sets/symbol/xy4.webp"
+    "logoSrc": "images/sets/logo/xy4.webp",
+    "symbolSrc": "images/sets/symbol/xy4.webp"
   },
   {
     "id": "477",
@@ -1226,8 +1226,8 @@
     "cardCountOfficial": 111,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy3.webp",
-    "symbolSrc": "sets/symbol/xy3.webp"
+    "logoSrc": "images/sets/logo/xy3.webp",
+    "symbolSrc": "images/sets/symbol/xy3.webp"
   },
   {
     "id": "476",
@@ -1241,8 +1241,8 @@
     "cardCountOfficial": 12,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/mcd14-logo.png",
-    "symbolSrc": "sets/symbol/mcd14-symbol.png"
+    "logoSrc": "images/sets/logo/mcd14-logo.png",
+    "symbolSrc": "images/sets/symbol/mcd14-symbol.png"
   },
   {
     "id": "475",
@@ -1256,8 +1256,8 @@
     "cardCountOfficial": 106,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy2.webp",
-    "symbolSrc": "sets/symbol/xy2.webp"
+    "logoSrc": "images/sets/logo/xy2.webp",
+    "symbolSrc": "images/sets/symbol/xy2.webp"
   },
   {
     "id": "471",
@@ -1271,8 +1271,8 @@
     "cardCountOfficial": 146,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy1.webp",
-    "symbolSrc": "sets/symbol/xy1.webp"
+    "logoSrc": "images/sets/logo/xy1.webp",
+    "symbolSrc": "images/sets/symbol/xy1.webp"
   },
   {
     "id": "470",
@@ -1286,8 +1286,8 @@
     "cardCountOfficial": 39,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xy0.webp",
-    "symbolSrc": "sets/symbol/xy0.webp"
+    "logoSrc": "images/sets/logo/xy0.webp",
+    "symbolSrc": "images/sets/symbol/xy0.webp"
   },
   {
     "id": "469",
@@ -1301,8 +1301,8 @@
     "cardCountOfficial": 113,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw11.webp",
-    "symbolSrc": "sets/symbol/bw11.webp"
+    "logoSrc": "images/sets/logo/bw11.webp",
+    "symbolSrc": "images/sets/symbol/bw11.webp"
   },
   {
     "id": "467",
@@ -1316,8 +1316,8 @@
     "cardCountOfficial": 211,
     "seriesName": "XY",
     "seriesSlug": "xy-xy",
-    "logoSrc": "sets/logo/xyp.webp",
-    "symbolSrc": "sets/symbol/xyp.webp"
+    "logoSrc": "images/sets/logo/xyp.webp",
+    "symbolSrc": "images/sets/symbol/xyp.webp"
   },
   {
     "id": "466",
@@ -1331,8 +1331,8 @@
     "cardCountOfficial": 101,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw10.webp",
-    "symbolSrc": "sets/symbol/bw10.webp"
+    "logoSrc": "images/sets/logo/bw10.webp",
+    "symbolSrc": "images/sets/symbol/bw10.webp"
   },
   {
     "id": "465",
@@ -1346,8 +1346,8 @@
     "cardCountOfficial": 116,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw9.webp",
-    "symbolSrc": "sets/symbol/bw9.webp"
+    "logoSrc": "images/sets/logo/bw9.webp",
+    "symbolSrc": "images/sets/symbol/bw9.webp"
   },
   {
     "id": "464",
@@ -1361,8 +1361,8 @@
     "cardCountOfficial": 135,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw8.webp",
-    "symbolSrc": "sets/symbol/bw8.webp"
+    "logoSrc": "images/sets/logo/bw8.webp",
+    "symbolSrc": "images/sets/symbol/bw8.webp"
   },
   {
     "id": "463",
@@ -1376,8 +1376,8 @@
     "cardCountOfficial": 149,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw7.webp",
-    "symbolSrc": "sets/symbol/bw7.webp"
+    "logoSrc": "images/sets/logo/bw7.webp",
+    "symbolSrc": "images/sets/symbol/bw7.webp"
   },
   {
     "id": "462",
@@ -1391,8 +1391,8 @@
     "cardCountOfficial": 20,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/dv1.webp",
-    "symbolSrc": "sets/symbol/dv1.webp"
+    "logoSrc": "images/sets/logo/dv1.webp",
+    "symbolSrc": "images/sets/symbol/dv1.webp"
   },
   {
     "id": "461",
@@ -1406,8 +1406,8 @@
     "cardCountOfficial": 124,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw6.webp",
-    "symbolSrc": "sets/symbol/bw6.webp"
+    "logoSrc": "images/sets/logo/bw6.webp",
+    "symbolSrc": "images/sets/symbol/bw6.webp"
   },
   {
     "id": "460",
@@ -1421,8 +1421,8 @@
     "cardCountOfficial": 12,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/mcd12-logo.png",
-    "symbolSrc": "sets/symbol/mcd12-symbol.png"
+    "logoSrc": "images/sets/logo/mcd12-logo.png",
+    "symbolSrc": "images/sets/symbol/mcd12-symbol.png"
   },
   {
     "id": "459",
@@ -1436,8 +1436,8 @@
     "cardCountOfficial": 108,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw5.webp",
-    "symbolSrc": "sets/symbol/bw5.webp"
+    "logoSrc": "images/sets/logo/bw5.webp",
+    "symbolSrc": "images/sets/symbol/bw5.webp"
   },
   {
     "id": "458",
@@ -1451,8 +1451,8 @@
     "cardCountOfficial": 99,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw4.webp",
-    "symbolSrc": "sets/symbol/bw4.webp"
+    "logoSrc": "images/sets/logo/bw4.webp",
+    "symbolSrc": "images/sets/symbol/bw4.webp"
   },
   {
     "id": "457",
@@ -1466,8 +1466,8 @@
     "cardCountOfficial": 101,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw3.webp",
-    "symbolSrc": "sets/symbol/bw3.webp"
+    "logoSrc": "images/sets/logo/bw3.webp",
+    "symbolSrc": "images/sets/symbol/bw3.webp"
   },
   {
     "id": "454",
@@ -1481,8 +1481,8 @@
     "cardCountOfficial": 98,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw2.webp",
-    "symbolSrc": "sets/symbol/bw2.webp"
+    "logoSrc": "images/sets/logo/bw2.webp",
+    "symbolSrc": "images/sets/symbol/bw2.webp"
   },
   {
     "id": "453",
@@ -1496,8 +1496,8 @@
     "cardCountOfficial": 12,
     "seriesName": "McDonald's Collection",
     "seriesSlug": "mcdonald-s-collection-mc",
-    "logoSrc": "sets/logo/mcd11-logo.png",
-    "symbolSrc": "sets/symbol/mcd11-symbol.png"
+    "logoSrc": "images/sets/logo/mcd11-logo.png",
+    "symbolSrc": "images/sets/symbol/mcd11-symbol.png"
   },
   {
     "id": "452",
@@ -1511,8 +1511,8 @@
     "cardCountOfficial": 101,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bwp.webp",
-    "symbolSrc": "sets/symbol/bwp.webp"
+    "logoSrc": "images/sets/logo/bwp.webp",
+    "symbolSrc": "images/sets/symbol/bwp.webp"
   },
   {
     "id": "451",
@@ -1526,8 +1526,8 @@
     "cardCountOfficial": 114,
     "seriesName": "Black & White",
     "seriesSlug": "black-white-bw",
-    "logoSrc": "sets/logo/bw1.webp",
-    "symbolSrc": "sets/symbol/bw1.webp"
+    "logoSrc": "images/sets/logo/bw1.webp",
+    "symbolSrc": "images/sets/symbol/bw1.webp"
   },
   {
     "id": "450",
@@ -1541,8 +1541,8 @@
     "cardCountOfficial": 95,
     "seriesName": "Call of Legends",
     "seriesSlug": "call-of-legends-col",
-    "logoSrc": "sets/logo/col1.webp",
-    "symbolSrc": "sets/symbol/col1.webp"
+    "logoSrc": "images/sets/logo/col1.webp",
+    "symbolSrc": "images/sets/symbol/col1.webp"
   },
   {
     "id": "449",
@@ -1556,8 +1556,8 @@
     "cardCountOfficial": 102,
     "seriesName": "HeartGold & SoulSilver",
     "seriesSlug": "heartgold-soulsilver-hgss",
-    "logoSrc": "sets/logo/hgss4.webp",
-    "symbolSrc": "sets/symbol/hgss4.webp"
+    "logoSrc": "images/sets/logo/hgss4.webp",
+    "symbolSrc": "images/sets/symbol/hgss4.webp"
   },
   {
     "id": "448",
@@ -1571,8 +1571,8 @@
     "cardCountOfficial": 90,
     "seriesName": "HeartGold & SoulSilver",
     "seriesSlug": "heartgold-soulsilver-hgss",
-    "logoSrc": "sets/logo/hgss3.webp",
-    "symbolSrc": "sets/symbol/hgss3.webp"
+    "logoSrc": "images/sets/logo/hgss3.webp",
+    "symbolSrc": "images/sets/symbol/hgss3.webp"
   },
   {
     "id": "447",
@@ -1586,8 +1586,8 @@
     "cardCountOfficial": 95,
     "seriesName": "HeartGold & SoulSilver",
     "seriesSlug": "heartgold-soulsilver-hgss",
-    "logoSrc": "sets/logo/hgss2.webp",
-    "symbolSrc": "sets/symbol/hgss2.webp"
+    "logoSrc": "images/sets/logo/hgss2.webp",
+    "symbolSrc": "images/sets/symbol/hgss2.webp"
   },
   {
     "id": "444",
@@ -1601,8 +1601,8 @@
     "cardCountOfficial": 25,
     "seriesName": "HeartGold & SoulSilver",
     "seriesSlug": "heartgold-soulsilver-hgss",
-    "logoSrc": "sets/logo/hgssp.webp",
-    "symbolSrc": "sets/symbol/hgssp.webp"
+    "logoSrc": "images/sets/logo/hgssp.webp",
+    "symbolSrc": "images/sets/symbol/hgssp.webp"
   },
   {
     "id": "443",
@@ -1616,8 +1616,8 @@
     "cardCountOfficial": 123,
     "seriesName": "HeartGold & SoulSilver",
     "seriesSlug": "heartgold-soulsilver-hgss",
-    "logoSrc": "sets/logo/hgss1.webp",
-    "symbolSrc": "sets/symbol/hgss1.webp"
+    "logoSrc": "images/sets/logo/hgss1.webp",
+    "symbolSrc": "images/sets/symbol/hgss1.webp"
   },
   {
     "id": "442",
@@ -1631,8 +1631,8 @@
     "cardCountOfficial": 16,
     "seriesName": "Platinum",
     "seriesSlug": "platinum-pl",
-    "logoSrc": "sets/logo/ru1.webp",
-    "symbolSrc": "sets/symbol/ru1.webp"
+    "logoSrc": "images/sets/logo/ru1.webp",
+    "symbolSrc": "images/sets/symbol/ru1.webp"
   },
   {
     "id": "441",
@@ -1646,8 +1646,8 @@
     "cardCountOfficial": 99,
     "seriesName": "Platinum",
     "seriesSlug": "platinum-pl",
-    "logoSrc": "sets/logo/pl4.webp",
-    "symbolSrc": "sets/symbol/pl4.webp"
+    "logoSrc": "images/sets/logo/pl4.webp",
+    "symbolSrc": "images/sets/symbol/pl4.webp"
   },
   {
     "id": "440",
@@ -1661,8 +1661,8 @@
     "cardCountOfficial": 147,
     "seriesName": "Platinum",
     "seriesSlug": "platinum-pl",
-    "logoSrc": "sets/logo/pl3.webp",
-    "symbolSrc": "sets/symbol/pl3.webp"
+    "logoSrc": "images/sets/logo/pl3.webp",
+    "symbolSrc": "images/sets/symbol/pl3.webp"
   },
   {
     "id": "439",
@@ -1676,8 +1676,8 @@
     "cardCountOfficial": 111,
     "seriesName": "Platinum",
     "seriesSlug": "platinum-pl",
-    "logoSrc": "sets/logo/pl2.webp",
-    "symbolSrc": "sets/symbol/pl2.webp"
+    "logoSrc": "images/sets/logo/pl2.webp",
+    "symbolSrc": "images/sets/symbol/pl2.webp"
   },
   {
     "id": "438",
@@ -1691,8 +1691,8 @@
     "cardCountOfficial": 17,
     "seriesName": "POP",
     "seriesSlug": "pop-pop",
-    "logoSrc": "sets/logo/pop9.webp",
-    "symbolSrc": "sets/symbol/pop9.webp"
+    "logoSrc": "images/sets/logo/pop9.webp",
+    "symbolSrc": "images/sets/symbol/pop9.webp"
   },
   {
     "id": "437",
@@ -1706,8 +1706,8 @@
     "cardCountOfficial": 127,
     "seriesName": "Platinum",
     "seriesSlug": "platinum-pl",
-    "logoSrc": "sets/logo/pl1.webp",
-    "symbolSrc": "sets/symbol/pl1.webp"
+    "logoSrc": "images/sets/logo/pl1.webp",
+    "symbolSrc": "images/sets/symbol/pl1.webp"
   },
   {
     "id": "436",
@@ -1721,8 +1721,8 @@
     "cardCountOfficial": 100,
     "seriesName": "Diamond & Pearl",
     "seriesSlug": "diamond-pearl-dp",
-    "logoSrc": "sets/logo/dp7.webp",
-    "symbolSrc": "sets/symbol/dp7.webp"
+    "logoSrc": "images/sets/logo/dp7.webp",
+    "symbolSrc": "images/sets/symbol/dp7.webp"
   },
   {
     "id": "435",
@@ -1736,8 +1736,8 @@
     "cardCountOfficial": 17,
     "seriesName": "POP",
     "seriesSlug": "pop-pop",
-    "logoSrc": "sets/logo/pop8.webp",
-    "symbolSrc": "sets/symbol/pop8.webp"
+    "logoSrc": "images/sets/logo/pop8.webp",
+    "symbolSrc": "images/sets/symbol/pop8.webp"
   },
   {
     "id": "434",
@@ -1751,8 +1751,8 @@
     "cardCountOfficial": 146,
     "seriesName": "Diamond & Pearl",
     "seriesSlug": "diamond-pearl-dp",
-    "logoSrc": "sets/logo/dp6.webp",
-    "symbolSrc": "sets/symbol/dp6.webp"
+    "logoSrc": "images/sets/logo/dp6.webp",
+    "symbolSrc": "images/sets/symbol/dp6.webp"
   },
   {
     "id": "433",
@@ -1766,8 +1766,8 @@
     "cardCountOfficial": 100,
     "seriesName": "Diamond & Pearl",
     "seriesSlug": "diamond-pearl-dp",
-    "logoSrc": "sets/logo/dp5.webp",
-    "symbolSrc": "sets/symbol/dp5.webp"
+    "logoSrc": "images/sets/logo/dp5.webp",
+    "symbolSrc": "images/sets/symbol/dp5.webp"
   },
   {
     "id": "432",
@@ -1781,8 +1781,8 @@
     "cardCountOfficial": 17,
     "seriesName": "POP",
     "seriesSlug": "pop-pop",
-    "logoSrc": "sets/logo/pop7.webp",
-    "symbolSrc": "sets/symbol/pop7.webp"
+    "logoSrc": "images/sets/logo/pop7.webp",
+    "symbolSrc": "images/sets/symbol/pop7.webp"
   },
   {
     "id": "431",
@@ -1796,8 +1796,8 @@
     "cardCountOfficial": 106,
     "seriesName": "Diamond & Pearl",
     "seriesSlug": "diamond-pearl-dp",
-    "logoSrc": "sets/logo/dp4.webp",
-    "symbolSrc": "sets/symbol/dp4.webp"
+    "logoSrc": "images/sets/logo/dp4.webp",
+    "symbolSrc": "images/sets/symbol/dp4.webp"
   },
   {
     "id": "430",
@@ -1811,8 +1811,8 @@
     "cardCountOfficial": 132,
     "seriesName": "Diamond & Pearl",
     "seriesSlug": "diamond-pearl-dp",
-    "logoSrc": "sets/logo/dp3.webp",
-    "symbolSrc": "sets/symbol/dp3.webp"
+    "logoSrc": "images/sets/logo/dp3.webp",
+    "symbolSrc": "images/sets/symbol/dp3.webp"
   },
   {
     "id": "427",
@@ -1826,8 +1826,8 @@
     "cardCountOfficial": 17,
     "seriesName": "POP",
     "seriesSlug": "pop-pop",
-    "logoSrc": "sets/logo/pop6.webp",
-    "symbolSrc": "sets/symbol/pop6.webp"
+    "logoSrc": "images/sets/logo/pop6.webp",
+    "symbolSrc": "images/sets/symbol/pop6.webp"
   },
   {
     "id": "426",
@@ -1841,8 +1841,8 @@
     "cardCountOfficial": 122,
     "seriesName": "Diamond & Pearl",
     "seriesSlug": "diamond-pearl-dp",
-    "logoSrc": "sets/logo/dp2.webp",
-    "symbolSrc": "sets/symbol/dp2.webp"
+    "logoSrc": "images/sets/logo/dp2.webp",
+    "symbolSrc": "images/sets/symbol/dp2.webp"
   },
   {
     "id": "425",
@@ -1856,8 +1856,8 @@
     "cardCountOfficial": 56,
     "seriesName": "Diamond & Pearl",
     "seriesSlug": "diamond-pearl-dp",
-    "logoSrc": "sets/logo/dpp.webp",
-    "symbolSrc": "sets/symbol/dpp.webp"
+    "logoSrc": "images/sets/logo/dpp.webp",
+    "symbolSrc": "images/sets/symbol/dpp.webp"
   },
   {
     "id": "424",
@@ -1871,8 +1871,8 @@
     "cardCountOfficial": 130,
     "seriesName": "Diamond & Pearl",
     "seriesSlug": "diamond-pearl-dp",
-    "logoSrc": "sets/logo/dp1.webp",
-    "symbolSrc": "sets/symbol/dp1.webp"
+    "logoSrc": "images/sets/logo/dp1.webp",
+    "symbolSrc": "images/sets/symbol/dp1.webp"
   },
   {
     "id": "423",
@@ -1886,8 +1886,8 @@
     "cardCountOfficial": 17,
     "seriesName": "POP",
     "seriesSlug": "pop-pop",
-    "logoSrc": "sets/logo/pop5.webp",
-    "symbolSrc": "sets/symbol/pop5.webp"
+    "logoSrc": "images/sets/logo/pop5.webp",
+    "symbolSrc": "images/sets/symbol/pop5.webp"
   },
   {
     "id": "422",
@@ -1901,8 +1901,8 @@
     "cardCountOfficial": 108,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex16.webp",
-    "symbolSrc": "sets/symbol/ex16.webp"
+    "logoSrc": "images/sets/logo/ex16.webp",
+    "symbolSrc": "images/sets/symbol/ex16.webp"
   },
   {
     "id": "421",
@@ -1916,8 +1916,8 @@
     "cardCountOfficial": 101,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex15.webp",
-    "symbolSrc": "sets/symbol/ex15.webp"
+    "logoSrc": "images/sets/logo/ex15.webp",
+    "symbolSrc": "images/sets/symbol/ex15.webp"
   },
   {
     "id": "420",
@@ -1931,8 +1931,8 @@
     "cardCountOfficial": 100,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex14.webp",
-    "symbolSrc": "sets/symbol/ex14.webp"
+    "logoSrc": "images/sets/logo/ex14.webp",
+    "symbolSrc": "images/sets/symbol/ex14.webp"
   },
   {
     "id": "419",
@@ -1946,8 +1946,8 @@
     "cardCountOfficial": 17,
     "seriesName": "POP",
     "seriesSlug": "pop-pop",
-    "logoSrc": "sets/logo/pop4.webp",
-    "symbolSrc": "sets/symbol/pop4.webp"
+    "logoSrc": "images/sets/logo/pop4.webp",
+    "symbolSrc": "images/sets/symbol/pop4.webp"
   },
   {
     "id": "418",
@@ -1961,8 +1961,8 @@
     "cardCountOfficial": 110,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex13.webp",
-    "symbolSrc": "sets/symbol/ex13.webp"
+    "logoSrc": "images/sets/logo/ex13.webp",
+    "symbolSrc": "images/sets/symbol/ex13.webp"
   },
   {
     "id": "417",
@@ -1976,8 +1976,8 @@
     "cardCountOfficial": 17,
     "seriesName": "POP",
     "seriesSlug": "pop-pop",
-    "logoSrc": "sets/logo/pop3.webp",
-    "symbolSrc": "sets/symbol/pop3.webp"
+    "logoSrc": "images/sets/logo/pop3.webp",
+    "symbolSrc": "images/sets/symbol/pop3.webp"
   },
   {
     "id": "416",
@@ -1991,8 +1991,8 @@
     "cardCountOfficial": 12,
     "seriesName": "Trainer kits",
     "seriesSlug": "trainer-kits-tk",
-    "logoSrc": "sets/logo/tk2b-logo.png",
-    "symbolSrc": "sets/symbol/tk2b-symbol.png"
+    "logoSrc": "images/sets/logo/tk2b-logo.png",
+    "symbolSrc": "images/sets/symbol/tk2b-symbol.png"
   },
   {
     "id": "415",
@@ -2006,8 +2006,8 @@
     "cardCountOfficial": 12,
     "seriesName": "Trainer kits",
     "seriesSlug": "trainer-kits-tk",
-    "logoSrc": "sets/logo/tk2a-logo.png",
-    "symbolSrc": "sets/symbol/tk-ex-p.webp"
+    "logoSrc": "images/sets/logo/tk2a-logo.png",
+    "symbolSrc": "images/sets/symbol/tk-ex-p.webp"
   },
   {
     "id": "414",
@@ -2021,8 +2021,8 @@
     "cardCountOfficial": 92,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex12.webp",
-    "symbolSrc": "sets/symbol/ex12.webp"
+    "logoSrc": "images/sets/logo/ex12.webp",
+    "symbolSrc": "images/sets/symbol/ex12.webp"
   },
   {
     "id": "413",
@@ -2036,8 +2036,8 @@
     "cardCountOfficial": 113,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex11.webp",
-    "symbolSrc": "sets/symbol/ex11.webp"
+    "logoSrc": "images/sets/logo/ex11.webp",
+    "symbolSrc": "images/sets/symbol/ex11.webp"
   },
   {
     "id": "412",
@@ -2051,8 +2051,8 @@
     "cardCountOfficial": 115,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex10.webp",
-    "symbolSrc": "sets/symbol/ex10.webp"
+    "logoSrc": "images/sets/logo/ex10.webp",
+    "symbolSrc": "images/sets/symbol/ex10.webp"
   },
   {
     "id": "410",
@@ -2066,8 +2066,8 @@
     "cardCountOfficial": 17,
     "seriesName": "POP",
     "seriesSlug": "pop-pop",
-    "logoSrc": "sets/logo/pop2.webp",
-    "symbolSrc": "sets/symbol/pop2.webp"
+    "logoSrc": "images/sets/logo/pop2.webp",
+    "symbolSrc": "images/sets/symbol/pop2.webp"
   },
   {
     "id": "409",
@@ -2081,8 +2081,8 @@
     "cardCountOfficial": 106,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex9.webp",
-    "symbolSrc": "sets/symbol/ex9.webp"
+    "logoSrc": "images/sets/logo/ex9.webp",
+    "symbolSrc": "images/sets/symbol/ex9.webp"
   },
   {
     "id": "408",
@@ -2096,8 +2096,8 @@
     "cardCountOfficial": 107,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex8.webp",
-    "symbolSrc": "sets/symbol/ex8.webp"
+    "logoSrc": "images/sets/logo/ex8.webp",
+    "symbolSrc": "images/sets/symbol/ex8.webp"
   },
   {
     "id": "407",
@@ -2111,8 +2111,8 @@
     "cardCountOfficial": 109,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex7.webp",
-    "symbolSrc": "sets/symbol/ex7.webp"
+    "logoSrc": "images/sets/logo/ex7.webp",
+    "symbolSrc": "images/sets/symbol/ex7.webp"
   },
   {
     "id": "406",
@@ -2126,8 +2126,8 @@
     "cardCountOfficial": 17,
     "seriesName": "POP",
     "seriesSlug": "pop-pop",
-    "logoSrc": "sets/logo/pop1.webp",
-    "symbolSrc": "sets/symbol/pop1.webp"
+    "logoSrc": "images/sets/logo/pop1.webp",
+    "symbolSrc": "images/sets/symbol/pop1.webp"
   },
   {
     "id": "405",
@@ -2141,8 +2141,8 @@
     "cardCountOfficial": 112,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex6.webp",
-    "symbolSrc": "sets/symbol/ex6.webp"
+    "logoSrc": "images/sets/logo/ex6.webp",
+    "symbolSrc": "images/sets/symbol/ex6.webp"
   },
   {
     "id": "581",
@@ -2156,8 +2156,8 @@
     "cardCountOfficial": 5,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex5.5-logo.jpg",
-    "symbolSrc": "sets/symbol/ex5.5-symbol.jpg"
+    "logoSrc": "images/sets/logo/ex5.5-logo.jpg",
+    "symbolSrc": "images/sets/symbol/ex5.5-symbol.jpg"
   },
   {
     "id": "404",
@@ -2171,8 +2171,8 @@
     "cardCountOfficial": 10,
     "seriesName": "Trainer kits",
     "seriesSlug": "trainer-kits-tk",
-    "logoSrc": "sets/logo/tk1a-logo.png",
-    "symbolSrc": "sets/symbol/tk-ex-latia.webp"
+    "logoSrc": "images/sets/logo/tk1a-logo.png",
+    "symbolSrc": "images/sets/symbol/tk-ex-latia.webp"
   },
   {
     "id": "403",
@@ -2186,8 +2186,8 @@
     "cardCountOfficial": 10,
     "seriesName": "Trainer kits",
     "seriesSlug": "trainer-kits-tk",
-    "logoSrc": "sets/logo/tk1b-logo.png",
-    "symbolSrc": "sets/symbol/tk-ex-latio.webp"
+    "logoSrc": "images/sets/logo/tk1b-logo.png",
+    "symbolSrc": "images/sets/symbol/tk-ex-latio.webp"
   },
   {
     "id": "401",
@@ -2201,8 +2201,8 @@
     "cardCountOfficial": 101,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex5.webp",
-    "symbolSrc": "sets/symbol/ex5.webp"
+    "logoSrc": "images/sets/logo/ex5.webp",
+    "symbolSrc": "images/sets/symbol/ex5.webp"
   },
   {
     "id": "400",
@@ -2216,8 +2216,8 @@
     "cardCountOfficial": 95,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex4.webp",
-    "symbolSrc": "sets/symbol/ex4.webp"
+    "logoSrc": "images/sets/logo/ex4.webp",
+    "symbolSrc": "images/sets/symbol/ex4.webp"
   },
   {
     "id": "399",
@@ -2231,8 +2231,8 @@
     "cardCountOfficial": 97,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex3.webp",
-    "symbolSrc": "sets/symbol/ex3.webp"
+    "logoSrc": "images/sets/logo/ex3.webp",
+    "symbolSrc": "images/sets/symbol/ex3.webp"
   },
   {
     "id": "398",
@@ -2246,8 +2246,8 @@
     "cardCountOfficial": 40,
     "seriesName": "POP",
     "seriesSlug": "pop-pop",
-    "logoSrc": "sets/logo/np.webp",
-    "symbolSrc": "sets/symbol/np.webp"
+    "logoSrc": "images/sets/logo/np.webp",
+    "symbolSrc": "images/sets/symbol/np.webp"
   },
   {
     "id": "397",
@@ -2261,8 +2261,8 @@
     "cardCountOfficial": 100,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex2.webp",
-    "symbolSrc": "sets/symbol/ex2.webp"
+    "logoSrc": "images/sets/logo/ex2.webp",
+    "symbolSrc": "images/sets/symbol/ex2.webp"
   },
   {
     "id": "396",
@@ -2276,8 +2276,8 @@
     "cardCountOfficial": 109,
     "seriesName": "EX",
     "seriesSlug": "ex-ex",
-    "logoSrc": "sets/logo/ex1.webp",
-    "symbolSrc": "sets/symbol/ex1.webp"
+    "logoSrc": "images/sets/logo/ex1.webp",
+    "symbolSrc": "images/sets/symbol/ex1.webp"
   },
   {
     "id": "395",
@@ -2291,8 +2291,8 @@
     "cardCountOfficial": 144,
     "seriesName": "E-Card",
     "seriesSlug": "e-card-ecard",
-    "logoSrc": "sets/logo/ecard3.webp",
-    "symbolSrc": "sets/symbol/ecard3.webp"
+    "logoSrc": "images/sets/logo/ecard3.webp",
+    "symbolSrc": "images/sets/symbol/ecard3.webp"
   },
   {
     "id": "394",
@@ -2306,8 +2306,8 @@
     "cardCountOfficial": 147,
     "seriesName": "E-Card",
     "seriesSlug": "e-card-ecard",
-    "logoSrc": "sets/logo/ecard2.webp",
-    "symbolSrc": "sets/symbol/ecard2.webp"
+    "logoSrc": "images/sets/logo/ecard2.webp",
+    "symbolSrc": "images/sets/symbol/ecard2.webp"
   },
   {
     "id": "393",
@@ -2321,8 +2321,8 @@
     "cardCountOfficial": 9,
     "seriesName": "E-Card",
     "seriesSlug": "e-card-ecard",
-    "logoSrc": "sets/logo/bp-logo.png",
-    "symbolSrc": "sets/symbol/bog.webp"
+    "logoSrc": "images/sets/logo/bp-logo.png",
+    "symbolSrc": "images/sets/symbol/bog.webp"
   },
   {
     "id": "392",
@@ -2336,8 +2336,8 @@
     "cardCountOfficial": 165,
     "seriesName": "E-Card",
     "seriesSlug": "e-card-ecard",
-    "logoSrc": "sets/logo/ecard1.webp",
-    "symbolSrc": "sets/symbol/ecard1.webp"
+    "logoSrc": "images/sets/logo/ecard1.webp",
+    "symbolSrc": "images/sets/symbol/ecard1.webp"
   },
   {
     "id": "390",
@@ -2351,8 +2351,8 @@
     "cardCountOfficial": 110,
     "seriesName": "Legendary Collection",
     "seriesSlug": "legendary-collection-lc",
-    "logoSrc": "sets/logo/lc.webp",
-    "symbolSrc": "sets/symbol/lc.webp"
+    "logoSrc": "images/sets/logo/lc.webp",
+    "symbolSrc": "images/sets/symbol/lc.webp"
   },
   {
     "id": "389",
@@ -2366,8 +2366,8 @@
     "cardCountOfficial": 105,
     "seriesName": "Neo",
     "seriesSlug": "neo-neo",
-    "logoSrc": "sets/logo/neo4.webp",
-    "symbolSrc": "sets/symbol/neo4.webp"
+    "logoSrc": "images/sets/logo/neo4.webp",
+    "symbolSrc": "images/sets/symbol/neo4.webp"
   },
   {
     "id": "388",
@@ -2381,8 +2381,8 @@
     "cardCountOfficial": 64,
     "seriesName": "Neo",
     "seriesSlug": "neo-neo",
-    "logoSrc": "sets/logo/neo3.webp",
-    "symbolSrc": "sets/symbol/neo3.webp"
+    "logoSrc": "images/sets/logo/neo3.webp",
+    "symbolSrc": "images/sets/symbol/neo3.webp"
   },
   {
     "id": "387",
@@ -2396,8 +2396,8 @@
     "cardCountOfficial": 18,
     "seriesName": "Neo",
     "seriesSlug": "neo-neo",
-    "logoSrc": "sets/logo/si1.webp",
-    "symbolSrc": "sets/symbol/si1.webp"
+    "logoSrc": "images/sets/logo/si1.webp",
+    "symbolSrc": "images/sets/symbol/si1.webp"
   },
   {
     "id": "386",
@@ -2411,8 +2411,8 @@
     "cardCountOfficial": 75,
     "seriesName": "Neo",
     "seriesSlug": "neo-neo",
-    "logoSrc": "sets/logo/neo2.webp",
-    "symbolSrc": "sets/symbol/neo2.webp"
+    "logoSrc": "images/sets/logo/neo2.webp",
+    "symbolSrc": "images/sets/symbol/neo2.webp"
   },
   {
     "id": "385",
@@ -2426,8 +2426,8 @@
     "cardCountOfficial": 111,
     "seriesName": "Neo",
     "seriesSlug": "neo-neo",
-    "logoSrc": "sets/logo/neo1.webp",
-    "symbolSrc": "sets/symbol/neo1.webp"
+    "logoSrc": "images/sets/logo/neo1.webp",
+    "symbolSrc": "images/sets/symbol/neo1.webp"
   },
   {
     "id": "384",
@@ -2441,8 +2441,8 @@
     "cardCountOfficial": 132,
     "seriesName": "Gym",
     "seriesSlug": "gym-gym",
-    "logoSrc": "sets/logo/gym2.webp",
-    "symbolSrc": "sets/symbol/gym2.webp"
+    "logoSrc": "images/sets/logo/gym2.webp",
+    "symbolSrc": "images/sets/symbol/gym2.webp"
   },
   {
     "id": "383",
@@ -2456,8 +2456,8 @@
     "cardCountOfficial": 132,
     "seriesName": "Gym",
     "seriesSlug": "gym-gym",
-    "logoSrc": "sets/logo/gym1.webp",
-    "symbolSrc": "sets/symbol/gym1.webp"
+    "logoSrc": "images/sets/logo/gym1.webp",
+    "symbolSrc": "images/sets/symbol/gym1.webp"
   },
   {
     "id": "382",
@@ -2471,8 +2471,8 @@
     "cardCountOfficial": 82,
     "seriesName": "Base",
     "seriesSlug": "base-base",
-    "logoSrc": "sets/logo/base5.webp",
-    "symbolSrc": "sets/symbol/base5.webp"
+    "logoSrc": "images/sets/logo/base5.webp",
+    "symbolSrc": "images/sets/symbol/base5.webp"
   },
   {
     "id": "381",
@@ -2486,8 +2486,8 @@
     "cardCountOfficial": 130,
     "seriesName": "Base",
     "seriesSlug": "base-base",
-    "logoSrc": "sets/logo/base4.webp",
-    "symbolSrc": "sets/symbol/base4.webp"
+    "logoSrc": "images/sets/logo/base4.webp",
+    "symbolSrc": "images/sets/symbol/base4.webp"
   },
   {
     "id": "379",
@@ -2501,8 +2501,8 @@
     "cardCountOfficial": 62,
     "seriesName": "Base",
     "seriesSlug": "base-base",
-    "logoSrc": "sets/logo/base3.webp",
-    "symbolSrc": "sets/symbol/base3.webp"
+    "logoSrc": "images/sets/logo/base3.webp",
+    "symbolSrc": "images/sets/symbol/base3.webp"
   },
   {
     "id": "377",
@@ -2516,8 +2516,8 @@
     "cardCountOfficial": 53,
     "seriesName": "Base",
     "seriesSlug": "base-base",
-    "logoSrc": "sets/logo/basep.webp",
-    "symbolSrc": "sets/symbol/basep.webp"
+    "logoSrc": "images/sets/logo/basep.webp",
+    "symbolSrc": "images/sets/symbol/basep.webp"
   },
   {
     "id": "376",
@@ -2531,8 +2531,8 @@
     "cardCountOfficial": 64,
     "seriesName": "Base",
     "seriesSlug": "base-base",
-    "logoSrc": "sets/logo/base2.webp",
-    "symbolSrc": "sets/symbol/base2.webp"
+    "logoSrc": "images/sets/logo/base2.webp",
+    "symbolSrc": "images/sets/symbol/base2.webp"
   },
   {
     "id": "375",
@@ -2546,8 +2546,8 @@
     "cardCountOfficial": 102,
     "seriesName": "Base",
     "seriesSlug": "base-base",
-    "logoSrc": "sets/logo/base1-1.webp",
-    "symbolSrc": "sets/symbol/base1-symbol.png"
+    "logoSrc": "images/sets/logo/base1-1.webp",
+    "symbolSrc": "images/sets/symbol/base1-symbol.png"
   },
   {
     "id": "582",
@@ -2561,8 +2561,8 @@
     "cardCountOfficial": 25,
     "seriesName": "Sword & Shield",
     "seriesSlug": "sword-shield-swsh",
-    "logoSrc": "sets/logo/cel25c-logo.jpg",
-    "symbolSrc": "sets/symbol/cel25c-symbol.jpg"
+    "logoSrc": "images/sets/logo/cel25c-logo.jpg",
+    "symbolSrc": "images/sets/symbol/cel25c-symbol.jpg"
   },
   {
     "id": "583",
@@ -2576,8 +2576,8 @@
     "cardCountOfficial": 34,
     "seriesName": "Miscellaneous",
     "seriesSlug": "miscellaneous-misc",
-    "logoSrc": "sets/logo/clv-logo.jpg",
-    "symbolSrc": "sets/symbol/clv-symbol.jpg"
+    "logoSrc": "images/sets/logo/clv-logo.jpg",
+    "symbolSrc": "images/sets/symbol/clv-symbol.jpg"
   },
   {
     "id": "584",
@@ -2591,8 +2591,8 @@
     "cardCountOfficial": 34,
     "seriesName": "Miscellaneous",
     "seriesSlug": "miscellaneous-misc",
-    "logoSrc": "sets/logo/clc-logo.jpg",
-    "symbolSrc": "sets/symbol/clc-symbol.jpg"
+    "logoSrc": "images/sets/logo/clc-logo.jpg",
+    "symbolSrc": "images/sets/symbol/clc-symbol.jpg"
   },
   {
     "id": "585",
@@ -2606,7 +2606,7 @@
     "cardCountOfficial": 34,
     "seriesName": "Miscellaneous",
     "seriesSlug": "miscellaneous-misc",
-    "logoSrc": "sets/logo/clb-logo.jpg",
-    "symbolSrc": "sets/symbol/clb-symbol.jpg"
+    "logoSrc": "images/sets/logo/clb-logo.jpg",
+    "symbolSrc": "images/sets/symbol/clb-symbol.jpg"
   }
 ]

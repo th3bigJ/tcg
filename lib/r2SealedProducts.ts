@@ -1,3 +1,8 @@
+import {
+  R2_SEALED_POKEDATA_DEFAULT_SLUG,
+  r2SealedPokedataCatalogKey,
+  r2SealedPokedataPricesSnapshotKey,
+} from "@/lib/r2BucketLayout";
 import { resolveMediaURL } from "@/lib/media";
 import type { SealedProductPriceTrendSummary } from "@/lib/staticDataTypes";
 
@@ -222,14 +227,14 @@ function getR2BaseUrl(): string {
   return base.replace(/\/+$/, "");
 }
 
-function getSealedProductsUrl(fileName: string): string | null {
+function getSealedProductsUrl(objectKey: string): string | null {
   const base = getR2BaseUrl();
   if (!base) return null;
-  return `${base}/sealed-products/pokedata/${fileName}`;
+  return `${base}/${objectKey}`;
 }
 
-export function getSealedProductsPublicUrl(fileName: string): string | null {
-  return getSealedProductsUrl(fileName);
+export function getSealedProductsPublicUrl(objectKey: string): string | null {
+  return getSealedProductsUrl(objectKey);
 }
 
 type CacheEntry<T> = { value: T; expiresAt: number };
@@ -240,7 +245,7 @@ let _pricesCache: CacheEntry<SealedProductPricesPayload | null> | null = null;
 export async function getSealedProductCatalog(): Promise<SealedProductCatalogPayload | null> {
   if (_catalogCache && Date.now() < _catalogCache.expiresAt) return _catalogCache.value;
 
-  const url = getSealedProductsUrl("pokedata-english-pokemon-products.json");
+  const url = getSealedProductsUrl(r2SealedPokedataCatalogKey(R2_SEALED_POKEDATA_DEFAULT_SLUG));
   if (!url) return null;
 
   const ttlMs = process.env.NODE_ENV === "development" ? 0 : 7 * 24 * 60 * 60 * 1000;
@@ -258,7 +263,7 @@ export async function getSealedProductCatalog(): Promise<SealedProductCatalogPay
 export async function getSealedProductPrices(): Promise<SealedProductPricesPayload | null> {
   if (_pricesCache && Date.now() < _pricesCache.expiresAt) return _pricesCache.value;
 
-  const url = getSealedProductsUrl("pokedata-english-pokemon-prices.json");
+  const url = getSealedProductsUrl(r2SealedPokedataPricesSnapshotKey(R2_SEALED_POKEDATA_DEFAULT_SLUG));
   if (!url) return null;
 
   const ttlMs = process.env.NODE_ENV === "development" ? 0 : 24 * 60 * 60 * 1000;

@@ -1,6 +1,10 @@
 import { PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  R2_SEALED_POKEDATA_DEFAULT_SLUG,
+  r2SealedPokedataPriceHistoryKey,
+} from "@/lib/r2BucketLayout";
 import type {
   PriceHistoryPoint,
   PriceHistoryWindow,
@@ -18,7 +22,7 @@ export type {
 const DAILY_HISTORY_LIMIT = 31;
 const WEEKLY_HISTORY_LIMIT = 52;
 const MONTHLY_HISTORY_LIMIT = 60;
-const SEALED_PRICE_HISTORY_FILE = "sealed-products/pokedata/pokedata-english-pokemon-price-history.json";
+const SEALED_PRICE_HISTORY_FILE = r2SealedPokedataPriceHistoryKey(R2_SEALED_POKEDATA_DEFAULT_SLUG);
 const LOCAL_SEALED_PRICE_HISTORY_FILE = path.join(
   process.cwd(),
   "data",

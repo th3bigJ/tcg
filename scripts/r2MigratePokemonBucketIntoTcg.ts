@@ -9,7 +9,7 @@
  *
  * Env (from .env.local or shell):
  *   R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_REGION=auto
- * Optional: SOURCE_BUCKET (default pokemon), DEST_BUCKET (default tcg), DEST_PREFIX (default pokemon)
+ * Optional: SOURCE_BUCKET (default pokemon), DEST_BUCKET (default tcg), DEST_PREFIX (default images/pokemon)
  */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -64,7 +64,7 @@ async function main(): Promise<void> {
 
   const sourceBucket = process.env.SOURCE_BUCKET?.trim() || "pokemon";
   const destBucket = process.env.DEST_BUCKET?.trim() || "tcg";
-  const destPrefix = (process.env.DEST_PREFIX?.trim() || "pokemon").replace(/^\/+|\/+$/g, "");
+  const destPrefix = (process.env.DEST_PREFIX?.trim() || "images/pokemon").replace(/^\/+|\/+$/g, "");
 
   const client = new S3Client({
     region,

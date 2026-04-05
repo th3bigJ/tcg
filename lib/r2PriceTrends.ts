@@ -1,4 +1,5 @@
 import { PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
+import { r2SinglesPriceTrendsPrefix } from "@/lib/r2BucketLayout";
 import { PRICING_VARIANT_DISPLAY_ORDER } from "@/lib/pricingVariantRegistry";
 import { buildPricingLookupIds } from "@/lib/r2Pricing";
 import type {
@@ -123,7 +124,7 @@ export async function getPriceTrendsForSet(setCode: string): Promise<SetPriceTre
   const base = getPriceTrendBaseUrl();
   if (!base) return null;
 
-  const url = `${base}/price-trends/${setCode}.json`;
+  const url = `${base}/${r2SinglesPriceTrendsPrefix}/${setCode}.json`;
   try {
     const res = await fetch(url, {
       next: { revalidate: process.env.NODE_ENV === "development" ? 0 : 86400 },
@@ -166,7 +167,7 @@ export async function uploadPriceTrends(
   await s3.send(
     new PutObjectCommand({
       Bucket: getR2Bucket(),
-      Key: `price-trends/${setCode}.json`,
+      Key: `${r2SinglesPriceTrendsPrefix}/${setCode}.json`,
       Body: JSON.stringify(trendMap),
       ContentType: "application/json",
     }),

@@ -1,4 +1,8 @@
 import { PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
+import {
+  R2_SEALED_POKEDATA_DEFAULT_SLUG,
+  r2SealedPokedataPriceTrendsKey,
+} from "@/lib/r2BucketLayout";
 import type {
   PriceHistoryPoint,
   PriceTrendDirection,
@@ -11,7 +15,7 @@ import type {
 export type { SealedProductPriceTrendMap, SealedProductPriceTrendSummary };
 
 const FLAT_THRESHOLD_PCT = 1;
-const SEALED_PRICE_TRENDS_FILE = "sealed-products/pokedata/pokedata-english-pokemon-price-trends.json";
+const SEALED_PRICE_TRENDS_FILE = r2SealedPokedataPriceTrendsKey(R2_SEALED_POKEDATA_DEFAULT_SLUG);
 
 function getPriceTrendBaseUrl(): string {
   const base =

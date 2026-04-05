@@ -1,6 +1,6 @@
 /**
  * Backfill per-card price history from Scrydex chart data.
- * Seeds R2 price-history/{setCode}.json with real historical daily dates,
+ * Seeds R2 pricing/price-history/{setCode}.json with real historical daily dates,
  * then derives weekly/monthly windows from those daily points.
  *
  * Usage:
@@ -13,6 +13,7 @@
 import fs from "fs";
 import path from "path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { r2SinglesPriceHistoryPrefix } from "../lib/r2BucketLayout";
 import type {
   CardJsonEntry,
   CardPriceHistory,
@@ -228,7 +229,7 @@ async function uploadHistoryToR2(s3: S3Client, setCode: string, historyMap: SetP
   await s3.send(
     new PutObjectCommand({
       Bucket: bucket,
-      Key: `price-history/${setCode}.json`,
+      Key: `${r2SinglesPriceHistoryPrefix}/${setCode}.json`,
       Body: JSON.stringify(historyMap),
       ContentType: "application/json",
     }),
@@ -321,7 +322,9 @@ async function backfillSet(
 
   await uploadHistoryToR2(s3, setCode, historyMap);
   await uploadPriceTrends(s3, setCode, historyMap);
-  console.log(`  [${setCode}] ${Object.keys(historyMap).length} history cards → R2 price-history/${setCode}.json`);
+  console.log(
+    `  [${setCode}] ${Object.keys(historyMap).length} history cards → R2 ${r2SinglesPriceHistoryPrefix}/${setCode}.json`,
+  );
 }
 
 async function main(): Promise<void> {

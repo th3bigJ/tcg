@@ -1,6 +1,7 @@
 import { type NextRequest } from "next/server";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
+import { r2GradedImagesPrefix } from "@/lib/r2BucketLayout";
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
 import { createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
@@ -58,10 +59,9 @@ export async function POST(request: NextRequest) {
     return jsonResponseWithAuthCookies({ error: "Storage not configured" }, authCookieResponse, { status: 500 });
   }
 
-  // Build a path: graded-images/{customerId}/{entryId}.{ext}
   const mimeType = file.type || "image/jpeg";
   const ext = mimeType.includes("png") ? "png" : mimeType.includes("webp") ? "webp" : "jpg";
-  const r2Key = `graded-images/${customer.id}/${entryId}.${ext}`;
+  const r2Key = `${r2GradedImagesPrefix}/${customer.id}/${entryId}.${ext}`;
 
   const arrayBuffer = await file.arrayBuffer();
   const body = Buffer.from(arrayBuffer);

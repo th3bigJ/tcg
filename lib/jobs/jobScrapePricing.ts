@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { r2SinglesCardPricingPrefix } from "@/lib/r2BucketLayout";
 import type { CardJsonEntry, SetJsonEntry, SeriesJsonEntry, SetPricingMap } from "../staticDataTypes";
 import { updatePriceHistory } from "../r2PriceHistory";
 import { uploadPriceTrends } from "../r2PriceTrends";
@@ -210,7 +211,7 @@ async function uploadToR2(s3: S3Client, setCode: string, json: string): Promise<
   await s3.send(
     new PutObjectCommand({
       Bucket: bucket,
-      Key: `pricing/${setCode}.json`,
+      Key: `${r2SinglesCardPricingPrefix}/${setCode}.json`,
       Body: json,
       ContentType: "application/json",
     }),
@@ -348,7 +349,7 @@ async function scrapeSet(
     await uploadToR2(s3, setCode, json);
     const historyMap = await updatePriceHistory(s3, setCode, pricingMap);
     await uploadPriceTrends(s3, setCode, historyMap);
-    console.log(`  [${setCode}] ${count} priced cards → R2 pricing/${setCode}.json`);
+    console.log(`  [${setCode}] ${count} priced cards → R2 ${r2SinglesCardPricingPrefix}/${setCode}.json`);
   }
 }
 

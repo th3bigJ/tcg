@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { r2SetLogoPrefix, r2SetSymbolPrefix } from "../lib/r2BucketLayout";
 import type { CardJsonEntry, SetJsonEntry } from "../lib/staticDataTypes";
 
 const TARGET_SET_CODES = [
@@ -124,7 +125,7 @@ async function uploadSetAssets(s3: S3Client, bucket: string): Promise<void> {
       const src = set[field]?.trim();
       if (!src || !/^https?:\/\//iu.test(src)) return;
       const { body, contentType, ext } = await fetchRemoteImage(src);
-      const r2Key = `sets/${prefix}/${setCode}-${prefix}${ext}`;
+      const r2Key = `${prefix === "logo" ? r2SetLogoPrefix : r2SetSymbolPrefix}/${setCode}-${prefix}${ext}`;
       await uploadBuffer(s3, bucket, r2Key, body, contentType);
       set[field] = r2Key;
       console.log(`uploaded ${r2Key}`);

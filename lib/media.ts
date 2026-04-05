@@ -1,3 +1,5 @@
+import { r2GradedImagesPrefix, r2PokemonMediaPrefixDefault } from "@/lib/r2BucketLayout";
+
 const trimTrailingSlash = (value: string): string => value.replace(/\/+$/, "");
 
 const getFirstValidBaseURL = (candidates: Array<string | undefined>): string | null => {
@@ -21,20 +23,36 @@ const getMediaBaseURL = (): string | null =>
     process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
   ]);
 
-/** Prefix inside R2_BUCKET for National Dex sprites (was a separate "pokemon" bucket). Default `pokemon`. */
-const DEFAULT_POKEMON_MEDIA_PREFIX = "pokemon";
-
 function normalizePokemonPrefix(raw: string | undefined): string {
-  const p = (raw ?? DEFAULT_POKEMON_MEDIA_PREFIX).trim().replace(/^\/+|\/+$/g, "");
+  const p = (raw ?? r2PokemonMediaPrefixDefault).trim().replace(/^\/+|\/+$/g, "");
   return p;
 }
 
-/** Avoid `pokemon/pokemon/...` if stored paths were already prefixed during migration. */
+/** Avoid duplicated segments when prefix or stored paths already include `pokemon/`. */
 function pokemonObjectKey(relativePath: string, prefix: string): string {
-  const v = relativePath.replace(/^\/+/, "");
+  let v = relativePath.replace(/^\/+/, "");
+  if (!prefix) return v;
+  if (prefix === "images/pokemon" || prefix.endsWith("/pokemon")) {
+    if (v === "pokemon" || v.startsWith("pokemon/")) {
+      v = v === "pokemon" ? "" : v.slice("pokemon/".length);
+    }
+  }
   if (!prefix) return v;
   if (v === prefix || v.startsWith(`${prefix}/`)) return v;
-  return `${prefix}/${v}`;
+  return v ? `${prefix}/${v}` : prefix;
+}
+
+/** Legacy R2 keys before `images/pokemon` and `images/graded_images` layout. */
+function normalizeLegacyR2RelativePath(value: string): string {
+  const v = value.replace(/^\/+/, "");
+  if (v.startsWith("images/")) return v;
+  if (v.startsWith("graded-images/")) {
+    return `${r2GradedImagesPrefix}/${v.slice("graded-images/".length)}`;
+  }
+  if (v.startsWith("sets/")) {
+    return `images/sets/${v.slice("sets/".length)}`;
+  }
+  return v;
 }
 
 const sanitizeAbsoluteMediaURL = (value: string): string => {
@@ -64,16 +82,16 @@ export const resolveMediaURL = (value: string | null | undefined): string => {
   if (!value) return "";
   if (/^https?:\/\//i.test(value)) return sanitizeAbsoluteMediaURL(value);
 
+  const path = normalizeLegacyR2RelativePath(value);
   const base = getMediaBaseURL();
-  if (!base) return value.startsWith("/") ? value : `/${value}`;
+  if (!base) return path.startsWith("/") ? path : `/${path}`;
 
-  return `${base}/${value.replace(/^\/+/, "")}`;
+  return `${base}/${path.replace(/^\/+/, "")}`;
 };
 
 /**
  * Dex / Pokémon search thumbnails: same R2 public host as {@link resolveMediaURL}, under
- * `R2_POKEMON_MEDIA_PREFIX` (default `pokemon`). Copy former standalone-bucket keys into
- * `tcg` bucket as `{prefix}/{filename}` (e.g. `pokemon/1-1.png`).
+ * `R2_POKEMON_MEDIA_PREFIX` (default {@link r2PokemonMediaPrefixDefault}).
  */
 export const resolvePokemonMediaURL = (value: string | null | undefined): string => {
   if (!value) return "";

@@ -1,6 +1,6 @@
 /**
  * Scrape Scrydex pricing for all sets, a specific set, or a specific series.
- * Reads card data from data/cards/{setCode}.json, writes results to R2 as pricing/{setCode}.json.
+ * Reads card data from data/cards/{setCode}.json, writes results to R2 as pricing/card-pricing/{setCode}.json.
  *
  * Usage:
  *   node --import tsx/esm scripts/scrapePricing.ts
