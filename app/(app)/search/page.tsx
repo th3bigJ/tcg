@@ -331,7 +331,7 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
 
   const searchSelectionParams = Object.fromEntries(
     Array.from(new URLSearchParams(buildCardsHref().split("?")[1] ?? "").entries()).filter(
-      ([key]) => key !== "set" && key !== "pokemon" && key !== "take",
+      ([key]) => key !== "set" && key !== "pokemon" && key !== "take" && key !== "return_to",
     ),
   );
 

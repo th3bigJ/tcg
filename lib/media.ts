@@ -21,14 +21,21 @@ const getMediaBaseURL = (): string | null =>
     process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
   ]);
 
-const getPokemonMediaBaseURL = (): string | null =>
-  getFirstValidBaseURL([
-    process.env.R2_POKEMON_PUBLIC_BASE_URL,
-    process.env.NEXT_PUBLIC_R2_POKEMON_PUBLIC_BASE_URL,
-    process.env.R2_PUBLIC_BASE_URL,
-    process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL,
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
-  ]);
+/** Prefix inside R2_BUCKET for National Dex sprites (was a separate "pokemon" bucket). Default `pokemon`. */
+const DEFAULT_POKEMON_MEDIA_PREFIX = "pokemon";
+
+function normalizePokemonPrefix(raw: string | undefined): string {
+  const p = (raw ?? DEFAULT_POKEMON_MEDIA_PREFIX).trim().replace(/^\/+|\/+$/g, "");
+  return p;
+}
+
+/** Avoid `pokemon/pokemon/...` if stored paths were already prefixed during migration. */
+function pokemonObjectKey(relativePath: string, prefix: string): string {
+  const v = relativePath.replace(/^\/+/, "");
+  if (!prefix) return v;
+  if (v === prefix || v.startsWith(`${prefix}/`)) return v;
+  return `${prefix}/${v}`;
+}
 
 const sanitizeAbsoluteMediaURL = (value: string): string => {
   try {
@@ -63,12 +70,19 @@ export const resolveMediaURL = (value: string | null | undefined): string => {
   return `${base}/${value.replace(/^\/+/, "")}`;
 };
 
+/**
+ * Dex / Pokémon search thumbnails: same R2 public host as {@link resolveMediaURL}, under
+ * `R2_POKEMON_MEDIA_PREFIX` (default `pokemon`). Copy former standalone-bucket keys into
+ * `tcg` bucket as `{prefix}/{filename}` (e.g. `pokemon/1-1.png`).
+ */
 export const resolvePokemonMediaURL = (value: string | null | undefined): string => {
   if (!value) return "";
   if (/^https?:\/\//i.test(value)) return sanitizeAbsoluteMediaURL(value);
 
-  const base = getPokemonMediaBaseURL();
-  if (!base) return value.startsWith("/") ? value : `/${value}`;
+  const base = getMediaBaseURL();
+  const prefix = normalizePokemonPrefix(process.env.R2_POKEMON_MEDIA_PREFIX);
+  const key = pokemonObjectKey(value, prefix);
+  if (!base) return key.startsWith("/") ? key : `/${key}`;
 
-  return `${base}/${value.replace(/^\/+/, "")}`;
+  return `${base}/${key.replace(/^\/+/, "")}`;
 };

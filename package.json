@@ -22,7 +22,8 @@
     "scrape:pokedata-products:catalog": "node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=products --tcg=Pokemon --language=ENGLISH",
     "scrape:pokedata-products:prices": "node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH",
     "portfolio:snapshot": "node --import tsx/esm scripts/snapshotPortfolio.ts",
-    "portfolio:snapshot:fix-dates": "node --import tsx/esm scripts/backfillPortfolioSnapshotTodayToYesterday.ts"
+    "portfolio:snapshot:fix-dates": "node --import tsx/esm scripts/backfillPortfolioSnapshotTodayToYesterday.ts",
+    "r2:migrate-pokemon-bucket": "node --import tsx/esm scripts/r2MigratePokemonBucketIntoTcg.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

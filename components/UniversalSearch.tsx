@@ -1251,8 +1251,8 @@ export function UniversalSearch({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pokedexSelectorParams = new URLSearchParams(selectorBaseParams.toString());
   pokedexSelectorParams.delete("pokemon");
   pokedexSelectorParams.delete("set");
-  const currentSearch = searchParams?.toString() ?? "";
-  const currentReturnTo = `${pathname}${currentSearch ? `?${currentSearch}` : ""}`;
+  // One level only: never embed an existing return_to (avoids nested encoding and URL lengths that break RSC fetches).
+  const currentReturnTo = `${pathname}${selectorBaseParams.toString() ? `?${selectorBaseParams.toString()}` : ""}`;
   setSelectorParams.set("return_to", currentReturnTo);
   pokedexSelectorParams.set("return_to", currentReturnTo);
   const setsHref = `/expansions${setSelectorParams.toString() ? `?${setSelectorParams.toString()}` : ""}`;
