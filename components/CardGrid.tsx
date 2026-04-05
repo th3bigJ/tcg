@@ -3807,9 +3807,9 @@ export function CardGrid({
                   : false;
             return (
               <CardGridItem
-                key={card.wishlistEntryId ?? card.collectionEntryId ?? card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${index}`}
+                key={card.wishlistEntryId ?? card.collectionEntryId ?? card.collectionGroupKey ?? card.masterCardId ?? `${card.set}/${card.filename}/${row.cardIndex}`}
                 card={card}
-                index={index}
+                index={row.cardIndex}
                 variant={variant}
                 unitPrice={unitPrice ?? null}
                 trendSummary={cardTrendSummary}
