@@ -18,6 +18,7 @@
     "backfill:price-history": "node --import tsx/esm scripts/backfillPriceHistoryFromScrydex.ts",
     "backfill:sealed-price-history": "node --import tsx/esm scripts/backfillSealedPriceHistoryFromPokedata.ts",
     "scrape:pricing": "node --import tsx/esm scripts/scrapePricing.ts",
+    "scrape:scrydex-card-meta": "node --import tsx/esm scripts/scrapeScrydexCardMeta.ts",
     "scrape:pokedata-products": "node --import tsx/esm scripts/scrapePokedataProducts.ts",
     "scrape:pokedata-products:catalog": "node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=products --tcg=Pokemon --language=ENGLISH",
     "scrape:pokedata-products:prices": "node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH",

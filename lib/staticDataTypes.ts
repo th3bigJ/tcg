@@ -3,13 +3,22 @@
  * Used by both the export scripts (scripts/) and the read layer (lib/).
  */
 
+/** Pokémon attacks from Scrydex card pages (`attacks.name`, `attacks.damage`). */
+export type CardAttackJson = {
+  name: string;
+  /** Empty string on Scrydex is stored as null. */
+  damage: string | null;
+};
+
 export type CardJsonEntry = {
   masterCardId: string;
+  /** Scrydex card id when known (e.g. `me2pt5-256`); also used for pricing lookups. */
   externalId: string | null;
   tcgdex_id: string | null;
   localId: string | null;
   setCode: string;
   setTcgdexId: string | null;
+  /** Display/collector number; may be overwritten from Scrydex `printed_number` when scraped. */
   cardNumber: string;
   cardName: string;
   fullDisplayName: string | null;
@@ -29,6 +38,10 @@ export type CardJsonEntry = {
   noPricing: boolean;
   imageLowSrc: string;
   imageHighSrc: string | null;
+  /** Populated by `scrape:scrydex-card-meta` from Scrydex. */
+  attacks?: CardAttackJson[] | null;
+  /** Trainer / stadium rules text from Scrydex; usually only present for Trainer cards. */
+  rules?: string | null;
 };
 
 export type SetJsonEntry = {

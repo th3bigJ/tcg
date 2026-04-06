@@ -130,8 +130,9 @@ Approx. 4,587 cards.
 npm run scrape:pricing -- --series="XY,EX,Platinum,HeartGold & SoulSilver"
 ```
 
+## Scrydex card metadata (printed number, attacks, rules)
 
-
+Same four batch groupings: see `docs/scrydex-card-meta-scrape.md`. After each run, gaps are appended to `docs/scrydex-card-meta-gaps.md`.
 
 npm run backfill:price-history -- --series="Sword & Shield,Base,Neo,Gym,POP,Legendary Collection,Call of Legends,McDonald's Collection,Trainer kits"
 
