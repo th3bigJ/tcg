@@ -54,7 +54,7 @@ export function extractCardmarketAvgsGbp(
   return Object.keys(out).length > 0 ? out : null;
 }
 
-/** Per-variant Scrydex scrape: raw (NM/list), PSA 10, and ACE 10 in USD or GBP. */
+/** Per-variant Scrydex scrape: raw (NM/list), PSA 10, and ACE 10 in **USD** (R2 storage). */
 export type ExternalScrapeVariantNumbers = {
   raw?: number;
   psa10?: number;

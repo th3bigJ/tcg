@@ -26,13 +26,17 @@ export async function cardPricingEntryToPayload(
       if (typeof v === "number" && Number.isFinite(v)) {
         const scBlock = sc?.[k];
         const scB = scBlock && typeof scBlock === "object" ? (scBlock as Record<string, unknown>) : null;
-        const psa10 = scB?.psa10;
-        const ace10 = scB?.ace10;
+        const psa10Usd = scB?.psa10;
+        const ace10Usd = scB?.ace10;
+        const psa10 =
+          typeof psa10Usd === "number" && Number.isFinite(psa10Usd) ? psa10Usd * m.usdToGbp : undefined;
+        const ace10 =
+          typeof ace10Usd === "number" && Number.isFinite(ace10Usd) ? ace10Usd * m.usdToGbp : undefined;
         tcgplayerOut[k] = {
           market: v,
           marketPrice: v,
-          ...(typeof psa10 === "number" && Number.isFinite(psa10) ? { psa10 } : {}),
-          ...(typeof ace10 === "number" && Number.isFinite(ace10) ? { ace10 } : {}),
+          ...(psa10 !== undefined ? { psa10 } : {}),
+          ...(ace10 !== undefined ? { ace10 } : {}),
         };
       }
     }
@@ -55,9 +59,12 @@ export async function cardPricingEntryToPayload(
       if (tcgplayerOut[variant] !== undefined) continue;
       if (!block || typeof block !== "object") continue;
       const b = block as Record<string, unknown>;
-      const r = typeof b.raw === "number" && Number.isFinite(b.raw) ? b.raw : undefined;
-      const psa10 = typeof b.psa10 === "number" && Number.isFinite(b.psa10) ? b.psa10 : undefined;
-      const ace10 = typeof b.ace10 === "number" && Number.isFinite(b.ace10) ? b.ace10 : undefined;
+      const rUsd = typeof b.raw === "number" && Number.isFinite(b.raw) ? b.raw : undefined;
+      const psa10Usd = typeof b.psa10 === "number" && Number.isFinite(b.psa10) ? b.psa10 : undefined;
+      const ace10Usd = typeof b.ace10 === "number" && Number.isFinite(b.ace10) ? b.ace10 : undefined;
+      const r = rUsd !== undefined ? rUsd * m.usdToGbp : undefined;
+      const psa10 = psa10Usd !== undefined ? psa10Usd * m.usdToGbp : undefined;
+      const ace10 = ace10Usd !== undefined ? ace10Usd * m.usdToGbp : undefined;
       if (r !== undefined || psa10 !== undefined || ace10 !== undefined) {
         tcgplayerOut[variant] = {
           ...(r !== undefined ? { market: r, marketPrice: r } : {}),

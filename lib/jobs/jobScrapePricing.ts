@@ -149,34 +149,6 @@ function collateFlatToByVariant(flatUsd: Record<string, number>): ByVariant {
   return out;
 }
 
-function convertByVariantUsdToGbp(byVariant: ByVariant, usdToGbp: number): ByVariant {
-  const out: ByVariant = {};
-  for (const [slug, rec] of Object.entries(byVariant)) {
-    const next: { raw?: number; psa10?: number; ace10?: number } = {};
-    if (typeof rec.raw === "number") next.raw = rec.raw * usdToGbp;
-    if (typeof rec.psa10 === "number") next.psa10 = rec.psa10 * usdToGbp;
-    if (typeof rec.ace10 === "number") next.ace10 = rec.ace10 * usdToGbp;
-    if (Object.keys(next).length > 0) out[slug] = next;
-  }
-  return out;
-}
-
-// ─── FX rates ─────────────────────────────────────────────────────────────────
-
-async function fetchUsdToGbp(): Promise<number> {
-  try {
-    const res = await fetch("https://api.frankfurter.app/latest?from=GBP&to=USD");
-    if (!res.ok) throw new Error(`Frankfurter ${res.status}`);
-    const data = (await res.json()) as { rates?: { USD?: number } };
-    const usdPerGbp = data.rates?.USD;
-    if (!usdPerGbp || usdPerGbp <= 0) throw new Error("Bad rate");
-    return 1 / usdPerGbp;
-  } catch {
-    const fallback = Number.parseFloat(process.env.MARKET_PRICE_FALLBACK_USD_TO_GBP ?? "0.79");
-    return Number.isFinite(fallback) && fallback > 0 ? fallback : 0.79;
-  }
-}
-
 // ─── Concurrency pool ─────────────────────────────────────────────────────────
 
 async function mapPool<T>(items: T[], concurrency: number, fn: (item: T) => Promise<void>): Promise<void> {
@@ -220,13 +192,7 @@ async function uploadToR2(s3: S3Client, setCode: string, json: string): Promise<
 
 // ─── Per-set scrape ───────────────────────────────────────────────────────────
 
-async function scrapeSet(
-  set: SetJsonEntry,
-  cards: CardJsonEntry[],
-  usdToGbp: number,
-  s3: S3Client,
-  dryRun: boolean,
-): Promise<void> {
+async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client, dryRun: boolean): Promise<void> {
   const setCode = set.code ?? set.tcgdexId;
   if (!setCode) return;
 
@@ -335,9 +301,8 @@ async function scrapeSet(
     const hasPrice = Object.values(byVariant).some((r) => Number.isFinite(r.raw) || Number.isFinite(r.psa10) || Number.isFinite(r.ace10));
     if (!hasPrice) continue;
 
-    const scrydexGbp = convertByVariantUsdToGbp(byVariant, usdToGbp);
     const key = card.externalId ?? ext;
-    pricingMap[key] = { scrydex: scrydexGbp, tcgplayer: null, cardmarket: null };
+    pricingMap[key] = { scrydex: byVariant, tcgplayer: null, cardmarket: null };
   }
 
   const count = Object.keys(pricingMap).length;
@@ -387,11 +352,8 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
       ? `series: ${onlySeriesNames.join(", ")}`
       : "all sets";
 
-  console.log(`=== Scrydex price scrape (${scopeLabel}) ===`);
+  console.log(`=== Scrydex price scrape (${scopeLabel}) — storing USD ===`);
   if (dryRun) console.log("(dry-run: no R2 uploads)\n");
-
-  const usdToGbp = await fetchUsdToGbp();
-  console.log(`FX: 1 USD = ${usdToGbp.toFixed(4)} GBP\n`);
 
   const s3 = buildS3Client();
 
@@ -403,7 +365,7 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
       console.log(`  [${setCode}] skip — no cards in data/cards/${setCode}.json`);
       continue;
     }
-    await scrapeSet(set, cards, usdToGbp, s3, dryRun);
+    await scrapeSet(set, cards, s3, dryRun);
   }
 
   console.log("\nDone.");

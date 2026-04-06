@@ -1,6 +1,7 @@
 import { getCardMapById } from "@/lib/staticCardIndex";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import { getPricingForCard, getPricingForSet } from "@/lib/r2Pricing";
+import { scaleSetPriceTrendMapUsdToGbpForDisplay } from "@/lib/pricingUsdStorageDisplay";
 import { getPriceTrendForCard, getPriceTrendsForSet } from "@/lib/r2PriceTrends";
 import type { CardJsonEntry, CardPriceTrendSummary } from "@/lib/staticDataTypes";
 
@@ -43,7 +44,7 @@ export function readMarketGbp(
       if (!block || typeof block !== "object") continue;
       const value = block as Record<string, unknown>;
       if (typeof value.raw === "number" && Number.isFinite(value.raw)) {
-        return value.raw;
+        return value.raw * multipliers.usdToGbp;
       }
     }
   }
@@ -79,10 +80,13 @@ export async function fetchPriceSummariesForMasterCardIds(
   const trends: Record<string, CardPriceTrendSummary> = {};
   await Promise.all(
     [...bySet.entries()].map(async ([setCode, setIds]) => {
-      const [pricingMap, trendMap] = await Promise.all([
+      const [pricingMap, trendMapRaw] = await Promise.all([
         getPricingForSet(setCode),
         getPriceTrendsForSet(setCode),
       ]);
+      const trendMap = trendMapRaw
+        ? scaleSetPriceTrendMapUsdToGbpForDisplay(trendMapRaw, multipliers.usdToGbp)
+        : null;
       if (!pricingMap && !trendMap) return;
 
       for (const masterCardId of setIds) {

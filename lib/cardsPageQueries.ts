@@ -1,6 +1,7 @@
 import { cardMatchesEnergyTypeSelection } from "@/lib/cardEnergyFilter";
 import { isBasicRarity } from "@/lib/cardRarityFilter";
 import { fetchPriceSummariesForMasterCardIds, fetchPricesForMasterCardIds } from "@/lib/cardPricingBulk";
+import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import type { SortOrder } from "@/lib/persistedFilters";
 import type { CardJsonEntry } from "@/lib/staticCards";
 import { getCardsBySet, getAllSets } from "@/lib/staticCards";
@@ -331,8 +332,8 @@ export function getCachedFilterFacets() {
 // ─── Set market value ─────────────────────────────────────────────────────────
 
 /**
- * Sum the lowest raw GBP price per card for the given set.
- * Reads from the R2 pricing JSON if available, falls back to Payload DB.
+ * Sum the lowest raw **GBP** price per card for the given set.
+ * Reads Scrydex snapshot from R2 (stored USD) and converts with live FX.
  */
 export async function fetchSetMarketValue(setCode: string): Promise<number | null> {
   try {
@@ -340,23 +341,24 @@ export async function fetchSetMarketValue(setCode: string): Promise<number | nul
     const pricing = await getPricingForSet(setCode);
     if (!pricing) return null;
 
+    const { usdToGbp } = await fetchGbpConversionMultipliers();
     let total = 0;
     let counted = 0;
 
     for (const entry of Object.values(pricing)) {
       const scrydex = entry.scrydex;
       if (!scrydex || typeof scrydex !== "object" || Array.isArray(scrydex)) continue;
-      let lowest = Infinity;
+      let lowestUsd = Infinity;
       for (const v of Object.values(scrydex as Record<string, unknown>)) {
         if (v && typeof v === "object" && !Array.isArray(v)) {
           const raw = (v as Record<string, unknown>).raw;
-          if (typeof raw === "number" && Number.isFinite(raw) && raw > 0 && raw < lowest) {
-            lowest = raw;
+          if (typeof raw === "number" && Number.isFinite(raw) && raw > 0 && raw < lowestUsd) {
+            lowestUsd = raw;
           }
         }
       }
-      if (lowest !== Infinity) {
-        total += lowest;
+      if (lowestUsd !== Infinity) {
+        total += lowestUsd * usdToGbp;
         counted++;
       }
     }
@@ -368,7 +370,7 @@ export async function fetchSetMarketValue(setCode: string): Promise<number | nul
 }
 
 /**
- * Sum the lowest raw GBP price for cards in a set that are not already owned.
+ * Sum the lowest raw **GBP** price for cards in a set that are not already owned.
  * Uses the same pricing source as {@link fetchSetMarketValue}.
  */
 export async function fetchSetCompletionValue(
@@ -381,6 +383,7 @@ export async function fetchSetCompletionValue(
     const pricing = await getPricingForSet(setCode);
     if (!pricing) return null;
 
+    const { usdToGbp } = await fetchGbpConversionMultipliers();
     let total = 0;
     let counted = 0;
     let missingCount = 0;
@@ -403,18 +406,18 @@ export async function fetchSetCompletionValue(
       const scrydex = entry?.scrydex;
       if (!scrydex || typeof scrydex !== "object" || Array.isArray(scrydex)) continue;
 
-      let lowest = Infinity;
+      let lowestUsd = Infinity;
       for (const v of Object.values(scrydex as Record<string, unknown>)) {
         if (v && typeof v === "object" && !Array.isArray(v)) {
           const raw = (v as Record<string, unknown>).raw;
-          if (typeof raw === "number" && Number.isFinite(raw) && raw > 0 && raw < lowest) {
-            lowest = raw;
+          if (typeof raw === "number" && Number.isFinite(raw) && raw > 0 && raw < lowestUsd) {
+            lowestUsd = raw;
           }
         }
       }
 
-      if (lowest !== Infinity) {
-        total += lowest;
+      if (lowestUsd !== Infinity) {
+        total += lowestUsd * usdToGbp;
         counted++;
       }
     }
@@ -426,7 +429,7 @@ export async function fetchSetCompletionValue(
 }
 
 /**
- * Sum the lowest raw GBP price for a list of cards spanning multiple sets.
+ * Sum the lowest raw **GBP** price for a list of cards spanning multiple sets.
  * Returns total market value and (if ownedMasterCardIds provided) missing value.
  */
 export async function fetchCardsMarketValue(
@@ -435,6 +438,7 @@ export async function fetchCardsMarketValue(
 ): Promise<{ totalValueGbp: number; missingValueGbp: number; missingCount: number } | null> {
   try {
     const { getPricingForSet, getPricingForCard } = await import("@/lib/r2Pricing");
+    const { usdToGbp } = await fetchGbpConversionMultipliers();
 
     const cardsBySet = new Map<string, CardsPageCardEntry[]>();
     for (const card of cards) {
@@ -470,21 +474,22 @@ export async function fetchCardsMarketValue(
       const scrydex = entry?.scrydex;
       if (!scrydex || typeof scrydex !== "object" || Array.isArray(scrydex)) continue;
 
-      let lowest = Infinity;
+      let lowestUsd = Infinity;
       for (const v of Object.values(scrydex as Record<string, unknown>)) {
         if (v && typeof v === "object" && !Array.isArray(v)) {
           const raw = (v as Record<string, unknown>).raw;
-          if (typeof raw === "number" && Number.isFinite(raw) && raw > 0 && raw < lowest) {
-            lowest = raw;
+          if (typeof raw === "number" && Number.isFinite(raw) && raw > 0 && raw < lowestUsd) {
+            lowestUsd = raw;
           }
         }
       }
-      if (lowest === Infinity) continue;
+      if (lowestUsd === Infinity) continue;
 
-      totalValueGbp += lowest;
+      const lowestGbp = lowestUsd * usdToGbp;
+      totalValueGbp += lowestGbp;
       const isOwned = ownedMasterCardIds && masterCardId && ownedMasterCardIds.has(masterCardId);
       if (!isOwned) {
-        missingValueGbp += lowest;
+        missingValueGbp += lowestGbp;
         missingCount++;
       }
     }

@@ -15,7 +15,6 @@ import {
   R2_SEALED_POKEDATA_DEFAULT_SLUG,
   r2SealedPokedataPriceHistoryKey,
 } from "../lib/r2BucketLayout";
-import { fetchGbpConversionMultipliers } from "../lib/marketPriceExchange";
 import {
   mergeDailySeriesIntoWindow,
   type PriceHistoryPoint,
@@ -158,10 +157,7 @@ function collectObservedDateKeys(payload: ProductTransactionsPayload): string[] 
   return [...keys].sort((left, right) => left.localeCompare(right));
 }
 
-function collectKnownDailyAveragePoints(
-  payload: ProductTransactionsPayload,
-  usdToGbpMultiplier: number,
-): PriceHistoryPoint[] {
+function collectKnownDailyAveragePoints(payload: ProductTransactionsPayload): PriceHistoryPoint[] {
   const grouped = new Map<string, { total: number; count: number }>();
   const appendFromSources = (sources: ProductTransaction[][]) => {
     for (const source of sources) {
@@ -171,7 +167,7 @@ function collectKnownDailyAveragePoints(
         if (typeof row.sold_price !== "number" || !Number.isFinite(row.sold_price)) continue;
 
         const current = grouped.get(dateKey) ?? { total: 0, count: 0 };
-        current.total += row.sold_price * usdToGbpMultiplier;
+        current.total += row.sold_price;
         current.count += 1;
         grouped.set(dateKey, current);
       }
@@ -243,11 +239,8 @@ function expandChartLikeDailyPoints(
   });
 }
 
-function collectPrimaryDailyHistoryPoints(
-  payload: ProductTransactionsPayload,
-  usdToGbpMultiplier: number,
-): PriceHistoryPoint[] {
-  const knownPoints = collectKnownDailyAveragePoints(payload, usdToGbpMultiplier);
+function collectPrimaryDailyHistoryPoints(payload: ProductTransactionsPayload): PriceHistoryPoint[] {
+  const knownPoints = collectKnownDailyAveragePoints(payload);
   const observedDateKeys = collectObservedDateKeys(payload);
   return expandChartLikeDailyPoints(knownPoints, observedDateKeys);
 }
@@ -290,7 +283,6 @@ async function main(): Promise<void> {
   loadEnvFile(ENV_FILE);
   ensureOutputDir();
 
-  const multipliers = await fetchGbpConversionMultipliers();
   const allProducts = await fetchProducts();
   const products = filterProducts(allProducts);
 
@@ -303,7 +295,7 @@ async function main(): Promise<void> {
 
   for (const [index, product] of products.entries()) {
     const payload = await fetchProductTransactions(product.id);
-    const dailyPoints = collectPrimaryDailyHistoryPoints(payload, multipliers.usdToGbp);
+    const dailyPoints = collectPrimaryDailyHistoryPoints(payload);
     if (dailyPoints.length === 0) {
       if ((index + 1) % 25 === 0 || index === products.length - 1) {
         console.log(`  processed ${index + 1}/${products.length}`);

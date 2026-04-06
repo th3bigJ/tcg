@@ -63,6 +63,7 @@ export type CardPricingEntry = {
 
 export type SetPricingMap = Record<string, CardPricingEntry>;
 
+/** Near Mint / graded estimates from Scrydex scrape — stored on R2 in **USD**. */
 export type ScrydexVariantPricing = {
   raw?: number;
   psa10?: number;
@@ -71,6 +72,7 @@ export type ScrydexVariantPricing = {
 
 export type ScrydexCardPricing = Record<string, ScrydexVariantPricing>;
 
+/** Date bucket key and price — R2 singles + sealed history store **USD** amounts. */
 export type PriceHistoryPoint = [string, number];
 
 export type PriceHistoryWindow = {

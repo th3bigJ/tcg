@@ -214,7 +214,6 @@ export function getSealedPriceHistoryForProduct(
 export async function updateSealedPriceHistory(
   s3: S3Client,
   prices: Record<string, { id: number; market_value: number | null }>,
-  usdToGbpMultiplier: number,
 ): Promise<SealedProductPriceHistoryMap> {
   const historyMap = (await getSealedPriceHistory()) ?? {};
   const dailyKey = todayKey();
@@ -227,8 +226,8 @@ export async function updateSealedPriceHistory(
 
     const productId = String(priceEntry.id);
     const current = ensureWindow(historyMap[productId]);
-    const gbpValue = priceEntry.market_value * usdToGbpMultiplier;
-    const daily = upsertAndTrim(current.daily, dailyKey, gbpValue, DAILY_HISTORY_LIMIT);
+    const usdValue = priceEntry.market_value;
+    const daily = upsertAndTrim(current.daily, dailyKey, usdValue, DAILY_HISTORY_LIMIT);
     const weekly = upsertAverageForBucket(
       current.weekly,
       daily,

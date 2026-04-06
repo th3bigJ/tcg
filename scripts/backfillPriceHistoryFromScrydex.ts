@@ -143,16 +143,13 @@ function slugFromLabel(label: string): string {
 
 type VariantGradeHistoryMap = Record<string, Record<string, PriceHistoryPoint[]>>;
 
-function collateFlatHistoryToByVariant(
-  flatHistory: Record<string, ScrydexHistoryPoint[]>,
-  usdToGbp: number,
-): VariantGradeHistoryMap {
+function collateFlatHistoryToByVariant(flatHistory: Record<string, ScrydexHistoryPoint[]>): VariantGradeHistoryMap {
   const out: VariantGradeHistoryMap = {};
 
   for (const [key, points] of Object.entries(flatHistory)) {
     const normalizedPoints: PriceHistoryPoint[] = points
-      .map(([dateKey, usd]) => [dateKey, usd * usdToGbp] as PriceHistoryPoint)
-      .filter(([, gbp]) => Number.isFinite(gbp));
+      .map(([dateKey, usd]) => [dateKey, usd] as PriceHistoryPoint)
+      .filter(([, v]) => Number.isFinite(v));
     if (normalizedPoints.length === 0) continue;
 
     if (key.endsWith(SCRYDEX_FLAT_PSA10_KEY_SUFFIX)) {
@@ -179,8 +176,8 @@ function collateFlatHistoryToByVariant(
   return out;
 }
 
-function buildHistoryForCard(flatHistory: Record<string, ScrydexHistoryPoint[]>, usdToGbp: number): CardPriceHistory | null {
-  const byVariant = collateFlatHistoryToByVariant(flatHistory, usdToGbp);
+function buildHistoryForCard(flatHistory: Record<string, ScrydexHistoryPoint[]>): CardPriceHistory | null {
+  const byVariant = collateFlatHistoryToByVariant(flatHistory);
   const out: CardPriceHistory = {};
 
   for (const [variantSlug, grades] of Object.entries(byVariant)) {
@@ -195,20 +192,6 @@ function buildHistoryForCard(flatHistory: Record<string, ScrydexHistoryPoint[]>,
   }
 
   return Object.keys(out).length > 0 ? out : null;
-}
-
-async function fetchUsdToGbp(): Promise<number> {
-  try {
-    const res = await fetch("https://api.frankfurter.app/latest?from=GBP&to=USD");
-    if (!res.ok) throw new Error(`Frankfurter ${res.status}`);
-    const data = (await res.json()) as { rates?: { USD?: number } };
-    const usdPerGbp = data.rates?.USD;
-    if (!usdPerGbp || usdPerGbp <= 0) throw new Error("Bad rate");
-    return 1 / usdPerGbp;
-  } catch {
-    const fallback = Number.parseFloat(process.env.MARKET_PRICE_FALLBACK_USD_TO_GBP ?? "0.79");
-    return Number.isFinite(fallback) && fallback > 0 ? fallback : 0.79;
-  }
 }
 
 function buildS3Client(): S3Client {
@@ -236,12 +219,7 @@ async function uploadHistoryToR2(s3: S3Client, setCode: string, historyMap: SetP
   );
 }
 
-async function backfillSet(
-  set: SetJsonEntry,
-  cards: CardJsonEntry[],
-  usdToGbp: number,
-  s3: S3Client,
-): Promise<void> {
+async function backfillSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client): Promise<void> {
   const setCode = set.code ?? set.tcgdexId;
   if (!setCode) return;
 
@@ -305,7 +283,7 @@ async function backfillSet(
       flatHistory = { ...flatHistory, ...rawHistory, ...psa10History, ...ace10History };
     }
 
-    const cardHistory = buildHistoryForCard(flatHistory, usdToGbp);
+    const cardHistory = buildHistoryForCard(flatHistory);
     if (!cardHistory) continue;
 
     historyMap[card.externalId ?? ext] = cardHistory;
@@ -372,9 +350,7 @@ async function main(): Promise<void> {
   console.log(`=== Scrydex price-history backfill (${filterLabel}) ===`);
   if (dryRun) console.log("(dry-run: no R2 uploads)\n");
   console.log(`Windows: daily=${todayKey()} weekly=${currentWeekKey()} monthly=${currentMonthKey()}`);
-
-  const usdToGbp = await fetchUsdToGbp();
-  console.log(`FX: 1 USD = ${usdToGbp.toFixed(4)} GBP\n`);
+  console.log("(history points stored in USD)\n");
 
   const s3 = buildS3Client();
   for (const set of sets) {
@@ -385,7 +361,7 @@ async function main(): Promise<void> {
       console.log(`  [${setCode}] skip — no cards in data/cards/${setCode}.json`);
       continue;
     }
-    await backfillSet(set, cards, usdToGbp, s3);
+    await backfillSet(set, cards, s3);
   }
 
   console.log("\nDone.");

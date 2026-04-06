@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getCurrentCustomer } from "@/lib/auth";
+import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 import { getPricingForSet, getPricingForCard } from "@/lib/r2Pricing";
@@ -31,6 +32,7 @@ function readScrydexPrice(scrydex: unknown, key: string, variant?: string): numb
 }
 
 async function buildGradeOpportunities(customerId: string): Promise<GradeOpportunity[]> {
+  const { usdToGbp } = await fetchGbpConversionMultipliers();
   const entries = await fetchCollectionCardEntries(customerId);
 
   // Only consider ungraded cards
@@ -72,9 +74,12 @@ async function buildGradeOpportunities(customerId: string): Promise<GradeOpportu
         if (!entry?.scrydex) continue;
 
         const variant = e.printing?.trim() || undefined;
-        const rawGbp = readScrydexPrice(entry.scrydex, "raw", variant);
-        const psa10Gbp = readScrydexPrice(entry.scrydex, "psa10", variant);
-        const ace10Gbp = readScrydexPrice(entry.scrydex, "ace10", variant);
+        const rawUsd = readScrydexPrice(entry.scrydex, "raw", variant);
+        const psa10Usd = readScrydexPrice(entry.scrydex, "psa10", variant);
+        const ace10Usd = readScrydexPrice(entry.scrydex, "ace10", variant);
+        const rawGbp = rawUsd !== null ? rawUsd * usdToGbp : null;
+        const psa10Gbp = psa10Usd !== null ? psa10Usd * usdToGbp : null;
+        const ace10Gbp = ace10Usd !== null ? ace10Usd * usdToGbp : null;
 
         if (!rawGbp || rawGbp <= 0) continue;
         if (!psa10Gbp && !ace10Gbp) continue;

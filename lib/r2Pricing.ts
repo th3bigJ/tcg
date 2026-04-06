@@ -2,7 +2,7 @@
  * Fetches per-set pricing JSON from R2 (`pricing/card-pricing/{setCode}.json`).
  * Updated by the pricing scrape job (`jobScrapePricing` / `scrape:pricing`).
  *
- * Each file shape: { [externalId]: { scrydex, tcgplayer, cardmarket } }
+ * Each file shape: { [externalId]: { scrydex, tcgplayer, cardmarket } } — `scrydex` variant figures are **USD**.
  */
 
 import { r2SinglesCardPricingPrefix } from "@/lib/r2BucketLayout";

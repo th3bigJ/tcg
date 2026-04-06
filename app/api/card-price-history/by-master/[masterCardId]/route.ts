@@ -1,5 +1,8 @@
+import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
+import { scaleCardPriceHistoryUsdToGbpForDisplay } from "@/lib/pricingUsdStorageDisplay";
 import { getPriceHistoryForCard, getPriceHistoryForSet } from "@/lib/r2PriceHistory";
 import { getCardMapById } from "@/lib/staticCardIndex";
+import type { CardPriceHistory } from "@/lib/staticDataTypes";
 
 const CACHE_HEADERS = { "Cache-Control": "s-maxage=21600, stale-while-revalidate=86400" };
 
@@ -14,6 +17,7 @@ export async function GET(
   }
 
   try {
+    const { usdToGbp } = await fetchGbpConversionMultipliers();
     const card = getCardMapById().get(masterCardId);
     if (!card) return Response.json({ error: "Not found" }, { status: 404, headers: CACHE_HEADERS });
 
@@ -26,7 +30,8 @@ export async function GET(
     const entry = getPriceHistoryForCard(historyMap, ids[0], ids.slice(1));
     if (!entry) return Response.json({ error: "Not found" }, { status: 404, headers: CACHE_HEADERS });
 
-    return Response.json(entry, { headers: CACHE_HEADERS });
+    const gbp: CardPriceHistory = scaleCardPriceHistoryUsdToGbpForDisplay(entry, usdToGbp);
+    return Response.json(gbp, { headers: CACHE_HEADERS });
   } catch {
     return Response.json({ error: "Not found" }, { status: 404, headers: CACHE_HEADERS });
   }

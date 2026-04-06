@@ -5,7 +5,6 @@ import {
   r2SealedPokedataCatalogKey,
   r2SealedPokedataPricesSnapshotKey,
 } from "@/lib/r2BucketLayout";
-import { fetchGbpConversionMultipliers } from "../marketPriceExchange";
 import { updateSealedPriceHistory } from "../r2SealedPriceHistory";
 import { uploadSealedPriceTrends } from "../r2SealedPriceTrends";
 
@@ -483,8 +482,7 @@ export async function runScrapePokedataProducts(opts: ScrapePokedataProductsOpti
 
   if (mode === "all" || mode === "prices") {
     await uploadJson(s3, bucket, pricesKey, pricesPayload);
-    const multipliers = await fetchGbpConversionMultipliers();
-    const historyMap = await updateSealedPriceHistory(s3, pricesPayload.prices, multipliers.usdToGbp);
+    const historyMap = await updateSealedPriceHistory(s3, pricesPayload.prices);
     await uploadSealedPriceTrends(s3, historyMap);
     console.log(`Uploaded price snapshot to R2 ${pricesKey}`);
   }

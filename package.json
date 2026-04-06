@@ -29,7 +29,8 @@
     "r2:nest-singles-pricing-under-pricing": "node --import tsx/esm scripts/r2NestSinglesPricingUnderPricingFolder.ts",
     "r2:move-sealed-pokedata-json": "node --import tsx/esm scripts/r2MoveSealedPokedataJsonToDataAndPricing.ts",
     "r2:move-pokemon-graded-under-images": "node --import tsx/esm scripts/r2MovePokemonAndGradedUnderImages.ts",
-    "r2:move-sets-under-images": "node --import tsx/esm scripts/r2MoveSetsUnderImages.ts"
+    "r2:move-sets-under-images": "node --import tsx/esm scripts/r2MoveSetsUnderImages.ts",
+    "r2:migrate-pricing-gbp-to-usd": "node --import tsx/esm scripts/migrateR2PricingGbpToUsd.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

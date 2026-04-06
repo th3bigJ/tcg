@@ -73,7 +73,7 @@ function estimateUnitGbpFromPricing(
         : null;
     if (avgSell !== null) return avgSell * multipliers.eurToGbp;
   }
-  // Fall back to Scrydex: { [variant]: { raw: number, psa10?: number, ace10?: number } } — already GBP
+  // Scrydex R2 snapshot: { [variant]: { raw, psa10?, ace10? } } in **USD** (same as TCGPlayer source currency).
   const scObj = scrydex && typeof scrydex === "object" ? (scrydex as Record<string, unknown>) : null;
   if (scObj) {
     const gradedKey = gradingCompany && gradeValue ? scrydexGradedKey(gradingCompany, gradeValue) : null;
@@ -82,10 +82,10 @@ function estimateUnitGbpFromPricing(
       const b = block as Record<string, unknown>;
       if (gradedKey) {
         const g = b[gradedKey];
-        if (typeof g === "number" && Number.isFinite(g)) return g;
+        if (typeof g === "number" && Number.isFinite(g)) return g * multipliers.usdToGbp;
       }
       const r = b.raw;
-      return typeof r === "number" && Number.isFinite(r) ? r : null;
+      return typeof r === "number" && Number.isFinite(r) ? r * multipliers.usdToGbp : null;
     };
     if (tcgplayerKeysForVariant.length > 0) {
       for (const k of tcgplayerKeysForVariant) {
