@@ -90,6 +90,13 @@ export type PriceTrendWindowSummary = {
   direction: PriceTrendDirection;
 };
 
+export type GradeTrendSummary = {
+  current: number;
+  daily: PriceTrendWindowSummary;
+  weekly: PriceTrendWindowSummary;
+  monthly: PriceTrendWindowSummary;
+};
+
 export type CardPriceTrendSummary = {
   variant: string;
   grade: string;
@@ -97,6 +104,8 @@ export type CardPriceTrendSummary = {
   daily: PriceTrendWindowSummary;
   weekly: PriceTrendWindowSummary;
   monthly: PriceTrendWindowSummary;
+  /** Full breakdown of trends per variant → grade */
+  allVariants?: Record<string, Record<string, GradeTrendSummary>>;
 };
 
 export type SetPriceTrendMap = Record<string, CardPriceTrendSummary>;

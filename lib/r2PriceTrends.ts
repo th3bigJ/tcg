@@ -5,6 +5,7 @@ import { buildPricingLookupIds } from "@/lib/r2Pricing";
 import type {
   CardPriceHistory,
   CardPriceTrendSummary,
+  GradeTrendSummary,
   PriceHistoryPoint,
   PriceTrendDirection,
   SetPriceHistoryMap,
@@ -87,7 +88,30 @@ function sortedGradeKeys(variantHistory: Record<string, { daily: PriceHistoryPoi
   });
 }
 
+function buildAllVariantsTrends(cardHistory: CardPriceHistory): Record<string, Record<string, GradeTrendSummary>> {
+  const out: Record<string, Record<string, GradeTrendSummary>> = {};
+  for (const variant of sortedVariantKeys(cardHistory)) {
+    const variantHistory = cardHistory[variant];
+    if (!variantHistory || typeof variantHistory !== "object") continue;
+    for (const grade of sortedGradeKeys(variantHistory as Record<string, { daily: PriceHistoryPoint[] }>)) {
+      const window = variantHistory[grade];
+      const current = window?.daily?.[window.daily.length - 1]?.[1];
+      if (typeof current !== "number" || !Number.isFinite(current)) continue;
+      out[variant] ??= {};
+      out[variant][grade] = {
+        current,
+        daily: buildWindowSummary(window.daily),
+        weekly: buildWindowSummary(window.weekly),
+        monthly: buildWindowSummary(window.monthly),
+      };
+    }
+  }
+  return out;
+}
+
 export function buildTrendSummaryForCard(cardHistory: CardPriceHistory): CardPriceTrendSummary | null {
+  const allVariants = buildAllVariantsTrends(cardHistory);
+
   for (const variant of sortedVariantKeys(cardHistory)) {
     const variantHistory = cardHistory[variant];
     if (!variantHistory || typeof variantHistory !== "object") continue;
@@ -104,6 +128,7 @@ export function buildTrendSummaryForCard(cardHistory: CardPriceHistory): CardPri
         daily: buildWindowSummary(window.daily),
         weekly: buildWindowSummary(window.weekly),
         monthly: buildWindowSummary(window.monthly),
+        allVariants,
       };
     }
   }
