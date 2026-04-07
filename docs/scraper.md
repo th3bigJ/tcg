@@ -127,7 +127,7 @@ npm run scrape:pricing -- --series="Sun & Moon,Black & White,E-Card"
 Approx. 4,587 cards.
 
 ```bash
-npm run scrape:pricing -- --series="XY,EX,Platinum,HeartGold & SoulSilver"
+npm run scrape:pricing -- --series="XY,EX,Platinum,HeartGold & SoulSilver,Miscellaneous"
 ```
 
 ## Scrydex card metadata (printed number, attacks, rules)
