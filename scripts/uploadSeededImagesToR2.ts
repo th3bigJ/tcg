@@ -21,8 +21,6 @@ const TARGET_SET_CODES = [
   "ex5.5",
   "ex5",
   "hgssp",
-  "mee",
-  "sve",
   "svp",
   "xyp",
 ] as const;
@@ -196,15 +194,8 @@ async function uploadCardsForSet(
   return { uploaded, rewritten };
 }
 
-function verifySetAssetsInData(): void {
-  const sets = readJson<SetJsonEntry[]>(SETS_FILE);
-  const sve = sets.find((set) => set.setKey === "sve");
-  if (!sve) throw new Error("Could not find sve in data/sets.json");
-}
-
 async function main(): Promise<void> {
   loadEnvFile(ENV_FILE);
-  verifySetAssetsInData();
 
   const s3 = buildS3Client();
   const bucket = getBucket();

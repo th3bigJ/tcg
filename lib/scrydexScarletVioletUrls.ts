@@ -26,7 +26,6 @@ const SV_ROWS: readonly [string, string, string][] = [
   ["rsv10pt5", "white-flare", "rsv10pt5"],
   ["zsv10pt5", "black-bolt", "zsv10pt5"],
   ["svp", "scarlet-violet-black-star-promos", "svp"],
-  ["sve", "scarlet-violet-energies", "sve"],
 ];
 
 const SV_BY_CODE: Record<string, ScrydexExpansionListConfig> = (() => {
@@ -40,8 +39,11 @@ const SV_BY_CODE: Record<string, ScrydexExpansionListConfig> = (() => {
   return out;
 })();
 
-/** Alternate Payload / legacy spellings → canonical tcg key in `SV_BY_CODE`. */
-const SV_ALIASES: Record<string, string> = {
+/**
+ * Alternate Payload / legacy spellings → canonical catalog set key (e.g. `sv02` → `sv2`).
+ * Used for price-history keys, Scrydex URL resolution, and pricing lookups.
+ */
+export const SCARLET_VIOLET_CARD_KEY_PREFIX_ALIASES: Readonly<Record<string, string>> = {
   // Zero-padded without dot
   sv01: "sv1",
   sv02: "sv2",
@@ -73,10 +75,60 @@ const SV_ALIASES: Record<string, string> = {
   sv10pt5b: "zsv10pt5",
 };
 
+/** Longest first so `sv06.5-1` resolves to prefix `sv06.5`, not `sv06`. */
+const SCARLET_VIOLET_CARD_KEY_PREFIXES_LONG_FIRST: readonly string[] = (() => {
+  const s = new Set<string>();
+  for (const [a, b] of Object.entries(SCARLET_VIOLET_CARD_KEY_PREFIX_ALIASES)) {
+    s.add(a.toLowerCase());
+    s.add(b.toLowerCase());
+  }
+  return Array.from(s).sort((x, y) => y.length - x.length);
+})();
+
+/**
+ * Split a card external id into set prefix + remainder (e.g. `sv06.5-099` → `sv06.5`, `099`).
+ * Non–Scarlet & Violet ids fall back to the first `-` boundary.
+ */
+export function partitionPokemonCardExternalId(id: string): { prefix: string; suffix: string } {
+  const lower = id.toLowerCase();
+  for (const pl of SCARLET_VIOLET_CARD_KEY_PREFIXES_LONG_FIRST) {
+    const pat = `${pl}-`;
+    if (lower.startsWith(pat)) {
+      return { prefix: id.slice(0, pl.length), suffix: id.slice(pl.length + 1) };
+    }
+  }
+  const dash = id.indexOf("-");
+  if (dash <= 0) return { prefix: id, suffix: "" };
+  return { prefix: id.slice(0, dash), suffix: id.slice(dash + 1) };
+}
+
+/** Catalog set key → legacy prefixes still seen in older pricing / price-history JSON. */
+export function scarletVioletLegacyPricingPrefixesByCatalogKey(): Record<string, readonly string[]> {
+  const byCanon: Record<string, Set<string>> = {};
+  for (const [legacy, canon] of Object.entries(SCARLET_VIOLET_CARD_KEY_PREFIX_ALIASES)) {
+    const c = canon.toLowerCase();
+    const l = legacy.toLowerCase();
+    if (l === c) continue;
+    byCanon[c] ??= new Set();
+    byCanon[c].add(legacy);
+  }
+  const out: Record<string, readonly string[]> = {};
+  for (const [c, set] of Object.entries(byCanon)) {
+    out[c] = Array.from(set);
+  }
+  return out;
+}
+
+/** Normalize a card id’s set prefix for SV block (`sv02` → `sv2`); elsewhere returns `prefix` lowercased. */
+export function normalizeScarletVioletCardKeySetPrefix(prefix: string): string {
+  const lower = prefix.toLowerCase();
+  return SCARLET_VIOLET_CARD_KEY_PREFIX_ALIASES[lower] ?? lower;
+}
+
 function resolveSvKey(raw: string): string | null {
   const k = raw.trim().toLowerCase();
   if (SV_BY_CODE[k]) return k;
-  const aliased = SV_ALIASES[k];
+  const aliased = SCARLET_VIOLET_CARD_KEY_PREFIX_ALIASES[k];
   if (aliased && SV_BY_CODE[aliased]) return aliased;
   return null;
 }

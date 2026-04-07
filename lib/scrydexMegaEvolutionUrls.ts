@@ -1,6 +1,5 @@
 /**
  * Scrydex English expansion URLs for sets in the Mega Evolution block (card href prefix = `listPrefix`).
- * `mee` is a local-only energy set — not listed on Scrydex.
  */
 
 export type ScrydexExpansionListConfig = {
@@ -21,8 +20,6 @@ export function scrydexMegaExpansionConfig(
     (x): x is string => typeof x === "string" && x.trim().length > 0,
   );
   const lowered = new Set(candidates.map((c) => c.trim().toLowerCase()));
-
-  if (lowered.has("mee")) return null;
 
   if (lowered.has("mep")) {
     return {

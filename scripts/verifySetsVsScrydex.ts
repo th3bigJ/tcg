@@ -11,9 +11,6 @@ import { resolveExpansionConfigsForSet } from "../lib/scrydexExpansionConfigsFor
 import { isScrydexErrorPage } from "../lib/scrydexCardPageCardText";
 import { SCRYDEX_DEFAULT_UA } from "../lib/scrydexExpansionListParsing";
 
-/** Catalog sets with no Scrydex expansion listing (by design). */
-const NO_SCRYDEX_LISTING = new Set(["mee"]);
-
 const DATA = path.join(process.cwd(), "data", "sets.json");
 
 function sleep(ms: number): Promise<void> {
@@ -49,11 +46,6 @@ async function main(): Promise<void> {
   for (const set of sets) {
     const key = (set.setKey ?? "").trim();
     if (!key) continue;
-
-    if (NO_SCRYDEX_LISTING.has(key.toLowerCase())) {
-      ok.push(`${key}\t(local-only, no Scrydex listing)`);
-      continue;
-    }
 
     const configs = resolveExpansionConfigsForSet(set);
     if (!configs.length) {

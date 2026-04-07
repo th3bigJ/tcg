@@ -6,6 +6,11 @@
  */
 
 import { r2SinglesCardPricingPrefix } from "@/lib/r2BucketLayout";
+import {
+  normalizeScarletVioletCardKeySetPrefix,
+  partitionPokemonCardExternalId,
+  scarletVioletLegacyPricingPrefixesByCatalogKey,
+} from "@/lib/scrydexScarletVioletUrls";
 import type { CardPricingEntry, SetPricingMap } from "@/lib/staticDataTypes";
 
 export type { CardPricingEntry, SetPricingMap };
@@ -13,8 +18,10 @@ export type { CardPricingEntry, SetPricingMap };
 /**
  * Older price-history / trend maps (and some R2 blobs) keyed cards with TCGdex-style set prefixes
  * (`me01-…`, `me02-…`, `me02.5-…`) while the catalog uses Scrydex `setKey` (`me1`, `me2`, `me2pt5`).
+ * Scarlet & Violet zero-padded / dotted legacy prefixes come from `scrydexScarletVioletUrls`.
  */
 const CATALOG_PREFIX_TO_LEGACY_PRICING_PREFIXES: Record<string, readonly string[]> = {
+  ...scarletVioletLegacyPricingPrefixesByCatalogKey(),
   me1: ["me01"],
   me2: ["me02"],
   me2pt5: ["me02.5"],
@@ -25,13 +32,15 @@ export function buildPricingLookupIds(externalId: string): string[] {
   if (!id) return [];
 
   const ids = new Set<string>([id, id.toLowerCase()]);
-  const dashIndex = id.indexOf("-");
-  if (dashIndex <= 0) return Array.from(ids);
+  const { prefix: setPrefix, suffix } = partitionPokemonCardExternalId(id);
+  if (!suffix) return Array.from(ids);
 
-  const setPrefix = id.slice(0, dashIndex);
-  const suffix = id.slice(dashIndex + 1);
+  const canonSetPrefix = normalizeScarletVioletCardKeySetPrefix(setPrefix);
 
-  const legacyPrefixes = CATALOG_PREFIX_TO_LEGACY_PRICING_PREFIXES[setPrefix];
+  ids.add(`${canonSetPrefix}-${suffix}`);
+  ids.add(`${canonSetPrefix}-${suffix}`.toLowerCase());
+
+  const legacyPrefixes = CATALOG_PREFIX_TO_LEGACY_PRICING_PREFIXES[canonSetPrefix];
   if (legacyPrefixes) {
     for (const lp of legacyPrefixes) {
       ids.add(`${lp}-${suffix}`);
@@ -44,6 +53,8 @@ export function buildPricingLookupIds(externalId: string): string[] {
     if (Number.isFinite(n)) {
       ids.add(`${setPrefix}-${n}`);
       ids.add(`${setPrefix.toLowerCase()}-${n}`);
+      ids.add(`${canonSetPrefix}-${n}`);
+      ids.add(`${canonSetPrefix}-${n}`.toLowerCase());
       if (legacyPrefixes) {
         for (const lp of legacyPrefixes) {
           ids.add(`${lp}-${n}`);

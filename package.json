@@ -16,6 +16,8 @@
     "seed:missing-sets": "node --import tsx/esm scripts/seedMissingScrydexSets.ts",
     "seed:missing-set-images": "node --import tsx/esm scripts/uploadSeededImagesToR2.ts",
     "backfill:price-history": "node --import tsx/esm scripts/backfillPriceHistoryFromScrydex.ts",
+    "backfill:swsh-tg-external-ids": "node --import tsx/esm scripts/backfillSwshTrainerGalleryExternalIds.ts",
+    "dedupe:price-history-sv-prefixes": "node --import tsx/esm scripts/dedupeSinglesPriceHistorySvPrefixes.ts",
     "backfill:sealed-price-history": "node --import tsx/esm scripts/backfillSealedPriceHistoryFromPokedata.ts",
     "scrape:pricing": "node --import tsx/esm scripts/scrapePricing.ts",
     "scrape:scrydex-card-meta": "node --import tsx/esm scripts/scrapeScrydexCardMeta.ts",

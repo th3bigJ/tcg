@@ -2,7 +2,13 @@ import fs from "fs";
 import path from "path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { r2SinglesCardPricingPrefix } from "@/lib/r2BucketLayout";
-import type { CardJsonEntry, SetJsonEntry, SeriesJsonEntry, SetPricingMap } from "../staticDataTypes";
+import type {
+  CardJsonEntry,
+  ScrydexCardPricing,
+  SeriesJsonEntry,
+  SetJsonEntry,
+  SetPricingMap,
+} from "../staticDataTypes";
 import { updatePriceHistory } from "../r2PriceHistory";
 import { uploadPriceTrends } from "../r2PriceTrends";
 import {
@@ -58,6 +64,13 @@ function loadCardsForSet(setCode: string): CardJsonEntry[] {
 // ─── Pricing helpers ──────────────────────────────────────────────────────────
 
 type ByVariant = Record<string, { raw?: number; psa10?: number; ace10?: number }>;
+
+/** When Scrydex has no NM/graded data, still emit pricing + history/trends so every catalog card has a row. */
+function scrydexZeroPricingPlaceholder(): ScrydexCardPricing {
+  return {
+    default: { raw: 0, psa10: 0, ace10: 0 },
+  };
+}
 
 function slugFromLabel(label: string): string {
   const compact = label.toLowerCase().replace(/[\s-_]+/g, "");
@@ -246,22 +259,22 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
     }
     const byVariant = collateFlatToByVariant(flatUsd);
     const hasPrice = Object.values(byVariant).some((r) => Number.isFinite(r.raw) || Number.isFinite(r.psa10) || Number.isFinite(r.ace10));
-    if (!hasPrice) continue;
+    const scrydex: ScrydexCardPricing = hasPrice ? byVariant : scrydexZeroPricingPlaceholder();
 
     const key = (card.externalId ?? ext).trim().toLowerCase();
-    pricingMap[key] = { scrydex: byVariant, tcgplayer: null, cardmarket: null };
+    pricingMap[key] = { scrydex, tcgplayer: null, cardmarket: null };
   }
 
   const count = Object.keys(pricingMap).length;
   const json = JSON.stringify(pricingMap);
 
   if (dryRun) {
-    console.log(`  [${setCode}] ${count} priced cards (dry-run — skipping R2 upload)`);
+    console.log(`  [${setCode}] ${count} cards in pricing map (dry-run — skipping R2 upload)`);
   } else {
     await uploadToR2(s3, setCode, json);
     const historyMap = await updatePriceHistory(s3, setCode, pricingMap);
     await uploadPriceTrends(s3, setCode, historyMap);
-    console.log(`  [${setCode}] ${count} priced cards → R2 ${r2SinglesCardPricingPrefix}/${setCode}.json`);
+    console.log(`  [${setCode}] ${count} cards → R2 ${r2SinglesCardPricingPrefix}/${setCode}.json`);
   }
 }
 
