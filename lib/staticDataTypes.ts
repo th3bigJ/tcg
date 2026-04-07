@@ -68,6 +68,7 @@ export type CardPricingEntry = {
   cardmarket: unknown | null;
 };
 
+/** Keys are catalog `externalId` strings (exact Scrydex spelling, case-sensitive). */
 export type SetPricingMap = Record<string, CardPricingEntry>;
 
 /** Near Mint / graded estimates from Scrydex scrape — stored on R2 in **USD**. */

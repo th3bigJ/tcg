@@ -1,7 +1,7 @@
 /**
  * Backfill per-card price history from Scrydex chart data.
- * Seeds R2 pricing/price-history/{setCode}.json with real historical daily dates,
- * then derives weekly/monthly windows from those daily points.
+ * Merges into existing R2 `pricing/price-history/{setCode}.json` (does not drop other cards).
+ * Re-uploads merged history and regenerates price-trends from the merged map.
  *
  * Usage:
  *   node --import tsx/esm scripts/backfillPriceHistoryFromScrydex.ts --set=me03
@@ -24,7 +24,9 @@ import type {
 import {
   currentMonthKey,
   currentWeekKey,
+  getPriceHistoryForSetFromS3,
   mergeDailySeriesIntoWindow,
+  mergeSetPriceHistoryMaps,
   todayKey,
 } from "../lib/r2PriceHistory";
 import { uploadPriceTrends } from "../lib/r2PriceTrends";
@@ -195,15 +197,16 @@ async function backfillSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Clie
   let processed = 0;
 
   for (const card of cards) {
-    const ext = (card.externalId ?? "").trim().toLowerCase();
-    if (!ext) continue;
+    const storageKey = (card.externalId ?? "").trim();
+    const extLower = storageKey.toLowerCase();
+    if (!extLower) continue;
 
     let flatHistory: Record<string, ScrydexHistoryPoint[]> = {};
 
     for (const config of configs) {
       const pathMap = pathMaps.get(config.listPrefix);
       if (!pathMap) continue;
-      const cardPath = resolveScrydexCardPath(pathMap, ext, config.listPrefix, tcgPrefixes);
+      const cardPath = resolveScrydexCardPath(pathMap, extLower, config.listPrefix, tcgPrefixes);
       if (!cardPath) continue;
 
       let html = "";
@@ -239,22 +242,29 @@ async function backfillSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Clie
     const cardHistory = buildHistoryForCard(flatHistory);
     if (!cardHistory) continue;
 
-    historyMap[(card.externalId ?? ext).trim().toLowerCase()] = cardHistory;
+    historyMap[storageKey] = cardHistory;
     processed++;
     if (processed % 25 === 0) {
       console.log(`  [${setCode}] built history for ${processed} cards…`);
     }
   }
 
+  const existingOnR2 = await getPriceHistoryForSetFromS3(s3, setCode);
+  const priorCount = existingOnR2 ? Object.keys(existingOnR2).length : 0;
+  const merged = mergeSetPriceHistoryMaps(existingOnR2 ?? {}, historyMap);
+  const mergedCount = Object.keys(merged).length;
+
   if (dryRun) {
-    console.log(`  [${setCode}] ${Object.keys(historyMap).length} history cards (dry-run — skipping R2 upload)`);
+    console.log(
+      `  [${setCode}] dry-run: ${Object.keys(historyMap).length} cards from Scrydex; R2 had ${priorCount} card keys → ${mergedCount} after merge (no upload)`,
+    );
     return;
   }
 
-  await uploadHistoryToR2(s3, setCode, historyMap);
-  await uploadPriceTrends(s3, setCode, historyMap);
+  await uploadHistoryToR2(s3, setCode, merged);
+  await uploadPriceTrends(s3, setCode, merged);
   console.log(
-    `  [${setCode}] ${Object.keys(historyMap).length} history cards → R2 ${r2SinglesPriceHistoryPrefix}/${setCode}.json`,
+    `  [${setCode}] merged ${Object.keys(historyMap).length} backfilled cards into R2 (${priorCount} prior keys → ${mergedCount} total) ${r2SinglesPriceHistoryPrefix}/${setCode}.json`,
   );
 }
 

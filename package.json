@@ -35,7 +35,8 @@
     "r2:move-sealed-pokedata-json": "node --import tsx/esm scripts/r2MoveSealedPokedataJsonToDataAndPricing.ts",
     "r2:move-pokemon-graded-under-images": "node --import tsx/esm scripts/r2MovePokemonAndGradedUnderImages.ts",
     "r2:move-sets-under-images": "node --import tsx/esm scripts/r2MoveSetsUnderImages.ts",
-    "r2:migrate-pricing-gbp-to-usd": "node --import tsx/esm scripts/migrateR2PricingGbpToUsd.ts"
+    "r2:migrate-pricing-gbp-to-usd": "node --import tsx/esm scripts/migrateR2PricingGbpToUsd.ts",
+    "migrate:singles-pricing-keys": "node --import tsx/esm scripts/migrateSinglesPricingKeysToCanonical.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

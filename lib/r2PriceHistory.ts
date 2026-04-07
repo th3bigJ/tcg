@@ -1,4 +1,4 @@
-import { PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
 import { r2SinglesPriceHistoryPrefix } from "@/lib/r2BucketLayout";
 import { buildPricingLookupIds } from "@/lib/r2Pricing";
 import type {
@@ -174,6 +174,77 @@ export function mergeDailySeriesIntoWindow(
     weekly: derived.weekly.length > 0 ? derived.weekly : existing.weekly.slice(-WEEKLY_HISTORY_LIMIT),
     monthly: derived.monthly.length > 0 ? derived.monthly : existing.monthly.slice(-MONTHLY_HISTORY_LIMIT),
   };
+}
+
+/** Combine two windows by merging all daily points (same calendar day → max USD), then re-derive limits. */
+export function mergePriceHistoryWindows(wa: PriceHistoryWindow, wb: PriceHistoryWindow): PriceHistoryWindow {
+  const combinedDaily: PriceHistoryPoint[] = [...ensureWindow(wa).daily, ...ensureWindow(wb).daily];
+  const byD = new Map<string, number>();
+  for (const [d, p] of combinedDaily) {
+    if (typeof d !== "string" || typeof p !== "number" || !Number.isFinite(p)) continue;
+    const prev = byD.get(d);
+    byD.set(d, prev === undefined ? p : Math.max(prev, p));
+  }
+  const sorted: PriceHistoryPoint[] = [...byD.entries()]
+    .sort((x, y) => x[0].localeCompare(y[0]))
+    .map(([d, p]) => [d, p]);
+  return mergeDailySeriesIntoWindow(undefined, sorted);
+}
+
+/** Deep-merge incoming chart backfill into existing card history (variant → grade → window). */
+export function mergeCardPriceHistory(
+  existing: CardPriceHistory | undefined,
+  incoming: CardPriceHistory,
+): CardPriceHistory {
+  const base: CardPriceHistory = existing ? structuredClone(existing) : {};
+  for (const [vKey, vObjB] of Object.entries(incoming)) {
+    if (!base[vKey]) {
+      base[vKey] = structuredClone(vObjB);
+      continue;
+    }
+    const vObjA = base[vKey];
+    for (const [gKey, winB] of Object.entries(vObjB)) {
+      const winA = vObjA[gKey];
+      if (!winA) {
+        vObjA[gKey] = ensureWindow(winB as Partial<PriceHistoryWindow>);
+        continue;
+      }
+      vObjA[gKey] = mergePriceHistoryWindows(ensureWindow(winA), ensureWindow(winB as Partial<PriceHistoryWindow>));
+    }
+  }
+  return base;
+}
+
+/** Merge per-card histories: keeps all existing keys; updates/adds keys present in `incoming`. */
+export function mergeSetPriceHistoryMaps(existing: SetPriceHistoryMap, incoming: SetPriceHistoryMap): SetPriceHistoryMap {
+  const out: SetPriceHistoryMap = { ...existing };
+  for (const [id, cardHist] of Object.entries(incoming)) {
+    out[id] = mergeCardPriceHistory(existing[id], cardHist);
+  }
+  return out;
+}
+
+/** Load current price-history JSON from R2 via S3 (same key the scrape uploads). */
+export async function getPriceHistoryForSetFromS3(
+  s3: S3Client,
+  setCode: string,
+): Promise<SetPriceHistoryMap | null> {
+  try {
+    const res = await s3.send(
+      new GetObjectCommand({
+        Bucket: getR2Bucket(),
+        Key: `${r2SinglesPriceHistoryPrefix}/${setCode}.json`,
+      }),
+    );
+    const raw = await res.Body?.transformToString();
+    if (!raw?.trim()) return null;
+    return JSON.parse(raw) as SetPriceHistoryMap;
+  } catch (e: unknown) {
+    const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+    const name = (e as { name?: string }).name;
+    if (status === 404 || name === "NoSuchKey") return null;
+    throw e;
+  }
 }
 
 function upsertAverageForBucket(

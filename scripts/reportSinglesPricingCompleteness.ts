@@ -2,7 +2,8 @@
  * Lists catalog cards whose externalId cannot be resolved in all three local mirrors:
  *   data/pricing/card-pricing, price-history, price-trends
  *
- * Uses `buildPricingLookupIds` (same alias rules as the app) and lowercases JSON keys.
+ * Uses `buildPricingLookupIds` so alternate spellings still resolve; pricing files should
+ * use the exact catalog `externalId` as the key (case-sensitive).
  *
  * Usage: node --import tsx/esm scripts/reportSinglesPricingCompleteness.ts
  *          ... --limit=50   (max rows to print; default 100)
@@ -22,17 +23,18 @@ const setsPath = path.join(DATA, "sets.json");
 const cardsDir = path.join(DATA, "cards");
 const pricingRoot = path.join(DATA, "pricing");
 
-function lowerKeySet(filePath: string): Set<string> | null {
+function keySet(filePath: string): Set<string> | null {
   if (!fs.existsSync(filePath)) return null;
   const raw = fs.readFileSync(filePath, "utf-8").trim();
   if (!raw) return new Set();
-  return new Set(Object.keys(JSON.parse(raw) as Record<string, unknown>).map((k) => k.toLowerCase()));
+  return new Set(Object.keys(JSON.parse(raw) as Record<string, unknown>));
 }
 
-function hasAny(set: Set<string> | null, externalId: string): boolean {
+/** True if the file contains this card under the exact id or any `buildPricingLookupIds` variant. */
+function hasRow(set: Set<string> | null, externalId: string): boolean {
   if (!set || set.size === 0) return false;
   for (const id of buildPricingLookupIds(externalId)) {
-    if (set.has(id.toLowerCase())) return true;
+    if (set.has(id)) return true;
   }
   return false;
 }
@@ -53,18 +55,18 @@ function main(): void {
       cardName: string;
     }[];
 
-    const cp = lowerKeySet(path.join(pricingRoot, "card-pricing", `${setKey}.json`));
-    const ph = lowerKeySet(path.join(pricingRoot, "price-history", `${setKey}.json`));
-    const pt = lowerKeySet(path.join(pricingRoot, "price-trends", `${setKey}.json`));
+    const cp = keySet(path.join(pricingRoot, "card-pricing", `${setKey}.json`));
+    const ph = keySet(path.join(pricingRoot, "price-history", `${setKey}.json`));
+    const pt = keySet(path.join(pricingRoot, "price-trends", `${setKey}.json`));
 
     for (const c of cards) {
       const ext = (c.externalId ?? "").trim();
       if (!ext) continue;
       totalCards += 1;
       const missing: Gap["missing"] = [];
-      if (!hasAny(cp, ext)) missing.push("card-pricing");
-      if (!hasAny(ph, ext)) missing.push("price-history");
-      if (!hasAny(pt, ext)) missing.push("price-trends");
+      if (!hasRow(cp, ext)) missing.push("card-pricing");
+      if (!hasRow(ph, ext)) missing.push("price-history");
+      if (!hasRow(pt, ext)) missing.push("price-trends");
       if (missing.length === 0) full += 1;
       else gaps.push({ setKey, externalId: ext, cardName: c.cardName, missing });
     }

@@ -48,7 +48,7 @@ function main(): void {
       fs.readFileSync(path.join(cardsDir, `${setKey}.json`), "utf-8"),
     ) as { externalId: string | null }[];
     const cardsInFile = cards.length;
-    const catalog = new Set(cards.map((c) => c.externalId).filter(Boolean) as string[]);
+    const catalog = new Set((cards.map((c) => c.externalId).filter(Boolean) as string[]).map((id) => id.trim()));
 
     const cp = keySet(path.join(pricingRoot, "card-pricing", `${setKey}.json`));
     const ph = keySet(path.join(pricingRoot, "price-history", `${setKey}.json`));

@@ -341,6 +341,31 @@ const BULK_ALIASES: Record<string, string> = {
   legendarycollection: "base6",
 };
 
+/** Map legacy / alternate tier-1 set prefixes (as in older pricing JSON) → catalog `setKey`. */
+export function bulkLegacySetPrefixToCatalogKey(lowerPrefix: string): string {
+  return BULK_ALIASES[lowerPrefix] ?? lowerPrefix;
+}
+
+const BULK_LEGACY_PRICING_PREFIXES_LONG_FIRST: readonly string[] = (() =>
+  Object.keys(BULK_ALIASES).sort((a, b) => b.length - a.length))();
+
+/**
+ * Older blobs sometimes use multi-dash legacy set slugs (`tk-ex-latia-10`, `swsh12.5-gg70`).
+ * If the key starts with `BULK_ALIASES` + `-`, rewrite to `{catalogSet}-{rest}`.
+ */
+export function bulkLegacyMultiDashCardKeyToCatalogForm(fullKey: string): string | null {
+  const lower = fullKey.toLowerCase();
+  for (const legacy of BULK_LEGACY_PRICING_PREFIXES_LONG_FIRST) {
+    const pref = `${legacy}-`;
+    if (lower.startsWith(pref)) {
+      const canon = BULK_ALIASES[legacy];
+      const suf = fullKey.slice(pref.length);
+      return `${canon}-${suf}`;
+    }
+  }
+  return null;
+}
+
 export function lookupScrydexBulkExpansionConfig(
   canonicalSetCode: string,
   legacyCode: string | undefined,

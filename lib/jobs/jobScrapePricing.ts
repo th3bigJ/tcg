@@ -182,9 +182,11 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
     console.log(`  [${setCode}] ${priceMap.size} tiles from expansion listing (${cfg.listPrefix})`);
 
     for (const card of cards) {
-      const ext = (card.externalId ?? "").trim().toLowerCase();
-      if (!ext) continue;
-      const p = resolveScrydexCardPath(pathMap, ext, cfg.listPrefix, tcgPrefixes);
+      // Lowercase is only for pathMap / priceMap keys (normalized in listing parsers).
+      // `resolveScrydexCardPath` returns the href path from Scrydex HTML — e.g. …/swsh12tg-TG02 — unchanged.
+      const extLower = (card.externalId ?? "").trim().toLowerCase();
+      if (!extLower) continue;
+      const p = resolveScrydexCardPath(pathMap, extLower, cfg.listPrefix, tcgPrefixes);
       if (p) pathsNeeded.add(p);
     }
   }
@@ -213,15 +215,17 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
   // Build pricing map
   const pricingMap: SetPricingMap = {};
   for (const card of cards) {
-    const ext = (card.externalId ?? "").trim().toLowerCase();
-    if (!ext) continue;
+    const storageKey = (card.externalId ?? "").trim();
+    // Scrydex listing maps use lowercase-normalized keys; card page fetch still uses canonical path casing.
+    const extLower = storageKey.toLowerCase();
+    if (!extLower) continue;
 
     let flatUsd: Record<string, number> = {};
     for (const cfg of configs) {
       const entry = perConfig.get(cfg.listPrefix);
       if (!entry) continue;
-      const listUsd = resolveScrydexListUsd(entry.priceMap, ext, cfg.listPrefix, tcgPrefixes);
-      const cardPath = resolveScrydexCardPath(entry.pathMap, ext, cfg.listPrefix, tcgPrefixes);
+      const listUsd = resolveScrydexListUsd(entry.priceMap, extLower, cfg.listPrefix, tcgPrefixes);
+      const cardPath = resolveScrydexCardPath(entry.pathMap, extLower, cfg.listPrefix, tcgPrefixes);
       let html = cardPath ? (pathHtml.get(cardPath) ?? "") : "";
       let detailUsd = html ? parseScrydexCardPageRawNearMintUsd(html) : {};
       let psa10Usd = html ? parseScrydexCardPagePsa10Usd(html) : {};
@@ -261,8 +265,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
     const hasPrice = Object.values(byVariant).some((r) => Number.isFinite(r.raw) || Number.isFinite(r.psa10) || Number.isFinite(r.ace10));
     const scrydex: ScrydexCardPricing = hasPrice ? byVariant : scrydexZeroPricingPlaceholder();
 
-    const key = (card.externalId ?? ext).trim().toLowerCase();
-    pricingMap[key] = { scrydex, tcgplayer: null, cardmarket: null };
+    pricingMap[storageKey] = { scrydex, tcgplayer: null, cardmarket: null };
   }
 
   const count = Object.keys(pricingMap).length;

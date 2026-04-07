@@ -140,7 +140,7 @@ npm run backfill:price-history -- --series="Scarlet & Violet,Diamond & Pearl,Meg
 
 npm run backfill:price-history -- --series="Sun & Moon,Black & White,E-Card"
 
-npm run backfill:price-history -- --series="XY,EX,Platinum,HeartGold & SoulSilver"
+npm run backfill:price-history -- --series="XY,EX,Platinum,HeartGold & SoulSilver,Miscellaneous"
 
 
 npm run portfolio:snapshot
