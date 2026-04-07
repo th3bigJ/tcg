@@ -26,7 +26,7 @@ const SEALED_PRICE_HISTORY_FILE = r2SealedPokedataPriceHistoryKey(R2_SEALED_POKE
 const LOCAL_SEALED_PRICE_HISTORY_FILE = path.join(
   process.cwd(),
   "data",
-  "sealed-products",
+  "pricing",
   "pokedata-english-pokemon-price-history.json",
 );
 

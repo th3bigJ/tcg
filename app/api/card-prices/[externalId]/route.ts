@@ -11,27 +11,24 @@ function setCodeFromExternalId(id: string): string {
 }
 
 export async function GET(
-  request: Request,
+  _request: Request,
   context: { params: Promise<{ externalId: string }> },
 ) {
   const { externalId: raw } = await context.params;
   const externalId = decodeURIComponent(raw ?? "").trim();
-  const fallbackExternalId =
-    new URL(request.url).searchParams.get("fallbackExternalId")?.trim() ?? "";
 
   if (!externalId) {
     return Response.json(EMPTY, { headers: CACHE_HEADERS });
   }
 
   try {
-    const ids = [...new Set([externalId, fallbackExternalId].filter(Boolean))];
-    const setCodes = [...new Set(ids.map(setCodeFromExternalId))];
+    const setCodes = [...new Set([setCodeFromExternalId(externalId)])];
 
     for (const setCode of setCodes) {
       const pricingMap = await getPricingForSet(setCode);
       if (!pricingMap) continue;
 
-      const entry = getPricingForCard(pricingMap, ids[0], ids.slice(1));
+      const entry = getPricingForCard(pricingMap, externalId);
       if (!entry) continue;
 
       const resolved = await cardPricingEntryToPayload(entry.tcgplayer, entry.cardmarket, entry.scrydex);

@@ -197,7 +197,7 @@ function readJson<T>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
 }
 
-type SetJsonEntry = { code: string | null; tcgdexId: string | null };
+type SetJsonEntry = { setKey: string };
 
 async function main(): Promise<void> {
   const bucket = process.env.R2_BUCKET?.trim();
@@ -220,7 +220,7 @@ async function main(): Promise<void> {
   let setsSkipped = 0;
 
   for (const set of sets) {
-    const setCode = set.code ?? set.tcgdexId;
+    const setCode = (set.setKey ?? "").trim();
     if (!setCode) continue;
 
     const pricingKey = `${r2SinglesCardPricingPrefix}/${setCode}.json`;

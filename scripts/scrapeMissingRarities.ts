@@ -7,10 +7,9 @@ import {
   resolveScrydexCardPath,
 } from "../lib/scrydexExpansionListParsing";
 import { fetchScrydexCardPageHtml, parseScrydexCardPageRarity } from "../lib/scrydexMepCardPagePricing";
-import { scrydexMegaExpansionConfig } from "../lib/scrydexMegaEvolutionUrls";
-import { scrydexScarletVioletExpansionConfig } from "../lib/scrydexScarletVioletUrls";
-import { lookupScrydexBulkExpansionConfig } from "../lib/scrydexBulkExpansionUrls";
-import type { ScrydexExpansionListConfig } from "../lib/scrydexMegaEvolutionUrls";
+import { resolveExpansionConfigsForSet } from "../lib/scrydexExpansionConfigsForSet";
+import { getSinglesCatalogSetKey } from "../lib/singlesCatalogSetKey";
+import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "../lib/scrydexPrefixCandidatesForSet";
 
 const dryRun = process.argv.includes("--dry-run");
 const includeNone = process.argv.includes("--include-none");
@@ -39,25 +38,6 @@ function loadCardsForSet(setCode: string): CardJsonEntry[] {
   return readJson<CardJsonEntry[]>(filePath);
 }
 
-function resolveExpansionConfig(set: SetJsonEntry): ScrydexExpansionListConfig | null {
-  const code = set.code ?? undefined;
-  const tcgdexId = set.tcgdexId ?? undefined;
-  const candidates = [code, tcgdexId].filter((x): x is string => Boolean(x?.trim()));
-  for (const c of candidates) {
-    const r = scrydexMegaExpansionConfig(c, undefined, undefined);
-    if (r) return r;
-  }
-  for (const c of candidates) {
-    const r = scrydexScarletVioletExpansionConfig(c, undefined, undefined);
-    if (r) return r;
-  }
-  for (const c of candidates) {
-    const r = lookupScrydexBulkExpansionConfig(c, undefined, undefined);
-    if (r) return r;
-  }
-  return null;
-}
-
 function shouldBackfill(card: CardJsonEntry): boolean {
   if (card.rarity == null) return true;
   if (includeNone && card.rarity === "None") return true;
@@ -76,9 +56,9 @@ async function main(): Promise<void> {
   const summaries: SetSummary[] = [];
 
   for (const set of sets) {
-    const setCode = (set.code ?? set.tcgdexId ?? "").trim();
+    const setCode = getSinglesCatalogSetKey(set);
     if (!setCode) continue;
-    if (onlySetCodes && !onlySetCodes.has(setCode)) continue;
+    if (onlySetCodes && !setRowMatchesAllowedSetCodes(set, [...onlySetCodes])) continue;
 
     const filePath = path.join(CARDS_DIR, `${setCode}.json`);
     if (!fs.existsSync(filePath)) continue;
@@ -87,24 +67,25 @@ async function main(): Promise<void> {
     const targets = cards.filter(shouldBackfill);
     if (!targets.length) continue;
 
-    const cfg = resolveExpansionConfig(set);
-    if (!cfg) {
+    const configs = resolveExpansionConfigsForSet(set);
+    if (!configs.length) {
       console.log(`[${setCode}] skip: no Scrydex mapping`);
       summaries.push({ setCode, updated: 0, unresolved: targets.length, missingPath: targets.length });
       continue;
     }
 
+    const cfg = configs[0]!;
     console.log(`[${setCode}] fetching expansion listing ${cfg.expansionUrl}`);
     const listHtml = await fetchScrydexExpansionMultiPageHtml(cfg.expansionUrl);
     const pathMap = parseScrydexExpansionListPaths(listHtml, cfg.listPrefix);
-    const tcgPrefixes = [set.code, set.tcgdexId].filter((x): x is string => Boolean(x?.trim()));
+    const tcgPrefixes = buildScrydexPrefixCandidates(set);
 
     let updated = 0;
     let unresolved = 0;
     let missingPath = 0;
 
     for (const card of targets) {
-      const externalKey = (card.externalId ?? card.tcgdex_id ?? "").trim();
+      const externalKey = (card.externalId ?? "").trim();
       if (!externalKey) {
         unresolved += 1;
         console.log(`  - ${card.cardName} ${card.cardNumber}: no external id`);

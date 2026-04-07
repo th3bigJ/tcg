@@ -16,10 +16,7 @@ export type SealedProductCatalogEntry = {
   year: number | null;
   series: string | null;
   set_id: number | null;
-  live: boolean;
-  hot: number;
   image: {
-    source_url: string | null;
     r2_key: string | null;
     public_url: string | null;
   };
@@ -202,8 +199,6 @@ export function filterShopSealedProducts(
 
 export function sortShopSealedProducts(products: ShopSealedProduct[]): ShopSealedProduct[] {
   return [...products].sort((left, right) => {
-    if (left.live !== right.live) return Number(right.live) - Number(left.live);
-    if (left.hot !== right.hot) return right.hot - left.hot;
     const rightPrice = typeof right.marketValue === "number" ? right.marketValue : -1;
     const leftPrice = typeof left.marketValue === "number" ? left.marketValue : -1;
     if (leftPrice !== rightPrice) return rightPrice - leftPrice;
@@ -286,7 +281,7 @@ export function mergeSealedProductsWithPrices(
 
   return catalog.products.map((product) => {
     const price = prices?.prices[String(product.id)] ?? null;
-    const imageUrl = resolveMediaURL(product.image.public_url ?? product.image.r2_key ?? product.image.source_url ?? "");
+    const imageUrl = resolveMediaURL(product.image.public_url ?? product.image.r2_key ?? "");
 
     return {
       ...product,

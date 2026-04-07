@@ -1,6 +1,8 @@
 /**
- * Uploads local static JSON (sets, series, pokemon dex, all card files) to R2.
- * Keys mirror repo paths: `data/sets.json`, `data/series.json`, `data/pokemon.json`, `data/cards/{setCode}.json`.
+ * Uploads local static JSON to R2.
+ *   - `data/sets.json`, `series.json`, `pokemon.json`, `data/cards/{setCode}.json` → same keys under `data/…` on R2
+ *   - `data/{slug}-products.json` → same key on R2 (sealed Pokedata catalog; slug from lib/r2BucketLayout.ts)
+ *   - `data/pricing/**` (recursive `.json` only) → `pricing/**` on R2 (matches bucket layout in lib/r2BucketLayout.ts)
  * Does not modify files on disk or any URLs inside them.
  *
  * Usage:
@@ -12,11 +14,18 @@
 
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  R2_PRICING,
+  R2_SEALED_POKEDATA_DEFAULT_SLUG,
+  r2SealedPokedataCatalogKey,
+} from "../lib/r2BucketLayout";
 
 const ENV_FILE = path.join(process.cwd(), ".env.local");
 const DATA_DIR = path.join(process.cwd(), "data");
 const CARDS_DIR = path.join(DATA_DIR, "cards");
+const PRICING_DIR = path.join(DATA_DIR, "pricing");
 
 const ROOT_FILES = ["sets.json", "series.json", "pokemon.json"] as const;
 
@@ -52,9 +61,26 @@ function getBucket(): string {
   return bucket;
 }
 
-async function main(): Promise<void> {
+function collectPricingUploads(pricingDir: string): Array<{ key: string; abs: string }> {
+  const out: Array<{ key: string; abs: string }> = [];
+  function walk(sub: string, relPosix: string): void {
+    for (const ent of fs.readdirSync(sub, { withFileTypes: true })) {
+      const abs = path.join(sub, ent.name);
+      const nextRel = relPosix ? `${relPosix}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        walk(abs, nextRel);
+      } else if (ent.isFile() && ent.name.endsWith(".json")) {
+        out.push({ key: `${R2_PRICING}/${nextRel}`, abs });
+      }
+    }
+  }
+  if (fs.existsSync(pricingDir)) walk(pricingDir, "");
+  out.sort((a, b) => a.key.localeCompare(b.key));
+  return out;
+}
+
+export async function runUploadStaticCardDataToR2(dryRun: boolean): Promise<void> {
   loadEnvFile(ENV_FILE);
-  const dryRun = Boolean(process.env.DRY_RUN && process.env.DRY_RUN !== "0");
   const s3 = buildS3Client();
   const bucket = getBucket();
 
@@ -76,6 +102,22 @@ async function main(): Promise<void> {
   cardFiles.sort();
   for (const f of cardFiles) {
     uploads.push({ key: `data/cards/${f}`, abs: path.join(CARDS_DIR, f) });
+  }
+
+  const sealedSlug = R2_SEALED_POKEDATA_DEFAULT_SLUG;
+  const sealedCatalogAbs = path.join(DATA_DIR, `${sealedSlug}-products.json`);
+  const sealedCatalogKey = r2SealedPokedataCatalogKey(sealedSlug);
+  if (!fs.existsSync(sealedCatalogAbs)) {
+    console.warn(`skip missing sealed catalog: ${sealedCatalogAbs} (expected R2 key ${sealedCatalogKey})`);
+  } else {
+    uploads.push({ key: sealedCatalogKey, abs: sealedCatalogAbs });
+  }
+
+  const pricingUploads = collectPricingUploads(PRICING_DIR);
+  if (pricingUploads.length === 0) {
+    console.warn(`No files under ${path.relative(process.cwd(), PRICING_DIR)} — skipping pricing/ uploads`);
+  } else {
+    uploads.push(...pricingUploads);
   }
 
   console.log(`Uploading ${uploads.length} objects to ${bucket} (${dryRun ? "dry-run" : "live"})`);
@@ -104,4 +146,9 @@ async function main(): Promise<void> {
   console.log(`Finished: ${uploads.length} files ${dryRun ? "(dry-run)" : "uploaded"}.`);
 }
 
-await main();
+const __filename = fileURLToPath(import.meta.url);
+const invokedAsMain = path.resolve(process.argv[1] ?? "") === __filename;
+if (invokedAsMain) {
+  const dryRun = Boolean(process.env.DRY_RUN && process.env.DRY_RUN !== "0");
+  await runUploadStaticCardDataToR2(dryRun);
+}

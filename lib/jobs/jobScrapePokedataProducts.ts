@@ -43,10 +43,7 @@ type ProductCatalogEntry = {
   year: number | null;
   series: string | null;
   set_id: number | null;
-  live: boolean;
-  hot: number;
   image: {
-    source_url: string | null;
     r2_key: string | null;
     public_url: string | null;
   };
@@ -92,7 +89,10 @@ type PricePayload = {
 
 const SOURCE_URL = "https://www.pokedata.io/products";
 const SOURCE_API_URL = "https://www.pokedata.io/api/products";
-const OUTPUT_DIR = path.join(process.cwd(), "data", "sealed-products");
+const DATA_DIR = path.join(process.cwd(), "data");
+/** Image-failure reports only; product catalog lives in `data/{slug}-products.json`. */
+const SEALED_REPORTS_DIR = path.join(DATA_DIR, "sealed-products");
+const PRICING_DATA_DIR = path.join(DATA_DIR, "pricing");
 const DEFAULT_IMAGE_CONCURRENCY = 8;
 const DEFAULT_TCG = "Pokemon";
 const DEFAULT_LANGUAGE = "ENGLISH";
@@ -133,7 +133,9 @@ function getPublicBaseUrl(): string {
 }
 
 function ensureOutputDir(): void {
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.mkdirSync(SEALED_REPORTS_DIR, { recursive: true });
+  fs.mkdirSync(PRICING_DATA_DIR, { recursive: true });
 }
 
 async function fetchProducts(): Promise<PokedataProduct[]> {
@@ -326,10 +328,7 @@ function buildCatalogPayload(
         year: product.year ?? null,
         series: resolveSeries(product),
         set_id: product.set_id ?? null,
-        live: Boolean(product.live),
-        hot: product.hot ?? 0,
         image: {
-          source_url: product.img_url ?? null,
           r2_key: r2Key,
           public_url: buildPublicUrl(r2Key),
         },
@@ -410,7 +409,7 @@ async function uploadProductImages(
   });
 
   if (failures.length > 0) {
-    const failuresPath = path.join(OUTPUT_DIR, `${slugParts.join("-")}-image-failures.json`);
+    const failuresPath = path.join(SEALED_REPORTS_DIR, `${slugParts.join("-")}-image-failures.json`);
     writeLocalJson(failuresPath, {
       scrapedAt: new Date().toISOString(),
       sourceApiUrl: SOURCE_API_URL,
@@ -455,8 +454,8 @@ export async function runScrapePokedataProducts(opts: ScrapePokedataProductsOpti
   const catalogPayload = buildCatalogPayload(filteredProducts, requestedLanguage, requestedTcg);
   const pricesPayload = buildPricesPayload(filteredProducts, requestedLanguage, requestedTcg);
 
-  const localProductsPath = path.join(OUTPUT_DIR, `${slug}-products.json`);
-  const localPricesPath = path.join(OUTPUT_DIR, `${slug}-prices.json`);
+  const localProductsPath = path.join(DATA_DIR, `${slug}-products.json`);
+  const localPricesPath = path.join(PRICING_DATA_DIR, `${slug}-prices.json`);
 
   writeLocalJson(localProductsPath, catalogPayload);
   writeLocalJson(localPricesPath, pricesPayload);

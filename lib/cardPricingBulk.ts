@@ -93,13 +93,8 @@ export async function fetchPriceSummariesForMasterCardIds(
         const card = cardMap.get(masterCardId);
         const externalId = resolvePricingExternalId(card);
         if (!card || !externalId) continue;
-        const fallback = resolvePricingFallbackIds(card, externalId);
         if (pricingMap) {
-          const pricing = getPricingForCard(
-            pricingMap,
-            externalId,
-            fallback,
-          );
+          const pricing = getPricingForCard(pricingMap, externalId);
           if (pricing) {
             const price = readMarketGbp(
               pricing.tcgplayer,
@@ -111,7 +106,7 @@ export async function fetchPriceSummariesForMasterCardIds(
           }
         }
         if (trendMap) {
-          const trend = getPriceTrendForCard(trendMap, externalId, fallback);
+          const trend = getPriceTrendForCard(trendMap, externalId);
           if (trend) trends[masterCardId] = trend;
         }
       }
@@ -121,29 +116,18 @@ export async function fetchPriceSummariesForMasterCardIds(
   return { prices, trends };
 }
 
-function resolvePricingExternalId(card: CardJsonEntry | undefined): string | null {
+/** Resolved Scrydex-style id for pricing / trend maps: explicit `externalId` or `{setCode}-{localId}`. */
+export function resolvePricingExternalId(card: CardJsonEntry | undefined): string | null {
   if (!card) return null;
   const explicit = typeof card.externalId === "string" ? card.externalId.trim() : "";
   if (explicit) return explicit;
-  const tcgdex = typeof card.tcgdex_id === "string" ? card.tcgdex_id.trim() : "";
-  if (tcgdex) return tcgdex;
 
-  const setTcgdexId = typeof card.setTcgdexId === "string" ? card.setTcgdexId.trim() : "";
+  const setCode = typeof card.setCode === "string" ? card.setCode.trim() : "";
   const localId = typeof card.localId === "string" ? card.localId.trim() : "";
-  if (setTcgdexId && localId) {
+  if (setCode && localId) {
     const normalizedLocalId = /^\d+$/u.test(localId) ? localId.padStart(3, "0") : localId;
-    return `${setTcgdexId}-${normalizedLocalId}`;
+    return `${setCode}-${normalizedLocalId}`;
   }
 
   return null;
-}
-
-function resolvePricingFallbackIds(card: CardJsonEntry, externalId: string): string[] | undefined {
-  const candidates = [
-    typeof card.tcgdex_id === "string" ? card.tcgdex_id.trim() : "",
-    typeof card.externalId === "string" ? card.externalId.trim() : "",
-    typeof card.localId === "string" ? card.localId.trim() : "",
-  ].filter((value) => value.length > 0 && value !== externalId);
-
-  return candidates.length > 0 ? [...new Set(candidates)] : undefined;
 }

@@ -387,7 +387,6 @@ function MarketplacePricingLogo({ which }: { which: keyof typeof MARKETPLACE_LOG
 export function ModalCardPricing({
   masterCardId,
   externalId,
-  legacyExternalId,
   ebayCardContext,
   onVariantsLoaded,
   onAdd,
@@ -399,7 +398,6 @@ export function ModalCardPricing({
 }: {
   masterCardId?: string;
   externalId?: string;
-  legacyExternalId?: string;
   ebayCardContext: EbayPokemonCardSearchParts;
   onVariantsLoaded?: (variants: string[]) => void;
   onAdd?: (variant: string) => void;
@@ -430,12 +428,9 @@ export function ModalCardPricing({
       try {
         setPricingLoaded(false);
         setPayload(null);
-        const params = new URLSearchParams();
-        const legacy = legacyExternalId?.trim() ?? "";
-        if (legacy && !mid) params.set("fallbackExternalId", legacy);
         const url = mid
           ? `/api/card-pricing/by-master/${encodeURIComponent(mid)}`
-          : `/api/card-prices/${encodeURIComponent(ext)}${params.size > 0 ? `?${params.toString()}` : ""}`;
+          : `/api/card-prices/${encodeURIComponent(ext)}`;
         const r = await fetch(url);
         if (cancelled) return;
         let j: { tcgplayer?: unknown; cardmarket?: unknown };
@@ -461,7 +456,7 @@ export function ModalCardPricing({
     return () => {
       cancelled = true;
     };
-  }, [mid, ext, legacyExternalId]);
+  }, [mid, ext]);
 
   useEffect(() => {
     if (!mid && !ext) {
@@ -475,12 +470,9 @@ export function ModalCardPricing({
       try {
         setHistoryLoaded(false);
         setHistory(null);
-        const params = new URLSearchParams();
-        const legacy = legacyExternalId?.trim() ?? "";
-        if (legacy && !mid) params.set("fallbackExternalId", legacy);
         const url = mid
           ? `/api/card-price-history/by-master/${encodeURIComponent(mid)}`
-          : `/api/card-price-history/${encodeURIComponent(ext)}${params.size > 0 ? `?${params.toString()}` : ""}`;
+          : `/api/card-price-history/${encodeURIComponent(ext)}`;
         const response = await fetch(url);
         if (cancelled) return;
         if (!response.ok) {
@@ -500,7 +492,7 @@ export function ModalCardPricing({
     return () => {
       cancelled = true;
     };
-  }, [ext, legacyExternalId, mid]);
+  }, [ext, mid]);
 
   const ebayQuery = buildPokemonEbaySoldSearchQuery(ebayCardContext);
   const ebayUrl =

@@ -10,11 +10,14 @@ import type { CardPricingEntry, SetPricingMap } from "@/lib/staticDataTypes";
 
 export type { CardPricingEntry, SetPricingMap };
 
-const TCGDEX_SET_PREFIX_NORMALIZATION: Record<string, string> = {
-  me1: "me01",
-  me2: "me02",
-  me2pt5: "me02.5",
-  me3: "me03",
+/**
+ * Older price-history / trend maps (and some R2 blobs) keyed cards with TCGdex-style set prefixes
+ * (`me01-…`, `me02-…`, `me02.5-…`) while the catalog uses Scrydex `setKey` (`me1`, `me2`, `me2pt5`).
+ */
+const CATALOG_PREFIX_TO_LEGACY_PRICING_PREFIXES: Record<string, readonly string[]> = {
+  me1: ["me01"],
+  me2: ["me02"],
+  me2pt5: ["me02.5"],
 };
 
 export function buildPricingLookupIds(externalId: string): string[] {
@@ -27,19 +30,25 @@ export function buildPricingLookupIds(externalId: string): string[] {
 
   const setPrefix = id.slice(0, dashIndex);
   const suffix = id.slice(dashIndex + 1);
-  const normalizedPrefix = TCGDEX_SET_PREFIX_NORMALIZATION[setPrefix];
 
-  if (normalizedPrefix && suffix) {
-    ids.add(`${normalizedPrefix}-${suffix}`);
-    ids.add(`${normalizedPrefix}-${suffix.toLowerCase()}`);
+  const legacyPrefixes = CATALOG_PREFIX_TO_LEGACY_PRICING_PREFIXES[setPrefix];
+  if (legacyPrefixes) {
+    for (const lp of legacyPrefixes) {
+      ids.add(`${lp}-${suffix}`);
+      ids.add(`${lp}-${suffix}`.toLowerCase());
+    }
   }
 
   if (/^\d+$/u.test(suffix)) {
     const n = Number.parseInt(suffix, 10);
     if (Number.isFinite(n)) {
       ids.add(`${setPrefix}-${n}`);
-      if (normalizedPrefix) {
-        ids.add(`${normalizedPrefix}-${n}`);
+      ids.add(`${setPrefix.toLowerCase()}-${n}`);
+      if (legacyPrefixes) {
+        for (const lp of legacyPrefixes) {
+          ids.add(`${lp}-${n}`);
+          ids.add(`${lp}-${n}`.toLowerCase());
+        }
       }
     }
   }

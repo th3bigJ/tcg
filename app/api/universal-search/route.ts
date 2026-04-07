@@ -3,6 +3,7 @@ import { type NextRequest } from "next/server";
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
 import { jsonResponseWithAuthCookies, createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
 import { getAllCards, getAllSets } from "@/lib/staticCards";
+import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
 import { getFilterFacets } from "@/lib/staticCardIndex";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import { resolvePokemonMediaURL } from "@/lib/media";
@@ -26,7 +27,7 @@ function getSetNameMap(): Map<string, string> {
   if (_setNameMap) return _setNameMap;
   _setNameMap = new Map();
   for (const s of getAllSets()) {
-    const code = s.code ?? s.tcgdexId;
+    const code = getSinglesCatalogSetKey(s);
     if (code && s.name) _setNameMap.set(code, s.name);
   }
   return _setNameMap;
@@ -83,10 +84,10 @@ export async function GET(request: NextRequest) {
 
   // Sets — search by name
   const sets = getAllSets()
-    .filter((s) => s.isActive && s.logoSrc && s.name.toLocaleLowerCase().includes(qLower))
+    .filter((s) => s.logoSrc && s.name.toLocaleLowerCase().includes(qLower))
     .slice(0, 3)
     .map((s) => ({
-      code: s.code ?? s.tcgdexId ?? "",
+      code: getSinglesCatalogSetKey(s) ?? "",
       name: s.name,
       logoSrc: s.logoSrc,
       cardCountOfficial: s.cardCountOfficial,

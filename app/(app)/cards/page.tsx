@@ -26,6 +26,7 @@ import {
   fetchCollectionCardEntries,
   fetchWishlistIdsByMasterCard,
 } from "@/lib/storefrontCardMapsServer";
+import { normalizeSetCodeFromUrlParam } from "@/lib/staticCards";
 
 function parseExcludeCommonUncommon(value: string | undefined): boolean {
   const v = (value ?? "").trim().toLowerCase();
@@ -51,7 +52,7 @@ type CardsPageProps = {
 
 export default async function CardsPage({ searchParams }: CardsPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
-  const selectedSet = (resolvedSearchParams.set ?? "").trim();
+  const selectedSet = normalizeSetCodeFromUrlParam(resolvedSearchParams.set ?? "");
   const selectedPokemon = (resolvedSearchParams.pokemon ?? "").trim();
   const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();
   const selectedSearch = (resolvedSearchParams.search ?? "").trim();

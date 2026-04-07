@@ -44,7 +44,6 @@ type TcgdexCard = {
   types?: string[];
   dexId?: number[];
   illustrator?: string | null;
-  evolveFrom?: string | null;
   regulationMark?: string | null;
 };
 
@@ -54,7 +53,6 @@ type ScrydexCardMeta = {
   rarity: string | null;
   category: string | null;
   stage: string | null;
-  subtypes: string[] | null;
   trainerType: string | null;
   energyType: string | null;
   hp: number | null;
@@ -180,7 +178,6 @@ function parseScrydexCardMeta(html: string): ScrydexCardMeta {
     rarity: rarityMatch ? stripTags(rarityMatch[1]) : null,
     category,
     stage,
-    subtypes: subtypes.length ? subtypes : stage ? [stage] : null,
     trainerType: category === "Trainer" ? (subtypes[0] ?? null) : null,
     energyType: category === "Energy" ? (subtypes[0] ?? null) : null,
     hp: hpMatch ? Number.parseInt(hpMatch[1], 10) : null,
@@ -250,7 +247,8 @@ async function buildMissingCard(
     return res.text();
   });
   const scrydex = parseScrydexCardMeta(cardHtml);
-  const tcgdex = await fetchTcgdexCard(set.tcgdexId ?? set.code ?? "", missing.externalId);
+  const catalogKey = set.setKey.trim();
+  const tcgdex = await fetchTcgdexCard(catalogKey, missing.externalId);
   const localId = missing.localId;
   const denominator = set.cardCountOfficial ?? 0;
   const cardNumber = `${localId}/${String(denominator)}`;
@@ -258,27 +256,20 @@ async function buildMissingCard(
   return {
     masterCardId: String(masterCardId),
     externalId: missing.externalId,
-    tcgdex_id: tcgdex?.id ?? null,
     localId,
-    setCode: set.tcgdexId ?? set.code ?? "",
-    setTcgdexId: set.tcgdexId ?? set.code ?? "",
+    setCode: catalogKey,
     cardNumber,
     cardName: scrydex.name,
     fullDisplayName: `${scrydex.name} ${cardNumber} ${set.name}`,
     rarity: tcgdex?.rarity ?? scrydex.rarity,
     category: normalizeCategory(tcgdex?.category ?? scrydex.category),
-    stage: normalizeStage(tcgdex?.stage ?? scrydex.stage),
     hp: typeof tcgdex?.hp === "number" ? tcgdex.hp : scrydex.hp,
     elementTypes: tcgdex?.types ?? scrydex.elementTypes ?? [],
     dexIds: tcgdex?.dexId ?? null,
-    subtypes: scrydex.subtypes,
     trainerType: scrydex.trainerType,
     energyType: scrydex.energyType,
     regulationMark: tcgdex?.regulationMark ?? null,
-    evolveFrom: tcgdex?.evolveFrom ?? null,
     artist: tcgdex?.illustrator ?? scrydex.artist,
-    isActive: true,
-    noPricing: false,
     imageLowSrc: scrydex.imageUrl,
     imageHighSrc: scrydex.imageUrl,
   };
@@ -289,7 +280,7 @@ async function main(): Promise<void> {
   const masterCardRef = { current: nextMasterCardId() };
 
   for (const target of TARGETS) {
-    const set = sets.find((entry) => (entry.code ?? entry.tcgdexId) === target.code);
+    const set = sets.find((entry) => entry.setKey === target.code);
     if (!set) throw new Error(`Missing set entry for ${target.code}`);
 
     const cardsPath = path.join(CARDS_DIR, `${target.code}.json`);

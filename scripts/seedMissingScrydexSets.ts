@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { fetchScrydexExpansionMultiPageHtml } from "../lib/scrydexExpansionListParsing";
-import { slugify } from "../lib/slugs";
 import type { CardJsonEntry, SetJsonEntry } from "../lib/staticDataTypes";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -13,7 +12,6 @@ type SeedTarget = {
   expansionUrl: string;
   listPrefix: string;
   seriesName: string;
-  seriesSlug: string;
   source: "tcgdex+scrydex" | "scrydex";
 };
 
@@ -23,7 +21,6 @@ const TARGETS: readonly SeedTarget[] = [
     expansionUrl: "https://scrydex.com/pokemon/expansions/mcdonalds-collection-2022/mcd22",
     listPrefix: "mcd22",
     seriesName: "McDonald's Collection",
-    seriesSlug: "mcdonald-s-collection-mc",
     source: "tcgdex+scrydex",
   },
   {
@@ -31,7 +28,6 @@ const TARGETS: readonly SeedTarget[] = [
     expansionUrl: "https://scrydex.com/pokemon/expansions/mcdonalds-collection-2023/mcd23",
     listPrefix: "mcd23",
     seriesName: "McDonald's Collection",
-    seriesSlug: "mcdonald-s-collection-mc",
     source: "tcgdex+scrydex",
   },
   {
@@ -39,7 +35,6 @@ const TARGETS: readonly SeedTarget[] = [
     expansionUrl: "https://scrydex.com/pokemon/expansions/mcdonalds-collection-2024/mcd24",
     listPrefix: "mcd24",
     seriesName: "McDonald's Collection",
-    seriesSlug: "mcdonald-s-collection-mc",
     source: "tcgdex+scrydex",
   },
   {
@@ -47,7 +42,6 @@ const TARGETS: readonly SeedTarget[] = [
     expansionUrl: "https://scrydex.com/pokemon/expansions/pok-card-creator-pack/wb1",
     listPrefix: "wb1",
     seriesName: "EX",
-    seriesSlug: "ex-ex",
     source: "tcgdex+scrydex",
   },
   {
@@ -55,7 +49,6 @@ const TARGETS: readonly SeedTarget[] = [
     expansionUrl: "https://scrydex.com/pokemon/expansions/celebrations-classic-collection/cel25c",
     listPrefix: "cel25c",
     seriesName: "Sword & Shield",
-    seriesSlug: "sword-shield-swsh",
     source: "scrydex",
   },
   {
@@ -63,7 +56,6 @@ const TARGETS: readonly SeedTarget[] = [
     expansionUrl: "https://scrydex.com/pokemon/expansions/pokmon-tcg-classic-venusaur/clv",
     listPrefix: "clv",
     seriesName: "Miscellaneous",
-    seriesSlug: "miscellaneous-misc",
     source: "scrydex",
   },
   {
@@ -71,7 +63,6 @@ const TARGETS: readonly SeedTarget[] = [
     expansionUrl: "https://scrydex.com/pokemon/expansions/pokmon-tcg-classic-charizard/clc",
     listPrefix: "clc",
     seriesName: "Miscellaneous",
-    seriesSlug: "miscellaneous-misc",
     source: "scrydex",
   },
   {
@@ -79,7 +70,6 @@ const TARGETS: readonly SeedTarget[] = [
     expansionUrl: "https://scrydex.com/pokemon/expansions/pokmon-tcg-classic-blastoise/clb",
     listPrefix: "clb",
     seriesName: "Miscellaneous",
-    seriesSlug: "miscellaneous-misc",
     source: "scrydex",
   },
 ] as const;
@@ -103,7 +93,6 @@ type TcgdexCard = {
   types?: string[];
   dexId?: number[];
   illustrator?: string | null;
-  evolveFrom?: string | null;
 };
 
 type ScrydexListingCard = {
@@ -121,13 +110,11 @@ type ScrydexCardMeta = {
   rarity: string | null;
   category: string | null;
   stage: string | null;
-  subtypes: string[] | null;
   trainerType: string | null;
   energyType: string | null;
   hp: number | null;
   elementTypes: string[] | null;
   dexIds: number[] | null;
-  evolveFrom: string | null;
   artist: string | null;
   imageUrl: string;
 };
@@ -333,13 +320,11 @@ function parseScrydexCardMeta(html: string): ScrydexCardMeta {
     rarity: rarityMatch ? stripTags(rarityMatch[1]) : null,
     category,
     stage,
-    subtypes: subtypes.length ? subtypes : stage ? [stage] : null,
     trainerType,
     energyType,
     hp: hpMatch ? Number.parseInt(hpMatch[1], 10) : null,
     elementTypes,
     dexIds: null,
-    evolveFrom: null,
     artist: artistMatch ? stripTags(artistMatch[1]) : null,
     imageUrl: imageMatch[1].trim(),
   };
@@ -362,27 +347,20 @@ function buildCardFromTcgdex(
   return {
     masterCardId: String(masterCardId),
     externalId,
-    tcgdex_id: detail.id,
     localId,
     setCode: setId,
-    setTcgdexId: setId,
     cardNumber,
     cardName: detail.name,
     fullDisplayName: buildFullDisplayName(detail.name, cardNumber, setName),
     rarity: detail.rarity ?? null,
     category,
-    stage,
     hp: typeof detail.hp === "number" ? detail.hp : null,
     elementTypes: normalizeTypes(detail.types) ?? [],
     dexIds: detail.dexId ?? null,
-    subtypes: stage ? [stage] : null,
     trainerType: null,
     energyType: null,
     regulationMark: null,
-    evolveFrom: detail.evolveFrom ?? null,
     artist: detail.illustrator ?? null,
-    isActive: true,
-    noPricing: false,
     imageLowSrc: imageUrl,
     imageHighSrc: imageUrl,
   };
@@ -400,27 +378,20 @@ function buildCardFromScrydex(
   return {
     masterCardId: String(masterCardId),
     externalId,
-    tcgdex_id: null,
     localId: meta.localId,
     setCode: setId,
-    setTcgdexId: setId,
     cardNumber,
     cardName: meta.name,
     fullDisplayName: buildFullDisplayName(meta.name, cardNumber, setName),
     rarity: meta.rarity,
     category: meta.category,
-    stage: meta.stage,
     hp: meta.hp,
     elementTypes: meta.elementTypes ?? [],
     dexIds: meta.dexIds,
-    subtypes: meta.subtypes,
     trainerType: meta.trainerType,
     energyType: meta.energyType,
     regulationMark: null,
-    evolveFrom: meta.evolveFrom,
     artist: meta.artist,
-    isActive: true,
-    noPricing: false,
     imageLowSrc: meta.imageUrl,
     imageHighSrc: meta.imageUrl,
   };
@@ -449,7 +420,7 @@ function getNextMasterCardId(): number {
 }
 
 function upsertSet(sets: SetJsonEntry[], nextSetIdRef: { current: number }, nextSet: SetJsonEntry): void {
-  const idx = sets.findIndex((set) => (set.code ?? set.tcgdexId) === (nextSet.code ?? nextSet.tcgdexId));
+  const idx = sets.findIndex((set) => set.setKey === nextSet.setKey);
   if (idx >= 0) {
     sets[idx] = { ...sets[idx], ...nextSet, id: sets[idx].id };
     return;
@@ -537,15 +508,11 @@ async function seedTarget(
   upsertSet(sets, nextSetIdRef, {
     id: String(nextSetIdRef.current),
     name: setName,
-    slug: slugify(setName),
-    code: null,
-    tcgdexId: target.setId,
+    setKey: target.setId,
     releaseDate,
-    isActive: true,
     cardCountTotal,
     cardCountOfficial,
     seriesName: target.seriesName,
-    seriesSlug: target.seriesSlug,
     logoSrc: header.logoUrl,
     symbolSrc: header.symbolUrl,
   });

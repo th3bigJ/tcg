@@ -72,13 +72,9 @@ def load_set_name_map(sets_path: Path) -> dict[str, str]:
         if not isinstance(item, dict):
             continue
         name = item.get("name")
-        code = item.get("code")
-        tcgdex_id = item.get("tcgdexId")
-        if isinstance(name, str) and name:
-            if isinstance(code, str) and code:
-                set_name_map[code] = name
-            if isinstance(tcgdex_id, str) and tcgdex_id:
-                set_name_map[tcgdex_id] = name
+        set_key = item.get("setKey")
+        if isinstance(name, str) and name and isinstance(set_key, str) and set_key:
+            set_name_map[set_key] = name
     return set_name_map
 
 
@@ -90,9 +86,7 @@ def build_card_record(card: dict[str, Any], image_path: str, set_name_map: dict[
     return {
         "masterCardId": card.get("masterCardId"),
         "externalId": card.get("externalId"),
-        "tcgdexId": card.get("tcgdex_id"),
         "setCode": set_code,
-        "setTcgdexId": card.get("setTcgdexId"),
         "setName": set_name_map.get(set_code or "") if isinstance(set_code, str) else None,
         "cardNumber": card.get("cardNumber"),
         "cardName": card.get("cardName"),

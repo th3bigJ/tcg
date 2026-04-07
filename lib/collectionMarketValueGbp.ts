@@ -141,8 +141,7 @@ export async function estimateCardUnitPricesGbp(
           continue;
         }
         if (pricingMap) {
-          const fallback = e.legacyExternalId?.trim() ? [e.legacyExternalId.trim()] : undefined;
-          const entry = getPricingForCard(pricingMap, ext, fallback);
+          const entry = getPricingForCard(pricingMap, ext);
           if (entry) {
             const price = estimateUnitGbpFromPricing(entry.tcgplayer, entry.cardmarket, entry.scrydex, multipliers, e.printing, e.gradingCompany, e.gradeValue);
             if (price !== null) out[gk] = price;
@@ -210,7 +209,7 @@ export async function estimateCollectionMarketValueGbp(
   type RowKey = string;
   const rowMap = new Map<
     RowKey,
-    { quantity: number; externalId: string; printing?: string; legacyExternalId?: string; setCode: string; manualPrice?: number; gradingCompany?: string; gradeValue?: string }
+    { quantity: number; externalId: string; printing?: string; setCode: string; manualPrice?: number; gradingCompany?: string; gradeValue?: string }
   >();
   let rowsWithoutExternalId = 0;
 
@@ -226,7 +225,6 @@ export async function estimateCollectionMarketValueGbp(
       continue;
     }
     const printing = e.printing?.trim() || e.targetPrinting?.trim() || undefined;
-    const legacyExternalId = e.legacyExternalId?.trim() || undefined;
     const manualPrice = e.unlistedPrice;
     const gradingCompany = e.gradingCompany?.trim() || undefined;
     const gradeValue = e.gradeValue?.trim() || undefined;
@@ -235,7 +233,7 @@ export async function estimateCollectionMarketValueGbp(
     if (prev) {
       rowMap.set(key, { ...prev, quantity: prev.quantity + q });
     } else {
-      rowMap.set(key, { quantity: q, externalId: ext, printing, legacyExternalId, setCode, manualPrice, gradingCompany, gradeValue });
+      rowMap.set(key, { quantity: q, externalId: ext, printing, setCode, manualPrice, gradingCompany, gradeValue });
     }
   }
 
@@ -267,8 +265,7 @@ export async function estimateCollectionMarketValueGbp(
           unitByKey.set(key, row.manualPrice);
           continue;
         }
-        const fallback = row.legacyExternalId ? [row.legacyExternalId] : undefined;
-        const entry = getPricingForCard(pricingMap, row.externalId, fallback);
+        const entry = getPricingForCard(pricingMap, row.externalId);
         if (!entry) {
           unitByKey.set(key, null);
           continue;

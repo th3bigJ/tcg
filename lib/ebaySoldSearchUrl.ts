@@ -3,10 +3,6 @@ export type EbayPokemonCardSearchParts = {
   setName?: string;
   /** Set code (e.g. `sv8`) if `setName` is missing. */
   setCode: string;
-  /** Payload `sets.slug` (kebab-case); used to build Cardmarket `/Singles/{Set}/…` paths. */
-  setSlug?: string;
-  /** Payload `sets.tcgdexId` (e.g. `me02.5`) — used for TCGPlayer product URL slug prefix (`me`). */
-  setTcgdexId?: string;
   /** Payload `sets.cardCountOfficial` — denominator in TCGPlayer slug when card number has no `/`. */
   setCardCountOfficial?: number;
   cardName: string;

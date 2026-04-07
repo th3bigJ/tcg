@@ -50,12 +50,13 @@ function buildPricingLookupIds(externalId: string): string[] {
 
 type PricingLookupInput = {
   externalId: string;
-  setTcgdexId?: string | null;
+  /** Catalog `setCode` (Scrydex `setKey`) — used with `localId` when `externalId` lacks a `-suffix`. */
+  setCode?: string | null;
   localId?: string | null;
 };
 
 function buildCanonicalExternalIdFromSet(input: PricingLookupInput): string | null {
-  const setId = typeof input.setTcgdexId === "string" ? input.setTcgdexId.trim() : "";
+  const setId = typeof input.setCode === "string" ? input.setCode.trim() : "";
   if (!setId) return null;
 
   const ext = input.externalId.trim();
@@ -86,7 +87,7 @@ export function extractTcgdexCardPricing(card: unknown): { tcgplayer: unknown; c
 }
 
 /**
- * When we know the expected TCGdex set id (e.g. from `sets.tcgdexId`), reject card payloads from
+ * When we know the expected set prefix from the card row (aligned with `sets.setKey`), reject card payloads from
  * another set. Otherwise lookup fallbacks like `me02-001` can match a different set than `me02.5-001`
  * and pricing will be wrong.
  */
@@ -124,7 +125,7 @@ export type LiveCardPricingFetchOptions = {
   multipliers?: GbpConversionMultipliers;
   /**
    * If set, only accept a card whose `set.id` / `id` prefix matches this TCGdex set id.
-   * `fetchLiveCardPricingGbpForCard` also uses `input.setTcgdexId` when this is omitted.
+   * `fetchLiveCardPricingGbpForCard` also uses `input.setCode` when this is omitted.
    */
   expectedTcgdexSetId?: string | null;
 };
@@ -181,7 +182,7 @@ export async function fetchLiveCardPricingGbp(
 }
 
 /**
- * Prefer canonical ids built from `sets.tcgdexId` + card suffix/localId, then fall back to legacy ids.
+ * Prefer canonical Scrydex-style ids from the card (`externalId`), then TCGdex-shaped fallbacks.
  */
 export async function fetchLiveCardPricingGbpForCard(
   input: PricingLookupInput,
@@ -203,9 +204,7 @@ export async function fetchLiveCardPricingGbpForCard(
   if (resolvedLookupIds.length === 0) return null;
 
   const expectedSetFromInput =
-    typeof input.setTcgdexId === "string" && input.setTcgdexId.trim()
-      ? input.setTcgdexId.trim()
-      : undefined;
+    typeof input.setCode === "string" && input.setCode.trim() ? input.setCode.trim() : undefined;
   const expectedSet = options?.expectedTcgdexSetId ?? expectedSetFromInput;
 
   for (const id of resolvedLookupIds) {
@@ -270,9 +269,7 @@ export async function fetchRawTcgdexCardPricingForCard(
   if (resolvedLookupIds.length === 0) return null;
 
   const expectedSetFromInput =
-    typeof input.setTcgdexId === "string" && input.setTcgdexId.trim()
-      ? input.setTcgdexId.trim()
-      : undefined;
+    typeof input.setCode === "string" && input.setCode.trim() ? input.setCode.trim() : undefined;
   const expectedSet = options?.expectedTcgdexSetId ?? expectedSetFromInput;
 
   for (const id of resolvedLookupIds) {

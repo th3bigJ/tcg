@@ -3,6 +3,7 @@ import path from "path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { r2SetLogoPrefix, r2SetSymbolPrefix } from "../lib/r2BucketLayout";
 import type { CardJsonEntry, SetJsonEntry } from "../lib/staticDataTypes";
+import { getSinglesCatalogSetKey } from "../lib/singlesCatalogSetKey";
 
 const TARGET_SET_CODES = [
   "2014xy",
@@ -115,8 +116,10 @@ async function uploadSetAssets(s3: S3Client, bucket: string): Promise<void> {
   const targets = new Set(TARGET_SET_CODES);
 
   for (const set of sets) {
-    const setCode = (set.code ?? set.tcgdexId ?? "").trim();
-    if (!targets.has(setCode as (typeof TARGET_SET_CODES)[number])) continue;
+    const catalog = getSinglesCatalogSetKey(set) ?? "";
+    const hit = catalog && targets.has(catalog as (typeof TARGET_SET_CODES)[number]);
+    if (!hit) continue;
+    const setCode = catalog;
 
     const uploadSetAsset = async (
       field: "logoSrc" | "symbolSrc",
@@ -195,7 +198,7 @@ async function uploadCardsForSet(
 
 function verifySetAssetsInData(): void {
   const sets = readJson<SetJsonEntry[]>(SETS_FILE);
-  const sve = sets.find((set) => set.tcgdexId === "sve");
+  const sve = sets.find((set) => set.setKey === "sve");
   if (!sve) throw new Error("Could not find sve in data/sets.json");
 }
 
@@ -211,7 +214,15 @@ async function main(): Promise<void> {
   let totalUploaded = 0;
   let totalRewritten = 0;
 
-  for (const setCode of TARGET_SET_CODES) {
+  const allSetsForResolve = readJson<SetJsonEntry[]>(SETS_FILE);
+  const catalogKeys = new Set<string>();
+  for (const t of TARGET_SET_CODES) {
+    const row = allSetsForResolve.find((s) => (s.setKey ?? "").trim() === t);
+    const key = row ? getSinglesCatalogSetKey(row) : t;
+    if (key) catalogKeys.add(key);
+  }
+
+  for (const setCode of catalogKeys) {
     const { uploaded, rewritten } = await uploadCardsForSet(s3, bucket, setCode);
     totalUploaded += uploaded;
     totalRewritten += rewritten;

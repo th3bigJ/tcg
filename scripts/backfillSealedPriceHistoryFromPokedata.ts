@@ -45,7 +45,7 @@ type ProductTransactionsPayload = {
 
 const SOURCE_API_URL = "https://www.pokedata.io/api/products";
 const PRODUCT_TRANSACTIONS_URL = "https://www.pokedata.io/api/product_transactions";
-const OUTPUT_DIR = path.join(process.cwd(), "data", "sealed-products");
+const PRICING_DATA_DIR = path.join(process.cwd(), "data", "pricing");
 const ENV_FILE = path.join(process.cwd(), ".env.local");
 const DEFAULT_TCG = "Pokemon";
 const DEFAULT_LANGUAGE = "ENGLISH";
@@ -99,7 +99,7 @@ function getBucket(): string {
 }
 
 function ensureOutputDir(): void {
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  fs.mkdirSync(PRICING_DATA_DIR, { recursive: true });
 }
 
 function normalizeSeriesValue(value: string | null | undefined): string {
@@ -311,7 +311,7 @@ async function main(): Promise<void> {
     }
   }
 
-  const localHistoryPath = path.join(OUTPUT_DIR, "pokedata-english-pokemon-price-history.json");
+  const localHistoryPath = path.join(PRICING_DATA_DIR, "pokedata-english-pokemon-price-history.json");
   const shouldMergeWithExisting = Boolean(requestedProductId || requestedSeriesRaw);
   const historyMap = shouldMergeWithExisting
     ? { ...readLocalHistoryMap(localHistoryPath), ...historyUpdates }

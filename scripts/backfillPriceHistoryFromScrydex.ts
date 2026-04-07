@@ -43,9 +43,12 @@ import {
   SCRYDEX_FLAT_PSA10_KEY_SUFFIX,
   type ScrydexHistoryPoint,
 } from "../lib/scrydexMepCardPagePricing";
-import { lookupScrydexBulkExpansionConfig } from "../lib/scrydexBulkExpansionUrls";
-import { scrydexMegaExpansionConfig, type ScrydexExpansionListConfig } from "../lib/scrydexMegaEvolutionUrls";
-import { scrydexScarletVioletExpansionConfig } from "../lib/scrydexScarletVioletUrls";
+import { resolveExpansionConfigsForSet } from "../lib/scrydexExpansionConfigsForSet";
+import { getSinglesCatalogSetKey } from "../lib/singlesCatalogSetKey";
+import {
+  buildScrydexPrefixCandidates,
+  setRowMatchesAllowedSetCodes,
+} from "../lib/scrydexPrefixCandidatesForSet";
 
 const dryRun = process.argv.includes("--dry-run");
 const setArg = process.argv.find((arg) => arg.startsWith("--set="));
@@ -72,56 +75,6 @@ function loadCardsForSet(setCode: string): CardJsonEntry[] {
   const file = path.join(CARDS_DIR, `${setCode}.json`);
   if (!fs.existsSync(file)) return [];
   return readJson<CardJsonEntry[]>(file);
-}
-
-function resolveExpansionConfig(set: SetJsonEntry): ScrydexExpansionListConfig | null {
-  const code = set.code ?? undefined;
-  const tcgdexId = set.tcgdexId ?? undefined;
-  const candidates = [code, tcgdexId].filter((value): value is string => Boolean(value?.trim()));
-  for (const candidate of candidates) {
-    const result = scrydexMegaExpansionConfig(candidate, undefined, undefined);
-    if (result) return result;
-  }
-  for (const candidate of candidates) {
-    const result = scrydexScarletVioletExpansionConfig(candidate, undefined, undefined);
-    if (result) return result;
-  }
-  for (const candidate of candidates) {
-    const result = lookupScrydexBulkExpansionConfig(candidate, undefined, undefined);
-    if (result) return result;
-  }
-  return null;
-}
-
-function resolveExpansionConfigs(set: SetJsonEntry): ScrydexExpansionListConfig[] {
-  const code = (set.code ?? set.tcgdexId ?? "").trim().toLowerCase();
-  if (code === "swsh12.5") {
-    return [
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/crown-zenith/swsh12pt5",
-        listPrefix: "swsh12pt5",
-      },
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/crown-zenith-galarian-gallery/swsh12pt5gg",
-        listPrefix: "swsh12pt5gg",
-      },
-    ];
-  }
-  if (code === "swsh4.5") {
-    return [
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/shining-fates/swsh45",
-        listPrefix: "swsh45",
-      },
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/shining-fates-shiny-vault/swsh45sv",
-        listPrefix: "swsh45sv",
-      },
-    ];
-  }
-
-  const config = resolveExpansionConfig(set);
-  return config ? [config] : [];
 }
 
 function slugFromLabel(label: string): string {
@@ -220,16 +173,16 @@ async function uploadHistoryToR2(s3: S3Client, setCode: string, historyMap: SetP
 }
 
 async function backfillSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client): Promise<void> {
-  const setCode = set.code ?? set.tcgdexId;
+  const setCode = getSinglesCatalogSetKey(set);
   if (!setCode) return;
 
-  const configs = resolveExpansionConfigs(set);
+  const configs = resolveExpansionConfigsForSet(set);
   if (!configs.length) {
     console.log(`  [${setCode}] skip — no Scrydex URL mapped`);
     return;
   }
 
-  const tcgPrefixes = [set.code, set.tcgdexId].filter((value): value is string => Boolean(value?.trim()));
+  const tcgPrefixes = buildScrydexPrefixCandidates(set);
   const pathMaps = new Map<string, Map<string, string>>();
 
   for (const config of configs) {
@@ -242,7 +195,7 @@ async function backfillSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Clie
   let processed = 0;
 
   for (const card of cards) {
-    const ext = (card.externalId ?? card.tcgdex_id ?? "").trim().toLowerCase();
+    const ext = (card.externalId ?? "").trim().toLowerCase();
     if (!ext) continue;
 
     let flatHistory: Record<string, ScrydexHistoryPoint[]> = {};
@@ -286,7 +239,7 @@ async function backfillSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Clie
     const cardHistory = buildHistoryForCard(flatHistory);
     if (!cardHistory) continue;
 
-    historyMap[card.externalId ?? ext] = cardHistory;
+    historyMap[(card.externalId ?? ext).trim().toLowerCase()] = cardHistory;
     processed++;
     if (processed % 25 === 0) {
       console.log(`  [${setCode}] built history for ${processed} cards…`);
@@ -315,21 +268,14 @@ async function main(): Promise<void> {
   }
 
   const allSets = loadSets();
-  const allowedCodes =
-    onlySetCodes && onlySetCodes.length > 0
-      ? new Set(onlySetCodes.map((value) => value.toLowerCase()))
-      : null;
   const allowedSeries =
     onlySeriesNames && onlySeriesNames.length > 0
       ? new Set(onlySeriesNames.map((value) => value.toLowerCase()))
       : null;
 
   const sets = allSets.filter((set) => {
-    if (allowedCodes) {
-      const codeOk =
-        (set.code && allowedCodes.has(set.code.toLowerCase())) ||
-        (set.tcgdexId && allowedCodes.has(set.tcgdexId.toLowerCase()));
-      if (!codeOk) return false;
+    if (onlySetCodes?.length) {
+      if (!setRowMatchesAllowedSetCodes(set, onlySetCodes)) return false;
     }
     if (allowedSeries) {
       const name = set.seriesName?.trim().toLowerCase();
@@ -354,7 +300,7 @@ async function main(): Promise<void> {
 
   const s3 = buildS3Client();
   for (const set of sets) {
-    const setCode = set.code ?? set.tcgdexId;
+    const setCode = getSinglesCatalogSetKey(set);
     if (!setCode) continue;
     const cards = loadCardsForSet(setCode);
     if (!cards.length) {

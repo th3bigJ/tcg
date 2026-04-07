@@ -11,6 +11,7 @@
 
 import type { CardJsonEntry } from "@/lib/staticDataTypes";
 import { getAllCards, getAllSets, getAllSetCodes, getCardsBySet } from "@/lib/staticCards";
+import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
 
 // ─── Shared helpers (mirrored from cardsPageQueries.ts) ───────────────────────
 
@@ -73,7 +74,7 @@ export function getDefaultCardOrder(): DefaultCardOrderEntry[] {
   const sets = getAllSets();
   const setReleaseTimes = new Map<string, number>(
     sets.map((s) => {
-      const code = s.code ?? s.tcgdexId ?? "";
+      const code = getSinglesCatalogSetKey(s) ?? "";
       const time = s.releaseDate ? new Date(s.releaseDate).getTime() : 0;
       return [code, Number.isFinite(time) ? time : 0];
     })

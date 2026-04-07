@@ -358,3 +358,25 @@ export function lookupScrydexBulkExpansionConfig(
   }
   return null;
 }
+
+/**
+ * Sword & Shield sets where Scrydex uses a separate expansion for Trainer Gallery cards
+ * (`swshNtg` listPrefix). Catalog `setKey` stays the main set (`swshN`); scrapers merge both listings.
+ */
+export const SWSH_TRAINER_GALLERY_LIST_PREFIX_BY_MAIN: Readonly<Record<string, string>> = {
+  swsh9: "swsh9tg",
+  swsh10: "swsh10tg",
+  swsh11: "swsh11tg",
+  swsh12: "swsh12tg",
+};
+
+/** Main + Trainer Gallery Scrydex configs, or null when `mainSetKey` is not a known TG pair. */
+export function resolveSwshTrainerGalleryExpansionPair(mainSetKey: string): ScrydexExpansionListConfig[] | null {
+  const main = mainSetKey.trim().toLowerCase();
+  const tgPrefix = SWSH_TRAINER_GALLERY_LIST_PREFIX_BY_MAIN[main];
+  if (!tgPrefix) return null;
+  const mainCfg = lookupScrydexBulkExpansionConfig(main, main, main);
+  const tgCfg = lookupScrydexBulkExpansionConfig(tgPrefix, tgPrefix, tgPrefix);
+  if (!mainCfg || !tgCfg) return null;
+  return [mainCfg, tgCfg];
+}

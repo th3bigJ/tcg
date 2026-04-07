@@ -3,13 +3,14 @@ import { type NextRequest } from "next/server";
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
 import { jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
 import { getAllCards, getAllSets } from "@/lib/staticCards";
+import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
 
 let _setNameMap: Map<string, string> | null = null;
 function getSetNameMap(): Map<string, string> {
   if (!_setNameMap) {
     _setNameMap = new Map();
     for (const s of getAllSets()) {
-      const code = s.code ?? s.tcgdexId;
+      const code = getSinglesCatalogSetKey(s);
       if (code && s.name) _setNameMap.set(code, s.name);
     }
   }

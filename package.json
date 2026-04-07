@@ -26,6 +26,8 @@
     "portfolio:snapshot:fix-dates": "node --import tsx/esm scripts/backfillPortfolioSnapshotTodayToYesterday.ts",
     "r2:migrate-pokemon-bucket": "node --import tsx/esm scripts/r2MigratePokemonBucketIntoTcg.ts",
     "r2:upload-static-data": "node --import tsx/esm scripts/uploadStaticCardDataToR2.ts",
+    "r2:replace-mirrored-data": "node --import tsx/esm scripts/replaceMirroredDataOnR2.ts",
+    "r2:download-static-data": "node --import tsx/esm scripts/downloadStaticCardDataFromR2.ts",
     "r2:rename-pricing-to-card-pricing": "node --import tsx/esm scripts/r2RenamePricingToCardPricing.ts",
     "r2:nest-singles-pricing-under-pricing": "node --import tsx/esm scripts/r2NestSinglesPricingUnderPricingFolder.ts",
     "r2:move-sealed-pokedata-json": "node --import tsx/esm scripts/r2MoveSealedPokedataJsonToDataAndPricing.ts",

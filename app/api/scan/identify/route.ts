@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
+import { buildScrydexPrefixCandidates } from "@/lib/scrydexPrefixCandidatesForSet";
 import { getAllCards, getAllSets } from "@/lib/staticCards";
 
 let setMetaMap: Map<string, ReturnType<typeof getAllSets>[number]> | null = null;
@@ -9,8 +10,9 @@ function getSetMetaMap() {
   if (!setMetaMap) {
     setMetaMap = new Map();
     for (const set of getAllSets()) {
-      if (set.code) setMetaMap.set(set.code, set);
-      if (set.tcgdexId) setMetaMap.set(set.tcgdexId, set);
+      for (const p of buildScrydexPrefixCandidates(set)) {
+        setMetaMap.set(p, set);
+      }
     }
   }
   return setMetaMap;
@@ -118,24 +120,16 @@ function toEntry(card: ReturnType<typeof getAllCards>[number]): CardsPageCardEnt
       ? card.localId.trim().padStart(3, "0")
       : card.localId.trim()
     : null;
-  const tcgdexStored = card.tcgdex_id?.trim() || undefined;
   const extStored = card.externalId?.trim() || undefined;
   const derivedFromSetAndLocal =
-    card.setTcgdexId && localIdNormalized
-      ? `${card.setTcgdexId}-${localIdNormalized}`
-      : undefined;
-  const ext = tcgdexStored ?? extStored ?? derivedFromSetAndLocal;
-  const legacyExternalId =
-    tcgdexStored !== undefined ? extStored ?? derivedFromSetAndLocal : derivedFromSetAndLocal;
+    card.setCode && localIdNormalized ? `${card.setCode}-${localIdNormalized}` : undefined;
+  const ext = extStored ?? derivedFromSetAndLocal;
 
   return {
     masterCardId: card.masterCardId,
     ...(ext ? { externalId: ext } : {}),
-    ...(legacyExternalId ? { legacyExternalId } : {}),
     set: card.setCode,
-    setSlug: setMeta?.slug ?? undefined,
     setName: setMeta?.name ?? undefined,
-    setTcgdexId: card.setTcgdexId ?? undefined,
     setLogoSrc: setMeta?.logoSrc ?? undefined,
     setSymbolSrc: setMeta?.symbolSrc ?? undefined,
     setReleaseDate: setMeta?.releaseDate ?? undefined,
@@ -147,7 +141,6 @@ function toEntry(card: ReturnType<typeof getAllCards>[number]): CardsPageCardEnt
     rarity: card.rarity ?? "",
     cardName: card.cardName ?? "",
     category: card.category ?? undefined,
-    stage: card.stage ?? undefined,
     hp: card.hp ?? undefined,
     elementTypes: card.elementTypes ?? undefined,
     dexIds: card.dexIds ?? undefined,

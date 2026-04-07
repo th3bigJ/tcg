@@ -18,6 +18,8 @@ import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
 import { getPriceHistoryForSet } from "../lib/r2PriceHistory";
 import { uploadPriceTrends } from "../lib/r2PriceTrends";
 import type { SetJsonEntry, SeriesJsonEntry } from "../lib/staticDataTypes";
+import { getSinglesCatalogSetKey } from "../lib/singlesCatalogSetKey";
+import { setRowMatchesAllowedSetCodes } from "../lib/scrydexPrefixCandidatesForSet";
 
 loadEnvFilesFromRepoRoot(import.meta.url);
 
@@ -56,12 +58,7 @@ async function run() {
   let sets = allSets;
 
   if (onlySetCodes?.length) {
-    const allowed = new Set(onlySetCodes.map((s) => s.toLowerCase()));
-    sets = allSets.filter(
-      (s) =>
-        (s.code && allowed.has(s.code.toLowerCase())) ||
-        (s.tcgdexId && allowed.has(s.tcgdexId.toLowerCase())),
-    );
+    sets = allSets.filter((s) => setRowMatchesAllowedSetCodes(s, onlySetCodes));
     if (!sets.length) throw new Error(`No sets found matching: ${onlySetCodes.join(", ")}`);
   } else if (onlySeriesNames?.length) {
     const allSeries = readJson<SeriesJsonEntry[]>(path.join(DATA_DIR, "series.json"));
@@ -89,7 +86,7 @@ async function run() {
   let skipped = 0;
 
   for (const set of sets) {
-    const setCode = set.code ?? set.tcgdexId;
+    const setCode = getSinglesCatalogSetKey(set);
     if (!setCode) continue;
 
     const historyMap = await getPriceHistoryForSet(setCode);

@@ -3,6 +3,7 @@ import { cache } from "react";
 import { resolvePokemonMediaURL } from "@/lib/media";
 import type { PokemonJsonEntry } from "@/lib/staticDataTypes";
 import { getAllSets } from "@/lib/staticCards";
+import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
 
 export type SetFilterOption = {
   code: string;
@@ -27,7 +28,7 @@ const getAllSetFilterOptions = cache(async function getAllSetFilterOptions(): Pr
   const results: SetFilterOption[] = [];
 
   for (const s of getAllSets()) {
-    const code = s.code ?? s.tcgdexId;
+    const code = getSinglesCatalogSetKey(s);
     if (!code || !s.logoSrc) continue;
 
     const releaseYear = s.releaseDate

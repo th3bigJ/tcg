@@ -12,30 +12,23 @@ export type CardAttackJson = {
 
 export type CardJsonEntry = {
   masterCardId: string;
-  /** Scrydex card id when known (e.g. `me2pt5-256`); also used for pricing lookups. */
+  /** Scrydex card id (e.g. `me2-130`, `rsv10pt5-173`) — primary id for pricing and scrapers. */
   externalId: string | null;
-  tcgdex_id: string | null;
   localId: string | null;
   setCode: string;
-  setTcgdexId: string | null;
   /** Display/collector number; may be overwritten from Scrydex `printed_number` when scraped. */
   cardNumber: string;
   cardName: string;
   fullDisplayName: string | null;
   rarity: string | null;
   category: string | null;
-  stage: string | null;
   hp: number | null;
   elementTypes: string[] | null;
   dexIds: number[] | null;
-  subtypes: string[] | null;
   trainerType: string | null;
   energyType: string | null;
   regulationMark: string | null;
-  evolveFrom: string | null;
   artist: string | null;
-  isActive: boolean;
-  noPricing: boolean;
   imageLowSrc: string;
   imageHighSrc: string | null;
   /** Populated by `scrape:scrydex-card-meta` from Scrydex. */
@@ -47,15 +40,17 @@ export type CardJsonEntry = {
 export type SetJsonEntry = {
   id: string;
   name: string;
-  slug: string;
-  code: string | null;
-  tcgdexId: string | null;
+  /**
+   * Single catalog id for this set: Scrydex main `listPrefix` (e.g. `me2`, `swsh12pt5`, `swsh45`).
+   * Multi-list sets use the primary id on disk; scrapers follow all Scrydex listings (e.g. Crown Zenith + GG,
+   * Shining Fates + Shiny Vault, SWSH `swsh10` + `swsh10tg` Trainer Gallery).
+   * Drives `data/cards/{setKey}.json`, R2 singles pricing, scrapers.
+   */
+  setKey: string;
   releaseDate: string | null;
-  isActive: boolean;
   cardCountTotal: number | null;
   cardCountOfficial: number | null;
   seriesName: string | null;
-  seriesSlug: string | null;
   logoSrc: string;
   symbolSrc: string | null;
 };
@@ -63,9 +58,8 @@ export type SetJsonEntry = {
 export type SeriesJsonEntry = {
   id: string;
   name: string;
-  slug: string;
-  tcgdexSeriesId: string | null;
-  isActive: boolean;
+  /** TCGdex/API series slug (e.g. `swsh`, `sv`). */
+  seriesId: string | null;
 };
 
 export type CardPricingEntry = {

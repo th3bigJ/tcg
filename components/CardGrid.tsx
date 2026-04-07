@@ -1441,15 +1441,6 @@ function ModalCardAttributesSection({
             value={selectedCard.category}
           />
         ) : null}
-        {selectedCard.stage ? (
-          <ModalAttributeRowPick
-            compact={compact}
-            solid={solidBack}
-            icon={<AttributeIconBadge />}
-            label="Stage"
-            value={selectedCard.stage}
-          />
-        ) : null}
         {typeof selectedCard.hp === "number" ? (
           <ModalAttributeRowPick
             compact={compact}
@@ -1551,7 +1542,7 @@ const CardGridItem = memo(function CardGridItem({
         observer.disconnect();
         const url = card.masterCardId
           ? `/api/card-pricing-summary/by-master/${encodeURIComponent(card.masterCardId)}`
-          : `/api/card-prices/${encodeURIComponent(card.externalId!)}${card.legacyExternalId ? `?fallbackExternalId=${encodeURIComponent(card.legacyExternalId)}` : ""}`;
+          : `/api/card-prices/${encodeURIComponent(card.externalId!)}`;
         fetch(url)
           .then((r) => (r.ok ? r.json() : null))
           .then((data) => {
@@ -1571,7 +1562,7 @@ const CardGridItem = memo(function CardGridItem({
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [variant, card.externalId, card.legacyExternalId]);
+  }, [variant, card.externalId]);
 
   const unitPrice = variant === "browse" ? lazyPrice ?? unitPriceProp : unitPriceProp;
   const unitTrend = variant === "browse" ? lazyTrend ?? trendSummaryProp ?? null : trendSummaryProp ?? null;
@@ -3440,7 +3431,6 @@ export function CardGrid({
                 key={activeModalCard.masterCardId ?? `${activeModalCard.set}/${activeModalCard.filename}`}
                 masterCardId={activeModalCard.masterCardId}
                 externalId={activeModalCard.externalId}
-                legacyExternalId={activeModalCard.legacyExternalId}
                 onVariantsLoaded={setPricingVariants}
                 hidePerVariantActions={Boolean(allowMutations && activeModalCard.masterCardId)}
                 onAdd={allowMutations && activeModalCard.masterCardId ? (v) => onOpenAddSheet(v) : undefined}
@@ -3471,8 +3461,6 @@ export function CardGrid({
                 }
                 ebayCardContext={{
                   setName: activeModalCard.setName,
-                  setSlug: activeModalCard.setSlug,
-                  setTcgdexId: activeModalCard.setTcgdexId,
                   setCardCountOfficial: activeModalCard.setCardCountOfficial,
                   setCode: activeModalCard.set,
                   cardName: activeModalCard.cardName,

@@ -1,4 +1,5 @@
 import { getAllSets } from "@/lib/staticCards";
+import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
 
 export type ExpansionSetRow = {
   code: string;
@@ -20,8 +21,7 @@ export function getCachedExpansionSetRows(): ExpansionSetRow[] {
   const rows: ExpansionSetRow[] = [];
 
   for (const s of getAllSets()) {
-    if (!s.isActive) continue;
-    const code = s.code ?? s.tcgdexId;
+    const code = getSinglesCatalogSetKey(s);
     if (!code || !s.logoSrc) continue;
 
     const releaseTime = s.releaseDate ? new Date(s.releaseDate).getTime() : 0;

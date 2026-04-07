@@ -1,6 +1,7 @@
 import type { CardPricingGbpPayload } from "@/lib/liveCardPricingGbp";
 import { cardPricingEntryToPayload } from "@/lib/cardPricingEntryToPayload";
 import { getPricingForCard, getPricingForSet } from "@/lib/r2Pricing";
+import { resolvePricingExternalId } from "@/lib/cardPricingBulk";
 import { getCardMapById } from "@/lib/staticCardIndex";
 
 const EMPTY: CardPricingGbpPayload = { tcgplayer: null, cardmarket: null, currency: "GBP" };
@@ -23,10 +24,10 @@ export async function GET(
     const pricingMap = await getPricingForSet(card.setCode);
     if (!pricingMap) return Response.json(EMPTY, { headers: CACHE_HEADERS });
 
-    const ids = [card.externalId, card.tcgdex_id].filter((id): id is string => Boolean(id));
-    if (ids.length === 0) return Response.json(EMPTY, { headers: CACHE_HEADERS });
+    const externalId = resolvePricingExternalId(card);
+    if (!externalId) return Response.json(EMPTY, { headers: CACHE_HEADERS });
 
-    const entry = getPricingForCard(pricingMap, ids[0], ids.slice(1));
+    const entry = getPricingForCard(pricingMap, externalId);
     if (!entry) return Response.json(EMPTY, { headers: CACHE_HEADERS });
 
     const resolved = await cardPricingEntryToPayload(entry.tcgplayer, entry.cardmarket, entry.scrydex);

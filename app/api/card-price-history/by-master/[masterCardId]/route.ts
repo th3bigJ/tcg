@@ -1,6 +1,7 @@
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import { scaleCardPriceHistoryUsdToGbpForDisplay } from "@/lib/pricingUsdStorageDisplay";
 import { getPriceHistoryForCard, getPriceHistoryForSet } from "@/lib/r2PriceHistory";
+import { resolvePricingExternalId } from "@/lib/cardPricingBulk";
 import { getCardMapById } from "@/lib/staticCardIndex";
 import type { CardPriceHistory } from "@/lib/staticDataTypes";
 
@@ -24,10 +25,10 @@ export async function GET(
     const historyMap = await getPriceHistoryForSet(card.setCode);
     if (!historyMap) return Response.json({ error: "Not found" }, { status: 404, headers: CACHE_HEADERS });
 
-    const ids = [card.externalId, card.tcgdex_id].filter((id): id is string => Boolean(id));
-    if (ids.length === 0) return Response.json({ error: "Not found" }, { status: 404, headers: CACHE_HEADERS });
+    const externalId = resolvePricingExternalId(card);
+    if (!externalId) return Response.json({ error: "Not found" }, { status: 404, headers: CACHE_HEADERS });
 
-    const entry = getPriceHistoryForCard(historyMap, ids[0], ids.slice(1));
+    const entry = getPriceHistoryForCard(historyMap, externalId);
     if (!entry) return Response.json({ error: "Not found" }, { status: 404, headers: CACHE_HEADERS });
 
     const gbp: CardPriceHistory = scaleCardPriceHistoryUsdToGbpForDisplay(entry, usdToGbp);

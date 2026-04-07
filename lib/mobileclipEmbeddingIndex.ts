@@ -1,9 +1,7 @@
 export type MobileClipEmbeddingCardRecord = {
   masterCardId: string;
   externalId: string | null;
-  tcgdexId: string | null;
   setCode: string | null;
-  setTcgdexId: string | null;
   setName: string | null;
   cardNumber: string | null;
   cardName: string | null;

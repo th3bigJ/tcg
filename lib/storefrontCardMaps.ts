@@ -2,6 +2,7 @@ import type { CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import { resolveMediaURL } from "@/lib/media";
 import { getCardMapById } from "@/lib/staticCardIndex";
 import { getAllSets } from "@/lib/staticCards";
+import { buildScrydexPrefixCandidates } from "@/lib/scrydexPrefixCandidatesForSet";
 import { isGradedConditionId, isGradedConditionLabel, ITEM_CONDITIONS } from "@/lib/referenceData";
 
 export type StorefrontCardExtras = {
@@ -132,8 +133,9 @@ function getSetMetaMap() {
   if (!_setMetaMap) {
     _setMetaMap = new Map();
     for (const s of getAllSets()) {
-      if (s.code) _setMetaMap.set(s.code, s);
-      if (s.tcgdexId) _setMetaMap.set(s.tcgdexId, s);
+      for (const p of buildScrydexPrefixCandidates(s)) {
+        _setMetaMap.set(p, s);
+      }
     }
   }
   return _setMetaMap;
@@ -155,24 +157,16 @@ function mapMasterCardId(masterCardId: string): CardsPageCardEntry | null {
       ? card.localId.trim().padStart(3, "0")
       : card.localId.trim()
     : null;
-  const tcgdexStored = card.tcgdex_id?.trim() || undefined;
   const extStored = card.externalId?.trim() || undefined;
   const derivedFromSetAndLocal =
-    card.setTcgdexId && localIdNormalized
-      ? `${card.setTcgdexId}-${localIdNormalized}`
-      : undefined;
-  const ext = tcgdexStored ?? extStored ?? derivedFromSetAndLocal;
-  const legacyExternalId =
-    tcgdexStored !== undefined ? extStored ?? derivedFromSetAndLocal : derivedFromSetAndLocal;
+    card.setCode && localIdNormalized ? `${card.setCode}-${localIdNormalized}` : undefined;
+  const ext = extStored ?? derivedFromSetAndLocal;
 
   return {
     masterCardId: card.masterCardId,
     ...(ext ? { externalId: ext } : {}),
-    ...(legacyExternalId ? { legacyExternalId } : {}),
     set: card.setCode,
-    setSlug: setMeta?.slug ?? undefined,
     setName: setMeta?.name ?? undefined,
-    setTcgdexId: card.setTcgdexId ?? undefined,
     setCardCountOfficial:
       setMeta?.cardCountOfficial != null && setMeta.cardCountOfficial >= 0
         ? Math.floor(setMeta.cardCountOfficial)
@@ -188,7 +182,6 @@ function mapMasterCardId(masterCardId: string): CardsPageCardEntry | null {
     rarity: card.rarity ?? "",
     cardName: card.cardName ?? "",
     category: card.category ?? undefined,
-    stage: card.stage ?? undefined,
     hp: card.hp ?? undefined,
     elementTypes: card.elementTypes ?? undefined,
     dexIds: card.dexIds ?? undefined,

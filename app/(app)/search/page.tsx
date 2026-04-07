@@ -23,6 +23,7 @@ import {
 import { normalizePokemonImageSrc } from "@/lib/pokemonImageUrl";
 import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
 import { getMasterCardIdsWithMinCopies } from "@/lib/storefrontCardMaps";
+import { normalizeSetCodeFromUrlParam } from "@/lib/staticCards";
 import { fetchCollectionCardEntries } from "@/lib/storefrontCardMapsServer";
 import { type SortOrder, DEFAULT_SORT, SEARCH_DEFAULT_SORT } from "@/lib/persistedFilters";
 
@@ -112,7 +113,7 @@ async function SearchPageContent({ searchParams }: SearchPageProps) {
     );
   }
 
-  const selectedSet = (resolvedSearchParams.set ?? "").trim();
+  const selectedSet = normalizeSetCodeFromUrlParam(resolvedSearchParams.set ?? "");
   const selectedPokemon = (resolvedSearchParams.pokemon ?? "").trim();
   const selectedSort = parseSortOrder(resolvedSearchParams.sort);
   const selectedRarity = (resolvedSearchParams.rarity ?? "").trim();

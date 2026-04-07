@@ -7,9 +7,9 @@ import {
   resolveScrydexCardPath,
 } from "../scrydexExpansionListParsing";
 import { fetchScrydexCardPageHtml } from "../scrydexMepCardPagePricing";
-import { lookupScrydexBulkExpansionConfig } from "../scrydexBulkExpansionUrls";
-import { scrydexMegaExpansionConfig, type ScrydexExpansionListConfig } from "../scrydexMegaEvolutionUrls";
-import { scrydexScarletVioletExpansionConfig } from "../scrydexScarletVioletUrls";
+import { resolveExpansionConfigsForSet } from "../scrydexExpansionConfigsForSet";
+import { getSinglesCatalogSetKey } from "../singlesCatalogSetKey";
+import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "../scrydexPrefixCandidatesForSet";
 import {
   isScrydexErrorPage,
   parseScrydexCardAttacks,
@@ -53,58 +53,6 @@ function loadCardsForSet(setCode: string): CardJsonEntry[] {
 
 function writeJson(filePath: string, value: unknown): void {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-// ─── Expansion URL resolution (same logic as jobScrapePricing) ────────────────
-
-function resolveExpansionConfig(set: SetJsonEntry): ScrydexExpansionListConfig | null {
-  const code = set.code ?? undefined;
-  const tcgdexId = set.tcgdexId ?? undefined;
-  const candidates = [code, tcgdexId].filter((x): x is string => Boolean(x?.trim()));
-  for (const c of candidates) {
-    const r = scrydexMegaExpansionConfig(c, undefined, undefined);
-    if (r) return r;
-  }
-  for (const c of candidates) {
-    const r = scrydexScarletVioletExpansionConfig(c, undefined, undefined);
-    if (r) return r;
-  }
-  for (const c of candidates) {
-    const r = lookupScrydexBulkExpansionConfig(c, undefined, undefined);
-    if (r) return r;
-  }
-  return null;
-}
-
-function resolveExpansionConfigs(set: SetJsonEntry): ScrydexExpansionListConfig[] {
-  const code = (set.code ?? set.tcgdexId ?? "").trim().toLowerCase();
-  if (code === "swsh12.5") {
-    return [
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/crown-zenith/swsh12pt5",
-        listPrefix: "swsh12pt5",
-      },
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/crown-zenith-galarian-gallery/swsh12pt5gg",
-        listPrefix: "swsh12pt5gg",
-      },
-    ];
-  }
-  if (code === "swsh4.5") {
-    return [
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/shining-fates/swsh45",
-        listPrefix: "swsh45",
-      },
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/shining-fates-shiny-vault/swsh45sv",
-        listPrefix: "swsh45sv",
-      },
-    ];
-  }
-
-  const cfg = resolveExpansionConfig(set);
-  return cfg ? [cfg] : [];
 }
 
 // ─── Concurrency ─────────────────────────────────────────────────────────────
@@ -205,7 +153,7 @@ async function scrapeSetMeta(
   cards: CardJsonEntry[],
   dryRun: boolean,
 ): Promise<SetMetaResult> {
-  const setCode = set.code ?? set.tcgdexId;
+  const setCode = getSinglesCatalogSetKey(set);
   const setName = set.name ?? setCode ?? "";
   const out: SetMetaResult = {
     setCode: setCode ?? "",
@@ -218,12 +166,12 @@ async function scrapeSetMeta(
   };
   if (!setCode) return out;
 
-  const configs = resolveExpansionConfigs(set);
+  const configs = resolveExpansionConfigsForSet(set);
   if (!configs.length) {
     return out;
   }
 
-  const tcgPrefixes = [set.code, set.tcgdexId].filter((x): x is string => Boolean(x?.trim()));
+  const tcgPrefixes = buildScrydexPrefixCandidates(set);
   const perPrefix = new Map<string, Map<string, string>>();
 
   for (const cfg of configs) {
@@ -246,7 +194,7 @@ async function scrapeSetMeta(
   const pathSet = new Set<string>();
 
   for (const card of cards) {
-    const ext = (card.externalId ?? card.tcgdex_id ?? "").trim().toLowerCase();
+    const ext = (card.externalId ?? "").trim().toLowerCase();
     if (!ext) continue;
 
     let foundPath: string | undefined;
@@ -439,12 +387,7 @@ export async function runScrapeScrydexCardMeta(opts: ScrapeScrydexCardMetaOption
   let seriesFilter: string | undefined;
 
   if (onlySetCodes?.length) {
-    const allowed = new Set(onlySetCodes.map((s) => s.toLowerCase()));
-    sets = allSets.filter(
-      (s) =>
-        (s.code && allowed.has(s.code.toLowerCase())) ||
-        (s.tcgdexId && allowed.has(s.tcgdexId.toLowerCase())),
-    );
+    sets = allSets.filter((s) => setRowMatchesAllowedSetCodes(s, onlySetCodes));
     if (!sets.length) throw new Error(`No sets found matching: ${onlySetCodes.join(", ")}`);
   } else if (onlySeriesNames?.length) {
     const allSeries = loadSeries();
@@ -472,14 +415,14 @@ export async function runScrapeScrydexCardMeta(opts: ScrapeScrydexCardMetaOption
   const setsSkippedNoMapping: string[] = [];
 
   for (const set of sets) {
-    const setCode = set.code ?? set.tcgdexId;
+    const setCode = getSinglesCatalogSetKey(set);
     if (!setCode) continue;
     const cards = loadCardsForSet(setCode);
     if (!cards.length) {
       console.log(`  [${setCode}] skip — no cards in data/cards/${setCode}.json`);
       continue;
     }
-    const configs = resolveExpansionConfigs(set);
+    const configs = resolveExpansionConfigsForSet(set);
     if (!configs.length) {
       setsSkippedNoMapping.push(setCode);
       console.log(`  [${setCode}] skip — no Scrydex URL mapped`);

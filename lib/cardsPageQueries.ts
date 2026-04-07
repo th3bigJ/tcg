@@ -5,6 +5,8 @@ import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
 import type { SortOrder } from "@/lib/persistedFilters";
 import type { CardJsonEntry } from "@/lib/staticCards";
 import { getCardsBySet, getAllSets } from "@/lib/staticCards";
+import { buildScrydexPrefixCandidates } from "@/lib/scrydexPrefixCandidatesForSet";
+import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
 import {
   getDefaultCardOrder,
   getFilterFacets,
@@ -15,16 +17,10 @@ import {
 export type CardsPageCardEntry = {
   /** Payload `master-card-list` document id (for collection / wishlist APIs). */
   masterCardId?: string;
-  /** TCGdex card id — used for market price API; omit when unknown. */
+  /** Scrydex card id — used for market price API; omit when unknown. */
   externalId?: string;
-  /** Backup id used when `externalId` misses in cache/API lookups. */
-  legacyExternalId?: string;
   set: string;
-  /** Payload `sets.slug` (kebab-case), when the populated set includes it. */
-  setSlug?: string;
   setName?: string;
-  /** Payload `sets.tcgdexId` when the populated set includes it. */
-  setTcgdexId?: string;
   /** Payload `sets.cardCountOfficial` when the populated set includes it. */
   setCardCountOfficial?: number;
   setLogoSrc?: string;
@@ -39,7 +35,6 @@ export type CardsPageCardEntry = {
   rarity: string;
   cardName: string;
   category?: string;
-  stage?: string;
   hp?: number;
   elementTypes?: string[];
   dexIds?: number[];
@@ -155,25 +150,17 @@ function cardJsonEntryToCardsPageEntry(
   if (!filename) return null;
 
   const localIdNormalized = normalizeTcgdexLocalId(card.localId);
-  const tcgdexStored = card.tcgdex_id?.trim() || undefined;
   const extStored = card.externalId?.trim() || undefined;
   const derivedFromSetAndLocal =
-    card.setTcgdexId && localIdNormalized
-      ? `${card.setTcgdexId}-${localIdNormalized}`
-      : undefined;
+    card.setCode && localIdNormalized ? `${card.setCode}-${localIdNormalized}` : undefined;
 
-  const ext = tcgdexStored ?? extStored ?? derivedFromSetAndLocal;
-  const legacyExternalId =
-    tcgdexStored !== undefined ? extStored ?? derivedFromSetAndLocal : derivedFromSetAndLocal;
+  const ext = extStored ?? derivedFromSetAndLocal;
 
   return {
     ...(card.masterCardId ? { masterCardId: card.masterCardId } : {}),
     ...(ext ? { externalId: ext } : {}),
-    ...(legacyExternalId ? { legacyExternalId } : {}),
     set: card.setCode,
-    setSlug: setMeta?.slug || undefined,
     setName: setMeta?.name || undefined,
-    setTcgdexId: card.setTcgdexId ?? undefined,
     setCardCountOfficial:
       setMeta?.cardCountOfficial != null && setMeta.cardCountOfficial >= 0
         ? Math.floor(setMeta.cardCountOfficial)
@@ -189,7 +176,6 @@ function cardJsonEntryToCardsPageEntry(
     rarity: card.rarity ?? "",
     cardName: card.cardName ?? "",
     category: card.category ?? undefined,
-    stage: card.stage ?? undefined,
     hp: card.hp ?? undefined,
     elementTypes: card.elementTypes ?? undefined,
     dexIds: card.dexIds ?? undefined,
@@ -203,8 +189,9 @@ function cardJsonEntryToCardsPageEntry(
 function buildSetMetaMap(): Map<string, ReturnType<typeof getAllSets>[number]> {
   const map = new Map<string, ReturnType<typeof getAllSets>[number]>();
   for (const s of getAllSets()) {
-    if (s.code) map.set(s.code, s);
-    if (s.tcgdexId) map.set(s.tcgdexId, s);
+    for (const p of buildScrydexPrefixCandidates(s)) {
+      map.set(p, s);
+    }
   }
   return map;
 }
@@ -401,8 +388,7 @@ export async function fetchSetCompletionValue(
 
       if (!externalId) continue;
 
-      const fallback = card.legacyExternalId?.trim() ? [card.legacyExternalId.trim()] : undefined;
-      const entry = getPricingForCard(pricing, externalId, fallback);
+      const entry = getPricingForCard(pricing, externalId);
       const scrydex = entry?.scrydex;
       if (!scrydex || typeof scrydex !== "object" || Array.isArray(scrydex)) continue;
 
@@ -469,8 +455,7 @@ export async function fetchCardsMarketValue(
       const pricing = pricingBySet.get(card.set?.trim() ?? "");
       if (!pricing || !externalId) continue;
 
-      const fallback = card.legacyExternalId?.trim() ? [card.legacyExternalId.trim()] : undefined;
-      const entry = getPricingForCard(pricing, externalId, fallback);
+      const entry = getPricingForCard(pricing, externalId);
       const scrydex = entry?.scrydex;
       if (!scrydex || typeof scrydex !== "object" || Array.isArray(scrydex)) continue;
 

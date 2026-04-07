@@ -69,8 +69,7 @@ async function buildGradeOpportunities(customerId: string): Promise<GradeOpportu
         const ext = e.externalId?.trim();
         if (!ext) continue;
 
-        const fallback = e.legacyExternalId?.trim() ? [e.legacyExternalId.trim()] : undefined;
-        const entry = getPricingForCard(pricingMap, ext, fallback);
+        const entry = getPricingForCard(pricingMap, ext);
         if (!entry?.scrydex) continue;
 
         const variant = e.printing?.trim() || undefined;
@@ -95,11 +94,8 @@ async function buildGradeOpportunities(customerId: string): Promise<GradeOpportu
           card: {
             masterCardId: e.masterCardId,
             externalId: e.externalId,
-            legacyExternalId: e.legacyExternalId,
             set: e.set,
-            setSlug: e.setSlug,
             setName: e.setName,
-            setTcgdexId: e.setTcgdexId,
             setCardCountOfficial: e.setCardCountOfficial,
             setLogoSrc: e.setLogoSrc,
             setSymbolSrc: e.setSymbolSrc,
@@ -112,7 +108,6 @@ async function buildGradeOpportunities(customerId: string): Promise<GradeOpportu
             rarity: e.rarity,
             cardName: e.cardName,
             category: e.category,
-            stage: e.stage,
             hp: e.hp,
             elementTypes: e.elementTypes,
             dexIds: e.dexIds,

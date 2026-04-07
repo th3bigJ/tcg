@@ -5,11 +5,13 @@
  * Files live at:
  *   data/sets.json
  *   data/series.json
- *   data/cards/{setCode}.json
+ *   data/cards/{setKey}.json
  */
 
 import type { CardJsonEntry, SeriesJsonEntry, SetJsonEntry } from "@/lib/staticDataTypes";
 import { resolveMediaURL } from "@/lib/media";
+import { buildScrydexPrefixCandidates } from "@/lib/scrydexPrefixCandidatesForSet";
+import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
 
 export type { CardJsonEntry, SeriesJsonEntry, SetJsonEntry };
 
@@ -30,12 +32,25 @@ export function getAllSets(): SetJsonEntry[] {
   return _sets;
 }
 
+/** Resolve a set row by catalog `setKey` or any Scrydex `listPrefix` / alias (e.g. `me1` vs `me01`). */
 export function getSetByCode(code: string): SetJsonEntry | null {
-  return getAllSets().find((s) => s.code === code || s.tcgdexId === code) ?? null;
+  const c = code.trim().toLowerCase();
+  if (!c) return null;
+  const all = getAllSets();
+  for (const s of all) {
+    const k = getSinglesCatalogSetKey(s);
+    if (k && k.toLowerCase() === c) return s;
+  }
+  for (const s of all) {
+    for (const p of buildScrydexPrefixCandidates(s)) {
+      if (p.toLowerCase() === c) return s;
+    }
+  }
+  return null;
 }
 
 export function getAllSetCodes(): string[] {
-  return getAllSets().map((s) => s.code ?? s.tcgdexId).filter((c): c is string => Boolean(c));
+  return getAllSets().map((s) => getSinglesCatalogSetKey(s)).filter((c): c is string => Boolean(c));
 }
 
 // ─── Series ───────────────────────────────────────────────────────────────────
@@ -86,4 +101,12 @@ export function getCardByMasterCardId(id: string): CardJsonEntry | null {
     if (found) return found;
   }
   return null;
+}
+
+/** Map URL/query set params (legacy tcg codes or catalog keys) to the canonical catalog key. */
+export function normalizeSetCodeFromUrlParam(param: string): string {
+  const t = param.trim();
+  if (!t) return "";
+  const row = getSetByCode(t);
+  return row ? (getSinglesCatalogSetKey(row) ?? t) : t;
 }

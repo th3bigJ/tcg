@@ -4,6 +4,7 @@ import { getCurrentCustomerForApiRoute } from "@/lib/auth";
 import { type CardsPageCardEntry } from "@/lib/cardsPageQueries";
 import { getSearchCardDataForCustomer } from "@/lib/searchCardDataServer";
 import { getCardMapById } from "@/lib/staticCardIndex";
+import { buildScrydexPrefixCandidates } from "@/lib/scrydexPrefixCandidatesForSet";
 import { getAllSets } from "@/lib/staticCards";
 import type { CardJsonEntry } from "@/lib/staticDataTypes";
 import { jsonResponseWithAuthCookies } from "@/lib/supabase/route-handler";
@@ -19,8 +20,9 @@ function normalizeTcgdexLocalId(localId: string | null | undefined): string | nu
 function buildSetMetaMap(): Map<string, ReturnType<typeof getAllSets>[number]> {
   const map = new Map<string, ReturnType<typeof getAllSets>[number]>();
   for (const set of getAllSets()) {
-    if (set.code) map.set(set.code, set);
-    if (set.tcgdexId) map.set(set.tcgdexId, set);
+    for (const p of buildScrydexPrefixCandidates(set)) {
+      map.set(p, set);
+    }
   }
   return map;
 }
@@ -38,25 +40,17 @@ function cardJsonEntryToCardsPageEntry(
   if (!filename) return null;
 
   const localIdNormalized = normalizeTcgdexLocalId(card.localId);
-  const tcgdexStored = card.tcgdex_id?.trim() || undefined;
   const extStored = card.externalId?.trim() || undefined;
   const derivedFromSetAndLocal =
-    card.setTcgdexId && localIdNormalized
-      ? `${card.setTcgdexId}-${localIdNormalized}`
-      : undefined;
+    card.setCode && localIdNormalized ? `${card.setCode}-${localIdNormalized}` : undefined;
 
-  const ext = tcgdexStored ?? extStored ?? derivedFromSetAndLocal;
-  const legacyExternalId =
-    tcgdexStored !== undefined ? extStored ?? derivedFromSetAndLocal : derivedFromSetAndLocal;
+  const ext = extStored ?? derivedFromSetAndLocal;
 
   return {
     ...(card.masterCardId ? { masterCardId: card.masterCardId } : {}),
     ...(ext ? { externalId: ext } : {}),
-    ...(legacyExternalId ? { legacyExternalId } : {}),
     set: card.setCode,
-    setSlug: setMeta?.slug || undefined,
     setName: setMeta?.name || undefined,
-    setTcgdexId: card.setTcgdexId ?? undefined,
     setCardCountOfficial:
       setMeta?.cardCountOfficial != null && setMeta.cardCountOfficial >= 0
         ? Math.floor(setMeta.cardCountOfficial)
@@ -72,7 +66,6 @@ function cardJsonEntryToCardsPageEntry(
     rarity: card.rarity ?? "",
     cardName: card.cardName ?? "",
     category: card.category ?? undefined,
-    stage: card.stage ?? undefined,
     hp: card.hp ?? undefined,
     elementTypes: card.elementTypes ?? undefined,
     dexIds: card.dexIds ?? undefined,

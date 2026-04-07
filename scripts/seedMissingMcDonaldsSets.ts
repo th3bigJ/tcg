@@ -22,7 +22,6 @@ type TcgdexCard = {
   types?: string[];
   stage?: string | null;
   illustrator?: string | null;
-  evolveFrom?: string | null;
 };
 
 function readJson<T>(filePath: string): T {
@@ -63,7 +62,7 @@ async function main(): Promise<void> {
     ) + 1;
 
   for (const set of sets) {
-    const setId = (set.tcgdexId ?? set.code ?? "").trim();
+    const setId = (set.setKey ?? "").trim();
     if (!TARGET_SET_IDS.has(setId)) continue;
 
     const filePath = path.join(CARDS_DIR, `${setId}.json`);
@@ -80,32 +79,24 @@ async function main(): Promise<void> {
       const countDenominator = officialCount != null ? String(officialCount) : localId;
       const printedNumber = localId ? `${localId}/${countDenominator}` : countDenominator;
       const category = normalizeCategory(detail.category);
-      const stage = detail.stage?.trim() || null;
 
       cards.push({
         masterCardId: String(nextMasterCardId++),
         externalId: null,
-        tcgdex_id: detail.id,
         localId,
         setCode: setId,
-        setTcgdexId: setId,
         cardNumber: printedNumber,
         cardName: detail.name,
         fullDisplayName: `${detail.name} ${printedNumber} ${set.name}`,
         rarity: detail.rarity ?? null,
         category,
-        stage,
         hp: typeof detail.hp === "number" ? detail.hp : null,
         elementTypes: detail.types ?? [],
         dexIds: detail.dexId ?? null,
-        subtypes: stage ? [stage] : null,
         trainerType: null,
         energyType: null,
         regulationMark: null,
-        evolveFrom: detail.evolveFrom ?? null,
         artist: detail.illustrator ?? null,
-        isActive: true,
-        noPricing: false,
         imageLowSrc: "",
         imageHighSrc: null,
       });

@@ -22,10 +22,9 @@ import {
   SCRYDEX_FLAT_PSA10_KEY_SUFFIX,
   SCRYDEX_FLAT_ACE10_KEY_SUFFIX,
 } from "../scrydexMepCardPagePricing";
-import { scrydexMegaExpansionConfig } from "../scrydexMegaEvolutionUrls";
-import { scrydexScarletVioletExpansionConfig } from "../scrydexScarletVioletUrls";
-import { lookupScrydexBulkExpansionConfig } from "../scrydexBulkExpansionUrls";
-import type { ScrydexExpansionListConfig } from "../scrydexMegaEvolutionUrls";
+import { resolveExpansionConfigsForSet } from "../scrydexExpansionConfigsForSet";
+import { getSinglesCatalogSetKey } from "../singlesCatalogSetKey";
+import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "../scrydexPrefixCandidatesForSet";
 
 export interface ScrapePricingOptions {
   dryRun?: boolean;
@@ -54,58 +53,6 @@ function loadCardsForSet(setCode: string): CardJsonEntry[] {
   const file = path.join(CARDS_DIR, `${setCode}.json`);
   if (!fs.existsSync(file)) return [];
   return readJson<CardJsonEntry[]>(file);
-}
-
-// ─── Expansion URL resolution ─────────────────────────────────────────────────
-
-function resolveExpansionConfig(set: SetJsonEntry): ScrydexExpansionListConfig | null {
-  const code = set.code ?? undefined;
-  const tcgdexId = set.tcgdexId ?? undefined;
-  const candidates = [code, tcgdexId].filter((x): x is string => Boolean(x?.trim()));
-  for (const c of candidates) {
-    const r = scrydexMegaExpansionConfig(c, undefined, undefined);
-    if (r) return r;
-  }
-  for (const c of candidates) {
-    const r = scrydexScarletVioletExpansionConfig(c, undefined, undefined);
-    if (r) return r;
-  }
-  for (const c of candidates) {
-    const r = lookupScrydexBulkExpansionConfig(c, undefined, undefined);
-    if (r) return r;
-  }
-  return null;
-}
-
-function resolveExpansionConfigs(set: SetJsonEntry): ScrydexExpansionListConfig[] {
-  const code = (set.code ?? set.tcgdexId ?? "").trim().toLowerCase();
-  if (code === "swsh12.5") {
-    return [
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/crown-zenith/swsh12pt5",
-        listPrefix: "swsh12pt5",
-      },
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/crown-zenith-galarian-gallery/swsh12pt5gg",
-        listPrefix: "swsh12pt5gg",
-      },
-    ];
-  }
-  if (code === "swsh4.5") {
-    return [
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/shining-fates/swsh45",
-        listPrefix: "swsh45",
-      },
-      {
-        expansionUrl: "https://scrydex.com/pokemon/expansions/shining-fates-shiny-vault/swsh45sv",
-        listPrefix: "swsh45sv",
-      },
-    ];
-  }
-
-  const cfg = resolveExpansionConfig(set);
-  return cfg ? [cfg] : [];
 }
 
 // ─── Pricing helpers ──────────────────────────────────────────────────────────
@@ -193,16 +140,16 @@ async function uploadToR2(s3: S3Client, setCode: string, json: string): Promise<
 // ─── Per-set scrape ───────────────────────────────────────────────────────────
 
 async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client, dryRun: boolean): Promise<void> {
-  const setCode = set.code ?? set.tcgdexId;
+  const setCode = getSinglesCatalogSetKey(set);
   if (!setCode) return;
 
-  const configs = resolveExpansionConfigs(set);
+  const configs = resolveExpansionConfigsForSet(set);
   if (!configs.length) {
     console.log(`  [${setCode}] skip — no Scrydex URL mapped`);
     return;
   }
 
-  const tcgPrefixes = [set.code, set.tcgdexId].filter((x): x is string => Boolean(x?.trim()));
+  const tcgPrefixes = buildScrydexPrefixCandidates(set);
   const perConfig = new Map<string, { priceMap: Map<string, Record<string, number>>; pathMap: Map<string, string> }>();
   const pathsNeeded = new Set<string>();
 
@@ -222,7 +169,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
     console.log(`  [${setCode}] ${priceMap.size} tiles from expansion listing (${cfg.listPrefix})`);
 
     for (const card of cards) {
-      const ext = (card.tcgdex_id ?? card.externalId ?? "").trim().toLowerCase();
+      const ext = (card.externalId ?? "").trim().toLowerCase();
       if (!ext) continue;
       const p = resolveScrydexCardPath(pathMap, ext, cfg.listPrefix, tcgPrefixes);
       if (p) pathsNeeded.add(p);
@@ -253,7 +200,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
   // Build pricing map
   const pricingMap: SetPricingMap = {};
   for (const card of cards) {
-    const ext = (card.externalId ?? card.tcgdex_id ?? "").trim().toLowerCase();
+    const ext = (card.externalId ?? "").trim().toLowerCase();
     if (!ext) continue;
 
     let flatUsd: Record<string, number> = {};
@@ -301,7 +248,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
     const hasPrice = Object.values(byVariant).some((r) => Number.isFinite(r.raw) || Number.isFinite(r.psa10) || Number.isFinite(r.ace10));
     if (!hasPrice) continue;
 
-    const key = card.externalId ?? ext;
+    const key = (card.externalId ?? ext).trim().toLowerCase();
     pricingMap[key] = { scrydex: byVariant, tcgplayer: null, cardmarket: null };
   }
 
@@ -327,12 +274,7 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
   let sets = allSets;
 
   if (onlySetCodes?.length) {
-    const allowed = new Set(onlySetCodes.map((s) => s.toLowerCase()));
-    sets = allSets.filter(
-      (s) =>
-        (s.code && allowed.has(s.code.toLowerCase())) ||
-        (s.tcgdexId && allowed.has(s.tcgdexId.toLowerCase())),
-    );
+    sets = allSets.filter((s) => setRowMatchesAllowedSetCodes(s, onlySetCodes));
     if (!sets.length) throw new Error(`No sets found matching: ${onlySetCodes.join(", ")}`);
   } else if (onlySeriesNames?.length) {
     const allSeries = loadSeries();
@@ -358,7 +300,7 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
   const s3 = buildS3Client();
 
   for (const set of sets) {
-    const setCode = set.code ?? set.tcgdexId;
+    const setCode = getSinglesCatalogSetKey(set);
     if (!setCode) continue;
     const cards = loadCardsForSet(setCode);
     if (!cards.length) {

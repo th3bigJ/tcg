@@ -10,7 +10,7 @@ export type ScrydexExpansionListConfig = {
 };
 
 /**
- * Resolve Scrydex listing URL from set identifiers (`tcgdexId`, `code`, canonical).
+ * Resolve Scrydex listing URL from catalog `setKey` and optional alias strings.
  */
 export function scrydexMegaExpansionConfig(
   canonicalSetCode: string,
