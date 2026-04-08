@@ -23,6 +23,11 @@ const getMediaBaseURL = (): string | null =>
     process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
   ]);
 
+/** Public CDN / R2 origin used to build absolute URLs for JSON and images (server or client via env). */
+export function getPublicMediaBaseUrl(): string | null {
+  return getMediaBaseURL();
+}
+
 function normalizePokemonPrefix(raw: string | undefined): string {
   const p = (raw ?? r2PokemonMediaPrefixDefault).trim().replace(/^\/+|\/+$/g, "");
   return p;

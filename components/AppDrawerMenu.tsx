@@ -76,6 +76,16 @@ function DrawerIconSparkles() {
   );
 }
 
+function DrawerIconOnePiece() {
+  return (
+    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M12 3c-1.2 2-4 3.8-4 6.5a4 4 0 1 0 8 0c0-2.7-2.8-4.5-4-6.5Z" />
+      <path d="M8.5 14.5C7 15.8 6 17.6 6 19.5h12c0-1.9-1-3.7-2.5-5" />
+      <path d="M12 14v5.5" />
+    </svg>
+  );
+}
+
 function DrawerIconAccount() {
   return (
     <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -115,6 +125,7 @@ export function AppDrawerMenu({
   const primaryItems: DrawerItem[] = [
     { href: "/dashboard", label: "Dashboard", description: "Overview and shortcuts", icon: <DashboardGlyph /> },
     { href: "/search", label: "Search", description: "Browse cards, sets, Pokedex, and sealed", icon: <DrawerIconCompass /> },
+    { href: "/onepiece", label: "One Piece", description: "Browse One Piece cards from the catalog", icon: <DrawerIconOnePiece /> },
     { href: "/search?tab=sealed", label: "Sealed", description: "Track sealed prices and products", icon: <DrawerIconBox /> },
     { href: "/collect", label: "Collection", description: "Track what you own", icon: <DrawerIconCards /> },
     { href: "/wishlist", label: "Wishlist", description: "Keep tabs on your targets", icon: <DrawerIconClock /> },
