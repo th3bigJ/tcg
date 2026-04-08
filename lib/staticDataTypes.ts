@@ -3,11 +3,23 @@
  * Used by both the export scripts (scripts/) and the read layer (lib/).
  */
 
-/** Pokémon attacks from Scrydex card pages (`attacks.name`, `attacks.damage`). */
+/** Pokémon attacks from Scrydex card pages. */
 export type CardAttackJson = {
   name: string;
   /** Empty string on Scrydex is stored as null. */
   damage: string | null;
+  /** Energy cost e.g. ["Fire", "Colorless"]. */
+  cost: string[];
+  /** Attack effect text. */
+  effect: string | null;
+};
+
+/** Pokémon abilities from Scrydex card pages. */
+export type CardAbilityJson = {
+  /** e.g. "Ability", "Poké-Power", "Poké-Body". */
+  type: string | null;
+  name: string;
+  text: string | null;
 };
 
 export type CardJsonEntry = {
@@ -33,8 +45,20 @@ export type CardJsonEntry = {
   imageHighSrc: string | null;
   /** Populated by `scrape:scrydex-card-meta` from Scrydex. */
   attacks?: CardAttackJson[] | null;
+  /** Abilities (Poké-Power, Poké-Body, Ability, etc.) from Scrydex. */
+  abilities?: CardAbilityJson[] | null;
   /** Trainer / stadium rules text from Scrydex; usually only present for Trainer cards. */
   rules?: string | null;
+  /** e.g. "Basic", "Stage 1", "Stage 2", "VMAX", "ex". Comma-separated when multiple. */
+  subtype?: string | null;
+  /** e.g. "Water ×2". Null when none. */
+  weakness?: string | null;
+  /** e.g. "Fire -30". Null when none. */
+  resistance?: string | null;
+  /** Number of Colorless energy in retreat cost. */
+  retreatCost?: number | null;
+  /** Flavor text printed on the card. */
+  flavorText?: string | null;
 };
 
 export type SetJsonEntry = {

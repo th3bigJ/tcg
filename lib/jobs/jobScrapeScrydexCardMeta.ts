@@ -12,9 +12,15 @@ import { getSinglesCatalogSetKey } from "../singlesCatalogSetKey";
 import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "../scrydexPrefixCandidatesForSet";
 import {
   isScrydexErrorPage,
+  parseScrydexCardAbilities,
   parseScrydexCardAttacks,
+  parseScrydexCardFlavorText,
   parseScrydexCardId,
+  parseScrydexCardRetreatCost,
+  parseScrydexCardResistance,
   parseScrydexCardRulesFromDetails,
+  parseScrydexCardSubtype,
+  parseScrydexCardWeakness,
   parseScrydexPrintedNumber,
   parseScrydexSupertype,
 } from "../scrydexCardPageCardText";
@@ -110,13 +116,19 @@ function applyCardUpdates(
 
   const printed = parseScrydexPrintedNumber(html);
   const attacks = parseScrydexCardAttacks(html);
+  const abilities = parseScrydexCardAbilities(html);
   const rules = parseScrydexCardRulesFromDetails(html);
+  const supertype = parseScrydexSupertype(html);
+  const subtype = parseScrydexCardSubtype(html);
+  const weakness = parseScrydexCardWeakness(html);
+  const resistance = parseScrydexCardResistance(html);
+  const retreatCost = parseScrydexCardRetreatCost(html);
+  const flavorText = parseScrydexCardFlavorText(html);
 
   let changed = false;
 
-  const nextExternal = id;
-  if (card.externalId !== nextExternal) {
-    card.externalId = nextExternal;
+  if (card.externalId !== id) {
+    card.externalId = id;
     changed = true;
   }
 
@@ -127,21 +139,49 @@ function applyCardUpdates(
   }
 
   const nextAttacks = attacks.length ? attacks : null;
-  const attacksJson = JSON.stringify(card.attacks ?? null);
-  const nextAttacksJson = JSON.stringify(nextAttacks);
-  if (attacksJson !== nextAttacksJson) {
+  if (JSON.stringify(card.attacks ?? null) !== JSON.stringify(nextAttacks)) {
     card.attacks = nextAttacks;
     changed = true;
   }
 
-  const supertype = parseScrydexSupertype(html);
-  const nextRules = rules;
-  if (supertype === "Trainer" || nextRules !== null) {
-    if (card.rules !== nextRules) {
-      card.rules = nextRules;
+  const nextAbilities = abilities.length ? abilities : null;
+  if (JSON.stringify(card.abilities ?? null) !== JSON.stringify(nextAbilities)) {
+    card.abilities = nextAbilities;
+    changed = true;
+  }
+
+  if (supertype === "Trainer" || rules !== null) {
+    if (card.rules !== rules) {
+      card.rules = rules;
       changed = true;
     }
   }
+
+  if (card.subtype !== subtype) {
+    card.subtype = subtype;
+    changed = true;
+  }
+
+  if (card.weakness !== weakness) {
+    card.weakness = weakness;
+    changed = true;
+  }
+
+  if (card.resistance !== resistance) {
+    card.resistance = resistance;
+    changed = true;
+  }
+
+  if (card.retreatCost !== retreatCost) {
+    card.retreatCost = retreatCost;
+    changed = true;
+  }
+
+  if (card.flavorText !== flavorText) {
+    card.flavorText = flavorText;
+    changed = true;
+  }
+
   const missingPrinted = !printed;
   const missingRules = supertype === "Trainer" && !rules;
 
