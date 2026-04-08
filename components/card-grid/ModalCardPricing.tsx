@@ -388,6 +388,7 @@ export function ModalCardPricing({
   masterCardId,
   externalId,
   ebayCardContext,
+  ebaySearchQuery,
   onVariantsLoaded,
   onAdd,
   onWishlist,
@@ -395,20 +396,27 @@ export function ModalCardPricing({
   wishlistedVariants,
   /** When true, + / wishlist controls are shown on the card image instead of each variant row. */
   hidePerVariantActions,
+  pricingUrl,
+  historyUrl,
 }: {
   masterCardId?: string;
   externalId?: string;
-  ebayCardContext: EbayPokemonCardSearchParts;
+  ebayCardContext?: EbayPokemonCardSearchParts;
+  ebaySearchQuery?: string | null;
   onVariantsLoaded?: (variants: string[]) => void;
   onAdd?: (variant: string) => void;
   onWishlist?: (variant: string) => void;
   wishlisted?: boolean;
   wishlistedVariants?: string[] | null;
   hidePerVariantActions?: boolean;
+  pricingUrl?: string | null;
+  historyUrl?: string | null;
 }) {
   const mid = masterCardId?.trim() ?? "";
   const ext = externalId?.trim() ?? "";
-  const showDexRows = Boolean(mid || ext);
+  const explicitPricingUrl = pricingUrl?.trim() ?? "";
+  const explicitHistoryUrl = historyUrl?.trim() ?? "";
+  const showDexRows = Boolean(mid || ext || explicitPricingUrl || explicitHistoryUrl);
 
   const [payload, setPayload] = useState<{ tcgplayer: unknown; cardmarket: unknown } | null>(null);
   const [history, setHistory] = useState<CardPriceHistory | null>(null);
@@ -421,16 +429,18 @@ export function ModalCardPricing({
   onVariantsLoadedRef.current = onVariantsLoaded;
 
   useEffect(() => {
-    if (!mid && !ext) return;
+    if (!explicitPricingUrl && !mid && !ext) return;
     let cancelled = false;
 
     const load = async () => {
       try {
         setPricingLoaded(false);
         setPayload(null);
-        const url = mid
-          ? `/api/card-pricing/by-master/${encodeURIComponent(mid)}`
-          : `/api/card-prices/${encodeURIComponent(ext)}`;
+        const url =
+          explicitPricingUrl ||
+          (mid
+            ? `/api/card-pricing/by-master/${encodeURIComponent(mid)}`
+            : `/api/card-prices/${encodeURIComponent(ext)}`);
         const r = await fetch(url);
         if (cancelled) return;
         let j: { tcgplayer?: unknown; cardmarket?: unknown };
@@ -456,10 +466,10 @@ export function ModalCardPricing({
     return () => {
       cancelled = true;
     };
-  }, [mid, ext]);
+  }, [explicitPricingUrl, ext, mid]);
 
   useEffect(() => {
-    if (!mid && !ext) {
+    if (!explicitHistoryUrl && !mid && !ext) {
       setHistory(null);
       setHistoryLoaded(true);
       return;
@@ -470,9 +480,11 @@ export function ModalCardPricing({
       try {
         setHistoryLoaded(false);
         setHistory(null);
-        const url = mid
-          ? `/api/card-price-history/by-master/${encodeURIComponent(mid)}`
-          : `/api/card-price-history/${encodeURIComponent(ext)}`;
+        const url =
+          explicitHistoryUrl ||
+          (mid
+            ? `/api/card-price-history/by-master/${encodeURIComponent(mid)}`
+            : `/api/card-price-history/${encodeURIComponent(ext)}`);
         const response = await fetch(url);
         if (cancelled) return;
         if (!response.ok) {
@@ -492,11 +504,13 @@ export function ModalCardPricing({
     return () => {
       cancelled = true;
     };
-  }, [ext, mid]);
+  }, [explicitHistoryUrl, ext, mid]);
 
-  const ebayQuery = buildPokemonEbaySoldSearchQuery(ebayCardContext);
+  const ebayQuery =
+    ebaySearchQuery?.trim() ??
+    (ebayCardContext ? buildPokemonEbaySoldSearchQuery(ebayCardContext) : "");
   const ebayUrl =
-    ebayCardContext.cardName.trim().length > 0 && ebayQuery.trim().length > 0
+    ebayQuery.trim().length > 0
       ? buildEbayUkSoldListingsUrl(ebayQuery)
       : null;
 

@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 
 import { useCardGridPreferences } from "@/components/CardGridPreferencesProvider";
 import { CardsResultsScroll } from "@/components/CardsResultsScroll";
+import { ModalCardPricing } from "@/components/card-grid/ModalCardPricing";
 import type { OnePieceCardRecord, OnePieceSetRecord } from "@/lib/onepieceBrowse";
 import { onePiecePublicAssetUrl } from "@/lib/onepieceBrowse";
 
@@ -30,6 +31,11 @@ type Props = {
 
 function cardStableId(card: OnePieceCardRecord): string {
   return [card.cardNumber, card.variant ?? "normal", card.tcgplayerProductId ?? ""].join("|");
+}
+
+function buildOnePieceEbaySearchQuery(card: OnePieceCardRecord, setName?: string | null): string {
+  const segments = ["One Piece", setName?.trim() ?? "", card.name.trim(), card.cardNumber.trim()].filter(Boolean);
+  return segments.join(" ");
 }
 
 function DrawerIconClose() {
@@ -189,6 +195,10 @@ export function OnePieceBrowseClient({
   const onPickSet = (code: string) => {
     const upper = code.toUpperCase();
     setSelectedSet(upper);
+    setSearch("");
+    setRarityFilter("");
+    setDetailCard(null);
+    setVisibleCount(INITIAL_VISIBLE);
     syncUrlSetParam(upper);
   };
 
@@ -344,7 +354,7 @@ export function OnePieceBrowseClient({
       {hasMounted && detailCard
         ? createPortal(
             <div
-              className="card-viewer-overlay fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-6"
+              className="card-viewer-overlay fixed inset-0 z-[9999] overflow-x-hidden overflow-y-auto overscroll-y-contain md:overflow-hidden"
               role="dialog"
               aria-modal="true"
               aria-labelledby="onepiece-card-title"
@@ -353,73 +363,125 @@ export function OnePieceBrowseClient({
               <button
                 type="button"
                 aria-label="Close"
-                className="card-viewer-icon-button absolute right-4 top-[max(1rem,env(safe-area-inset-top))] inline-flex h-11 w-11 items-center justify-center border border-white/15 bg-white/10 text-white backdrop-blur-xl transition hover:bg-white/18 sm:right-6 sm:top-6"
+                className="card-viewer-icon-button fixed right-[max(1rem,env(safe-area-inset-right,0px))] top-[max(1rem,env(safe-area-inset-top,0px))] z-[10000] inline-flex h-11 w-11 items-center justify-center border border-white/60 bg-black/75 text-white transition hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 sm:h-12 sm:w-12"
                 onClick={() => setDetailCard(null)}
               >
                 <DrawerIconClose />
               </button>
               <div
-                className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-[1.25rem] border border-white/12 bg-[#0c0d10]/92 p-5 shadow-2xl backdrop-blur-2xl sm:rounded-[1.5rem]"
+                className="relative mx-auto flex min-h-[100dvh] w-full min-w-0 max-w-[1280px] flex-col overflow-x-hidden px-3 pb-14 pt-[max(1rem,calc(env(safe-area-inset-top,0px)+0.75rem))] sm:px-6 md:h-[100dvh] md:max-h-[100dvh] md:min-h-0 md:overflow-hidden md:px-8 md:pb-5 md:pt-6"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                  <div className="relative mx-auto aspect-[63/88] w-[min(100%,220px)] shrink-0 overflow-hidden rounded-2xl bg-black/30 sm:mx-0">
-                    {onePiecePublicAssetUrl(mediaBaseUrl, detailCard.imagePath) ? (
-                      <NextImage
-                        src={onePiecePublicAssetUrl(mediaBaseUrl, detailCard.imagePath)}
-                        alt=""
-                        fill
-                        className="object-contain"
-                        sizes="220px"
-                      />
-                    ) : null}
+                <div className="grid w-full min-w-0 max-w-full gap-3 md:grid-cols-[minmax(18rem,24rem)_minmax(0,1fr)] md:flex-1 md:min-h-0 md:items-stretch md:gap-4 md:overflow-hidden">
+                  <div className="flex min-w-0 flex-col gap-3 md:min-h-0">
+                    <div className="flex w-full min-w-0 items-center justify-center rounded-xl border border-white/15 bg-black/35 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-md md:min-h-0 md:flex-1">
+                      <div className="relative aspect-[63/88] w-full max-w-[320px] overflow-hidden rounded-[1.5rem] bg-black/40">
+                        {onePiecePublicAssetUrl(mediaBaseUrl, detailCard.imagePath) ? (
+                          <NextImage
+                            src={onePiecePublicAssetUrl(mediaBaseUrl, detailCard.imagePath)}
+                            alt={detailCard.name}
+                            fill
+                            className="object-contain"
+                            sizes="(max-width: 768px) 80vw, 320px"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center px-4 text-center text-sm text-white/45">
+                            No image available
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <h2 id="onepiece-card-title" className="text-lg font-bold text-[var(--foreground)]">
-                      {detailCard.name}
-                    </h2>
-                    <p className="text-sm text-[var(--foreground)]/60">
-                      {detailCard.cardNumber}
-                      {detailCard.variant && detailCard.variant !== "normal" ? ` · ${detailCard.variant}` : ""} ·{" "}
-                      {detailCard.rarity}
-                    </p>
-                    <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-[var(--foreground)]/75">
-                      {detailCard.cardType?.length ? (
-                        <>
-                          <dt className="text-[var(--foreground)]/45">Type</dt>
-                          <dd>{detailCard.cardType.join(", ")}</dd>
-                        </>
+                  <div className="flex min-w-0 max-w-full flex-col gap-6 overflow-x-hidden rounded-xl border border-white/15 bg-black/35 p-4 pt-5 text-white shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-md sm:gap-8 sm:p-5 md:min-h-0 md:overflow-y-auto">
+                    <div className="space-y-3">
+                      <div>
+                        <h2 id="onepiece-card-title" className="text-2xl font-bold tracking-tight text-white">
+                          {detailCard.name}
+                        </h2>
+                        <p className="mt-1 text-sm text-white/65">
+                          {detailCard.cardNumber}
+                          {detailCard.variant && detailCard.variant !== "normal" ? ` · ${detailCard.variant}` : ""}
+                          {detailCard.rarity ? ` · ${detailCard.rarity}` : ""}
+                        </p>
+                      </div>
+
+                      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {detailCard.cardType?.length ? (
+                          <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
+                            <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/45">Type</dt>
+                            <dd className="mt-1 text-sm font-medium text-white">{detailCard.cardType.join(", ")}</dd>
+                          </div>
+                        ) : null}
+                        {detailCard.color?.length ? (
+                          <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
+                            <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/45">Color</dt>
+                            <dd className="mt-1 text-sm font-medium text-white">{detailCard.color.join(" / ")}</dd>
+                          </div>
+                        ) : null}
+                        {detailCard.cost != null ? (
+                          <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
+                            <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/45">Cost</dt>
+                            <dd className="mt-1 text-sm font-medium text-white">{detailCard.cost}</dd>
+                          </div>
+                        ) : null}
+                        {detailCard.power != null ? (
+                          <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
+                            <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/45">Power</dt>
+                            <dd className="mt-1 text-sm font-medium text-white">{detailCard.power}</dd>
+                          </div>
+                        ) : null}
+                        {detailCard.life != null ? (
+                          <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
+                            <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/45">Life</dt>
+                            <dd className="mt-1 text-sm font-medium text-white">{detailCard.life}</dd>
+                          </div>
+                        ) : null}
+                        {detailCard.counter != null ? (
+                          <div className="rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2.5">
+                            <dt className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/45">Counter</dt>
+                            <dd className="mt-1 text-sm font-medium text-white">{detailCard.counter}</dd>
+                          </div>
+                        ) : null}
+                      </dl>
+
+                      {detailCard.attribute?.length ? (
+                        <div className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3">
+                          <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/45">Attribute</div>
+                          <div className="mt-1 text-sm text-white/85">{detailCard.attribute.join(" / ")}</div>
+                        </div>
                       ) : null}
-                      {detailCard.color?.length ? (
-                        <>
-                          <dt className="text-[var(--foreground)]/45">Color</dt>
-                          <dd>{detailCard.color.join(" / ")}</dd>
-                        </>
+
+                      {detailCard.subtypes?.length ? (
+                        <div className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3">
+                          <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/45">Subtype</div>
+                          <div className="mt-1 text-sm text-white/85">{detailCard.subtypes.join(" · ")}</div>
+                        </div>
                       ) : null}
-                      {detailCard.cost != null ? (
-                        <>
-                          <dt className="text-[var(--foreground)]/45">Cost</dt>
-                          <dd>{detailCard.cost}</dd>
-                        </>
+
+                      {detailCard.effect ? (
+                        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-4">
+                          <div className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/45">Effect</div>
+                          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/88">
+                            {detailCard.effect}
+                          </p>
+                        </div>
                       ) : null}
-                      {detailCard.power != null ? (
-                        <>
-                          <dt className="text-[var(--foreground)]/45">Power</dt>
-                          <dd>{detailCard.power}</dd>
-                        </>
-                      ) : null}
-                      {detailCard.life != null ? (
-                        <>
-                          <dt className="text-[var(--foreground)]/45">Life</dt>
-                          <dd>{detailCard.life}</dd>
-                        </>
-                      ) : null}
-                    </dl>
-                    {detailCard.effect ? (
-                      <p className="whitespace-pre-wrap rounded-xl border border-white/10 bg-white/[0.04] p-3 text-sm leading-relaxed text-[var(--foreground)]/85">
-                        {detailCard.effect}
-                      </p>
-                    ) : null}
+                    </div>
+
+                    <ModalCardPricing
+                      externalId={detailCard.tcgplayerProductId}
+                      pricingUrl={
+                        detailCard.tcgplayerProductId
+                          ? `/api/onepiece/card-prices/${encodeURIComponent(detailCard.tcgplayerProductId)}?set=${encodeURIComponent(detailCard.setCode)}&variant=${encodeURIComponent(detailCard.variant ?? "normal")}`
+                          : null
+                      }
+                      historyUrl={
+                        detailCard.tcgplayerProductId
+                          ? `/api/onepiece/card-price-history/${encodeURIComponent(detailCard.tcgplayerProductId)}?set=${encodeURIComponent(detailCard.setCode)}&variant=${encodeURIComponent(detailCard.variant ?? "normal")}`
+                          : null
+                      }
+                      ebaySearchQuery={buildOnePieceEbaySearchQuery(detailCard, activeSetMeta?.name)}
+                    />
                   </div>
                 </div>
               </div>

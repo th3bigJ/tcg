@@ -181,6 +181,11 @@ export async function loadOnePieceHistoryForSet(setCode: string): Promise<SetPri
   return (await getJsonFromOnePieceR2<SetPriceHistoryMap>(s3, historyR2PathForSet(setCode))) ?? {};
 }
 
+export async function loadOnePieceMarketForSet(setCode: string): Promise<OnePieceSetMarketMap> {
+  const s3 = buildOnePieceS3Client();
+  return (await getJsonFromOnePieceR2<OnePieceSetMarketMap>(s3, marketR2PathForSet(setCode))) ?? {};
+}
+
 export async function writeOnePieceMarketForSet(setCode: string, marketMap: OnePieceSetMarketMap): Promise<void> {
   const s3 = buildOnePieceS3Client();
   await putJsonToOnePieceR2(s3, marketR2PathForSet(setCode), marketMap);
