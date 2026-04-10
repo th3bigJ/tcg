@@ -17,3 +17,7 @@ npm run r2:upload-onepiece
 npm run r2:upload-onepiece
 
 npm run r2:download-onepiece
+
+
+
+node --import tsx/esm scripts/scrapeOnePieceCards.ts --refresh-images

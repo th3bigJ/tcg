@@ -13,6 +13,7 @@
  *   node --import tsx/esm scripts/scrapeOnePieceCards.ts --set=OP01,OP02
  *   node --import tsx/esm scripts/scrapeOnePieceCards.ts --dry-run
  *   node --import tsx/esm scripts/scrapeOnePieceCards.ts --no-images
+ *   node --import tsx/esm scripts/scrapeOnePieceCards.ts --set=OP01 --refresh-images
  */
 
 import fs from "fs";
@@ -25,6 +26,7 @@ import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const NO_IMAGES = process.argv.includes("--no-images");
+const REFRESH_IMAGES = process.argv.includes("--refresh-images");
 loadEnvFilesFromRepoRoot(import.meta.url);
 
 const setArg = process.argv.find((a) => a.startsWith("--set="));
@@ -88,6 +90,7 @@ type ScrydexCardMeta = {
   subtypes: string[] | null;
   effect: string | null;
   variants: string[];
+  variantImages: Record<string, string>;
 };
 
 async function fetchText(url: string): Promise<string> {
@@ -214,6 +217,17 @@ function parseVariantSlugs(html: string, fallbackVariant: string): string[] {
   return [...found].sort((a, b) => a.localeCompare(b));
 }
 
+function parseVariantImages(html: string): Record<string, string> {
+  const images: Record<string, string> = {};
+  for (const match of html.matchAll(/data-variant-name="([^"]+)"\s+data-variant-image="([^"]+)"/g)) {
+    const variant = decodeHtml(match[1].trim());
+    const imageUrl = decodeHtml(match[2].trim());
+    if (!variant || !imageUrl) continue;
+    images[variant] = imageUrl;
+  }
+  return images;
+}
+
 function variantImageSuffix(variant: string): string {
   switch (variant.trim()) {
     case "altArt":
@@ -260,6 +274,7 @@ function parseCardMeta(html: string, fallbackCardNumber: string, fallbackVariant
     subtypes: parseListField(parseDevPaneField(html, "subtypes")),
     effect: parseTextField(parseRulesField(html)),
     variants: parseVariantSlugs(html, fallbackVariant),
+    variantImages: parseVariantImages(html),
   };
 }
 
@@ -335,7 +350,7 @@ function buildCards(set: OnePieceSetEntry, refs: ScrydexCardRef[], metaByCardNum
         subtypes: meta.subtypes,
         effect: meta.effect,
         scrydexSlug: ref.slug,
-        imageUrl: buildScrydexImageUrl(meta.cardNumber, variant),
+        imageUrl: meta.variantImages[variant] ?? buildScrydexImageUrl(meta.cardNumber, variant),
         imagePath: null,
       });
     }
@@ -392,7 +407,7 @@ async function downloadCardImage(card: OnePieceCard, setImagesDir: string): Prom
   const preferredUrl = urls[0];
   const ext = (preferredUrl.includes(".jpg") ? ".jpg" : ".png") as ".jpg" | ".png";
   const existingPath = findExistingImagePath(setImagesDir, card.setCode, card.cardNumber, card.variant, ext);
-  if (existingPath) return { imagePath: existingPath, status: "skipped" };
+  if (existingPath && !REFRESH_IMAGES) return { imagePath: existingPath, status: "skipped" };
 
   for (const url of urls) {
     const downloadExt = (url.includes(".jpg") ? ".jpg" : ".png") as ".jpg" | ".png";
@@ -494,6 +509,7 @@ async function main(): Promise<void> {
   console.log(`Processing ${toProcess.length} sets${ONLY_SETS ? ` (${ONLY_SETS.join(", ")})` : ""}...`);
   if (DRY_RUN) console.log("DRY RUN — no files will be written");
   if (NO_IMAGES) console.log("--no-images — skipping image downloads");
+  if (REFRESH_IMAGES) console.log("--refresh-images — re-downloading existing card image files");
 
   for (const set of toProcess) {
     await scrapeSet(set, s3);
