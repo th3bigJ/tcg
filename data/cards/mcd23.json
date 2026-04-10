@@ -40,7 +40,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": "It has a psychic power that enables it to distort the space around it and see into the future."
+    "flavorText": "It has a psychic power that enables it to distort the space around it and see into the future.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22359",
@@ -83,7 +86,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "It can sprint at over 70 mph while carrying a human. The rider's body heat warms Cyclizar's back and lifts the Pokémon's spirit."
+    "flavorText": "It can sprint at over 70 mph while carrying a human. The rider's body heat warms Cyclizar's back and lifts the Pokémon's spirit.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22358",
@@ -120,7 +126,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The pair sticks together no matter what. They split any food they find exactly in half and then eat it together."
+    "flavorText": "The pair sticks together no matter what. They split any food they find exactly in half and then eat it together.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22357",
@@ -157,7 +166,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "The eggs it lays are filled with happiness. Eating even one bite will bring a smile to anyone."
+    "flavorText": "The eggs it lays are filled with happiness. Eating even one bite will bring a smile to anyone.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22356",
@@ -200,7 +212,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Klawf hangs upside-down from the cliffs, waiting for prey. But Klawf can't remain in this position for long because its blood rushes to its head."
+    "flavorText": "Klawf hangs upside-down from the cliffs, waiting for prey. But Klawf can't remain in this position for long because its blood rushes to its head.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22355",
@@ -243,7 +258,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It will expand its body as much as it can and then contract itself, blasting out sand with enough force to wash away a dump truck."
+    "flavorText": "It will expand its body as much as it can and then contract itself, blasting out sand with enough force to wash away a dump truck.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22354",
@@ -280,7 +298,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": null,
-    "flavorText": "Flittle's toes levitate about half an inch above the ground because of the psychic power emitted from the frills on the Pokémon's belly."
+    "flavorText": "Flittle's toes levitate about half an inch above the ground because of the psychic power emitted from the frills on the Pokémon's belly.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22353",
@@ -323,7 +344,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "Kilowattrel inflates its throat sac to amplify its electricity. By riding the wind, this Pokémon can fly over 430 miles in a day."
+    "flavorText": "Kilowattrel inflates its throat sac to amplify its electricity. By riding the wind, this Pokémon can fly over 430 miles in a day.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22352",
@@ -366,7 +390,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The pads of its paws are electricity-discharging organs. Pawmi fires electricity from its forepaws while standing unsteadily on its hind legs."
+    "flavorText": "The pads of its paws are electricity-discharging organs. Pawmi fires electricity from its forepaws while standing unsteadily on its hind legs.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22351",
@@ -409,7 +436,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When it is angered, it immediately discharges the energy stored in the pouches in its cheeks."
+    "flavorText": "When it is angered, it immediately discharges the energy stored in the pouches in its cheeks.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22350",
@@ -452,7 +482,10 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Ice energy builds up in the horn on its upper jaw, causing the horn to reach cryogenic temperatures that freeze its surroundings."
+    "flavorText": "Ice energy builds up in the horn on its upper jaw, causing the horn to reach cryogenic temperatures that freeze its surroundings.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22349",
@@ -495,7 +528,10 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It lives in frigid regions in pods of five or so individuals. It loves the minerals found in snow and ice."
+    "flavorText": "It lives in frigid regions in pods of five or so individuals. It loves the minerals found in snow and ice.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22348",
@@ -538,7 +574,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "This Pokémon migrated to Paldea from distance lands long ago. The gel secreted by its feathers repeals water and grime."
+    "flavorText": "This Pokémon migrated to Paldea from distance lands long ago. The gel secreted by its feathers repeals water and grime.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22347",
@@ -581,7 +620,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Its flame sac is small, so energy is always leaking out. This energy is released from the dent atop Fuecoco's head and flickers to and fro."
+    "flavorText": "Its flame sac is small, so energy is always leaking out. This energy is released from the dent atop Fuecoco's head and flickers to and fro.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22346",
@@ -624,6 +666,9 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It's fluffy fur is similar in composition to plants. This Pokémon frequently washes its face to keep it from drying out."
+    "flavorText": "It's fluffy fur is similar in composition to plants. This Pokémon frequently washes its face to keep it from drying out.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

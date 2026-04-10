@@ -1,147 +1,74 @@
-import https from "https";
-import type { RequestOptions } from "https";
 import {
   buildOnePieceMarketEntry,
   loadOnePieceCardsForSet,
+  loadOnePieceCardsForSetFromR2,
   loadOnePieceSets,
+  loadOnePieceSetsFromR2,
   priceKeyForOnePieceCard,
+  selectScrydexRawPriceForCard,
   type OnePieceCardEntry,
   type OnePieceSetEntry,
   type OnePieceSetMarketMap,
   updateOnePieceHistoryWithDailyMarket,
   writeOnePieceMarketForSet,
 } from "@/lib/onepiecePricing";
+import { fetchScrydexCardPageHtml, parseScrydexCardPageRawNearMintUsd } from "@/lib/scrydexMepCardPagePricing";
 
 export interface ScrapeOnePiecePricingOptions {
   dryRun?: boolean;
   onlySetCodes?: string[];
+  source?: "local" | "r2";
 }
 
-type TcgCardItem = {
-  productId: number | null;
-  productName: string;
-  rarityName: string | null;
-  marketPrice?: number | null;
-  lowestPrice?: number | null;
-  lowestPriceWithShipping?: number | null;
-  medianPrice?: number | null;
-  totalListings?: number | null;
-  customAttributes: {
-    number: string | null;
-  } | null;
-};
+type RawPriceMap = Record<string, number>;
 
-const UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
-const TCG_SEARCH_URL =
-  "https://mp-search-api.tcgplayer.com/v1/search/request?q=&isList=false";
-
-function postJson(url: string, body: string): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    const req = https.request(
-      url,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "User-Agent": UA,
-          "Content-Length": Buffer.byteLength(body),
-        },
-      } as RequestOptions,
-      (res) => {
-        const chunks: Buffer[] = [];
-        res.on("data", (chunk: Buffer) => chunks.push(chunk));
-        res.on("end", () => {
-          try {
-            resolve(JSON.parse(Buffer.concat(chunks).toString("utf8")));
-          } catch (error) {
-            reject(error);
-          }
-        });
-        res.on("error", reject);
-      },
-    );
-    req.on("error", reject);
-    req.write(body);
-    req.end();
-  });
+function scrydexQueryVariant(card: OnePieceCardEntry): string {
+  return card.variant?.trim() || "normal";
 }
 
-async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function cardPagePath(card: OnePieceCardEntry): string | null {
+  if (!card.scrydexSlug?.trim()) return null;
+  return `/onepiece/cards/${card.scrydexSlug.trim()}/${card.cardNumber.trim().toUpperCase()}`;
 }
 
-async function fetchTcgPlayerSetCards(set: OnePieceSetEntry): Promise<TcgCardItem[]> {
-  if (!set.tcgplayerId) return [];
+async function loadRawPricesForCardPath(
+  cache: Map<string, RawPriceMap>,
+  card: OnePieceCardEntry,
+): Promise<RawPriceMap> {
+  const path = cardPagePath(card);
+  if (!path) return {};
 
-  const all: TcgCardItem[] = [];
-  let from = 0;
-  const size = 50;
-  let total: number | null = null;
-  const setId = Number(set.tcgplayerId);
+  const cached = cache.get(path);
+  if (cached) return cached;
 
-  while (total === null || from < total) {
-    const body = JSON.stringify({
-      algorithm: "revenue_desc",
-      from,
-      size,
-      filters: {
-        term: { productLineName: ["One Piece Card Game"], setId: [setId] },
-        range: {},
-        match: {},
-      },
-      context: { shippingCountry: "US", cart: {} },
-      settings: { useFuzzySearch: false, didYouMean: {} },
-    });
-
-    let data: unknown;
-    try {
-      data = await postJson(TCG_SEARCH_URL, body);
-    } catch {
-      await sleep(2000);
-      data = await postJson(TCG_SEARCH_URL, body);
-    }
-
-    const result = (data as { results?: Array<{ totalResults?: number; results?: TcgCardItem[] }> })
-      ?.results?.[0];
-    if (!result) break;
-
-    const items = result.results ?? [];
-    if (total === null) total = result.totalResults ?? items.length;
-
-    const validItems = items.filter((item) => {
-      if (!item.rarityName || item.rarityName === "None") return false;
-      if (!item.customAttributes?.number) return false;
-      return true;
-    });
-
-    all.push(...validItems);
-    from += items.length;
-    if (items.length < size) break;
-    await sleep(300);
+  try {
+    const html = await fetchScrydexCardPageHtml(path, scrydexQueryVariant(card));
+    const prices = parseScrydexCardPageRawNearMintUsd(html);
+    cache.set(path, prices);
+    return prices;
+  } catch {
+    cache.set(path, {});
+    return {};
   }
-
-  return all;
 }
 
-function buildMarketMap(cards: OnePieceCardEntry[], items: TcgCardItem[], nowIso: string): OnePieceSetMarketMap {
-  const byProductId = new Map(items.map((item) => [String(item.productId ?? ""), item]));
+async function buildMarketMap(cards: OnePieceCardEntry[], nowIso: string): Promise<OnePieceSetMarketMap> {
   const marketMap: OnePieceSetMarketMap = {};
+  const cache = new Map<string, RawPriceMap>();
 
   for (const card of cards) {
-    const key = priceKeyForOnePieceCard(card);
-    const item = byProductId.get(key);
-    marketMap[key] = buildOnePieceMarketEntry(
-      item
-        ? {
-            marketPrice: toFiniteNumber(item.marketPrice),
-            lowestPrice: toFiniteNumber(item.lowestPrice),
-            lowestPriceWithShipping: toFiniteNumber(item.lowestPriceWithShipping),
-            medianPrice: toFiniteNumber(item.medianPrice),
-            totalListings: toFiniteInteger(item.totalListings),
-          }
-        : null,
+    const rawPrices = await loadRawPricesForCardPath(cache, card);
+    const marketPrice = selectScrydexRawPriceForCard(rawPrices, card);
+    marketMap[priceKeyForOnePieceCard(card)] = buildOnePieceMarketEntry(
+      marketPrice === null
+        ? null
+        : {
+            marketPrice,
+            lowestPrice: marketPrice,
+            lowestPriceWithShipping: marketPrice,
+            medianPrice: marketPrice,
+            totalListings: null,
+          },
       nowIso,
     );
   }
@@ -149,27 +76,17 @@ function buildMarketMap(cards: OnePieceCardEntry[], items: TcgCardItem[], nowIso
   return marketMap;
 }
 
-function toFiniteNumber(value: unknown): number | null {
-  if (typeof value !== "number" || !Number.isFinite(value)) return null;
-  return value;
-}
-
-function toFiniteInteger(value: unknown): number | null {
-  const num = toFiniteNumber(value);
-  return num === null ? null : Math.round(num);
-}
-
-async function scrapeSet(set: OnePieceSetEntry, dryRun: boolean): Promise<void> {
-  const cards = loadOnePieceCardsForSet(set.setCode);
+async function scrapeSet(set: OnePieceSetEntry, dryRun: boolean, source: "local" | "r2"): Promise<void> {
+  const cards =
+    source === "r2" ? await loadOnePieceCardsForSetFromR2(set.setCode) : loadOnePieceCardsForSet(set.setCode);
   if (!cards.length) {
-    console.log(`  [${set.setCode}] skip — no cards in onepiece/cards/data/${set.setCode}.json`);
+    console.log(`  [${set.setCode}] skip — no cards found in ${source === "r2" ? "R2 onepiece/cards/data" : `onepiece/cards/data/${set.setCode}.json`}`);
     return;
   }
 
-  console.log(`  [${set.setCode}] fetching TCGPlayer market prices…`);
-  const items = await fetchTcgPlayerSetCards(set);
+  console.log(`  [${set.setCode}] fetching Scrydex prices…`);
   const nowIso = new Date().toISOString();
-  const marketMap = buildMarketMap(cards, items, nowIso);
+  const marketMap = await buildMarketMap(cards, nowIso);
   const priced = Object.values(marketMap).filter((entry) => entry.tcgplayer?.marketPrice != null).length;
 
   if (dryRun) {
@@ -183,13 +100,13 @@ async function scrapeSet(set: OnePieceSetEntry, dryRun: boolean): Promise<void> 
 }
 
 export async function runScrapeOnePiecePricing(opts: ScrapeOnePiecePricingOptions = {}): Promise<void> {
-  const { dryRun = false, onlySetCodes } = opts;
-  const allSets = loadOnePieceSets();
+  const { dryRun = false, onlySetCodes, source = "local" } = opts;
+  const allSets = source === "r2" ? await loadOnePieceSetsFromR2() : loadOnePieceSets();
   const requested = onlySetCodes?.map((value) => value.trim().toUpperCase()).filter(Boolean);
 
   const sets = requested?.length
     ? allSets.filter((set) => requested.includes(set.setCode.toUpperCase()))
-    : allSets.filter((set) => Boolean(set.tcgplayerId));
+    : allSets.filter((set) => Boolean(set.scrydexId));
 
   if (requested?.length && sets.length === 0) {
     throw new Error(`No One Piece sets found matching: ${requested.join(", ")}`);
@@ -200,7 +117,7 @@ export async function runScrapeOnePiecePricing(opts: ScrapeOnePiecePricingOption
   if (dryRun) console.log("(dry-run: no files written)\n");
 
   for (const set of sets) {
-    await scrapeSet(set, dryRun);
+    await scrapeSet(set, dryRun, source);
   }
 
   console.log("\nDone.");

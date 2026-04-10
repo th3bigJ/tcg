@@ -34,7 +34,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "They use their tusks to crush the berries they eat. Repeated regrowth makes their tusks strong and sharp."
+    "flavorText": "They use their tusks to crush the berries they eat. Repeated regrowth makes their tusks strong and sharp.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6831",
@@ -77,7 +80,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "Spinning minigears are rotated at high speed and repeatedly fired away. It is dangerous if the gears don't return."
+    "flavorText": "Spinning minigears are rotated at high speed and repeatedly fired away. It is dangerous if the gears don't return.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6824",
@@ -114,7 +120,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "Its skin has a rubbery elasticity, so it can reduce damage by defensively pulling its skin up to its neck."
+    "flavorText": "Its skin has a rubbery elasticity, so it can reduce damage by defensively pulling its skin up to its neck.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6817",
@@ -151,7 +160,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "They steal from people for fun, but their victims can't help but forgive them. Their deceptively cute act is perfect."
+    "flavorText": "They steal from people for fun, but their victims can't help but forgive them. Their deceptively cute act is perfect.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6810",
@@ -188,7 +200,10 @@
     "weakness": "Water ×2",
     "resistance": "Lightning -20",
     "retreatCost": 2,
-    "flavorText": "It can dig through the ground at a speed of 30 mph. It could give a car running aboveground a good race."
+    "flavorText": "It can dig through the ground at a speed of 30 mph. It could give a car running aboveground a good race.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6805",
@@ -225,7 +240,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its habitat is dark forests and caves. It emits ultrasonic waves from its nose to learn about its surroundings."
+    "flavorText": "Its habitat is dark forests and caves. It emits ultrasonic waves from its nose to learn about its surroundings.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6800",
@@ -268,7 +286,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "The energy made in its cheeks' electric pouches is stored inside its membranes and released while it is gliding."
+    "flavorText": "The energy made in its cheeks' electric pouches is stored inside its membranes and released while it is gliding.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6792",
@@ -311,7 +332,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Scalchop techniques differ from one Dewott to another. It never neglects maintaining its scalchops."
+    "flavorText": "Scalchop techniques differ from one Dewott to another. It never neglects maintaining its scalchops.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6783",
@@ -354,7 +378,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "When its internal fire flares up, its movements grow sharper and faster. When in trouble, it emits smoke."
+    "flavorText": "When its internal fire flares up, its movements grow sharper and faster. When in trouble, it emits smoke.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6769",
@@ -397,7 +424,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "The Pokémon can easily melt holes in hard rocks with a liquid secreted from its mouth."
+    "flavorText": "The Pokémon can easily melt holes in hard rocks with a liquid secreted from its mouth.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6756",
@@ -440,7 +470,10 @@
     "weakness": "Fire ×2",
     "resistance": "Water -20",
     "retreatCost": 1,
-    "flavorText": "This Pokémon dwells deep in the forest. Eating a leaf from its head whisks weariness away as if by magic."
+    "flavorText": "This Pokémon dwells deep in the forest. Eating a leaf from its head whisks weariness away as if by magic.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6740",
@@ -483,6 +516,9 @@
     "weakness": "Fire ×2",
     "resistance": "Water -20",
     "retreatCost": 1,
-    "flavorText": "They avoid attacks by sinking into the shadows of thick foliage. They retaliate with masterful whipping techniques."
+    "flavorText": "They avoid attacks by sinking into the shadows of thick foliage. They retaliate with masterful whipping techniques.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

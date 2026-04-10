@@ -22,7 +22,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22438",
@@ -47,7 +50,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22437",
@@ -73,7 +79,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22436",
@@ -99,7 +108,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22435",
@@ -125,7 +137,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22434",
@@ -151,7 +166,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22433",
@@ -177,7 +195,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22432",
@@ -203,7 +224,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22431",
@@ -229,7 +253,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22430",
@@ -255,7 +282,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22429",
@@ -281,7 +311,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22428",
@@ -307,7 +340,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22427",
@@ -333,7 +369,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22426",
@@ -359,7 +398,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22425",
@@ -385,7 +427,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22424",
@@ -411,7 +456,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22423",
@@ -437,7 +485,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22422",
@@ -479,7 +530,11 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "jumbo"
+    ]
   },
   {
     "masterCardId": "22421",
@@ -521,7 +576,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "It is not satisfied unless it eats over 880 pounds of food every day. When it is done eating, it goes promptly to sleep."
+    "flavorText": "It is not satisfied unless it eats over 880 pounds of food every day. When it is done eating, it goes promptly to sleep.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22420",
@@ -563,7 +621,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": "A rare and elusive Pokémon that is said to bring happiness to those who manage to catch it."
+    "flavorText": "A rare and elusive Pokémon that is said to bring happiness to those who manage to catch it.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22419",
@@ -599,7 +660,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It collects data and plans three times as wisely, but it may think too much and fall into a state of immobility."
+    "flavorText": "It collects data and plans three times as wisely, but it may think too much and fall into a state of immobility.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22418",
@@ -641,7 +705,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": null,
-    "flavorText": "The brains in its two heads appear to communicate emotions to each other with a telepathic power."
+    "flavorText": "The brains in its two heads appear to communicate emotions to each other with a telepathic power.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22417",
@@ -683,7 +750,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its punches slice the air. However, it seems to need a short break after fighting for three minutes."
+    "flavorText": "Its punches slice the air. However, it seems to need a short break after fighting for three minutes.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22416",
@@ -725,7 +795,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The legs freely contract and stretch. The stretchy legs allow it to hit a distant foe with a rising kick."
+    "flavorText": "The legs freely contract and stretch. The stretchy legs allow it to hit a distant foe with a rising kick.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22415",
@@ -761,7 +834,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "It usually lives underground. It searches for food while boring its way through the ground at 50 miles per hour."
+    "flavorText": "It usually lives underground. It searches for food while boring its way through the ground at 50 miles per hour.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22414",
@@ -803,7 +879,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its claws and horns often break off. The broken claws and horns can be used to carve plows for tilling farm fields."
+    "flavorText": "Its claws and horns often break off. The broken claws and horns can be used to carve plows for tilling farm fields.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22413",
@@ -845,7 +924,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It lives in areas of limited rainfall. When danger approaches, it curls up into a ball to protect its soft stomach."
+    "flavorText": "It lives in areas of limited rainfall. When danger approaches, it curls up into a ball to protect its soft stomach.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22412",
@@ -887,7 +969,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "One solid blow from its horns is enough to split apart a large tree. Its greatest rival in Alola is Vikavolt."
+    "flavorText": "One solid blow from its horns is enough to split apart a large tree. Its greatest rival in Alola is Vikavolt.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22411",
@@ -929,7 +1014,10 @@
     "weakness": "Fire ×2",
     "resistance": "Fighting -30",
     "retreatCost": null,
-    "flavorText": "With ninja-like agility and speed, it can create the illusion that there is more than one of it."
+    "flavorText": "With ninja-like agility and speed, it can create the illusion that there is more than one of it.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22410",
@@ -965,7 +1053,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A mushroom grown larger than the host's body controls PARASECT. It scatters poisonous spores."
+    "flavorText": "A mushroom grown larger than the host's body controls PARASECT. It scatters poisonous spores.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22409",
@@ -1007,7 +1098,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22408",
@@ -1043,7 +1137,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "This plant blooms when it is absorbing solar energy. It stays on the move to seek sunlight."
+    "flavorText": "This plant blooms when it is absorbing solar energy. It stays on the move to seek sunlight.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22407",
@@ -1085,7 +1182,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When the bulb on its back grows large, the Pokémon seems to lose the ability to stand on its hind legs."
+    "flavorText": "When the bulb on its back grows large, the Pokémon seems to lose the ability to stand on its hind legs.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22406",
@@ -1121,6 +1221,9 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A strange seed was planted on its back at birth. Thus, a plant sprouted and now grows with this Pokémon."
+    "flavorText": "A strange seed was planted on its back at birth. Thus, a plant sprouted and now grows with this Pokémon.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

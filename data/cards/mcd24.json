@@ -40,7 +40,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "The mountains it calls home are nearly two miles in height. On rare occasions, it descends to play with the children living in the towns below."
+    "flavorText": "The mountains it calls home are nearly two miles in height. On rare occasions, it descends to play with the children living in the towns below.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22374",
@@ -83,7 +86,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": "It flies in the ozone layer, way up high in the sky. Until recently, no one had ever seen it."
+    "flavorText": "It flies in the ozone layer, way up high in the sky. Until recently, no one had ever seen it.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22373",
@@ -120,7 +126,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Thanks to its unstable genetic makeup, this special Pokémon conceals many different possible evolutions."
+    "flavorText": "Thanks to its unstable genetic makeup, this special Pokémon conceals many different possible evolutions.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22372",
@@ -157,7 +166,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It is said that somewhere in the ocean lies an island where these gather. Only they live there."
+    "flavorText": "It is said that somewhere in the ocean lies an island where these gather. Only they live there.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22371",
@@ -200,7 +212,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It is possible that this is the creature listed as Roaring Moon in an expedition journal that still holds many mysteries."
+    "flavorText": "It is possible that this is the creature listed as Roaring Moon in an expedition journal that still holds many mysteries.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22370",
@@ -237,7 +252,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Only the central head has a brain. It is very intelligent, but it thinks only of destruction."
+    "flavorText": "Only the central head has a brain. It is very intelligent, but it thinks only of destruction.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22369",
@@ -280,7 +298,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "On the night of a full moon, or when it gets excited, the ring patterns on its body glow yellow."
+    "flavorText": "On the night of a full moon, or when it gets excited, the ring patterns on its body glow yellow.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22368",
@@ -323,7 +344,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "This seems to be the Winged King mentioned in an old expedition journal. It was said to have split the land with its bare fists."
+    "flavorText": "This seems to be the Winged King mentioned in an old expedition journal. It was said to have split the land with its bare fists.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22367",
@@ -366,7 +390,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It has an easygoing nature. It doesn't care if it bumps its head on boats and boulders while swimming."
+    "flavorText": "It has an easygoing nature. It doesn't care if it bumps its head on boats and boulders while swimming.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22366",
@@ -409,7 +436,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "When it isn't battling, it keeps Dreepy in the holes on its horns. Once a fight starts, it launches the Dreepy like supersonic missiles."
+    "flavorText": "When it isn't battling, it keeps Dreepy in the holes on its horns. Once a fight starts, it launches the Dreepy like supersonic missiles.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22365",
@@ -452,7 +482,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "Via the protrusion on its head, it senses other creatures' emotions. If you don't have a calm disposition, it will never warm up to you."
+    "flavorText": "Via the protrusion on its head, it senses other creatures' emotions. If you don't have a calm disposition, it will never warm up to you.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22364",
@@ -495,7 +528,10 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The songs they sing are totally different depending on the region they live in. Some even sound like they're shouting!"
+    "flavorText": "The songs they sing are totally different depending on the region they live in. Some even sound like they're shouting!",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22363",
@@ -538,7 +574,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Much remains unknown about this creature. It resembles Cyclizar, but it is far more ruthless and powerful."
+    "flavorText": "Much remains unknown about this creature. It resembles Cyclizar, but it is far more ruthless and powerful.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22362",
@@ -581,7 +620,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When it is angered, it immediately discharges the energy stored in the pouches in its cheeks."
+    "flavorText": "When it is angered, it immediately discharges the energy stored in the pouches in its cheeks.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22361",
@@ -618,6 +660,9 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It spits fire that is hot enough to melt boulders. It may cause forest fires by blowing flames."
+    "flavorText": "It spits fire that is hot enough to melt boulders. It may cause forest fires by blowing flames.",
+    "pricingVariants": [
+      "normal"
+    ]
   }
 ]

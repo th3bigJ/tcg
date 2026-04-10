@@ -34,7 +34,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9241",
@@ -71,7 +74,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9232",
@@ -108,7 +114,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9223",
@@ -145,7 +154,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9213",
@@ -188,7 +200,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9204",
@@ -225,7 +240,10 @@
     "weakness": "Grass ×2",
     "resistance": "Lightning -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9195",
@@ -268,7 +286,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9183",
@@ -305,7 +326,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "9175",
@@ -342,7 +366,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9166",
@@ -379,7 +406,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "9157",
@@ -416,7 +446,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9149",
@@ -453,7 +486,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9138",
@@ -490,7 +526,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9129",
@@ -527,7 +566,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9121",
@@ -564,7 +606,10 @@
     "weakness": "Fire ×2",
     "resistance": "Water -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9114",
@@ -601,6 +646,9 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

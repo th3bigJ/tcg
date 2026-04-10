@@ -1,4 +1,6 @@
 import type { GbpConversionMultipliers } from "@/lib/marketPriceExchange";
+import type { CardPricingEntry } from "@/lib/staticDataTypes";
+import { canonicalVariantSlugFromCompactLabel } from "@/lib/pricingVariantCompactAliases";
 import {
   canonicalScrydexVariantLabel,
   SCRYDEX_FLAT_PSA10_KEY_SUFFIX,
@@ -35,6 +37,33 @@ export function extractTcgplayerMarketPricesGbp(
 /**
  * Cardmarket: `avg` and `avg-holo` only (EUR → GBP).
  */
+/**
+ * Variant keys available for a `card-pricing` row — union of Scrydex variant slugs and TCGPlayer
+ * `marketPrice` / `market` rows (same keys the `/api/card-pricing/*` payload exposes after merging).
+ */
+export function collectPricingVariantKeys(entry: CardPricingEntry | null | undefined): string[] {
+  if (!entry) return [];
+  const set = new Set<string>();
+  if (entry.scrydex && typeof entry.scrydex === "object") {
+    for (const k of Object.keys(entry.scrydex)) {
+      if (k) set.add(k);
+    }
+  }
+  if (entry.tcgplayer && typeof entry.tcgplayer === "object") {
+    const o = entry.tcgplayer as Record<string, unknown>;
+    for (const [key, val] of Object.entries(o)) {
+      if (TCGPLAYER_SKIP_KEYS.has(key)) continue;
+      if (!val || typeof val !== "object") continue;
+      const block = val as Record<string, unknown>;
+      const mp = block.marketPrice ?? block.market;
+      if (typeof mp === "number" && Number.isFinite(mp)) {
+        set.add(key);
+      }
+    }
+  }
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
+
 export function extractCardmarketAvgsGbp(
   cardmarketRaw: unknown,
   multipliers: GbpConversionMultipliers,
@@ -70,10 +99,8 @@ export type ExternalScrapeByVariantNumbers = Record<string, ExternalScrapeVarian
 export function externalScrapeVariantSlugFromFlatKey(flatKey: string): string {
   const c = canonicalScrydexVariantLabel(flatKey.trim());
   const compact = c.toLowerCase().replace(/[\s-_]+/g, "");
-  if (compact === "default") return "default";
-  if (compact === "holofoil") return "holofoil";
-  if (compact === "reverseholofoil") return "reverseHolofoil";
-  if (compact === "staffstamp") return "staffStamp";
+  const canon = canonicalVariantSlugFromCompactLabel(compact);
+  if (canon !== null) return canon;
   const parts = c.split(/\s+/).filter(Boolean);
   if (parts.length === 0) return flatKey.trim().toLowerCase();
   return (

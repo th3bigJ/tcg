@@ -11,6 +11,7 @@ export type OnePieceSetRecord = {
 };
 
 export type OnePieceCardRecord = {
+  priceKey?: string;
   tcgplayerProductId?: string;
   cardNumber: string;
   name: string;

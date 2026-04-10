@@ -35,7 +35,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "cosmosHolofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "8450",
@@ -78,7 +82,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8443",
@@ -121,7 +128,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8432",
@@ -164,7 +174,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8424",
@@ -201,7 +214,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8416",
@@ -244,7 +260,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8408",
@@ -270,7 +289,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "jasonKlaczynski",
+      "normal"
+    ]
   },
   {
     "masterCardId": "8398",
@@ -296,7 +319,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8390",
@@ -330,7 +356,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8382",
@@ -356,7 +385,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8371",
@@ -399,7 +431,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8359",
@@ -442,7 +477,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "8350",
@@ -485,7 +524,11 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "8340",
@@ -522,7 +565,11 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "8330",
@@ -565,7 +612,11 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "8316",
@@ -602,7 +653,11 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -30",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "8299",
@@ -645,6 +700,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   }
 ]

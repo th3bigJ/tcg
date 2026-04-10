@@ -23,7 +23,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3695",
@@ -49,7 +53,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3690",
@@ -75,7 +83,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3685",
@@ -101,7 +113,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3681",
@@ -127,7 +143,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3675",
@@ -153,7 +173,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3670",
@@ -179,7 +203,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3665",
@@ -205,7 +233,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3660",
@@ -231,7 +263,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3655",
@@ -257,7 +293,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3650",
@@ -291,7 +331,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3642",
@@ -325,7 +369,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3639",
@@ -368,7 +416,11 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Can you handle the formation attack of the fearless Zangoose?"
+    "flavorText": "Can you handle the formation attack of the fearless Zangoose?",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3633",
@@ -405,7 +457,11 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "It boasts fangs so powerful that they knock opponents out in one shot! Enemies that slip up will be taken down without fail!"
+    "flavorText": "It boasts fangs so powerful that they knock opponents out in one shot! Enemies that slip up will be taken down without fail!",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3626",
@@ -442,7 +498,11 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "You can't keep up with its movements underwater, can you? If you get caught in this whirlpool, there'll be no escape."
+    "flavorText": "You can't keep up with its movements underwater, can you? If you get caught in this whirlpool, there'll be no escape.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3621",
@@ -485,7 +545,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "This Pokémon is loyal to its master. It will protect its partner to the end, no matter what."
+    "flavorText": "This Pokémon is loyal to its master. It will protect its partner to the end, no matter what.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3615",
@@ -528,7 +592,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "Thanks to Mightyena's outstanding leadership, it's very good at combination attacks that can leave a foe helpless."
+    "flavorText": "Thanks to Mightyena's outstanding leadership, it's very good at combination attacks that can leave a foe helpless.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3610",
@@ -571,7 +639,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "Poochyena's nose can identify any scent. It's very useful for reconnaissance."
+    "flavorText": "Poochyena's nose can identify any scent. It's very useful for reconnaissance.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3605",
@@ -614,7 +686,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "Poochyena can easily detect invading foes with its acute sense of smell. It's an excellent lookout!"
+    "flavorText": "Poochyena can easily detect invading foes with its acute sense of smell. It's an excellent lookout!",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3598",
@@ -652,7 +728,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3590",
@@ -695,7 +774,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "Aggron's metal horns can smash through any defenses, no matter how strong!"
+    "flavorText": "Aggron's metal horns can smash through any defenses, no matter how strong!",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3584",
@@ -738,7 +821,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "When Lairon uses Take Down, the impact from its solid body is enough to destroy concrete!"
+    "flavorText": "When Lairon uses Take Down, the impact from its solid body is enough to destroy concrete!",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3579",
@@ -775,7 +862,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Aron, which even devour metal, can eat and destroy enemy ships in an instant."
+    "flavorText": "Aron, which even devour metal, can eat and destroy enemy ships in an instant.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3572",
@@ -812,7 +903,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Claydol's beam can seize opponents and keep them from moving. Long-range attacks are its specialty!"
+    "flavorText": "Claydol's beam can seize opponents and keep them from moving. Long-range attacks are its specialty!",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3566",
@@ -849,7 +944,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "They all cry out at once to let us know when they spot an enemy. It really helps out!"
+    "flavorText": "They all cry out at once to let us know when they spot an enemy. It really helps out!",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3560",
@@ -892,7 +991,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Seviper's tail is a sharp blade. It can even poison you!"
+    "flavorText": "Seviper's tail is a sharp blade. It can even poison you!",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3554",
@@ -929,7 +1032,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It immobilizes its opponents by wrapping them in its huge, poisonous body. It'll smoosh you, too!"
+    "flavorText": "It immobilizes its opponents by wrapping them in its huge, poisonous body. It'll smoosh you, too!",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3548",
@@ -972,7 +1079,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Its flexible body, which allows it to squeeze into any cracks, comes in handy when invading enemy hideouts."
+    "flavorText": "Its flexible body, which allows it to squeeze into any cracks, comes in handy when invading enemy hideouts.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3543",
@@ -1010,7 +1121,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3538",
@@ -1053,7 +1167,11 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "It's good at attacks that freeze opponents with a powerful cold snap. Then, it pulverizes a frozen foe with its sharp tusks!"
+    "flavorText": "It's good at attacks that freeze opponents with a powerful cold snap. Then, it pulverizes a frozen foe with its sharp tusks!",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3532",
@@ -1096,7 +1214,11 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It provides support by making paths of ice. It can win any battle as long as it's on ice."
+    "flavorText": "It provides support by making paths of ice. It can win any battle as long as it's on ice.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3525",
@@ -1133,7 +1255,11 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Spheal's Water Gun can put out any fire. Flames used by opponents have no effect!"
+    "flavorText": "Spheal's Water Gun can put out any fire. Flames used by opponents have no effect!",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3521",
@@ -1170,7 +1296,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Camerupt, with its strength against fire, played a big role in rescuing team members."
+    "flavorText": "Camerupt, with its strength against fire, played a big role in rescuing team members.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "3517",
@@ -1207,6 +1337,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "No matter how heavy the cargo, we can transport it to our destination with ease, thanks to Numel."
+    "flavorText": "No matter how heavy the cargo, we can transport it to our destination with ease, thanks to Numel.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   }
 ]

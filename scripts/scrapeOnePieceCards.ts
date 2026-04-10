@@ -1,10 +1,10 @@
 /**
- * Scrape One Piece TCG card data from TCGPlayer (primary) and Scrydex (images).
+ * Scrape One Piece card data from Scrydex.
  *
  * For each set in onepiece/sets/data/sets.json:
- *   1. Paginate TCGPlayer search API by setId → exact card metadata + productId per variant
- *   2. Fetch Scrydex expansion page → variant→imageUrl mapping
- *   3. Merge and write onepiece/cards/data/{setCode}.json
+ *   1. Fetch Scrydex expansion page → unique card slug/number pairs
+ *   2. Fetch each Scrydex card page → metadata + available variants
+ *   3. Build card records and write onepiece/cards/data/{setCode}.json
  *   4. Download card images to onepiece/cards/images/{setCode}/
  *
  * Usage:
@@ -19,7 +19,6 @@ import fs from "fs";
 import path from "path";
 import https from "https";
 import http from "http";
-import type { RequestOptions } from "https";
 import type { S3Client } from "@aws-sdk/client-s3";
 import { buildOnePieceS3Client, uploadLocalFileToOnePieceR2 } from "../lib/onepieceR2";
 import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
@@ -41,142 +40,55 @@ const CARDS_IMAGES_DIR = path.join(REPO_ROOT, "onepiece", "cards", "images");
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
-const TCG_SEARCH_URL =
-  "https://mp-search-api.tcgplayer.com/v1/search/request?q=&isList=false";
-
-const TCG_IMAGE_URL = (productId: string) =>
-  `https://product-images.tcgplayer.com/fit-in/437x437/${productId}.jpg`;
-
-/**
- * TCGPlayer uses a different card number prefix than the canonical set code for some groups.
- * Key = TCGPlayer group's setCode, value = prefix remap to apply to all items in that group.
- * e.g. EB04 group uses ST29-xxx numbering → remap to EB04-xxx.
- */
-const CARD_NUMBER_REMAP: Record<string, { from: string; to: string }> = {
-  EB04: { from: "ST29", to: "EB04" },
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Types
-// ──────────────────────────────────────────────────────────────────────────────
-
 type OnePieceSetEntry = {
   setCode: string;
   name: string;
-  tcgplayerId: string | null;
-  tcgplayerUrlSlug: string | null;
   scrydexId: string | null;
-  setType: string | null;
 };
 
-export type OnePieceCardVariant =
-  | "normal"
-  | "parallel"
-  | "altArt"
-  | "mangaAltArt"
-  | "boxTopper"
-  | "promo"
-  | "specialAltArt";
-
-export type OnePieceCard = {
-  /** TCGPlayer productId — used for pricing */
-  tcgplayerProductId: string;
-  /** Canonical card number e.g. OP01-001 */
+type OnePieceCard = {
+  priceKey: string;
+  tcgplayerProductId: null;
   cardNumber: string;
-  /** Card name without variant suffix */
   name: string;
   setCode: string;
-  /** Variant type */
-  variant: OnePieceCardVariant;
+  variant: string;
   rarity: string | null;
-  /** Leader / Character / Event / Stage / DON!! */
   cardType: string[] | null;
   color: string[] | null;
   cost: number | null;
   power: number | null;
   counter: number | null;
-  /** Leaders only */
   life: number | null;
   attribute: string[] | null;
   subtypes: string[] | null;
   effect: string | null;
-  /** Scrydex card slug e.g. "roronoa-zoro" — used for card page URL */
   scrydexSlug: string | null;
-  /** Scrydex image URL */
   imageUrl: string | null;
-  /** Local path after download */
   imagePath: string | null;
 };
 
-type TcgSearchResult = {
-  totalResults: number | null;
-  results: TcgCardItem[];
-};
-
-type TcgCardItem = {
-  productId: number | null;
-  productName: string;
-  rarityName: string | null;
-  foilOnly: boolean;
-  setId: number | null;
-  setName: string | null;
-  customAttributes: {
-    number: string | null;
-    cardType: string[] | null;
-    color: string[] | null;
-    cost: string | null;
-    power: string | null;
-    counter: string | null;
-    life: string | null;
-    attribute: string[] | null;
-    subtypes: string[] | null;
-    description: string | null;
-    releaseDate: string | null;
-  } | null;
-};
-
-type ScrydexCardLink = {
+type ScrydexCardRef = {
   slug: string;
-  cardId: string; // e.g. OP01-001
-  variant: string; // raw scrydex variant name
-  imageUrl: string;
+  cardNumber: string;
+  initialVariant: string;
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// HTTP helpers
-// ──────────────────────────────────────────────────────────────────────────────
-
-function postJson(url: string, body: string): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    const req = https.request(
-      url,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          "User-Agent": UA,
-          "Content-Length": Buffer.byteLength(body),
-        },
-      } as RequestOptions,
-      (res) => {
-        const chunks: Buffer[] = [];
-        res.on("data", (c: Buffer) => chunks.push(c));
-        res.on("end", () => {
-          try {
-            resolve(JSON.parse(Buffer.concat(chunks).toString("utf8")));
-          } catch (e) {
-            reject(e);
-          }
-        });
-        res.on("error", reject);
-      },
-    );
-    req.on("error", reject);
-    req.write(body);
-    req.end();
-  });
-}
+type ScrydexCardMeta = {
+  cardNumber: string;
+  name: string;
+  rarity: string | null;
+  cardType: string[] | null;
+  color: string[] | null;
+  cost: number | null;
+  power: number | null;
+  counter: number | null;
+  life: number | null;
+  attribute: string[] | null;
+  subtypes: string[] | null;
+  effect: string | null;
+  variants: string[];
+};
 
 async function fetchText(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -227,129 +139,150 @@ async function sleep(ms: number): Promise<void> {
 }
 
 function cleanupPartialFile(destPath: string): void {
-  if (fs.existsSync(destPath)) {
-    fs.unlinkSync(destPath);
+  if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+}
+
+function decodeHtml(value: string): string {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, "\"")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function stripTags(value: string): string {
+  return decodeHtml(value.replace(/<[^>]+>/g, " "));
+}
+
+function parseNullableNumber(value: string | null): number | null {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed === "-" || trimmed === "—") return null;
+  const digits = trimmed.replace(/,/g, "");
+  const num = Number.parseInt(digits, 10);
+  return Number.isFinite(num) ? num : null;
+}
+
+function parseListField(value: string | null): string[] | null {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed === "-" || trimmed === "—") return null;
+  const items = trimmed.split(/\s*,\s*/u).map((entry) => entry.trim()).filter(Boolean);
+  return items.length ? items : null;
+}
+
+function parseTextField(value: string | null): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed === "-" || trimmed === "—") return null;
+  return trimmed;
+}
+
+function parseDevPaneField(html: string, field: string): string | null {
+  const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(
+    `data-target-field="${escaped}"[\\s\\S]*?<div class="overflow-x-auto[^"]*">([\\s\\S]*?)<\\/div>`,
+    "i",
+  );
+  const match = html.match(re);
+  if (!match) return null;
+  return stripTags(match[1]);
+}
+
+function parseRulesField(html: string): string | null {
+  const value = parseDevPaneField(html, "rules");
+  if (value) return value;
+
+  const visibleMatch = html.match(
+    /<div class="mb-2 text-sm text-white">Rules<\/div>[\s\S]*?<span class="block mt-2">([\s\S]*?)<\/span>/i,
+  );
+  return visibleMatch ? stripTags(visibleMatch[1]) : null;
+}
+
+function parseVariantSlugs(html: string, fallbackVariant: string): string[] {
+  const found = new Set<string>();
+
+  for (const match of html.matchAll(/data-variant="([^"]+)" data-prices-target="pricesContainer"/g)) {
+    found.add(match[1].trim());
+  }
+  for (const match of html.matchAll(/purchase\?type=&variant=([^"&]+)/g)) {
+    found.add(decodeURIComponent(match[1].trim()));
+  }
+
+  if (found.size === 0) found.add(fallbackVariant || "normal");
+  return [...found].sort((a, b) => a.localeCompare(b));
+}
+
+function variantImageSuffix(variant: string): string {
+  switch (variant.trim()) {
+    case "altArt":
+    case "fullArt":
+      return "A";
+    case "mangaAltArt":
+      return "B";
+    case "specialAltArt":
+      return "C";
+    default:
+      return "";
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// TCGPlayer fetch
-// ──────────────────────────────────────────────────────────────────────────────
+function buildScrydexImageUrl(cardNumber: string, variant: string): string {
+  const base = "https://images.scrydex.com/onepiece";
+  return `${base}/${cardNumber}${variantImageSuffix(variant)}/medium`;
+}
 
-async function fetchTcgPlayerCards(set: OnePieceSetEntry): Promise<TcgCardItem[]> {
-  const all: TcgCardItem[] = [];
-  let from = 0;
-  const size = 50;
-  let total: number | null = null;
+function priceKeyForCard(setCode: string, cardNumber: string, variant: string): string {
+  return [setCode.trim().toUpperCase(), cardNumber.trim().toUpperCase(), variant.trim() || "normal"].join("::");
+}
 
-  if (!set.tcgplayerId) return [];
+function parseCardMeta(html: string, fallbackCardNumber: string, fallbackVariant: string): ScrydexCardMeta {
+  const name =
+    parseTextField(parseDevPaneField(html, "name")) ??
+    stripTags(html.match(/<title>([^#<]+?)\s+#/i)?.[1] ?? "") ??
+    fallbackCardNumber;
+  const cardNumber =
+    parseTextField(parseDevPaneField(html, "printed_number")) ??
+    fallbackCardNumber;
 
-  // Filter by numeric setId — avoids false matches on setName (e.g. "Straw Hat Crew" is also a subtype)
-  const setId = Number(set.tcgplayerId);
+  return {
+    cardNumber,
+    name,
+    rarity: parseTextField(parseDevPaneField(html, "rarity")),
+    cardType: parseListField(parseDevPaneField(html, "type")),
+    color: parseListField(parseDevPaneField(html, "colors")),
+    cost: parseNullableNumber(parseDevPaneField(html, "cost")),
+    power: parseNullableNumber(parseDevPaneField(html, "power")),
+    counter: parseNullableNumber(parseDevPaneField(html, "counter")),
+    life: parseNullableNumber(parseDevPaneField(html, "life")),
+    attribute: parseListField(parseDevPaneField(html, "attribute")),
+    subtypes: parseListField(parseDevPaneField(html, "subtypes")),
+    effect: parseTextField(parseRulesField(html)),
+    variants: parseVariantSlugs(html, fallbackVariant),
+  };
+}
 
-  while (total === null || from < total) {
-    const body = JSON.stringify({
-      algorithm: "revenue_desc",
-      from,
-      size,
-      filters: {
-        term: { productLineName: ["One Piece Card Game"], setId: [setId] },
-        range: {},
-        match: {},
-      },
-      context: { shippingCountry: "US", cart: {} },
-      settings: { useFuzzySearch: false, didYouMean: {} },
-    });
+function parseScrydexExpansionCards(html: string): ScrydexCardRef[] {
+  const best = new Map<string, ScrydexCardRef>();
+  const re = /href="\/onepiece\/cards\/([^/"]+)\/(OP\d{2}-\d+|ST\d{2}-\d+|EB\d{2}-\d+|PRB\d+-\d+)\?variant=([^"]+)"/gi;
+  let match: RegExpExecArray | null;
 
-    let data: unknown;
-    try {
-      data = await postJson(TCG_SEARCH_URL, body);
-    } catch (err) {
-      console.warn(`    [TCGPlayer] Request failed at offset ${from}, retrying...`);
-      await sleep(2000);
-      data = await postJson(TCG_SEARCH_URL, body);
+  while ((match = re.exec(html)) !== null) {
+    const slug = match[1].trim();
+    const cardNumber = match[2].trim().toUpperCase();
+    const initialVariant = match[3].trim();
+    if (!best.has(cardNumber)) {
+      best.set(cardNumber, { slug, cardNumber, initialVariant });
     }
-
-    const result = (data as { results?: Array<{ totalResults?: number; results?: TcgCardItem[] }> })
-      ?.results?.[0];
-
-    if (!result) break;
-
-    const items = result.results ?? [];
-    if (total === null) total = result.totalResults ?? items.length;
-
-    // Validate set name match — filter out wrong-set results
-    const validItems = items.filter((item) => {
-      const ca = item.customAttributes;
-      // Keep sealed products (no card number) only if they belong to this set
-      if (!ca?.number && !item.rarityName) return false;
-      // Skip sealed products (booster boxes, packs, cases etc.)
-      if (!item.rarityName) return false;
-      return true;
-    });
-
-    all.push(...validItems);
-    from += items.length;
-
-    if (items.length < size) break;
-    await sleep(300);
   }
 
-  return all;
+  return [...best.values()].sort((a, b) =>
+    a.cardNumber.localeCompare(b.cardNumber, undefined, { numeric: true }),
+  );
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Scrydex fetch
-// ──────────────────────────────────────────────────────────────────────────────
-
-function parseScrydexExpansionCards(html: string): ScrydexCardLink[] {
-  const results: ScrydexCardLink[] = [];
-  // href="/onepiece/cards/{slug}/{OP01-001}?variant={name}"
-  const re =
-    /href="\/onepiece\/cards\/([^/"]+)\/(OP\d{2}-\d+|ST\d{2}-\d+|EB\d{2}-\d+|PRB\d+-\d+)\?variant=([^"]+)"/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(html)) !== null) {
-    const slug = m[1];
-    const cardId = m[2].toUpperCase();
-    const variant = m[3];
-
-    // Find image URL in the surrounding context (within 1500 chars of the anchor)
-    const ctx = html.slice(m.index, m.index + 1500);
-    const imgMatch = ctx.match(
-      /src="(https:\/\/images\.scrydex\.com\/onepiece\/[^"]+)"/i,
-    );
-    const imageUrl = imgMatch ? imgMatch[1] : buildScrydexImageUrl(cardId, variant);
-
-    // Deduplicate: keep first occurrence of each cardId+variant
-    if (!results.some((r) => r.cardId === cardId && r.variant === variant)) {
-      results.push({ slug, cardId, variant, imageUrl });
-    }
-  }
-  return results;
-}
-
-function buildScrydexImageUrl(cardId: string, variant: string): string {
-  // Scrydex CDN pattern:
-  //   normal  → OP01-001/medium
-  //   altArt  → OP01-001A/medium  (appends A)
-  //   mangaAltArt → OP01-001B/medium (appends B - may vary)
-  //   specialAltArt → OP01-001C/medium
-  // foil uses same image as normal
-  const base = `https://images.scrydex.com/onepiece`;
-  const suffix = variantImageSuffix(variant);
-  return `${base}/${cardId}${suffix}/medium`;
-}
-
-function variantImageSuffix(scrydexVariant: string): string {
-  switch (scrydexVariant.toLowerCase()) {
-    case "altart": return "A";
-    case "mangaaltart": return "B";
-    case "specialaltart": return "C";
-    default: return ""; // normal, foil share base image
-  }
-}
-
-async function fetchScrydexCards(set: OnePieceSetEntry): Promise<ScrydexCardLink[]> {
+async function fetchScrydexExpansionCards(set: OnePieceSetEntry): Promise<ScrydexCardRef[]> {
   if (!set.scrydexId) return [];
   const url = `https://scrydex.com/onepiece/expansions/${set.scrydexId}/${set.setCode.toUpperCase()}`;
   try {
@@ -363,182 +296,59 @@ async function fetchScrydexCards(set: OnePieceSetEntry): Promise<ScrydexCardLink
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Variant normalisation
-// ──────────────────────────────────────────────────────────────────────────────
-
-/**
- * Map TCGPlayer product name suffix → canonical variant.
- * TCGPlayer encodes variants as name suffixes: "(Parallel)", "(Box Topper)",
- * "(Manga) (Alternate Art)", "(Parallel) (Manga) (Alternate Art)", etc.
- */
-function normaliseTcgVariant(productName: string): OnePieceCardVariant {
-  const n = productName.toLowerCase();
-  if (n.includes("manga") && n.includes("alternate art")) return "mangaAltArt";
-  if (n.includes("alternate art") || n.includes("alt art") || n.includes("full art")) return "altArt";
-  // Only match "special" as a variant suffix in parens — not as part of the card name
-  if (/\(special\)/i.test(productName)) return "specialAltArt";
-  if (n.includes("parallel")) return "parallel";
-  if (n.includes("box topper")) return "boxTopper";
-  if (n.includes("promo")) return "promo";
-  return "normal";
-}
-
-/** Strip HTML tags and decode basic entities from effect text. */
-function cleanEffectText(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  return raw
-    .replace(/<[^>]+>/g, "") // strip all HTML tags
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .trim();
-}
-
-/** Strip variant suffix from TCGPlayer product name to get clean card name. */
-function cleanCardName(productName: string): string {
-  return productName
-    // Remove trailing (Parallel), (Box Topper), (Alternate Art), (Manga), (Promo) etc.
-    .replace(/\s*\((Parallel|Box Topper|Alternate Art|Alt Art|Manga|Promo|Special|Full Art)\)/gi, "")
-    // Remove trailing card number in parens e.g. "(024)" — only pure numbers
-    .replace(/\s*\(\d{3}\)$/g, "")
-    // Remove trailing wave info
-    .replace(/\s*\(Wave \d+[^)]*\)/gi, "")
-    .trim();
-}
-
-/** Map Scrydex variant name → canonical variant. */
-function normaliseScrydexVariant(scrydexVariant: string): OnePieceCardVariant {
-  switch (scrydexVariant.toLowerCase()) {
-    case "altart": return "altArt";
-    case "mangaaltart": return "mangaAltArt";
-    case "specialaltart": return "specialAltArt";
-    case "foil": return "parallel"; // Scrydex "foil" = TCGPlayer "Parallel" for most sets
-    case "normal": return "normal";
-    default: return "normal";
+async function fetchScrydexCardMeta(cardRef: ScrydexCardRef): Promise<ScrydexCardMeta | null> {
+  const url = `https://scrydex.com/onepiece/cards/${cardRef.slug}/${cardRef.cardNumber}?variant=${encodeURIComponent(cardRef.initialVariant || "normal")}`;
+  try {
+    const html = await fetchText(url);
+    return parseCardMeta(html, cardRef.cardNumber, cardRef.initialVariant);
+  } catch (err) {
+    console.warn(
+      `    [Scrydex] Failed to fetch card ${cardRef.cardNumber}: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    return null;
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Merge TCGPlayer + Scrydex
-// ──────────────────────────────────────────────────────────────────────────────
-
-/**
- * Build card records from TCGPlayer items + Scrydex links for a given target set.
- *
- * `tcgItems` are treated as the authoritative card list for the requested set because
- * TCGPlayer search is filtered by `setId`. Some sets still use an unexpected card-number
- * prefix, so we remap the prefix inside the set, but we do not route cards to a different
- * set based on that prefix.
- *
- * `scrydexLinks` should already be fetched for `targetSetCode`.
- * `hasScrydex` controls whether to use Scrydex or TCGPlayer CDN for images.
- */
-function buildCards(
-  targetSetCode: string,
-  hasScrydex: boolean,
-  tcgItems: TcgCardItem[],
-  scrydexLinks: ScrydexCardLink[],
-  tcgGroupSetCode: string, // the setCode of the TCGPlayer group we fetched from
-): OnePieceCard[] {
-  // Build Scrydex lookup: cardId + canonical variant → link
-  const scrydexMap = new Map<string, ScrydexCardLink>();
-  for (const link of scrydexLinks) {
-    const canonical = normaliseScrydexVariant(link.variant);
-    scrydexMap.set(`${link.cardId}::${canonical}`, link);
-    scrydexMap.set(`${link.cardId}::${link.variant}`, link);
-  }
-
-  // Slug lookup: cardId → slug (from any variant)
-  const slugByCardId = new Map<string, string>();
-  for (const link of scrydexLinks) {
-    if (!slugByCardId.has(link.cardId)) slugByCardId.set(link.cardId, link.slug);
-  }
-
+function buildCards(set: OnePieceSetEntry, refs: ScrydexCardRef[], metaByCardNumber: Map<string, ScrydexCardMeta>): OnePieceCard[] {
   const cards: OnePieceCard[] = [];
-  // Dedup by cardNumber::variant — prefer earlier items (higher revenue rank)
-  const seen = new Set<string>();
 
-  // Card number prefix remap for the requested TCGPlayer set (e.g. ST29 → EB04)
-  const remap = CARD_NUMBER_REMAP[tcgGroupSetCode];
+  for (const ref of refs) {
+    const meta = metaByCardNumber.get(ref.cardNumber);
+    if (!meta) continue;
 
-  for (const item of tcgItems) {
-    const ca = item.customAttributes;
-    let cardNumber = ca?.number ?? null;
-    if (!cardNumber) continue;
-    cardNumber = cardNumber.trim().toUpperCase();
-
-    // Apply remap for this group (e.g. ST29-001 → EB04-001)
-    if (remap && cardNumber.startsWith(remap.from + "-")) {
-      cardNumber = remap.to + cardNumber.slice(remap.from.length);
+    for (const variant of meta.variants) {
+      cards.push({
+        priceKey: priceKeyForCard(set.setCode, meta.cardNumber, variant),
+        tcgplayerProductId: null,
+        cardNumber: meta.cardNumber,
+        name: meta.name,
+        setCode: set.setCode,
+        variant,
+        rarity: meta.rarity,
+        cardType: meta.cardType,
+        color: meta.color,
+        cost: meta.cost,
+        power: meta.power,
+        counter: meta.counter,
+        life: meta.life,
+        attribute: meta.attribute,
+        subtypes: meta.subtypes,
+        effect: meta.effect,
+        scrydexSlug: ref.slug,
+        imageUrl: buildScrydexImageUrl(meta.cardNumber, variant),
+        imagePath: null,
+      });
     }
-
-    const variant = normaliseTcgVariant(item.productName);
-    const dedupKey = `${cardNumber}::${variant}`;
-    if (seen.has(dedupKey)) continue;
-    seen.add(dedupKey);
-
-    const name = cleanCardName(item.productName);
-    const productId = String(Math.round(item.productId ?? 0));
-
-    // Find Scrydex image
-    const scrydexLink =
-      scrydexMap.get(`${cardNumber}::${variant}`) ??
-      (variant === "parallel" ? scrydexMap.get(`${cardNumber}::foil`) : undefined) ??
-      (variant === "altArt" ? scrydexMap.get(`${cardNumber}::altart`) : undefined) ??
-      (variant === "mangaAltArt" ? scrydexMap.get(`${cardNumber}::mangaaltart`) : undefined) ??
-      (variant === "normal" ? scrydexMap.get(`${cardNumber}::normal`) : undefined);
-
-    // Image: Scrydex if available, else TCGPlayer CDN
-    const imageUrl = hasScrydex
-      ? (scrydexLink?.imageUrl ?? buildScrydexImageUrl(cardNumber, variant === "parallel" ? "foil" : variant))
-      : TCG_IMAGE_URL(productId);
-    const scrydexSlug = scrydexLink?.slug ?? slugByCardId.get(cardNumber) ?? null;
-
-    cards.push({
-      tcgplayerProductId: productId,
-      cardNumber,
-      name,
-      setCode: targetSetCode,
-      variant,
-      rarity: item.rarityName ?? null,
-      cardType: ca?.cardType ?? null,
-      color: ca?.color ?? null,
-      cost: ca?.cost != null ? Number(ca.cost) : null,
-      power: ca?.power != null ? Number(ca.power) : null,
-      counter: ca?.counter != null ? Number(ca.counter) : null,
-      life: ca?.life != null ? Number(ca.life) : null,
-      attribute: ca?.attribute ?? null,
-      subtypes: ca?.subtypes ?? null,
-      effect: cleanEffectText(ca?.description),
-      scrydexSlug,
-      imageUrl,
-      imagePath: null,
-    });
   }
 
-  // Sort: card number asc, then variant
-  const variantOrder: Record<string, number> = {
-    normal: 0, parallel: 1, altArt: 2, mangaAltArt: 3, specialAltArt: 4, boxTopper: 5, promo: 6,
-  };
   cards.sort((a, b) => {
-    const numA = a.cardNumber.split("-")[1] ?? "";
-    const numB = b.cardNumber.split("-")[1] ?? "";
-    const n = numA.localeCompare(numB, undefined, { numeric: true });
-    if (n !== 0) return n;
-    return (variantOrder[a.variant] ?? 9) - (variantOrder[b.variant] ?? 9);
+    const numberCompare = a.cardNumber.localeCompare(b.cardNumber, undefined, { numeric: true });
+    if (numberCompare !== 0) return numberCompare;
+    return (a.variant || "normal").localeCompare(b.variant || "normal");
   });
 
   return cards;
 }
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Image download
-// ──────────────────────────────────────────────────────────────────────────────
 
 type DownloadCardImageResult = {
   imagePath: string | null;
@@ -549,8 +359,8 @@ function candidateImageUrls(card: OnePieceCard): string[] {
   const candidates: string[] = [];
   if (card.imageUrl) candidates.push(card.imageUrl);
 
-  const tcgFallbackUrl = TCG_IMAGE_URL(card.tcgplayerProductId);
-  if (!candidates.includes(tcgFallbackUrl)) candidates.push(tcgFallbackUrl);
+  const fallback = buildScrydexImageUrl(card.cardNumber, "normal");
+  if (!candidates.includes(fallback)) candidates.push(fallback);
 
   return candidates;
 }
@@ -559,7 +369,7 @@ function findExistingImagePath(
   setImagesDir: string,
   setCode: string,
   cardNumber: string,
-  variant: OnePieceCardVariant,
+  variant: string,
   preferredExt: ".jpg" | ".png",
 ): string | null {
   const safeVariant = variant === "normal" ? "" : `-${variant}`;
@@ -568,25 +378,19 @@ function findExistingImagePath(
   for (const ext of candidateExts) {
     const filename = `${cardNumber}${safeVariant}${ext}`;
     const destPath = path.join(setImagesDir, filename);
-    if (fs.existsSync(destPath)) {
-      return `onepiece/cards/images/${setCode}/${filename}`;
-    }
+    if (fs.existsSync(destPath)) return `onepiece/cards/images/${setCode}/${filename}`;
   }
 
   return null;
 }
 
-async function downloadCardImage(
-  card: OnePieceCard,
-  setImagesDir: string,
-): Promise<DownloadCardImageResult> {
+async function downloadCardImage(card: OnePieceCard, setImagesDir: string): Promise<DownloadCardImageResult> {
   const urls = candidateImageUrls(card);
   if (urls.length === 0) return { imagePath: null, status: "missing" };
 
   const safeVariant = card.variant === "normal" ? "" : `-${card.variant}`;
   const preferredUrl = urls[0];
   const ext = (preferredUrl.includes(".jpg") ? ".jpg" : ".png") as ".jpg" | ".png";
-
   const existingPath = findExistingImagePath(setImagesDir, card.setCode, card.cardNumber, card.variant, ext);
   if (existingPath) return { imagePath: existingPath, status: "skipped" };
 
@@ -617,56 +421,30 @@ async function downloadCardImage(
   return { imagePath: null, status: "failed" };
 }
 
-function buildCardsForSet(
-  set: OnePieceSetEntry,
-  tcgItems: TcgCardItem[],
-  scrydexLinks: ScrydexCardLink[],
-): OnePieceCard[] {
-  return buildCards(
-    set.setCode,
-    Boolean(set.scrydexId),
-    tcgItems,
-    scrydexLinks,
-    set.setCode,
-  );
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Per-set processing
-// ──────────────────────────────────────────────────────────────────────────────
-
 async function scrapeSet(set: OnePieceSetEntry, s3: S3Client): Promise<void> {
   console.log(`\n── ${set.setCode}: ${set.name} ──`);
 
-  // ── TCGPlayer ──
-  console.log(`  [TCGPlayer] Fetching cards...`);
-  let tcgItems: TcgCardItem[] = [];
-  try {
-    tcgItems = await fetchTcgPlayerCards(set);
-    console.log(`  [TCGPlayer] ${tcgItems.length} card versions fetched`);
-  } catch (err) {
-    console.warn(`  [TCGPlayer] Failed: ${err instanceof Error ? err.message : String(err)}`);
+  console.log("  [Scrydex] Fetching expansion cards...");
+  const refs = await fetchScrydexExpansionCards(set);
+  console.log(`  [Scrydex] ${refs.length} unique cards found`);
+  if (refs.length === 0) return;
+
+  const metaByCardNumber = new Map<string, ScrydexCardMeta>();
+  let index = 0;
+  for (const ref of refs) {
+    index += 1;
+    const meta = await fetchScrydexCardMeta(ref);
+    if (meta) metaByCardNumber.set(ref.cardNumber, meta);
+    if (index % 25 === 0 || index === refs.length) {
+      console.log(`  [Scrydex] card pages ${index}/${refs.length}`);
+    }
+    await sleep(100);
   }
 
-  // ── Scrydex ──
-  let scrydexLinks: ScrydexCardLink[] = [];
-  if (set.scrydexId) {
-    console.log(`  [Scrydex] Fetching card links...`);
-    scrydexLinks = await fetchScrydexCards(set);
-    console.log(`  [Scrydex] ${scrydexLinks.length} card+variant links found`);
-    await sleep(300);
-  }
-
-  // ── Merge ──
-  const cards = buildCardsForSet(set, tcgItems, scrydexLinks);
+  const cards = buildCards(set, refs, metaByCardNumber);
   console.log(`  Merged: ${cards.length} card records`);
+  if (cards.length === 0) return;
 
-  if (cards.length === 0) {
-    console.warn(`  No cards found for ${set.setCode} — skipping`);
-    return;
-  }
-
-  // ── Download images ──
   if (!NO_IMAGES) {
     const setImagesDir = path.join(CARDS_IMAGES_DIR, set.setCode);
     fs.mkdirSync(setImagesDir, { recursive: true });
@@ -685,33 +463,18 @@ async function scrapeSet(set: OnePieceSetEntry, s3: S3Client): Promise<void> {
       }
       if (result.status === "downloaded") downloaded++;
       if (result.status === "skipped") skipped++;
-      await sleep(100);
+      await sleep(50);
     }
     console.log(`  [images] ${downloaded} downloaded, ${skipped} already existed`);
   }
 
-  // ── Write JSON ──
   if (!DRY_RUN) {
     const outFile = path.join(CARDS_DATA_DIR, `${set.setCode}.json`);
     fs.writeFileSync(outFile, JSON.stringify(cards, null, 2) + "\n");
     await uploadLocalFileToOnePieceR2(s3, outFile, `cards/data/${set.setCode}.json`);
     console.log(`  Wrote ${cards.length} cards → ${path.relative(REPO_ROOT, outFile)}`);
   }
-
-  // ── Stats ──
-  const byVariant = cards.reduce<Record<string, number>>((acc, c) => {
-    acc[c.variant] = (acc[c.variant] ?? 0) + 1;
-    return acc;
-  }, {});
-  console.log(`  Variants: ${JSON.stringify(byVariant)}`);
-
-  const noImage = cards.filter((c) => !c.imageUrl).length;
-  if (noImage > 0) console.warn(`  WARNING: ${noImage} cards have no image URL`);
 }
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Main
-// ──────────────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
   fs.mkdirSync(CARDS_DATA_DIR, { recursive: true });
@@ -719,16 +482,13 @@ async function main(): Promise<void> {
   const s3 = buildOnePieceS3Client();
 
   const sets = JSON.parse(fs.readFileSync(SETS_FILE, "utf8")) as OnePieceSetEntry[];
-
   const toProcess = ONLY_SETS
     ? sets.filter((s) => ONLY_SETS.includes(s.setCode))
-    : sets.filter((s) => s.tcgplayerId); // skip sets with no TCGPlayer ID
+    : sets.filter((s) => Boolean(s.scrydexId));
 
   if (ONLY_SETS) {
     const missing = ONLY_SETS.filter((c) => !sets.find((s) => s.setCode === c));
-    if (missing.length > 0) {
-      console.warn(`Unknown set codes: ${missing.join(", ")}`);
-    }
+    if (missing.length > 0) console.warn(`Unknown set codes: ${missing.join(", ")}`);
   }
 
   console.log(`Processing ${toProcess.length} sets${ONLY_SETS ? ` (${ONLY_SETS.join(", ")})` : ""}...`);

@@ -40,7 +40,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It shows its cute side by chasing its own tail until it gets dizzy."
+    "flavorText": "It shows its cute side by chasing its own tail until it gets dizzy.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22011",
@@ -83,7 +86,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A Pokémon with abundant curiosity. It shows an interest in everything, so it always zigzags."
+    "flavorText": "A Pokémon with abundant curiosity. It shows an interest in everything, so it always zigzags.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22010",
@@ -126,7 +132,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 2,
-    "flavorText": "The tip of its tail is filled with oil that is lighter than water, so it acts as a float."
+    "flavorText": "The tip of its tail is filled with oil that is lighter than water, so it acts as a float.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22009",
@@ -163,7 +172,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It eats just one berry a day. By enduring hunger, its spirit is tempered and made sharper."
+    "flavorText": "It eats just one berry a day. By enduring hunger, its spirit is tempered and made sharper.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22008",
@@ -200,7 +212,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It is inept at turning because of its four short legs. It can only charge and run in one direction."
+    "flavorText": "It is inept at turning because of its four short legs. It can only charge and run in one direction.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22007",
@@ -243,7 +258,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "It stores static electricity in its fur for discharging. It gives off sparks if a storm approaches."
+    "flavorText": "It stores static electricity in its fur for discharging. It gives off sparks if a storm approaches.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22006",
@@ -286,7 +304,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "It raises its tail to check its surroundings. The tail is sometimes struck by lightning in this pose."
+    "flavorText": "It raises its tail to check its surroundings. The tail is sometimes struck by lightning in this pose.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22005",
@@ -329,7 +350,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "To alert it, the fin on its head senses the flow of water. It has the strength to heft boulders."
+    "flavorText": "To alert it, the fin on its head senses the flow of water. It has the strength to heft boulders.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22004",
@@ -366,7 +390,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It appears in large numbers by seashores. At night, its central core flashes with a red light."
+    "flavorText": "It appears in large numbers by seashores. At night, its central core flashes with a red light.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22003",
@@ -403,7 +430,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A fire burns inside, so it feels very warm to hug. It launches fireballs of 1,800 degrees Fahrenheit."
+    "flavorText": "A fire burns inside, so it feels very warm to hug. It launches fireballs of 1,800 degrees Fahrenheit.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22002",
@@ -440,7 +470,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It searches about for clean water. If it does not drink water for too long, the leaf on its head wilts."
+    "flavorText": "It searches about for clean water. If it does not drink water for too long, the leaf on its head wilts.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22001",
@@ -477,6 +510,9 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Small hooks on the bottom of its feet catch on walls and ceilings. That is how it can hang from above."
+    "flavorText": "Small hooks on the bottom of its feet catch on walls and ceilings. That is how it can hang from above.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

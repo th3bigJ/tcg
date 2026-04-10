@@ -31,6 +31,8 @@ import {
 import { resolveExpansionConfigsForSet } from "../scrydexExpansionConfigsForSet";
 import { getSinglesCatalogSetKey } from "../singlesCatalogSetKey";
 import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "../scrydexPrefixCandidatesForSet";
+import { applyPricingVariantsToCardsInPlace } from "../applyPricingVariantsToCardJson";
+import { canonicalVariantSlugFromCompactLabel } from "../pricingVariantCompactAliases";
 
 export interface ScrapePricingOptions {
   dryRun?: boolean;
@@ -74,10 +76,8 @@ function scrydexZeroPricingPlaceholder(): ScrydexCardPricing {
 
 function slugFromLabel(label: string): string {
   const compact = label.toLowerCase().replace(/[\s-_]+/g, "");
-  if (compact === "default") return "default";
-  if (compact === "holofoil") return "holofoil";
-  if (compact === "reverseholofoil") return "reverseHolofoil";
-  if (compact === "staffstamp") return "staffStamp";
+  const canon = canonicalVariantSlugFromCompactLabel(compact);
+  if (canon !== null) return canon;
   const parts = label.split(/\s+/).filter(Boolean);
   if (!parts.length) return label.toLowerCase();
   return (
@@ -270,6 +270,22 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
 
   const count = Object.keys(pricingMap).length;
   const json = JSON.stringify(pricingMap);
+
+  const cardsPath = path.join(CARDS_DIR, `${setCode}.json`);
+  if (fs.existsSync(cardsPath)) {
+    try {
+      const cardRows = readJson<CardJsonEntry[]>(cardsPath);
+      const vChanged = applyPricingVariantsToCardsInPlace(cardRows, pricingMap);
+      if (vChanged && !dryRun) {
+        fs.writeFileSync(cardsPath, `${JSON.stringify(cardRows, null, 2)}\n`, "utf-8");
+        console.log(`  [${setCode}] updated pricingVariants in data/cards/${setCode}.json`);
+      } else if (vChanged && dryRun) {
+        console.log(`  [${setCode}] would update pricingVariants in data/cards/${setCode}.json (dry-run)`);
+      }
+    } catch (e) {
+      console.warn(`  [${setCode}] could not merge pricingVariants into card JSON: ${e instanceof Error ? e.message : e}`);
+    }
+  }
 
   if (dryRun) {
     console.log(`  [${setCode}] ${count} cards in pricing map (dry-run — skipping R2 upload)`);

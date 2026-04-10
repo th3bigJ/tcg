@@ -35,7 +35,12 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "tsubasaNakamura",
+      "yutaKomatsuda"
+    ]
   },
   {
     "masterCardId": "5165",
@@ -79,7 +84,10 @@
     "weakness": "Water ×2",
     "resistance": "Lightning -20",
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "5161",
@@ -117,7 +125,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "davidCohen",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "5157",
@@ -161,7 +173,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "5150",
@@ -199,7 +214,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "5145",
@@ -237,7 +255,10 @@
     "weakness": "Water ×2",
     "resistance": "Fighting -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "5140",
@@ -275,7 +296,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "michaelPramawat"
+    ]
   },
   {
     "masterCardId": "5135",
@@ -301,7 +326,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5130",
@@ -327,7 +356,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5125",
@@ -361,7 +394,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5120",
@@ -395,7 +432,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5115",
@@ -421,7 +462,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5110",
@@ -447,7 +492,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5105",
@@ -473,7 +522,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5098",
@@ -499,7 +552,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5092",
@@ -525,7 +582,14 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "cosmosHolofoil",
+      "mychaelBryan",
+      "normal",
+      "reverseHolofoil",
+      "stephenSilvestro"
+    ]
   },
   {
     "masterCardId": "5088",
@@ -551,7 +615,12 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "prereleaseStamp",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5083",
@@ -577,7 +646,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5077",
@@ -620,7 +693,11 @@
     "weakness": "Lightning +20",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "Its eyes can see 360 degrees without moving its head. It won't miss prey—even those behind it."
+    "flavorText": "Its eyes can see 360 degrees without moving its head. It won't miss prey—even those behind it.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5072",
@@ -663,7 +740,11 @@
     "weakness": "Fire +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "A Pokémon that appears to be a plant. It captures unwary prey by dousing them with a toxic powder."
+    "flavorText": "A Pokémon that appears to be a plant. It captures unwary prey by dousing them with a toxic powder.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5067",
@@ -700,7 +781,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is famous for its eagerness to fight and always nurses injuries from challenging larger foes."
+    "flavorText": "It is famous for its eagerness to fight and always nurses injuries from challenging larger foes.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5061",
@@ -743,7 +828,11 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its body is virtually composed of water. It shoots strange beams from its crystal-like eyes."
+    "flavorText": "Its body is virtually composed of water. It shoots strange beams from its crystal-like eyes.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5056",
@@ -786,7 +875,11 @@
     "weakness": "Lightning +10",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It has a gutsy spirit that makes it bravely take on tough foes. It flies in search of warm climates."
+    "flavorText": "It has a gutsy spirit that makes it bravely take on tough foes. It flies in search of warm climates.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5052",
@@ -829,7 +922,11 @@
     "weakness": "Metal +10",
     "resistance": "Lightning -20",
     "retreatCost": 2,
-    "flavorText": "It loves eating mushrooms that grow under dead grass. It also finds hot springs while foraging."
+    "flavorText": "It loves eating mushrooms that grow under dead grass. It also finds hot springs while foraging.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5047",
@@ -872,7 +969,11 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its body is virtually composed of water. It shoots strange beams from its crystal-like eyes."
+    "flavorText": "Its body is virtually composed of water. It shoots strange beams from its crystal-like eyes.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5042",
@@ -915,7 +1016,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It bounces constantly, using its tail like a spring. The shock of bouncing keeps its heart beating."
+    "flavorText": "It bounces constantly, using its tail like a spring. The shock of bouncing keeps its heart beating.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5037",
@@ -958,7 +1063,11 @@
     "weakness": "Fighting +10",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "It feeds on eggs stolen from nests. Its sharply hooked claws rip vulnerable spots on prey."
+    "flavorText": "It feeds on eggs stolen from nests. Its sharply hooked claws rip vulnerable spots on prey.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5032",
@@ -1001,7 +1110,11 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It can't stop itself from chasing moving things, and it runs in a circle, chasing its own tail."
+    "flavorText": "It can't stop itself from chasing moving things, and it runs in a circle, chasing its own tail.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5027",
@@ -1044,7 +1157,11 @@
     "weakness": "Fighting +10",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "All of its fur dazzles if danger is sensed. It flees while the foe is momentarily blinded."
+    "flavorText": "All of its fur dazzles if danger is sensed. It flees while the foe is momentarily blinded.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5022",
@@ -1087,7 +1204,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The aura that emanates from its body intensifies to alert others if it is afraid or sad."
+    "flavorText": "The aura that emanates from its body intensifies to alert others if it is afraid or sad.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5018",
@@ -1130,7 +1251,11 @@
     "weakness": "Fighting +10",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "A Pokémon with a persistent nature, it chases its chosen prey until the prey becomes exhausted."
+    "flavorText": "A Pokémon with a persistent nature, it chases its chosen prey until the prey becomes exhausted.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5013",
@@ -1173,7 +1298,11 @@
     "weakness": "Lightning +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The spiral pattern on its belly subtly undulates. Staring at it gradually causes drowsiness."
+    "flavorText": "The spiral pattern on its belly subtly undulates. Staring at it gradually causes drowsiness.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5008",
@@ -1216,7 +1345,11 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its skin is so thin, its internal organs are visible. It has trouble walking on its newly grown feet."
+    "flavorText": "Its skin is so thin, its internal organs are visible. It has trouble walking on its newly grown feet.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "5003",
@@ -1259,7 +1392,11 @@
     "weakness": "Fire +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It looks just like a pinecone. Its shell protects it from bird Pokémon that peck it by mistake."
+    "flavorText": "It looks just like a pinecone. Its shell protects it from bird Pokémon that peck it by mistake.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4998",
@@ -1302,7 +1439,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It often plants its root feet in the ground during the day and sows seeds as it walks about at night."
+    "flavorText": "It often plants its root feet in the ground during the day and sows seeds as it walks about at night.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4993",
@@ -1345,7 +1486,11 @@
     "weakness": "Fire +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It often plants its root feet in the ground during the day and sows seeds as it walks about at night."
+    "flavorText": "It often plants its root feet in the ground during the day and sows seeds as it walks about at night.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4988",
@@ -1388,7 +1533,11 @@
     "weakness": "Water +10",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Its humped back stores intensely hot magma. In rain, the magma cools, slowing its movement."
+    "flavorText": "Its humped back stores intensely hot magma. In rain, the magma cools, slowing its movement.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4983",
@@ -1431,7 +1580,11 @@
     "weakness": "Water +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its nose is a magnet. As a result, this Pokémon always keeps its face pointing north."
+    "flavorText": "Its nose is a magnet. As a result, this Pokémon always keeps its face pointing north.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4978",
@@ -1474,7 +1627,11 @@
     "weakness": "Fire +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It grows underground, sensing its surroundings using antennae instead of its virtually blind eyes."
+    "flavorText": "It grows underground, sensing its surroundings using antennae instead of its virtually blind eyes.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4973",
@@ -1517,7 +1674,11 @@
     "weakness": "Darkness +10",
     "resistance": "Colorless -20",
     "retreatCost": 1,
-    "flavorText": "It loves to sneak up on people late at night, then startle them with its shrieklike cry."
+    "flavorText": "It loves to sneak up on people late at night, then startle them with its shrieklike cry.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4968",
@@ -1560,7 +1721,12 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is nocturnal in nature. If it spots something shiny, its eyes glitter brightly."
+    "flavorText": "It is nocturnal in nature. If it spots something shiny, its eyes glitter brightly.",
+    "pricingVariants": [
+      "burgerKingExpansionStamp",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4963",
@@ -1603,7 +1769,11 @@
     "weakness": "Fire +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It lived on the seafloor 100 million years ago and was reanimated scientifically."
+    "flavorText": "It lived on the seafloor 100 million years ago and was reanimated scientifically.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4956",
@@ -1646,7 +1816,11 @@
     "weakness": "Fire +10",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It is so timid, it can't move if it isn't with a swarm of others. It conveys its feelings with scent."
+    "flavorText": "It is so timid, it can't move if it isn't with a swarm of others. It conveys its feelings with scent.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4952",
@@ -1689,7 +1863,11 @@
     "weakness": "Water +10",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "It conveys its feelings using different cries. It works in a pack to cleverly take down prey."
+    "flavorText": "It conveys its feelings using different cries. It works in a pack to cleverly take down prey.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4945",
@@ -1732,7 +1910,11 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It makes its nest in the shade of corals. If it senses danger, it spits murky ink and flees."
+    "flavorText": "It makes its nest in the shade of corals. If it senses danger, it spits murky ink and flees.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4938",
@@ -1775,7 +1957,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It fights while spinning like a top. The centrifugal force boosts its destructive power by ten."
+    "flavorText": "It fights while spinning like a top. The centrifugal force boosts its destructive power by ten.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4931",
@@ -1818,7 +2004,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its legs can stretch double. First-time foes are startled by its extensible reach."
+    "flavorText": "Its legs can stretch double. First-time foes are startled by its extensible reach.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4924",
@@ -1861,7 +2051,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The arm-twisting punches it throws pulverize even concrete. It rests after three minutes of fighting."
+    "flavorText": "The arm-twisting punches it throws pulverize even concrete. It rests after three minutes of fighting.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4916",
@@ -1904,7 +2098,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Almost all its body is its stomach. Its harsh digestive juices quickly dissolve anything it swallows."
+    "flavorText": "Almost all its body is its stomach. Its harsh digestive juices quickly dissolve anything it swallows.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4908",
@@ -1947,7 +2145,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "The honey it drools from its mouth smells so atrocious, it can curl noses more than a mile away."
+    "flavorText": "The honey it drools from its mouth smells so atrocious, it can curl noses more than a mile away.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4900",
@@ -1990,7 +2192,11 @@
     "weakness": "Fire +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The honey it drools from its mouth smells so atrocious, it can curl noses more than a mile away."
+    "flavorText": "The honey it drools from its mouth smells so atrocious, it can curl noses more than a mile away.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4892",
@@ -2033,7 +2239,11 @@
     "weakness": "Water +10",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It sails on the winds with its limbs extended to strike from the sky. It aims for the prey's face."
+    "flavorText": "It sails on the winds with its limbs extended to strike from the sky. It aims for the prey's face.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4884",
@@ -2076,7 +2286,11 @@
     "weakness": "Water +10",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It sails on the winds with its limbs extended to strike from the sky. It aims for the prey's face."
+    "flavorText": "It sails on the winds with its limbs extended to strike from the sky. It aims for the prey's face.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4876",
@@ -2119,7 +2333,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its six eggs converse using telepathy. They can quickly gather if they become separated."
+    "flavorText": "Its six eggs converse using telepathy. They can quickly gather if they become separated.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4868",
@@ -2162,7 +2380,11 @@
     "weakness": "Darkness +10",
     "resistance": "Colorless -20",
     "retreatCost": 1,
-    "flavorText": "A Pokémon formed by the spirits of people and Pokémon. It loves damp, humid seasons."
+    "flavorText": "A Pokémon formed by the spirits of people and Pokémon. It loves damp, humid seasons.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4860",
@@ -2205,7 +2427,13 @@
     "weakness": "Colorless +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is called the \"Mirage Pokémon\" because so few have seen it. Its shed skin has been found."
+    "flavorText": "It is called the \"Mirage Pokémon\" because so few have seen it. Its shed skin has been found.",
+    "pricingVariants": [
+      "leagueStamp",
+      "normal",
+      "reverseHolofoil",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "4852",
@@ -2248,7 +2476,11 @@
     "weakness": "Water +10",
     "resistance": "Lightning -20",
     "retreatCost": 1,
-    "flavorText": "When it thinks of its dead mother, it cries. Its crying makes the skull it wears rattle hollowly."
+    "flavorText": "When it thinks of its dead mother, it cries. Its crying makes the skull it wears rattle hollowly.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4844",
@@ -2291,7 +2523,11 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its hardy vitality enables it to adapt to any environment. Its pincers will never release prey."
+    "flavorText": "Its hardy vitality enables it to adapt to any environment. Its pincers will never release prey.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4836",
@@ -2334,7 +2570,11 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It discharges positive and negative electricity from its antenna tips to shock its foes."
+    "flavorText": "It discharges positive and negative electricity from its antenna tips to shock its foes.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4828",
@@ -2377,7 +2617,11 @@
     "weakness": "Grass +10",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It discharges positive and negative electricity from its antenna tips to shock its foes."
+    "flavorText": "It discharges positive and negative electricity from its antenna tips to shock its foes.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4820",
@@ -2420,7 +2664,11 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It slams foes by sharply uncoiling its rolled ears. It stings enough to make a grown-up cry in pain."
+    "flavorText": "It slams foes by sharply uncoiling its rolled ears. It stings enough to make a grown-up cry in pain.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4811",
@@ -2463,7 +2711,11 @@
     "weakness": "Fire +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It prefers hot and humid environments. It is quick at capturing prey with its vines."
+    "flavorText": "It prefers hot and humid environments. It is quick at capturing prey with its vines.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4802",
@@ -2506,7 +2758,11 @@
     "weakness": "Fire +10",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "It converses with others by using magnetic pulses. In a swarm, they move in perfect unison."
+    "flavorText": "It converses with others by using magnetic pulses. In a swarm, they move in perfect unison.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4795",
@@ -2543,7 +2799,11 @@
     "weakness": "Fire +10",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "It converses with others by using magnetic pulses. In a swarm, they move in perfect unison."
+    "flavorText": "It converses with others by using magnetic pulses. In a swarm, they move in perfect unison.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4786",
@@ -2580,7 +2840,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Shaped like ancient writing, it is a huge mystery whether language or Unown came first."
+    "flavorText": "Shaped like ancient writing, it is a huge mystery whether language or Unown came first.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4778",
@@ -2617,7 +2881,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first."
+    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4770",
@@ -2654,7 +2922,11 @@
     "weakness": "Psychic +30",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first."
+    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4762",
@@ -2691,7 +2963,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first."
+    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4754",
@@ -2728,7 +3004,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first."
+    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4746",
@@ -2765,7 +3045,12 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first."
+    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil",
+      "yukaFurusawa"
+    ]
   },
   {
     "masterCardId": "4738",
@@ -2802,7 +3087,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first."
+    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4730",
@@ -2845,7 +3134,11 @@
     "weakness": "Lightning +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "With 80 tentacles for ensnaring victims, it prevents escape until the prey is weakened by poison."
+    "flavorText": "With 80 tentacles for ensnaring victims, it prevents escape until the prey is weakened by poison.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4722",
@@ -2888,7 +3181,11 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Once it takes aim at its foe, it makes a headlong charge. It is famous for its violent nature."
+    "flavorText": "Once it takes aim at its foe, it makes a headlong charge. It is famous for its violent nature.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4700",
@@ -2925,7 +3222,11 @@
     "weakness": "Lightning +20",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It circles the sky in search of prey. When it spots one, it dive steeply to catch the prey."
+    "flavorText": "It circles the sky in search of prey. When it spots one, it dive steeply to catch the prey.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4692",
@@ -2968,7 +3269,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It swallows anything whole. It sweats toxic fluids from its follicles to douse foes."
+    "flavorText": "It swallows anything whole. It sweats toxic fluids from its follicles to douse foes.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4683",
@@ -3011,7 +3316,11 @@
     "weakness": "Lightning +20",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "At the center of its body is a red core, which sends mysterious radio signals into the night sky."
+    "flavorText": "At the center of its body is a red core, which sends mysterious radio signals into the night sky.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4675",
@@ -3054,7 +3363,10 @@
     "weakness": "Lightning +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its spines provide protection. Its fins and bones are prized as traditional medicine ingredients."
+    "flavorText": "Its spines provide protection. Its fins and bones are prized as traditional medicine ingredients.",
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4667",
@@ -3097,7 +3409,11 @@
     "weakness": "Metal +20",
     "resistance": "Lightning -20",
     "retreatCost": 3,
-    "flavorText": "Its shaggy coat makes it unable to see. It checks surroundings with its sensitive nose instead."
+    "flavorText": "Its shaggy coat makes it unable to see. It checks surroundings with its sensitive nose instead.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4660",
@@ -3140,7 +3456,11 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "A very haughty Pokémon. Among fans, the size of the jewel in its forehead is a topic of much talk."
+    "flavorText": "A very haughty Pokémon. Among fans, the size of the jewel in its forehead is a topic of much talk.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4652",
@@ -3177,7 +3497,11 @@
     "weakness": "Fire +20",
     "resistance": "Fighting -20",
     "retreatCost": null,
-    "flavorText": "Because it moves so quickly, it sometimes becomes unseeable. It congregates around tree sap."
+    "flavorText": "Because it moves so quickly, it sometimes becomes unseeable. It congregates around tree sap.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4643",
@@ -3220,7 +3544,11 @@
     "weakness": "Fighting +20",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "It chases down prey in a pack. It will never disobey the commands of a skilled Trainer."
+    "flavorText": "It chases down prey in a pack. It will never disobey the commands of a skilled Trainer.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4634",
@@ -3263,7 +3591,11 @@
     "weakness": "Fire +20",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "It is formed by two Beldum joining together. Its steel body won't be scratched if it collides with a jet."
+    "flavorText": "It is formed by two Beldum joining together. Its steel body won't be scratched if it collides with a jet.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4626",
@@ -3306,7 +3638,11 @@
     "weakness": "Fire +20",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "It is formed by two Beldum joining together. Its steel body won't be scratched if it collides with a jet."
+    "flavorText": "It is formed by two Beldum joining together. Its steel body won't be scratched if it collides with a jet.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4618",
@@ -3349,7 +3685,11 @@
     "weakness": "Water +20",
     "resistance": "Lightning -20",
     "retreatCost": 2,
-    "flavorText": "From its birth, this savage Pokémon constantly holds bones. It is skilled in using them as weapons."
+    "flavorText": "From its birth, this savage Pokémon constantly holds bones. It is skilled in using them as weapons.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4610",
@@ -3392,7 +3732,11 @@
     "weakness": "Fighting +20",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "Its claws loose electricity with enough amperage to cause fainting. They live in small groups."
+    "flavorText": "Its claws loose electricity with enough amperage to cause fainting. They live in small groups.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4602",
@@ -3435,7 +3779,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has the ability to sense the auras of all things. It understands human speech."
+    "flavorText": "It has the ability to sense the auras of all things. It understands human speech.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4593",
@@ -3478,7 +3826,11 @@
     "weakness": "Fire +20",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It uses starlight as energy. When more stars appear at night, the patterns on its back grow larger."
+    "flavorText": "It uses starlight as energy. When more stars appear at night, the patterns on its back grow larger.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4587",
@@ -3521,7 +3873,11 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Lanturn's light can shine up from great depths. It is nicknamed \"The Deep-Sea Star.\""
+    "flavorText": "Lanturn's light can shine up from great depths. It is nicknamed \"The Deep-Sea Star.\"",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4578",
@@ -3564,7 +3920,11 @@
     "weakness": "Grass +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Lanturn's light can shine up from great depths. It is nicknamed \"The Deep-Sea Star.\""
+    "flavorText": "Lanturn's light can shine up from great depths. It is nicknamed \"The Deep-Sea Star.\"",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4568",
@@ -3607,7 +3967,11 @@
     "weakness": "Water +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Long ago, people imagined its eerie howls to be the call of the grim reaper."
+    "flavorText": "Long ago, people imagined its eerie howls to be the call of the grim reaper.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4559",
@@ -3650,7 +4014,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It uses black pearls to amplify its psycho-power. It does an odd dance to gain control over foes."
+    "flavorText": "It uses black pearls to amplify its psycho-power. It does an odd dance to gain control over foes.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4551",
@@ -3693,7 +4061,11 @@
     "weakness": "Water +20",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It observes prey while hanging inverted from branches. When the chance presents itself, it swoops!"
+    "flavorText": "It observes prey while hanging inverted from branches. When the chance presents itself, it swoops!",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4544",
@@ -3736,7 +4108,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is called \"The Walking Jungle.\" If a head grows too big, it falls off and becomes an Exeggcute."
+    "flavorText": "It is called \"The Walking Jungle.\" If a head grows too big, it falls off and becomes an Exeggcute.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4535",
@@ -3779,7 +4155,11 @@
     "weakness": "Darkness +20",
     "resistance": "Colorless -20",
     "retreatCost": null,
-    "flavorText": "It's drowzy in daytime, but flies off in the evening in big groups. No one knows where they go."
+    "flavorText": "It's drowzy in daytime, but flies off in the evening in big groups. No one knows where they go.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4526",
@@ -3822,7 +4202,13 @@
     "weakness": "Colorless +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "If its body takes on an aura, the weather changes instantly. It is said to live in seas and lakes."
+    "flavorText": "If its body takes on an aura, the weather changes instantly. It is said to live in seas and lakes.",
+    "pricingVariants": [
+      "leagueStamp",
+      "normal",
+      "reverseHolofoil",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "4517",
@@ -3859,7 +4245,11 @@
     "weakness": "Water +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its appearance changes with the weather. Recently, its molecules were found to be just like water."
+    "flavorText": "Its appearance changes with the weather. Recently, its molecules were found to be just like water.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4508",
@@ -3896,7 +4286,11 @@
     "weakness": "Metal +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its appearance changes with the weather. Recently, its molecules were found to be just like water."
+    "flavorText": "Its appearance changes with the weather. Recently, its molecules were found to be just like water.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4498",
@@ -3933,7 +4327,11 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its appearance changes with the weather. Recently, its molecules were found to be just like water."
+    "flavorText": "Its appearance changes with the weather. Recently, its molecules were found to be just like water.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4491",
@@ -3970,7 +4368,11 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its appearance changes with the weather. Recently, its molecules were found to be just like water."
+    "flavorText": "Its appearance changes with the weather. Recently, its molecules were found to be just like water.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4483",
@@ -4013,7 +4415,11 @@
     "weakness": "Water +20",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It has volcanoes on its back. If magma builds up in its body, it shudders, then erupts violently."
+    "flavorText": "It has volcanoes on its back. If magma builds up in its body, it shudders, then erupts violently.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4472",
@@ -4056,7 +4462,11 @@
     "weakness": "Grass +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A Pokémon ancestor that was reanimated from a fossil. It lived in the sea and hunted with claws."
+    "flavorText": "A Pokémon ancestor that was reanimated from a fossil. It lived in the sea and hunted with claws.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4464",
@@ -4093,7 +4503,11 @@
     "weakness": "Psychic +30",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Its petals are the largest in the world. As it walks, it scatters extremely allergenic pollen."
+    "flavorText": "Its petals are the largest in the world. As it walks, it scatters extremely allergenic pollen.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4453",
@@ -4136,7 +4550,11 @@
     "weakness": "Fire +30",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It pools in its mouth a fluid with a honeylike scent, which is really an acid that dissolves anything."
+    "flavorText": "It pools in its mouth a fluid with a honeylike scent, which is really an acid that dissolves anything.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4444",
@@ -4173,7 +4591,19 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Known as \"The Being of Knowledge.\" It is said that it can wipe out the memory of those who see its eyes."
+    "flavorText": "Known as \"The Being of Knowledge.\" It is said that it can wipe out the memory of those who see its eyes.",
+    "pricingVariants": [
+      "davidCohen",
+      "jasonMartinez",
+      "leagueStamp",
+      "michaelPramawat",
+      "mychaelBryan",
+      "normal",
+      "reverseHolofoil",
+      "tsubasaNakamura",
+      "yukaFurusawa",
+      "yutaKomatsuda"
+    ]
   },
   {
     "masterCardId": "4435",
@@ -4210,7 +4640,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first."
+    "flavorText": "Shaped like an ancient writing, it is a huge mystery whether language or Unown came first.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4426",
@@ -4247,7 +4681,11 @@
     "weakness": "Water +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It burns coal inside its shell for energy. It blows out black soot if it is endangered."
+    "flavorText": "It burns coal inside its shell for energy. It blows out black soot if it is endangered.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4416",
@@ -4284,7 +4722,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "A discarded bug shell that came to life. Peering into the crack on its back is said to steal one's spirit."
+    "flavorText": "A discarded bug shell that came to life. Peering into the crack on its back is said to steal one's spirit.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4408",
@@ -4321,7 +4763,11 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 4,
-    "flavorText": "Tempered by pressure underground over tens of thousands of years, its body cannot be scratched."
+    "flavorText": "Tempered by pressure underground over tens of thousands of years, its body cannot be scratched.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4399",
@@ -4358,7 +4804,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Its entire body is made of rock. If any part chips off in battle, it attaches rocks to repair itself."
+    "flavorText": "Its entire body is made of rock. If any part chips off in battle, it attaches rocks to repair itself.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4390",
@@ -4395,7 +4845,12 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "There is an enduring legend that states this Pokémon towed continents with ropes."
+    "flavorText": "There is an enduring legend that states this Pokémon towed continents with ropes.",
+    "pricingVariants": [
+      "holofoil",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4380",
@@ -4432,7 +4887,11 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Its body is made of ice from the ice age. It controls frigid air of -328 degrees Fahrenheit."
+    "flavorText": "Its body is made of ice from the ice age. It controls frigid air of -328 degrees Fahrenheit.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4369",
@@ -4475,7 +4934,11 @@
     "weakness": "Lightning +30",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "With extremely tough muscles, it can keep swimming in the Pacific Ocean without resting."
+    "flavorText": "With extremely tough muscles, it can keep swimming in the Pacific Ocean without resting.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4360",
@@ -4512,7 +4975,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Known as \"The Being of Emotion.\" It taught humans the nobility of sorrow, pain, and joy."
+    "flavorText": "Known as \"The Being of Emotion.\" It taught humans the nobility of sorrow, pain, and joy.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4349",
@@ -4555,7 +5022,11 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "An extremely cautious Pokémon. It cloaks its body with its fluffy ear fur when it senses danger."
+    "flavorText": "An extremely cautious Pokémon. It cloaks its body with its fluffy ear fur when it senses danger.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4340",
@@ -4598,7 +5069,11 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It is said to have widened the seas by causing downpours. It had been asleep in a marine trench."
+    "flavorText": "It is said to have widened the seas by causing downpours. It had been asleep in a marine trench.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4332",
@@ -4641,7 +5116,11 @@
     "weakness": "Fire +20",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "It is said to have the ability to grant any wish for just one week every thousand years."
+    "flavorText": "It is said to have the ability to grant any wish for just one week every thousand years.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4323",
@@ -4678,7 +5157,14 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It dwells in volcanic caves. It digs in with its cross-shaped feet to crawl on ceilings and walls."
+    "flavorText": "It dwells in volcanic caves. It digs in with its cross-shaped feet to crawl on ceilings and walls.",
+    "pricingVariants": [
+      "holofoil",
+      "leagueStamp",
+      "normal",
+      "reverseHolofoil",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "4313",
@@ -4721,7 +5207,11 @@
     "weakness": "Grass ×2",
     "resistance": "Lightning -20",
     "retreatCost": 3,
-    "flavorText": "It had been asleep in underground magma ever since it fiercely fought Kyogre long ago."
+    "flavorText": "It had been asleep in underground magma ever since it fiercely fought Kyogre long ago.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4305",
@@ -4758,7 +5248,11 @@
     "weakness": "Fire +20",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "It is encased in a steel shell. Its peering eyes are all that can be seen of its mysterious innards."
+    "flavorText": "It is encased in a steel shell. Its peering eyes are all that can be seen of its mysterious innards.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4297",
@@ -4787,7 +5281,12 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has the ability to reconstitute its entire cellular structure to transform into whatever it sees."
+    "flavorText": "It has the ability to reconstitute its entire cellular structure to transform into whatever it sees.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil",
+      "tsubasaNakamura"
+    ]
   },
   {
     "masterCardId": "4288",
@@ -4824,7 +5323,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "An alien virus that fell to earth on a meteor underwent a DNA mutation to become this Pokémon."
+    "flavorText": "An alien virus that fell to earth on a meteor underwent a DNA mutation to become this Pokémon.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4279",
@@ -4861,7 +5364,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "An alien virus that fell to earth on a meteor underwent a DNA mutation to become this Pokémon."
+    "flavorText": "An alien virus that fell to earth on a meteor underwent a DNA mutation to become this Pokémon.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4270",
@@ -4898,7 +5405,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "An alien virus that fell to earth on a meteor underwent a DNA mutation to become this Pokémon."
+    "flavorText": "An alien virus that fell to earth on a meteor underwent a DNA mutation to become this Pokémon.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4261",
@@ -4935,7 +5446,11 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is highly popular among female Trainers for its sublime fur. It does not keep a nest."
+    "flavorText": "It is highly popular among female Trainers for its sublime fur. It does not keep a nest.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4252",
@@ -4978,7 +5493,11 @@
     "weakness": "Lightning +20",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "It is a ruffian that uses its pincers to pick up and toss out other Pokémon from its pond."
+    "flavorText": "It is a ruffian that uses its pincers to pick up and toss out other Pokémon from its pond.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4243",
@@ -5021,7 +5540,11 @@
     "weakness": "Fire +30",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It lives in the shallows of warm seas. When the tide goes out, it digs up prey from beaches."
+    "flavorText": "It lives in the shallows of warm seas. When the tide goes out, it digs up prey from beaches.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4234",
@@ -5064,7 +5587,11 @@
     "weakness": "Fire +30",
     "resistance": "Water -20",
     "retreatCost": 1,
-    "flavorText": "When the heavy rainfall season ends, it is drawn out by warm sunlight to dance in the open."
+    "flavorText": "When the heavy rainfall season ends, it is drawn out by warm sunlight to dance in the open.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4226",
@@ -5101,7 +5628,18 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Known as \"The Being of Willpower.\" It sleeps at the bottom of a lake to keep the world in balance."
+    "flavorText": "Known as \"The Being of Willpower.\" It sleeps at the bottom of a lake to keep the world in balance.",
+    "pricingVariants": [
+      "davidCohen",
+      "leagueStamp",
+      "michaelPramawat",
+      "mychaelBryan",
+      "normal",
+      "reverseHolofoil",
+      "stephenSilvestro",
+      "tsubasaNakamura",
+      "yutaKomatsuda"
+    ]
   },
   {
     "masterCardId": "4217",
@@ -5138,7 +5676,11 @@
     "weakness": "Grass +30",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It went ashore after evolving. Its entire body is clad in a sturdy armor."
+    "flavorText": "It went ashore after evolving. Its entire body is clad in a sturdy armor.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4208",
@@ -5181,7 +5723,12 @@
     "weakness": "Lightning +20",
     "resistance": "Fighting -20",
     "retreatCost": null,
-    "flavorText": "By churning its wings, it creates shock waves that inflict critical internal injuries to foes."
+    "flavorText": "By churning its wings, it creates shock waves that inflict critical internal injuries to foes.",
+    "pricingVariants": [
+      "holofoil",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4198",
@@ -5218,7 +5765,11 @@
     "weakness": null,
     "resistance": "Colorless -20",
     "retreatCost": 2,
-    "flavorText": "A Pokémon that was formed by 108 spirits. It is bound to a fissure in an odd keystone."
+    "flavorText": "A Pokémon that was formed by 108 spirits. It is bound to a fissure in an odd keystone.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4188",
@@ -5255,7 +5806,11 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "There is an enduring legend that states this Pokémon towed continents with ropes."
+    "flavorText": "There is an enduring legend that states this Pokémon towed continents with ropes.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4179",
@@ -5292,7 +5847,11 @@
     "weakness": "Colorless ×2",
     "resistance": "Fighting -20",
     "retreatCost": 3,
-    "flavorText": "It lives in the ozone layer far above the clouds and cannot be seen from the ground."
+    "flavorText": "It lives in the ozone layer far above the clouds and cannot be seen from the ground.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4171",
@@ -5329,7 +5888,11 @@
     "weakness": "Water +20",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It exudes strong magnetism from all over. It controls three small units call Mini-Noses."
+    "flavorText": "It exudes strong magnetism from all over. It controls three small units call Mini-Noses.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4162",
@@ -5366,7 +5929,11 @@
     "weakness": "Grass +30",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It gathers groups of others as their leader. Its cries make Poliwag obey."
+    "flavorText": "It gathers groups of others as their leader. Its cries make Poliwag obey.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4153",
@@ -5409,7 +5976,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "A Pokémon created by recombining Mew's genes. It's said to have the most savage heart among Pokémon."
+    "flavorText": "A Pokémon created by recombining Mew's genes. It's said to have the most savage heart among Pokémon.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4144",
@@ -5446,7 +6017,12 @@
     "weakness": "Fire +30",
     "resistance": "Psychic -20",
     "retreatCost": 3,
-    "flavorText": "Metang combined to form it. With four brains, it has the intelligence of a supercomputer."
+    "flavorText": "Metang combined to form it. With four brains, it has the intelligence of a supercomputer.",
+    "pricingVariants": [
+      "holofoil",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4134",
@@ -5489,7 +6065,12 @@
     "weakness": "Metal +40",
     "resistance": "Lightning -20",
     "retreatCost": 4,
-    "flavorText": "Its impressive tusks are made of ice. The population thinned when it turned warm after the ice age."
+    "flavorText": "Its impressive tusks are made of ice. The population thinned when it turned warm after the ice age.",
+    "pricingVariants": [
+      "holofoil",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4125",
@@ -5532,7 +6113,11 @@
     "weakness": "Fighting +30",
     "resistance": "Metal -20",
     "retreatCost": null,
-    "flavorText": "It has eyes that can see through anything. It spots and captures prey hiding behind objects."
+    "flavorText": "It has eyes that can see through anything. It spots and captures prey hiding behind objects.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4117",
@@ -5575,7 +6160,11 @@
     "weakness": "Lightning +30",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It lives in caves on the seafloor and creates giant whirlpools every time it moves."
+    "flavorText": "It lives in caves on the seafloor and creates giant whirlpools every time it moves.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4107",
@@ -5612,7 +6201,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "It dwells in volcanic caves. It digs in with its cross-shaped feet to crawl on ceilings and walls."
+    "flavorText": "It dwells in volcanic caves. It digs in with its cross-shaped feet to crawl on ceilings and walls.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4096",
@@ -5655,7 +6248,12 @@
     "weakness": "Water +20",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It observes prey while hanging inverted from branches. When the chance presents itself, it swoops!"
+    "flavorText": "It observes prey while hanging inverted from branches. When the chance presents itself, it swoops!",
+    "pricingVariants": [
+      "holofoil",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4089",
@@ -5698,7 +6296,12 @@
     "weakness": "Darkness ×2",
     "resistance": "Colorless -20",
     "retreatCost": 3,
-    "flavorText": "A Pokémon that is said to live in a world on the reverse side of ours. It appears in an ancient cemetery."
+    "flavorText": "A Pokémon that is said to live in a world on the reverse side of ours. It appears in an ancient cemetery.",
+    "pricingVariants": [
+      "burgerKingExpansionStamp",
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4081",
@@ -5741,7 +6344,11 @@
     "weakness": "Metal +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It freezes foes with an icy breath nearly -60 degrees F. What seems to be its body is actually hollow."
+    "flavorText": "It freezes foes with an icy breath nearly -60 degrees F. What seems to be its body is actually hollow.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4072",
@@ -5784,7 +6391,12 @@
     "weakness": "Colorless +30",
     "resistance": "Fighting -20",
     "retreatCost": 3,
-    "flavorText": "It is said to make its home somewhere in the sea. It guides crews of shipwrecks to shore."
+    "flavorText": "It is said to make its home somewhere in the sea. It guides crews of shipwrecks to shore.",
+    "pricingVariants": [
+      "holofoil",
+      "nationalChampionshipsStamp",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "4063",
@@ -5821,6 +6433,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "An alien virus that fell to earth on a meteor underwent a DNA mutation to become this Pokémon."
+    "flavorText": "An alien virus that fell to earth on a meteor underwent a DNA mutation to become this Pokémon.",
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   }
 ]

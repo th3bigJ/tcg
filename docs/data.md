@@ -4,8 +4,16 @@ npm run r2:download-static-data
 # upload data to device
 npm run r2:upload-static-data
 
+# download one piece data to device
+npm run r2:download-onepiece
+
+# upload one piece data to device
+npm run r2:upload-onepiece
 
 
 
 
 
+npm run r2:upload-onepiece
+
+npm run r2:download-onepiece

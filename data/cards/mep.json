@@ -34,7 +34,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "pokemonCenterStamp"
+    ]
   },
   {
     "masterCardId": "21975",
@@ -71,7 +75,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "21976",
@@ -114,7 +121,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "21849",
@@ -151,7 +161,10 @@
     "weakness": "Fire ×2",
     "resistance": "Grass -30",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "21848",
@@ -188,7 +201,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "21847",
@@ -225,7 +241,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "21846",
@@ -268,7 +287,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "21845",
@@ -305,7 +327,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21844",
@@ -342,7 +367,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21843",
@@ -379,7 +407,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21842",
@@ -416,7 +447,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21841",
@@ -453,7 +487,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21840",
@@ -490,7 +527,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21839",
@@ -527,7 +567,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21838",
@@ -564,7 +607,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21837",
@@ -601,7 +647,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21836",
@@ -644,7 +693,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "21835",
@@ -687,7 +739,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "21834",
@@ -730,7 +785,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "When the interior part of its tail spins like a motor, Zekrom can generate many bolts of lightning to blast its surrounds."
+    "flavorText": "When the interior part of its tail spins like a motor, Zekrom can generate many bolts of lightning to blast its surrounds.",
+    "pricingVariants": [
+      "holofoil",
+      "pokemonCenterStamp"
+    ]
   },
   {
     "masterCardId": "21833",
@@ -767,7 +826,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21832",
@@ -804,7 +866,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21831",
@@ -830,7 +895,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "asiachampionshipstamp",
+      "leagueStamp"
+    ]
   },
   {
     "masterCardId": "21830",
@@ -865,7 +934,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It likes to lurk in the dark and tap shoulders with a gaseous hand. Its touch causes endless shuddering."
+    "flavorText": "It likes to lurk in the dark and tap shoulders with a gaseous hand. Its touch causes endless shuddering.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21829",
@@ -906,7 +978,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "Its melodies are sung with a special vocalization method that can control the feelings of those who hear it."
+    "flavorText": "Its melodies are sung with a special vocalization method that can control the feelings of those who hear it.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21828",
@@ -942,7 +1017,11 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "jumbo"
+    ]
   },
   {
     "masterCardId": "21827",
@@ -978,7 +1057,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21826",
@@ -1016,7 +1098,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21825",
@@ -1057,7 +1142,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Burnt charcoal came to life and became a Pokémon. Possessing a fiery fighting spirit, Charcadet will battle even tough opponents."
+    "flavorText": "Burnt charcoal came to life and became a Pokémon. Possessing a fiery fighting spirit, Charcadet will battle even tough opponents.",
+    "pricingVariants": [
+      "holofoil",
+      "pokemonCenterStamp"
+    ]
   },
   {
     "masterCardId": "21824",
@@ -1098,7 +1187,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Evolution made it even more devious. It communicates by clawing signs in boulders."
+    "flavorText": "Evolution made it even more devious. It communicates by clawing signs in boulders.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21823",
@@ -1139,7 +1231,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "This cunning Pokémon hides under the cover of darkness, waiting to attack its prey."
+    "flavorText": "This cunning Pokémon hides under the cover of darkness, waiting to attack its prey.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21822",
@@ -1180,7 +1275,10 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Like the wind, it can slip through any gap, no matter how small. It leaves balls of white fluff behind."
+    "flavorText": "Like the wind, it can slip through any gap, no matter how small. It leaves balls of white fluff behind.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21821",
@@ -1215,7 +1313,10 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Pillows and beds stuffed with cotton exhaled by Cottonee are soft and puffy, light and airy— altogether top quality."
+    "flavorText": "Pillows and beds stuffed with cotton exhaled by Cottonee are soft and puffy, light and airy— altogether top quality.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21820",
@@ -1250,7 +1351,11 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "As it scatters toxic sweat and emits electricity, a melody that sounds like it came from a guitar reverberates through the surrounding area."
+    "flavorText": "As it scatters toxic sweat and emits electricity, a melody that sounds like it came from a guitar reverberates through the surrounding area.",
+    "pricingVariants": [
+      "holofoil",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "21819",
@@ -1285,7 +1390,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Known as the Desert Spirit, this Pokémon hides in the sandstorms it causes by beating its wings."
+    "flavorText": "Known as the Desert Spirit, this Pokémon hides in the sandstorms it causes by beating its wings.",
+    "pricingVariants": [
+      "holofoil",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "21818",
@@ -1320,7 +1429,11 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Able to cut down anything with a single strike, it became known as the Fairy King's Sword, and it inspired awe in friend and foe alike."
+    "flavorText": "Able to cut down anything with a single strike, it became known as the Fairy King's Sword, and it inspired awe in friend and foe alike.",
+    "pricingVariants": [
+      "holofoil",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "21817",
@@ -1355,7 +1468,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "The fiery blades on its arms burn fiercely with the lingering resentment of a sword wielder who fell before accomplishing their goal."
+    "flavorText": "The fiery blades on its arms burn fiercely with the lingering resentment of a sword wielder who fell before accomplishing their goal.",
+    "pricingVariants": [
+      "holofoil",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "21816",
@@ -1391,7 +1508,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "jumbo"
+    ]
   },
   {
     "masterCardId": "21815",
@@ -1435,7 +1556,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "jumbo"
+    ]
   },
   {
     "masterCardId": "21814",
@@ -1477,7 +1602,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "jumbo"
+    ]
   },
   {
     "masterCardId": "21813",
@@ -1512,7 +1641,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "They communicate with one another using their auras. They are able to run all through the night."
+    "flavorText": "They communicate with one another using their auras. They are able to run all through the night.",
+    "pricingVariants": [
+      "holofoil",
+      "pokemonCenterStamp"
+    ]
   },
   {
     "masterCardId": "21812",
@@ -1547,7 +1680,11 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "Alakazam wields potent psychic powers. It's said that this Pokémon used these powers to create the spoons it holds."
+    "flavorText": "Alakazam wields potent psychic powers. It's said that this Pokémon used these powers to create the spoons it holds.",
+    "pricingVariants": [
+      "holofoil",
+      "pokemonCenterStamp"
+    ]
   },
   {
     "masterCardId": "21811",
@@ -1582,7 +1719,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When it swims at full speed using its long, webbed limbs, its forehead somehow begins to glow."
+    "flavorText": "When it swims at full speed using its long, webbed limbs, its forehead somehow begins to glow.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21810",
@@ -1617,7 +1757,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is constantly wracked by a headache. When the headache turns intense, it begins using mysterious powers."
+    "flavorText": "It is constantly wracked by a headache. When the headache turns intense, it begins using mysterious powers.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21809",
@@ -1658,7 +1801,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "It can generate and release gas within its body. That's how it can control the altitude of its drift."
+    "flavorText": "It can generate and release gas within its body. That's how it can control the altitude of its drift.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21808",
@@ -1693,7 +1839,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "It is whispered that any child who mistakes Drifloon for a balloon and holds on to it could wind up missing."
+    "flavorText": "It is whispered that any child who mistakes Drifloon for a balloon and holds on to it could wind up missing.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21807",
@@ -1728,7 +1877,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It was discovered at the site of a meteor strike 40 years ago. Its stare can lull its foes to sleep."
+    "flavorText": "It was discovered at the site of a meteor strike 40 years ago. Its stare can lull its foes to sleep.",
+    "pricingVariants": [
+      "holofoil",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "21806",
@@ -1763,7 +1916,11 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "Alakazam wields potent psychic powers. It's said that this Pokémon used these powers to create the spoons it holds."
+    "flavorText": "Alakazam wields potent psychic powers. It's said that this Pokémon used these powers to create the spoons it holds.",
+    "pricingVariants": [
+      "holofoil",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "21805",
@@ -1804,7 +1961,11 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It uses special lenses in its eyes to sense things about its opponents—like their body heat—then attacks once it identifies a weak spot."
+    "flavorText": "It uses special lenses in its eyes to sense things about its opponents—like their body heat—then attacks once it identifies a weak spot.",
+    "pricingVariants": [
+      "holofoil",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "21804",
@@ -1839,6 +2000,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Anyone who stands beside it becomes refreshed, just as if they were soaking in the soothing atmosphere of a forest."
+    "flavorText": "Anyone who stands beside it becomes refreshed, just as if they were soaking in the soothing atmosphere of a forest.",
+    "pricingVariants": [
+      "holofoil",
+      "staffStamp"
+    ]
   }
 ]

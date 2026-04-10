@@ -40,7 +40,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Trimming its fluffy fur not only makes it more elegant but also increases the swiftness of its movements."
+    "flavorText": "Trimming its fluffy fur not only makes it more elegant but also increases the swiftness of its movements.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22023",
@@ -77,7 +80,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "These friendly Pokémon send signals to one another with beautiful chirps and tail-feather movements."
+    "flavorText": "These friendly Pokémon send signals to one another with beautiful chirps and tail-feather movements.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22022",
@@ -114,7 +120,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "They use their large ears to dig burrows. They will dig the whole night through."
+    "flavorText": "They use their large ears to dig burrows. They will dig the whole night through.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22021",
@@ -151,7 +160,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 1,
-    "flavorText": "To entangle its opponents in battle, it extrudes white threads as sweet and sticky as cotton candy."
+    "flavorText": "To entangle its opponents in battle, it extrudes white threads as sweet and sticky as cotton candy.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22020",
@@ -188,7 +200,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 2,
-    "flavorText": "It has an active, playful nature. Many women like to frolic with it because of its affectionate ways."
+    "flavorText": "It has an active, playful nature. Many women like to frolic with it because of its affectionate ways.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22019",
@@ -225,7 +240,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "Apparently this Pokémon is born when a departed spirit inhabits a sword. It attaches itself to people and drinks their life force."
+    "flavorText": "Apparently this Pokémon is born when a departed spirit inhabits a sword. It attaches itself to people and drinks their life force.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22018",
@@ -262,7 +280,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "Opponents who stare at the flashing of the light-emitting spots on its body become dazed and lose their will to fight."
+    "flavorText": "Opponents who stare at the flashing of the light-emitting spots on its body become dazed and lose their will to fight.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22017",
@@ -305,7 +326,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "It raises its tail to check its surroundings. The tail is sometimes struck by lightning in this pose."
+    "flavorText": "It raises its tail to check its surroundings. The tail is sometimes struck by lightning in this pose.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22016",
@@ -348,7 +372,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It secretes flexible bubbles from its chest and back. The bubbles reduce the damage it would otherwise take when attacked."
+    "flavorText": "It secretes flexible bubbles from its chest and back. The bubbles reduce the damage it would otherwise take when attacked.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22015",
@@ -391,7 +418,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Eating a twig fills it with energy, and its roomy ears give vent to air hotter than 390 degrees Fahrenheit."
+    "flavorText": "Eating a twig fills it with energy, and its roomy ears give vent to air hotter than 390 degrees Fahrenheit.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22014",
@@ -434,7 +464,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The quills on its head are usually soft. When it flexes them, the points become so hard and sharp that they can pierce rock."
+    "flavorText": "The quills on its head are usually soft. When it flexes them, the points become so hard and sharp that they can pierce rock.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22013",
@@ -471,6 +504,9 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Often found in forests and grasslands. It has a sharp, toxic barb of around two inches on top of its head."
+    "flavorText": "Often found in forests and grasslands. It has a sharp, toxic barb of around two inches on top of its head.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

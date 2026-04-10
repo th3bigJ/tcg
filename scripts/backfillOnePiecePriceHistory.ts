@@ -65,18 +65,7 @@ async function loadRawHistoryForCardPath(
 }
 
 function scrydexQueryVariant(card: OnePieceCardEntry): string {
-  switch (card.variant) {
-    case "parallel":
-      return "foil";
-    case "altArt":
-      return "altArt";
-    case "mangaAltArt":
-      return "mangaAltArt";
-    case "specialAltArt":
-      return "specialAltArt";
-    default:
-      return "normal";
-  }
+  return card.variant?.trim() || "normal";
 }
 
 async function backfillSet(set: OnePieceSetEntry, dryRunMode: boolean): Promise<void> {

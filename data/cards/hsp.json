@@ -40,7 +40,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "If it starts kicking repeatedly, both legs will stretch even longer to strike a fleeing foe."
+    "flavorText": "If it starts kicking repeatedly, both legs will stretch even longer to strike a fleeing foe.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6895",
@@ -83,7 +86,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its punches slice the air. However, it seems to need a short break after fighting for three minutes."
+    "flavorText": "Its punches slice the air. However, it seems to need a short break after fighting for three minutes.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6890",
@@ -120,7 +126,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "This upgraded version of Porygon is designed for space exploration. It can't fly, though."
+    "flavorText": "This upgraded version of Porygon is designed for space exploration. It can't fly, though.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6885",
@@ -163,7 +172,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is a manmade Pokémon. Since it doesn't breathe, people are eager to try it in any environment.."
+    "flavorText": "It is a manmade Pokémon. Since it doesn't breathe, people are eager to try it in any environment..",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6880",
@@ -200,7 +212,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Said to be the embodiment of north winds, it can instantly purify filthy, murky water."
+    "flavorText": "Said to be the embodiment of north winds, it can instantly purify filthy, murky water.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6875",
@@ -237,7 +252,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Volcanoes erupt when it barks. Unable to contain its sheer power, it races headlong around the land."
+    "flavorText": "Volcanoes erupt when it barks. Unable to contain its sheer power, it races headlong around the land.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6870",
@@ -274,7 +292,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "The rain clouds it carries let it fire thunderbolts at will. They say that it descended with lightning."
+    "flavorText": "The rain clouds it carries let it fire thunderbolts at will. They say that it descended with lightning.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22542",
@@ -305,7 +326,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6863",
@@ -348,7 +372,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "Exposure to electricity from Minun and Plusle promotes blood circulation and relaxes muscles."
+    "flavorText": "Exposure to electricity from Minun and Plusle promotes blood circulation and relaxes muscles.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6858",
@@ -391,7 +418,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "It absorbs electricity from telephone poles. It shorts out its body to create crackling noises."
+    "flavorText": "It absorbs electricity from telephone poles. It shorts out its body to create crackling noises.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6853",
@@ -428,7 +458,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It stores berries inside its shell. To avoid attacks, it hides beneath rocks and remains completely still."
+    "flavorText": "It stores berries inside its shell. To avoid attacks, it hides beneath rocks and remains completely still.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6849",
@@ -471,7 +504,10 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It ferries people across the sea on its back. It may sing an enchanting cry if it is in a good mood."
+    "flavorText": "It ferries people across the sea on its back. It may sing an enchanting cry if it is in a good mood.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6844",
@@ -508,7 +544,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "Its lips are the most sensitive part of its body. It always uses its lips first to examine things."
+    "flavorText": "Its lips are the most sensitive part of its body. It always uses its lips first to examine things.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6837",
@@ -545,7 +584,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "Because of its unusual, star-like silhouette, people believe that it came here on a meteor."
+    "flavorText": "Because of its unusual, star-like silhouette, people believe that it came here on a meteor.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6830",
@@ -582,7 +624,11 @@
     "weakness": "Colorless ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It understands human speech and is highly intelligent. It is a tender Pokémon that dislikes fighting."
+    "flavorText": "It understands human speech and is highly intelligent. It is a tender Pokémon that dislikes fighting.",
+    "pricingVariants": [
+      "crackedIceHolofoil",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6823",
@@ -625,7 +671,11 @@
     "weakness": "Colorless ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It communicates using telepathy. Its body is covered in down that refracts light to make it invisible."
+    "flavorText": "It communicates using telepathy. Its body is covered in down that refracts light to make it invisible.",
+    "pricingVariants": [
+      "cosmosHolofoil",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6816",
@@ -662,7 +712,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6809",
@@ -699,7 +752,10 @@
     "weakness": "Fire ×2",
     "resistance": "Water -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6802",
@@ -736,7 +792,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6796",
@@ -773,7 +832,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "When it needs to think, it rotates its head 180 degrees to sharpen its intellectual power."
+    "flavorText": "When it needs to think, it rotates its head 180 degrees to sharpen its intellectual power.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6790",
@@ -810,7 +872,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It has a perfect sense of time. Whatever happens, it keeps rhythm by precisely tilting its head in time."
+    "flavorText": "It has a perfect sense of time. Whatever happens, it keeps rhythm by precisely tilting its head in time.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6784",
@@ -847,7 +912,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "To keep its pitch-black tail hidden, it lives quietly in the darkness. It is never first to attack."
+    "flavorText": "To keep its pitch-black tail hidden, it lives quietly in the darkness. It is never first to attack.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6771",
@@ -890,7 +958,10 @@
     "weakness": "Fighting +10",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "It occasionally uses an electric shock to recharge a fellow Pikachu that is in a weakened state."
+    "flavorText": "It occasionally uses an electric shock to recharge a fellow Pikachu that is in a weakened state.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6757",
@@ -933,7 +1004,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 2,
-    "flavorText": "It is said that it quietly spends its time deep at the bottom of the sea because its powers are too strong."
+    "flavorText": "It is said that it quietly spends its time deep at the bottom of the sea because its powers are too strong.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6742",
@@ -976,6 +1050,9 @@
     "weakness": "Water ×2",
     "resistance": "Fighting -20",
     "retreatCost": 3,
-    "flavorText": "A legend says that its body glows in seven colors. A rainbow is said to form behind when it flies."
+    "flavorText": "A legend says that its body glows in seven colors. A rainbow is said to form behind when it flies.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

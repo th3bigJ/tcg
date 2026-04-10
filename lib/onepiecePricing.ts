@@ -37,15 +37,21 @@ export type OnePieceSetEntry = {
 
 export type OnePieceCardVariant =
   | "normal"
+  | "foil"
   | "parallel"
   | "altArt"
+  | "fullArt"
   | "mangaAltArt"
+  | "specialAltArt"
   | "boxTopper"
   | "promo"
-  | "specialAltArt";
+  | "reprint"
+  | "jollyRogerFoil"
+  | (string & {});
 
 export type OnePieceCardEntry = {
-  tcgplayerProductId: string;
+  priceKey?: string;
+  tcgplayerProductId?: string | null;
   cardNumber: string;
   name: string;
   setCode: string;
@@ -146,10 +152,23 @@ export function loadOnePieceSets(): OnePieceSetEntry[] {
   return readJson<OnePieceSetEntry[]>(ONEPIECE_SETS_FILE);
 }
 
+export async function loadOnePieceSetsFromR2(): Promise<OnePieceSetEntry[]> {
+  const s3 = buildOnePieceS3Client();
+  return (await getJsonFromOnePieceR2<OnePieceSetEntry[]>(s3, "sets/data/sets.json")) ?? [];
+}
+
 export function loadOnePieceCardsForSet(setCode: string): OnePieceCardEntry[] {
   const filePath = path.join(ONEPIECE_CARDS_DIR, `${setCode}.json`);
   if (!fs.existsSync(filePath)) return [];
   return readJson<OnePieceCardEntry[]>(filePath);
+}
+
+export async function loadOnePieceCardsForSetFromR2(setCode: string): Promise<OnePieceCardEntry[]> {
+  const code = setCode.trim().toUpperCase();
+  if (!code) return [];
+
+  const s3 = buildOnePieceS3Client();
+  return (await getJsonFromOnePieceR2<OnePieceCardEntry[]>(s3, `cards/data/${code}.json`)) ?? [];
 }
 
 export function marketFilePathForSet(setCode: string): string {
@@ -216,7 +235,13 @@ export async function mergeOnePieceHistoryForSet(setCode: string, incoming: SetP
 }
 
 export function priceKeyForOnePieceCard(card: OnePieceCardEntry): string {
-  return card.tcgplayerProductId.trim();
+  const direct = card.priceKey?.trim();
+  if (direct) return direct;
+
+  const legacy = card.tcgplayerProductId?.trim();
+  if (legacy) return legacy;
+
+  return [card.setCode.trim().toUpperCase(), card.cardNumber.trim().toUpperCase(), card.variant || "normal"].join("::");
 }
 
 export function buildOnePieceMarketEntry(
@@ -312,21 +337,45 @@ function normalizeVariantLabel(value: string): string {
 
 export function scrydexHistoryCandidatesForVariant(variant: OnePieceCardVariant): string[] {
   switch (variant) {
+    case "foil":
     case "parallel":
       return ["foil", "parallel", "normal"];
     case "altArt":
+    case "fullArt":
       return ["altArt", "alt art", "fullArt", "full art"];
     case "mangaAltArt":
       return ["mangaAltArt", "manga alt art", "altArt", "alt art"];
     case "specialAltArt":
       return ["specialAltArt", "special alt art", "altArt", "alt art"];
+    case "jollyRogerFoil":
+      return ["jollyRogerFoil", "jolly roger foil", "foil", "parallel", "normal"];
+    case "reprint":
+      return ["reprint", "normal"];
     case "boxTopper":
       return ["boxTopper", "box topper", "normal"];
     case "promo":
       return ["promo", "normal"];
     default:
-      return ["normal", "default"];
+      return [variant, normalizeVariantLabel(variant), "normal", "default"];
   }
+}
+
+export function selectScrydexRawPriceForCard(
+  pricesByLabel: Record<string, number>,
+  card: OnePieceCardEntry,
+): number | null {
+  const normalized = new Map<string, number>();
+  for (const [label, price] of Object.entries(pricesByLabel)) {
+    if (typeof price !== "number" || !Number.isFinite(price)) continue;
+    normalized.set(normalizeVariantLabel(label), price);
+  }
+
+  for (const candidate of scrydexHistoryCandidatesForVariant(card.variant)) {
+    const match = normalized.get(normalizeVariantLabel(candidate));
+    if (typeof match === "number" && Number.isFinite(match)) return match;
+  }
+
+  return null;
 }
 
 export function selectScrydexRawHistoryForCard(

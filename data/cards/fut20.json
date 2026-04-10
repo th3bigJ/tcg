@@ -38,7 +38,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When scared, this Pokémon cries. Its tears pack the chemical punch of 100 onions, and attackers won't be able to resist weeping."
+    "flavorText": "When scared, this Pokémon cries. Its tears pack the chemical punch of 100 onions, and attackers won't be able to resist weeping.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8231",
@@ -79,7 +82,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A warm-up of running around gets fire energy coursing through this Pokémon's body. Once that happens, it's ready to fight at full power."
+    "flavorText": "A warm-up of running around gets fire energy coursing through this Pokémon's body. Once that happens, it's ready to fight at full power.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8230",
@@ -120,7 +126,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When it uses its special stick to strike up a beat, the sound waves produced carry revitalizing energy to the plants and flowers in the area."
+    "flavorText": "When it uses its special stick to strike up a beat, the sound waves produced carry revitalizing energy to the plants and flowers in the area.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8229",
@@ -161,7 +170,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has the ability to alter the composition of its body to suit its surrounding environment."
+    "flavorText": "It has the ability to alter the composition of its body to suit its surrounding environment.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "8223",
@@ -202,6 +214,9 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Pikachu that can generate powerful electricity have cheek sacs that are extra soft and super stretchy."
+    "flavorText": "Pikachu that can generate powerful electricity have cheek sacs that are extra soft and super stretchy.",
+    "pricingVariants": [
+      "normal"
+    ]
   }
 ]

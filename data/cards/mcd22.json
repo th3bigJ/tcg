@@ -34,7 +34,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It draws symbols with the fluid that oozes from the tip of its tail. Depending on the symbol, Smeargle fanatics will pay big money for them."
+    "flavorText": "It draws symbols with the fluid that oozes from the tip of its tail. Depending on the symbol, Smeargle fanatics will pay big money for them.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22344",
@@ -77,7 +80,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Drampa is a kind and friendly Pokémon—up until it's angered. When that happens, it stirs up a gale and flattens everything around."
+    "flavorText": "Drampa is a kind and friendly Pokémon—up until it's angered. When that happens, it stirs up a gale and flattens everything around.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22343",
@@ -120,7 +126,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "Using its leaf, Pangoro can predict the moves of its opponents. It strikes with punches that can turn a dump truck into scrap with just one hit."
+    "flavorText": "Using its leaf, Pangoro can predict the moves of its opponents. It strikes with punches that can turn a dump truck into scrap with just one hit.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22342",
@@ -163,7 +172,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "The moves it uses to take down its prey would make a martial artist jealous. It tucks subdued prey under its arms to carry them to its nest."
+    "flavorText": "The moves it uses to take down its prey would make a martial artist jealous. It tucks subdued prey under its arms to carry them to its nest.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22341",
@@ -200,7 +212,10 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "An opponent's aura can tell Cutiefly what that opponent's next move will be. Then Cutiefly can glide around the attack and strike back."
+    "flavorText": "An opponent's aura can tell Cutiefly what that opponent's next move will be. Then Cutiefly can glide around the attack and strike back.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22340",
@@ -237,7 +252,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "One alone can emit only trickle of electricity, so a group of them gathers to unleash a powerful electric shock."
+    "flavorText": "One alone can emit only trickle of electricity, so a group of them gathers to unleash a powerful electric shock.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22339",
@@ -274,7 +292,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It stores electricity in its fluffy fleece. If it stores up too much, it will start to go bald in those patches."
+    "flavorText": "It stores electricity in its fluffy fleece. If it stores up too much, it will start to go bald in those patches.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22338",
@@ -311,7 +332,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "On the dark ocean floor, its only means of communication is its constantly flashing lights."
+    "flavorText": "On the dark ocean floor, its only means of communication is its constantly flashing lights.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22337",
@@ -354,7 +378,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When Pikachu meet, they'll touch their tails together and exchange electricity through them as a form of greeting."
+    "flavorText": "When Pikachu meet, they'll touch their tails together and exchange electricity through them as a form of greeting.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22336",
@@ -397,7 +424,10 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Crossing icy seas is no issue for this cold-resistant Pokémon. Its smooth skin is a little cool to the touch."
+    "flavorText": "Crossing icy seas is no issue for this cold-resistant Pokémon. Its smooth skin is a little cool to the touch.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "22335",
@@ -434,7 +464,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When it shares the infinite energy it creates, that being's entire body will be overflowing with power."
+    "flavorText": "When it shares the infinite energy it creates, that being's entire body will be overflowing with power.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22334",
@@ -477,7 +510,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Extremely loyal, it will fearlessly bark at any opponent to protect its own Trainer from harm."
+    "flavorText": "Extremely loyal, it will fearlessly bark at any opponent to protect its own Trainer from harm.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22333",
@@ -514,7 +550,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It whirls around in the wind while singing a joyous song. This delightful display has charmed many into raising this Pokémon."
+    "flavorText": "It whirls around in the wind while singing a joyous song. This delightful display has charmed many into raising this Pokémon.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22332",
@@ -551,7 +590,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "At a distance, it launches its sharp feathers while flying about. If the enemy gets too close, Rowlet switches tactics and delivers vicious kicks."
+    "flavorText": "At a distance, it launches its sharp feathers while flying about. If the enemy gets too close, Rowlet switches tactics and delivers vicious kicks.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22331",
@@ -594,6 +636,9 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "These very cowardly Pokémon join together and use Reflect to protect their nest."
+    "flavorText": "These very cowardly Pokémon join together and use Reflect to protect their nest.",
+    "pricingVariants": [
+      "normal"
+    ]
   }
 ]

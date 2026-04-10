@@ -23,7 +23,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "leagueStamp",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19363",
@@ -49,7 +53,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19351",
@@ -75,7 +82,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19341",
@@ -101,7 +111,12 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "leagueStamp",
+      "normal",
+      "trentOrndorff"
+    ]
   },
   {
     "masterCardId": "19332",
@@ -127,7 +142,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19322",
@@ -153,7 +171,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "leagueStamp",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19311",
@@ -196,7 +218,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Trimming its fluffy fur not only makes it more elegant but also increases the swiftness of its movements."
+    "flavorText": "Trimming its fluffy fur not only makes it more elegant but also increases the swiftness of its movements.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19302",
@@ -239,7 +264,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Trimming its fluffy fur not only makes it more elegant but also increases the swiftness of its movements."
+    "flavorText": "Trimming its fluffy fur not only makes it more elegant but also increases the swiftness of its movements.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19292",
@@ -276,7 +304,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "These friendly Pokémon send signals to one another with beautiful chirps and tail-feather movements."
+    "flavorText": "These friendly Pokémon send signals to one another with beautiful chirps and tail-feather movements.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19282",
@@ -313,7 +344,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "They use their large ears to dig burrows. They will dig the whole night through."
+    "flavorText": "They use their large ears to dig burrows. They will dig the whole night through.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19273",
@@ -350,7 +384,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "With nerves of steel, nothing can perturb it. It is more agile and active than it appears."
+    "flavorText": "With nerves of steel, nothing can perturb it. It is more agile and active than it appears.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19263",
@@ -387,7 +424,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It can't stop itself from chasing moving things, and it runs in a circle, chasing its own tail."
+    "flavorText": "It can't stop itself from chasing moving things, and it runs in a circle, chasing its own tail.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19254",
@@ -424,7 +464,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "If it is around babies, it milk it produces contains much more nutrition than usual."
+    "flavorText": "If it is around babies, it milk it produces contains much more nutrition than usual.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19244",
@@ -467,7 +510,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "It is not satisfied unless it eats over 880 pounds of food every day. When it is done eating, it goes promptly to sleep."
+    "flavorText": "It is not satisfied unless it eats over 880 pounds of food every day. When it is done eating, it goes promptly to sleep.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19234",
@@ -504,7 +550,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "The plant stalk it holds is its weapon. The stalk is used like a sword to cut all sorts of things."
+    "flavorText": "The plant stalk it holds is its weapon. The stalk is used like a sword to cut all sorts of things.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19223",
@@ -541,7 +590,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 1,
-    "flavorText": "To entangle its opponents in battle, it extrudes white threads as sweet and sticky as cotton candy."
+    "flavorText": "To entangle its opponents in battle, it extrudes white threads as sweet and sticky as cotton candy.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19213",
@@ -584,7 +636,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 3,
-    "flavorText": "It is timid in spite of its looks. If it becomes enraged, however, it will strike with its huge fangs."
+    "flavorText": "It is timid in spite of its looks. If it becomes enraged, however, it will strike with its huge fangs.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19202",
@@ -621,7 +676,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 2,
-    "flavorText": "It has an active, playful nature. Many women like to frolic with it because of its affectionate ways."
+    "flavorText": "It has an active, playful nature. Many women like to frolic with it because of its affectionate ways.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19191",
@@ -658,7 +716,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "Apparently this Pokémon is born when a departed spirit inhabits a sword. It attaches itself to people and drinks their life force."
+    "flavorText": "Apparently this Pokémon is born when a departed spirit inhabits a sword. It attaches itself to people and drinks their life force.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19181",
@@ -701,7 +762,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "This pitiless Pokémon commands a group of Pawniard to hound prey into immobility. It then moves in to finish the prey off."
+    "flavorText": "This pitiless Pokémon commands a group of Pawniard to hound prey into immobility. It then moves in to finish the prey off.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19170",
@@ -744,7 +808,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "Blades comprise this Pokémon's entire body. If battling dulls the blades, it sharpens them on stones by the river."
+    "flavorText": "Blades comprise this Pokémon's entire body. If battling dulls the blades, it sharpens them on stones by the river.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19161",
@@ -781,7 +848,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "Opponents who stare at the flashing of the light-emitting spots on its body become dazed and lose their will to fight."
+    "flavorText": "Opponents who stare at the flashing of the light-emitting spots on its body become dazed and lose their will to fight.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19152",
@@ -818,7 +888,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "It will always obey the commands of a skilled Trainer. Its behavior arises from its living in packs in ancient times."
+    "flavorText": "It will always obey the commands of a skilled Trainer. Its behavior arises from its living in packs in ancient times.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19142",
@@ -855,7 +928,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "A Pokémon with a persistent nature, it chases its chosen prey until the prey becomes exhausted."
+    "flavorText": "A Pokémon with a persistent nature, it chases its chosen prey until the prey becomes exhausted.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19132",
@@ -892,7 +968,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "They knock down flying prey by firing compressed water from their massive claws like shooting a pistol."
+    "flavorText": "They knock down flying prey by firing compressed water from their massive claws like shooting a pistol.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19121",
@@ -935,7 +1014,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It creates throwing stars out of compressed water. When it spins them and throws them at high speed, these stars can split metal in two."
+    "flavorText": "It creates throwing stars out of compressed water. When it spins them and throws them at high speed, these stars can split metal in two.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19112",
@@ -978,7 +1061,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It can throw bubble-covered pebbles with precise control, hitting empty cans up to a hundred feet away."
+    "flavorText": "It can throw bubble-covered pebbles with precise control, hitting empty cans up to a hundred feet away.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19102",
@@ -1021,7 +1108,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It secretes flexible bubbles from its chest and back. The bubbles reduce the damage it would otherwise take when attacked."
+    "flavorText": "It secretes flexible bubbles from its chest and back. The bubbles reduce the damage it would otherwise take when attacked.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19091",
@@ -1064,7 +1155,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The water stored inside the tuft on its head is full of nutrients. It waters plants with it using its tail."
+    "flavorText": "The water stored inside the tuft on its head is full of nutrients. It waters plants with it using its tail.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19081",
@@ -1107,7 +1201,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It gazes into the flame at the tip of its branch to achieve a focused state, which allows it to see into the future."
+    "flavorText": "It gazes into the flame at the tip of its branch to achieve a focused state, which allows it to see into the future.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19071",
@@ -1150,7 +1248,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has a twig stuck in its tail. With friction from its tail fur, it sets the twig on fire and launches into battle."
+    "flavorText": "It has a twig stuck in its tail. With friction from its tail fur, it sets the twig on fire and launches into battle.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19063",
@@ -1193,7 +1295,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Eating a twig fills it with energy, and its roomy ears give vent to air hotter than 390 degrees Fahrenheit."
+    "flavorText": "Eating a twig fills it with energy, and its roomy ears give vent to air hotter than 390 degrees Fahrenheit.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19053",
@@ -1236,7 +1342,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Very intelligent, it roasts berries before eating them. It likes to help people."
+    "flavorText": "Very intelligent, it roasts berries before eating them. It likes to help people.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19043",
@@ -1273,7 +1382,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "A common sight in volcanic areas, it slowly slithers around in a constant search for warm places."
+    "flavorText": "A common sight in volcanic areas, it slowly slithers around in a constant search for warm places.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "19033",
@@ -1316,7 +1428,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "Its Tackle is forceful enough to flip a 50-ton tank. It shields its allies from danger with its own body."
+    "flavorText": "Its Tackle is forceful enough to flip a 50-ton tank. It shields its allies from danger with its own body.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19023",
@@ -1359,7 +1475,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It relies on its sturdy shell to deflect predators' attacks. It counterattacks with its sharp quills."
+    "flavorText": "It relies on its sturdy shell to deflect predators' attacks. It counterattacks with its sharp quills.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19012",
@@ -1402,7 +1522,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The quills on its head are usually soft. When it flexes them, the points become so hard and sharp that they can pierce rock."
+    "flavorText": "The quills on its head are usually soft. When it flexes them, the points become so hard and sharp that they can pierce rock.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "19002",
@@ -1445,7 +1569,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It shares the leaf on its head with weary-looking Pokémon. These leaves are known to relieve stress."
+    "flavorText": "It shares the leaf on its head with weary-looking Pokémon. These leaves are known to relieve stress.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "18987",
@@ -1482,6 +1609,9 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Often found in forests and grasslands. It has a sharp, toxic barb of around two inches on top of its head."
+    "flavorText": "Often found in forests and grasslands. It has a sharp, toxic barb of around two inches on top of its head.",
+    "pricingVariants": [
+      "normal"
+    ]
   }
 ]

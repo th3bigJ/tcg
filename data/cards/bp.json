@@ -40,7 +40,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "1968",
@@ -89,7 +92,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "1967",
@@ -126,7 +132,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "winnerStamp"
+    ]
   },
   {
     "masterCardId": "1966",
@@ -163,7 +173,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "winnerStamp"
+    ]
   },
   {
     "masterCardId": "1965",
@@ -206,7 +220,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "winnerStamp"
+    ]
   },
   {
     "masterCardId": "1964",
@@ -249,7 +267,11 @@
     "weakness": "Fire ×2",
     "resistance": "Grass -30",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "winnerStamp"
+    ]
   },
   {
     "masterCardId": "1963",
@@ -275,7 +297,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "1962",
@@ -318,7 +343,12 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "While seeming to do nothing, it fires punches in lightning-fast volleys that are impossible to see."
+    "flavorText": "While seeming to do nothing, it fires punches in lightning-fast volleys that are impossible to see.",
+    "pricingVariants": [
+      "jumbo",
+      "reverseHolofoil",
+      "winnerStamp"
+    ]
   },
   {
     "masterCardId": "1961",
@@ -361,6 +391,11 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Normally found near power plants, it can wander away and cause major blackouts in cities."
+    "flavorText": "Normally found near power plants, it can wander away and cause major blackouts in cities.",
+    "pricingVariants": [
+      "jumbo",
+      "reverseHolofoil",
+      "winnerStamp"
+    ]
   }
 ]

@@ -34,7 +34,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It touches others with the feelers on its ears, using the sound of their heartbeats to tell how they are feeling."
+    "flavorText": "It touches others with the feelers on its ears, using the sound of their heartbeats to tell how they are feeling.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6834",
@@ -77,7 +80,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "These Pokémon live in cities. They are accustomed to people. Flocks often gather in parks and plazas."
+    "flavorText": "These Pokémon live in cities. They are accustomed to people. Flocks often gather in parks and plazas.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6826",
@@ -120,7 +126,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "The two minigears that mesh together are predetermined. Each will rebound from other minigears without meshing."
+    "flavorText": "The two minigears that mesh together are predetermined. Each will rebound from other minigears without meshing.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6818",
@@ -163,7 +172,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "It changes into the forms of others to surprise them. Apparently, it often transforms into a silent child."
+    "flavorText": "It changes into the forms of others to surprise them. Apparently, it often transforms into a silent child.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6812",
@@ -200,7 +212,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It moves along below the sand's surface, except for its nose and eyes. A dark membrane shields its eyes from the sun."
+    "flavorText": "It moves along below the sand's surface, except for its nose and eyes. A dark membrane shields its eyes from the sun.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6804",
@@ -237,7 +252,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It eats the dreams of people and Pokémon. When it eats a pleasant dream, it expels pink-colored mist."
+    "flavorText": "It eats the dreams of people and Pokémon. When it eats a pleasant dream, it expels pink-colored mist.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6795",
@@ -274,7 +292,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its mane shines when it discharges electricity. They use their flashing manes to communicate with one another."
+    "flavorText": "Its mane shines when it discharges electricity. They use their flashing manes to communicate with one another.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6788",
@@ -317,7 +338,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Floating in the open sea is how they live. When they find a wounded Pokémon, they embrace it and bring it to shore."
+    "flavorText": "Floating in the open sea is how they live. When they find a wounded Pokémon, they embrace it and bring it to shore.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6781",
@@ -354,7 +378,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It fights using the scalchop on its stomach. In response to an attack, it retaliates immediately by slashing."
+    "flavorText": "It fights using the scalchop on its stomach. In response to an attack, it retaliates immediately by slashing.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6766",
@@ -391,7 +418,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It blows fire through its nose. When it catches a cold, the fire becomes pitch-black smoke instead."
+    "flavorText": "It blows fire through its nose. When it catches a cold, the fire becomes pitch-black smoke instead.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6752",
@@ -434,7 +464,10 @@
     "weakness": "Fire ×2",
     "resistance": "Water -20",
     "retreatCost": 2,
-    "flavorText": "It uses an up-tempo song and dance to drive away the bird Pokémon that prey on its flower seeds."
+    "flavorText": "It uses an up-tempo song and dance to drive away the bird Pokémon that prey on its flower seeds.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "6738",
@@ -471,6 +504,9 @@
     "weakness": "Fire ×2",
     "resistance": "Water -20",
     "retreatCost": 1,
-    "flavorText": "It is very intelligent and calm. Being exposed to lots of sunlight makes its movements swifter."
+    "flavorText": "It is very intelligent and calm. Being exposed to lots of sunlight makes its movements swifter.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

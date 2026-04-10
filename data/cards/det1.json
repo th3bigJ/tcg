@@ -34,7 +34,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "The world's laziest Pokémon. It moves to another spot when there's no food left within its reach."
+    "flavorText": "The world's laziest Pokémon. It moves to another spot when there's no food left within its reach.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3614",
@@ -71,7 +74,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "While it can transform into anything, each Ditto apparently has its own strengths and weaknesses when it comes to transformations."
+    "flavorText": "While it can transform into anything, each Ditto apparently has its own strengths and weaknesses when it comes to transformations.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3609",
@@ -108,7 +114,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It checks out whatever's around it by licking everything. If you don't clean off a spot where it's licked you, you'll break out in a rash!"
+    "flavorText": "It checks out whatever's around it by licking everything. If you don't clean off a spot where it's licked you, you'll break out in a rash!",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3603",
@@ -145,7 +154,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 2,
-    "flavorText": "It grows close to others easily and is also easily spoiled. The disparity between its face and its actions makes many young people wild about it."
+    "flavorText": "It grows close to others easily and is also easily spoiled. The disparity between its face and its actions makes many young people wild about it.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3597",
@@ -182,7 +194,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 1,
-    "flavorText": "Recordings of Jigglypuff's strange lullabies can be purchased from department stores. These CDs can be found near the bedding area."
+    "flavorText": "Recordings of Jigglypuff's strange lullabies can be purchased from department stores. These CDs can be found near the bedding area.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3591",
@@ -225,7 +240,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It grasps its opponents with its four arms and twists them up in an intricate hold. People call it \"the Machamp special.\""
+    "flavorText": "It grasps its opponents with its four arms and twists them up in an intricate hold. People call it \"the Machamp special.\"",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3586",
@@ -268,7 +286,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "This Pokémon was created by years of horrific gene splicing and DNA engineering experiments."
+    "flavorText": "This Pokémon was created by years of horrific gene splicing and DNA engineering experiments.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3578",
@@ -305,7 +326,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its pantomime skills are wonderful. You may become enraptured while watching it, but next thing you know, Mr. Mime has made a real wall."
+    "flavorText": "Its pantomime skills are wonderful. You may become enraptured while watching it, but next thing you know, Mr. Mime has made a real wall.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3574",
@@ -348,7 +372,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 2,
-    "flavorText": "He loves to show off his vast knowledge. This expressive Pikachu is like a middle-aged man."
+    "flavorText": "He loves to show off his vast knowledge. This expressive Pikachu is like a middle-aged man.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3567",
@@ -385,7 +412,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It creates throwing stars out of compressed water. When it spins them and throws them at high speed, these stars can split metal in two."
+    "flavorText": "It creates throwing stars out of compressed water. When it spins them and throws them at high speed, these stars can split metal in two.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3562",
@@ -422,7 +452,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "In the distant past, they were fairly strong, but they have become gradually weaker over time."
+    "flavorText": "In the distant past, they were fairly strong, but they have become gradually weaker over time.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3555",
@@ -459,7 +492,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Using psychokinesis gives it a headache, so it normally passes the time spacing out and doing as little as possible."
+    "flavorText": "Using psychokinesis gives it a headache, so it normally passes the time spacing out and doing as little as possible.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3549",
@@ -496,7 +532,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Legends tell of its fighting alongside a general and conquering a whole country."
+    "flavorText": "Legends tell of its fighting alongside a general and conquering a whole country.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3545",
@@ -539,7 +578,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "When expelling a blast of superhot fire, the red flame at the tip of its tail burns more intensely."
+    "flavorText": "When expelling a blast of superhot fire, the red flame at the tip of its tail burns more intensely.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3536",
@@ -576,7 +618,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The flame on its tail indicates Charmander's life force. If it is healthy, the flame burns brightly."
+    "flavorText": "The flame on its tail indicates Charmander's life force. If it is healthy, the flame burns brightly.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3531",
@@ -613,7 +658,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It scatters its shining spores around itself. Even though they're dangerous, nighttime tours of forests where Morelull live are popular."
+    "flavorText": "It scatters its shining spores around itself. Even though they're dangerous, nighttime tours of forests where Morelull live are popular.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3528",
@@ -650,7 +698,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "If it hears festive music, all its muscles fill with energy. It can't help breaking out into a dance."
+    "flavorText": "If it hears festive music, all its muscles fill with energy. It can't help breaking out into a dance.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3522",
@@ -687,6 +738,9 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A strange seed was planted on its back at birth. The plant sprouts and grows with this Pokémon."
+    "flavorText": "A strange seed was planted on its back at birth. The plant sprouts and grows with this Pokémon.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

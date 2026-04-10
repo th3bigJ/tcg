@@ -40,7 +40,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "Its nature is to store up electricity. Forests where nests of Pikachu live are dangerous, since the trees are so often struck by lightning."
+    "flavorText": "Its nature is to store up electricity. Forests where nests of Pikachu live are dangerous, since the trees are so often struck by lightning.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7346",
@@ -77,7 +81,11 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When scared, this Pokémon cries. Its tears pack the chemical punch of 100 onions, and attackers won't be able to resist weeping."
+    "flavorText": "When scared, this Pokémon cries. Its tears pack the chemical punch of 100 onions, and attackers won't be able to resist weeping.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7343",
@@ -120,7 +128,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "This Pokémon snorts body fluids from its nose, blowing balloons to smash into its foes. It's famous for being a hard worker."
+    "flavorText": "This Pokémon snorts body fluids from its nose, blowing balloons to smash into its foes. It's famous for being a hard worker.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7340",
@@ -163,7 +175,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It secretes flexible bubbles from its chest and back. The bubbles reduce the damage it would otherwise take when attacked."
+    "flavorText": "It secretes flexible bubbles from its chest and back. The bubbles reduce the damage it would otherwise take when attacked.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7337",
@@ -200,7 +216,11 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It fights using the scalchop on its stomach. In response to an attack, it retaliates immediately by slashing."
+    "flavorText": "It fights using the scalchop on its stomach. In response to an attack, it retaliates immediately by slashing.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7334",
@@ -243,7 +263,11 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Because it is very proud, it hates accepting food from people. Its thick down guards it from cold."
+    "flavorText": "Because it is very proud, it hates accepting food from people. Its thick down guards it from cold.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7331",
@@ -286,7 +310,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "To alert it, the fin on its head senses the flow of water. It has the strength to heft boulders."
+    "flavorText": "To alert it, the fin on its head senses the flow of water. It has the strength to heft boulders.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7326",
@@ -323,7 +351,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is small but rough and tough. It won't hesitate to take a bite out of anything that moves."
+    "flavorText": "It is small but rough and tough. It won't hesitate to take a bite out of anything that moves.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7323",
@@ -360,7 +392,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It shelters itself in its shell, then strikes back with spouts of water at every opportunity."
+    "flavorText": "It shelters itself in its shell, then strikes back with spouts of water at every opportunity.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7320",
@@ -397,7 +433,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A warm-up of running around gets fire energy coursing through this Pokémon's body. Once that happens, it's ready to fight at full power."
+    "flavorText": "A warm-up of running around gets fire energy coursing through this Pokémon's body. Once that happens, it's ready to fight at full power.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7317",
@@ -440,7 +480,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "While grooming itself, it builds up fur inside its stomach. It sets the fur alight and spews fiery attacks, which change based on how it coughs."
+    "flavorText": "While grooming itself, it builds up fur inside its stomach. It sets the fur alight and spews fiery attacks, which change based on how it coughs.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7314",
@@ -483,7 +527,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Eating a twig fills it with energy, and its roomy ears give vent to air hotter than 390 degrees Fahrenheit."
+    "flavorText": "Eating a twig fills it with energy, and its roomy ears give vent to air hotter than 390 degrees Fahrenheit.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7310",
@@ -520,7 +568,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It blows fire through its nose. When it catches a cold, the fire becomes pitch-black smoke instead."
+    "flavorText": "It blows fire through its nose. When it catches a cold, the fire becomes pitch-black smoke instead.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7305",
@@ -557,7 +609,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The gas made in its belly burns from its rear end. The fire burns weakly when it feels sick."
+    "flavorText": "The gas made in its belly burns from its rear end. The fire burns weakly when it feels sick.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7300",
@@ -594,7 +650,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A fire burns inside, so it feels very warm to hug. It launches fireballs of 1,800 degrees Fahrenheit."
+    "flavorText": "A fire burns inside, so it feels very warm to hug. It launches fireballs of 1,800 degrees Fahrenheit.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7295",
@@ -631,7 +691,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has a timid nature. If it is startled, the flames on its back burn more vigorously."
+    "flavorText": "It has a timid nature. If it is startled, the flames on its back burn more vigorously.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7290",
@@ -674,7 +738,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The flame on its tail indicates Charmander's life force. If it is healthy, the flame burns brightly."
+    "flavorText": "The flame on its tail indicates Charmander's life force. If it is healthy, the flame burns brightly.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7285",
@@ -711,7 +779,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When it uses its special stick to strike up a beat, the sound waves produced carry revitalizing energy to the plants and flowers in the area."
+    "flavorText": "When it uses its special stick to strike up a beat, the sound waves produced carry revitalizing energy to the plants and flowers in the area.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7280",
@@ -754,7 +826,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "This wary Pokémon uses photosynthesis to store up energy during the day, while becoming active at night."
+    "flavorText": "This wary Pokémon uses photosynthesis to store up energy during the day, while becoming active at night.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7275",
@@ -797,7 +873,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The quills on its head are usually soft. When it flexes them, the points become so hard and sharp that they can pierce rock."
+    "flavorText": "The quills on its head are usually soft. When it flexes them, the points become so hard and sharp that they can pierce rock.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7270",
@@ -834,7 +914,11 @@
     "weakness": "Fire ×2",
     "resistance": "Water -20",
     "retreatCost": 1,
-    "flavorText": "It is very intelligent and calm. Being exposed to lots of sunlight makes its movements swifter."
+    "flavorText": "It is very intelligent and calm. Being exposed to lots of sunlight makes its movements swifter.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7263",
@@ -877,7 +961,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It undertakes photosynthesis with its body, making oxygen. The leaf on its head wilts if it is thirsty."
+    "flavorText": "It undertakes photosynthesis with its body, making oxygen. The leaf on its head wilts if it is thirsty.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7251",
@@ -914,7 +1002,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Small hooks on the bottom of its feet catch on walls and ceilings. That is how it can hang from above."
+    "flavorText": "Small hooks on the bottom of its feet catch on walls and ceilings. That is how it can hang from above.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7238",
@@ -951,7 +1043,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It uses the leaf on its head to determine the temperature and humidity. It loves to sunbathe."
+    "flavorText": "It uses the leaf on its head to determine the temperature and humidity. It loves to sunbathe.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "7226",
@@ -988,6 +1084,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "A strange seed was planted on its back at birth. The plant sprouts and grows with this Pokémon."
+    "flavorText": "A strange seed was planted on its back at birth. The plant sprouts and grows with this Pokémon.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   }
 ]

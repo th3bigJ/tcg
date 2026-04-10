@@ -40,7 +40,11 @@
     "weakness": "Fire +10",
     "resistance": "Water -20",
     "retreatCost": 2,
-    "flavorText": "Made from soil, the shell on its back hardens when it drinks water. It lives along lakes."
+    "flavorText": "Made from soil, the shell on its back hardens when it drinks water. It lives along lakes.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9244",
@@ -83,7 +87,10 @@
     "weakness": "Lightning +10",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "They flock in great numbers. Though small, they flap their wings with great power."
+    "flavorText": "They flock in great numbers. Though small, they flap their wings with great power.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9236",
@@ -126,7 +133,12 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Because it is very proud, it hates accepting food from people. Its thick down guards it from cold."
+    "flavorText": "Because it is very proud, it hates accepting food from people. Its thick down guards it from cold.",
+    "pricingVariants": [
+      "dylanLefavour",
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9227",
@@ -169,7 +181,11 @@
     "weakness": "Water +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It agilely scales cliffs to live atop craggy mountains. Its fire is put out when it sleeps."
+    "flavorText": "It agilely scales cliffs to live atop craggy mountains. Its fire is put out when it sleeps.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9218",
@@ -212,7 +228,10 @@
     "weakness": "Fire +10",
     "resistance": "Water -20",
     "retreatCost": 1,
-    "flavorText": "The small ball holds the nutrients needed for evolution. Apparently, it is very sweet and tasty."
+    "flavorText": "The small ball holds the nutrients needed for evolution. Apparently, it is very sweet and tasty.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9209",
@@ -255,7 +274,10 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It slams foes by sharply uncoiling is rolled ears. It stings enough to make a grown-up cry in pain."
+    "flavorText": "It slams foes by sharply uncoiling is rolled ears. It stings enough to make a grown-up cry in pain.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9200",
@@ -298,7 +320,10 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "With nerves of steel, nothing can perturb it. It is more agile and active than it appears."
+    "flavorText": "With nerves of steel, nothing can perturb it. It is more agile and active than it appears.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9190",
@@ -341,7 +366,10 @@
     "weakness": "Lightning +20",
     "resistance": "Fighting -20",
     "retreatCost": null,
-    "flavorText": "It flies around forests and fields in search of bug Pokémon. It stays within a huge flock."
+    "flavorText": "It flies around forests and fields in search of bug Pokémon. It stays within a huge flock.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9181",
@@ -379,7 +407,12 @@
     "weakness": "Fighting +10",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "normal",
+      "pokemonDayStamp"
+    ]
   },
   {
     "masterCardId": "9172",
@@ -416,7 +449,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The aura that emanates from its body intensifies to alert others if it is afraid or sad."
+    "flavorText": "The aura that emanates from its body intensifies to alert others if it is afraid or sad.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9164",
@@ -454,7 +491,11 @@
     "weakness": "Colorless +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9159",
@@ -497,7 +538,10 @@
     "weakness": "Darkness +10",
     "resistance": "Colorless -20",
     "retreatCost": 1,
-    "flavorText": "A Pokémon formed by the spirits of people and Pokémon. It loves damp, humid seasons."
+    "flavorText": "A Pokémon formed by the spirits of people and Pokémon. It loves damp, humid seasons.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9148",
@@ -540,7 +584,10 @@
     "weakness": "Grass +30",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its powerful head butt has enough power to shatter even the most durable things upon impact."
+    "flavorText": "Its powerful head butt has enough power to shatter even the most durable things upon impact.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9141",
@@ -583,7 +630,10 @@
     "weakness": "Fighting +20",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "It makes fur balls that crackle with static electricity. It stores them with berries in tree holes."
+    "flavorText": "It makes fur balls that crackle with static electricity. It stores them with berries in tree holes.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9132",
@@ -626,7 +676,11 @@
     "weakness": "Lightning +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Born on a cold seafloor, it will swim great distances to return to its birthplace."
+    "flavorText": "Born on a cold seafloor, it will swim great distances to return to its birthplace.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9124",
@@ -669,7 +723,10 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has the ability to sense the auras of all things. It understands human speech."
+    "flavorText": "It has the ability to sense the auras of all things. It understands human speech.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9108",
@@ -706,6 +763,9 @@
     "weakness": "Fire +40",
     "resistance": "Psychic -20",
     "retreatCost": 3,
-    "flavorText": "Any frontal attack is repulsed. It is a docile Pokémon that feeds on grass and berries."
+    "flavorText": "Any frontal attack is repulsed. It is a docile Pokémon that feeds on grass and berries.",
+    "pricingVariants": [
+      "normal"
+    ]
   }
 ]

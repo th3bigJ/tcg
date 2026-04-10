@@ -38,7 +38,7 @@ async function runNightlyJobs() {
   // Step 3: once Pokemon has finished, update One Piece pricing/history/trends on R2.
   log("onePiecePricing", "starting");
   try {
-    await runScrapeOnePiecePricing();
+    await runScrapeOnePiecePricing({ source: "r2" });
     log("onePiecePricing", "done");
   } catch (e) {
     log("onePiecePricing", `failed: ${e instanceof Error ? e.message : String(e)}`);

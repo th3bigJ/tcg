@@ -40,7 +40,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "This Pokémon only calms down when there are no other animals or people around—which means no one has ever seen it when it's not angry."
+    "flavorText": "This Pokémon only calms down when there are no other animals or people around—which means no one has ever seen it when it's not angry.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9255",
@@ -83,7 +86,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "This Pokémon makes a loud jangling noise when it shakes its petals to spread poison powder."
+    "flavorText": "This Pokémon makes a loud jangling noise when it shakes its petals to spread poison powder.",
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9246",
@@ -126,7 +132,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 2,
-    "flavorText": "This Pokémon uses its six-foot tongue as if it were a hand. The origin of its anaesthetic properties is still a mystery."
+    "flavorText": "This Pokémon uses its six-foot tongue as if it were a hand. The origin of its anaesthetic properties is still a mystery.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9237",
@@ -163,7 +172,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When attacked, this Pokémon withdraws into its shell, although it can't quite pull in all of its long tail."
+    "flavorText": "When attacked, this Pokémon withdraws into its shell, although it can't quite pull in all of its long tail.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9228",
@@ -206,7 +218,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Its nonchalant reaction to everything somehow gives this Pokémon an imposing presence."
+    "flavorText": "Its nonchalant reaction to everything somehow gives this Pokémon an imposing presence.",
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9219",
@@ -243,7 +258,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "This Pokémon has a unique cry, as all three of its heads are always talking independently of one another."
+    "flavorText": "This Pokémon has a unique cry, as all three of its heads are always talking independently of one another.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9210",
@@ -286,7 +304,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "This gentle Pokémon can understand human language and allows people to ride on its back."
+    "flavorText": "This gentle Pokémon can understand human language and allows people to ride on its back.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9202",
@@ -329,7 +350,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "This Pokémon's fur repels water like a duck's feathers, allowing it to stay dry and fluffy even in water."
+    "flavorText": "This Pokémon's fur repels water like a duck's feathers, allowing it to stay dry and fluffy even in water.",
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9193",
@@ -372,7 +396,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "This Pokémon attacks its prey with its eighty toxin-producing tentacles."
+    "flavorText": "This Pokémon attacks its prey with its eighty toxin-producing tentacles.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9186",
@@ -415,7 +442,10 @@
     "weakness": "Fire ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "The poison scales on its wings are waterproof, allowing this Pokémon to be active even on rainy days."
+    "flavorText": "The poison scales on its wings are waterproof, allowing this Pokémon to be active even on rainy days.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9177",
@@ -458,7 +488,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": "After lulling its enemies with its large eyes, this Pokémon sings them to sleep with a relaxing melody."
+    "flavorText": "After lulling its enemies with its large eyes, this Pokémon sings them to sleep with a relaxing melody.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9168",
@@ -501,7 +534,10 @@
     "weakness": "Fire ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "When it senses enemies approaching, this Pokémon releases an orange fluid from the joints in its legs and flees."
+    "flavorText": "When it senses enemies approaching, this Pokémon releases an orange fluid from the joints in its legs and flees.",
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9156",
@@ -538,7 +574,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": null,
-    "flavorText": "This Pokémon sometimes hunts for food in rivers, swimming using the small webs between the toes on its rear legs."
+    "flavorText": "This Pokémon sometimes hunts for food in rivers, swimming using the small webs between the toes on its rear legs.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9147",
@@ -581,7 +620,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A sure sign spring is on its way is when the seed on this Pokémon's back flowers."
+    "flavorText": "A sure sign spring is on its way is when the seed on this Pokémon's back flowers.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9139",
@@ -618,7 +660,10 @@
     "weakness": null,
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": "This Pokémon is still immature. When threatened, it releases poison from its head and tries to drive its enemies away."
+    "flavorText": "This Pokémon is still immature. When threatened, it releases poison from its head and tries to drive its enemies away.",
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9130",
@@ -661,7 +706,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "This Pokémon burrows through the earth at high speed, looking for food. The tunnels it digs are used by Diglett as nests."
+    "flavorText": "This Pokémon burrows through the earth at high speed, looking for food. The tunnels it digs are used by Diglett as nests.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9122",
@@ -704,7 +752,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -30",
     "retreatCost": null,
-    "flavorText": "This Pokémon searches for food while flying at Mach 2. Its large claws make fearsome weapons."
+    "flavorText": "This Pokémon searches for food while flying at Mach 2. Its large claws make fearsome weapons.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9116",
@@ -741,6 +792,9 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "This Pokémon's body is covered by fine hairs that can be seen only under a microscope."
+    "flavorText": "This Pokémon's body is covered by fine hairs that can be seen only under a microscope.",
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   }
 ]

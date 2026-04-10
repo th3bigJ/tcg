@@ -34,7 +34,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "Its DNA is said to contain the genetic codes of all Pokémon, so it can use all kinds of techniques."
+    "flavorText": "Its DNA is said to contain the genetic codes of all Pokémon, so it can use all kinds of techniques.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3409",
@@ -60,7 +63,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3408",
@@ -86,7 +92,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3407",
@@ -129,7 +138,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": "It is said to be the guardian of the seas. It is rumored to have been seen on the night of a storm."
+    "flavorText": "It is said to be the guardian of the seas. It is rumored to have been seen on the night of a storm.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3406",
@@ -166,7 +178,10 @@
     "weakness": "Fire ×2",
     "resistance": "Grass -30",
     "retreatCost": 2,
-    "flavorText": "In writings from the distant past, it's called by the name \"the beast that devours the sun.\""
+    "flavorText": "In writings from the distant past, it's called by the name \"the beast that devours the sun.\"",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3405",
@@ -209,7 +224,10 @@
     "weakness": "Fire ×2",
     "resistance": "Grass -30",
     "retreatCost": 2,
-    "flavorText": "It has the power to control time. It appears in Sinnoh-region myths as an ancient deity."
+    "flavorText": "It has the power to control time. It appears in Sinnoh-region myths as an ancient deity.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3404",
@@ -252,7 +270,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": "When its life comes to an end, it absorbs the life energy of every living thing and turns into a cocoon once more."
+    "flavorText": "When its life comes to an end, it absorbs the life energy of every living thing and turns into a cocoon once more.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3403",
@@ -290,7 +311,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3402",
@@ -333,7 +357,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "This legendary Pokémon is said to represent the land. It went to sleep after dueling Kyogre."
+    "flavorText": "This legendary Pokémon is said to represent the land. It went to sleep after dueling Kyogre.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3401",
@@ -371,7 +398,10 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3400",
@@ -414,7 +444,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": "It sometimes summons unknown powers and life-forms here to this world from holes that lead to other worlds."
+    "flavorText": "It sometimes summons unknown powers and life-forms here to this world from holes that lead to other worlds.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3399",
@@ -451,7 +484,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 3,
-    "flavorText": "As it absorbs light, Cosmoem continues to grow. Its golden shell is surprisingly solid."
+    "flavorText": "As it absorbs light, Cosmoem continues to grow. Its golden shell is surprisingly solid.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3398",
@@ -488,7 +524,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "Whether or not it's a Pokémon from this world is a mystery. When it's in a jam, it warps away to a safe place to hide."
+    "flavorText": "Whether or not it's a Pokémon from this world is a mystery. When it's in a jam, it warps away to a safe place to hide.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3397",
@@ -531,7 +570,10 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "When the horns on its head shine in seven colors, it is said to be sharing everlasting life."
+    "flavorText": "When the horns on its head shine in seven colors, it is said to be sharing everlasting life.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3396",
@@ -568,7 +610,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "Its DNA is said to contain the genetic codes of all Pokémon, so it can use all kinds of techniques."
+    "flavorText": "Its DNA is said to contain the genetic codes of all Pokémon, so it can use all kinds of techniques.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3395",
@@ -611,7 +656,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Concealing itself in lightning clouds, it flies throughout the Unova region. It creates electricity in its tail."
+    "flavorText": "Concealing itself in lightning clouds, it flies throughout the Unova region. It creates electricity in its tail.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3394",
@@ -649,7 +697,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3393",
@@ -687,7 +738,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3392",
@@ -725,7 +779,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -30",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3391",
@@ -769,7 +826,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -30",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3390",
@@ -812,7 +872,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has small electric sacs on both its cheeks. If threatened, it looses electric charges from the sacs."
+    "flavorText": "It has small electric sacs on both its cheeks. If threatened, it looses electric charges from the sacs.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3389",
@@ -849,7 +912,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It has the ability to distort space. It is described as a deity in Sinnoh-region mythology."
+    "flavorText": "It has the ability to distort space. It is described as a deity in Sinnoh-region mythology.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3388",
@@ -892,7 +958,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It is said to have widened the seas by causing downpours. It had been asleep in a marine trench."
+    "flavorText": "It is said to have widened the seas by causing downpours. It had been asleep in a marine trench.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3387",
@@ -935,7 +1004,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "When Reshiram's tail flares, the heat energy moves the atmosphere and changes the world's weather."
+    "flavorText": "When Reshiram's tail flares, the heat energy moves the atmosphere and changes the world's weather.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "3386",
@@ -978,6 +1050,9 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": "It will reveal itself before a pure-hearted Trainer by shining its bright, rainbow-colored wings."
+    "flavorText": "It will reveal itself before a pure-hearted Trainer by shining its bright, rainbow-colored wings.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

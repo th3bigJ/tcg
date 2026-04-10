@@ -35,7 +35,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4553",
@@ -61,7 +64,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "4541",
@@ -87,7 +93,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "4533",
@@ -117,7 +126,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4522",
@@ -154,7 +166,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "To protect itself, it afflicts those around it with nightmares. However, it means no harm."
+    "flavorText": "To protect itself, it afflicts those around it with nightmares. However, it means no harm.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4512",
@@ -191,7 +206,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "On nights around the quarter moon, the aurora from its tail extends and undulates beautifully."
+    "flavorText": "On nights around the quarter moon, the aurora from its tail extends and undulates beautifully.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4504",
@@ -229,7 +247,11 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It is said to have emerged from an egg in a place where there was nothing, then shaped the world."
+    "flavorText": "It is said to have emerged from an egg in a place where there was nothing, then shaped the world.",
+    "pricingVariants": [
+      "holofoil",
+      "jumbo"
+    ]
   },
   {
     "masterCardId": "4497",
@@ -272,7 +294,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "It has the power to control time. It appears in Sinnoh-region myths as an ancient deity."
+    "flavorText": "It has the power to control time. It appears in Sinnoh-region myths as an ancient deity.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4492",
@@ -298,7 +323,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "4482",
@@ -336,7 +364,10 @@
     "weakness": "Colorless ×2",
     "resistance": "Fighting -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4474",
@@ -374,7 +405,10 @@
     "weakness": "Colorless ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4465",
@@ -412,7 +446,10 @@
     "weakness": "Water ×2",
     "resistance": "Fighting -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4456",
@@ -455,7 +492,10 @@
     "weakness": "Fighting +30",
     "resistance": "Metal -20",
     "retreatCost": 2,
-    "flavorText": "It evolved from exposure to a special magnetic field. Three units generate magnetism."
+    "flavorText": "It evolved from exposure to a special magnetic field. Three units generate magnetism.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4446",
@@ -498,7 +538,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4437",
@@ -541,7 +584,10 @@
     "weakness": "Fire ×2",
     "resistance": "Water -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4429",
@@ -578,7 +624,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "tsubasaNakamura"
+    ]
   },
   {
     "masterCardId": "4419",
@@ -621,7 +671,11 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "There is an enduring legend that states this Pokémon towed continents with ropes."
+    "flavorText": "There is an enduring legend that states this Pokémon towed continents with ropes.",
+    "pricingVariants": [
+      "holofoil",
+      "jumbo"
+    ]
   },
   {
     "masterCardId": "4410",
@@ -659,7 +713,10 @@
     "weakness": "Fire ×2",
     "resistance": "Fighting -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4401",
@@ -697,7 +754,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Colorless -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4391",
@@ -735,7 +795,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4382",
@@ -778,7 +841,10 @@
     "weakness": "Water +20",
     "resistance": "Fighting -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4373",
@@ -821,7 +887,10 @@
     "weakness": "Fighting +30",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4364",
@@ -864,7 +933,10 @@
     "weakness": "Darkness +20",
     "resistance": "Colorless -20",
     "retreatCost": null,
-    "flavorText": "It's drowzy in daytime, but flies off in the evening in big groups. No one knows where they go."
+    "flavorText": "It's drowzy in daytime, but flies off in the evening in big groups. No one knows where they go.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4355",
@@ -901,7 +973,10 @@
     "weakness": "Darkness +30",
     "resistance": "Colorless -20",
     "retreatCost": 2,
-    "flavorText": "The antenna on its head captures radio waves from the world of spirits that command it to take people there."
+    "flavorText": "The antenna on its head captures radio waves from the world of spirits that command it to take people there.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4346",
@@ -944,7 +1019,10 @@
     "weakness": "Fire +30",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "It evolved from exposure to a special magnetic field. Three units generate magnetism."
+    "flavorText": "It evolved from exposure to a special magnetic field. Three units generate magnetism.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4338",
@@ -974,7 +1052,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4327",
@@ -1012,7 +1093,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4319",
@@ -1056,7 +1140,10 @@
     "weakness": "Water ×2",
     "resistance": "Lightning -20",
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4312",
@@ -1094,7 +1181,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4302",
@@ -1137,7 +1227,10 @@
     "weakness": "Lightning +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It has the ability to distort space. It is described as a deity in Sinnoh-region mythology."
+    "flavorText": "It has the ability to distort space. It is described as a deity in Sinnoh-region mythology.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4294",
@@ -1180,7 +1273,11 @@
     "weakness": "Fire +20",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "It has the power to control time. It appears in Sinnoh-region myths as an ancient deity."
+    "flavorText": "It has the power to control time. It appears in Sinnoh-region myths as an ancient deity.",
+    "pricingVariants": [
+      "holofoil",
+      "jumbo"
+    ]
   },
   {
     "masterCardId": "4285",
@@ -1206,7 +1303,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "default"
+    ]
   },
   {
     "masterCardId": "4276",
@@ -1250,7 +1350,11 @@
     "weakness": "Fighting +20",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "jumbo"
+    ]
   },
   {
     "masterCardId": "4266",
@@ -1293,7 +1397,10 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It claws if displeased and purrs when affectionate. Its fickleness if very popular among some."
+    "flavorText": "It claws if displeased and purrs when affectionate. Its fickleness if very popular among some.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4254",
@@ -1330,7 +1437,10 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It habitually mimics foes. Once mimicked, the foe cannot take its eyes off this Pokémon."
+    "flavorText": "It habitually mimics foes. Once mimicked, the foe cannot take its eyes off this Pokémon.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4245",
@@ -1373,7 +1483,10 @@
     "weakness": "Fighting +20",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "It turns aggressive if it has too much electricity in its body. It discharges power through its tail."
+    "flavorText": "It turns aggressive if it has too much electricity in its body. It discharges power through its tail.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4236",
@@ -1416,7 +1529,10 @@
     "weakness": "Water +30",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It blasts fireballs of over 3,600 degrees F from the ends of its arms. It lives in volcanic craters."
+    "flavorText": "It blasts fireballs of over 3,600 degrees F from the ends of its arms. It lives in volcanic craters.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4227",
@@ -1454,7 +1570,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4221",
@@ -1492,7 +1611,11 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "davidCohen",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4210",
@@ -1530,7 +1653,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4202",
@@ -1567,7 +1693,10 @@
     "weakness": "Fighting +10",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "It lives in forests with others. It stores electricity in the pouches on its cheeks."
+    "flavorText": "It lives in forests with others. It stores electricity in the pouches on its cheeks.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4191",
@@ -1604,7 +1733,10 @@
     "weakness": "Fighting +10",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "All of its fur dazzles if danger is sensed. It flees while the foe is momentarily blinded."
+    "flavorText": "All of its fur dazzles if danger is sensed. It flees while the foe is momentarily blinded.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4182",
@@ -1647,7 +1779,10 @@
     "weakness": "Lightning +10",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "It can learn and speak human words. If they gather, they all learn the same saying."
+    "flavorText": "It can learn and speak human words. If they gather, they all learn the same saying.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4173",
@@ -1684,7 +1819,10 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has a flotation sac that is like an inflatable collar. It floats on water with its head out."
+    "flavorText": "It has a flotation sac that is like an inflatable collar. It floats on water with its head out.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4163",
@@ -1722,7 +1860,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4154",
@@ -1760,7 +1901,10 @@
     "weakness": "Lightning +30",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4145",
@@ -1798,7 +1942,10 @@
     "weakness": "Water +30",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4135",
@@ -1836,7 +1983,10 @@
     "weakness": "Fire +30",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4126",
@@ -1879,7 +2029,10 @@
     "weakness": "Fire +20",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "A Pokémon that lived in jungles around 100 million years ago. Its facial hide is extremely hard."
+    "flavorText": "A Pokémon that lived in jungles around 100 million years ago. Its facial hide is extremely hard.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4116",
@@ -1922,7 +2075,10 @@
     "weakness": "Grass +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It lived in jungles around 100 million years ago. Its skull is as hard as iron."
+    "flavorText": "It lived in jungles around 100 million years ago. Its skull is as hard as iron.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4108",
@@ -1965,7 +2121,10 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It slams foes by sharply uncoiling its rolled ears. It stings enough to make a grown-up cry in pain."
+    "flavorText": "It slams foes by sharply uncoiling its rolled ears. It stings enough to make a grown-up cry in pain.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4100",
@@ -1991,7 +2150,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "4092",
@@ -2034,7 +2197,10 @@
     "weakness": "Fighting +20",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "It makes fur balls that crackle with static electricity. It stores them with berries in tree holes."
+    "flavorText": "It makes fur balls that crackle with static electricity. It stores them with berries in tree holes.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4084",
@@ -2077,7 +2243,11 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Because it is very proud, it hates accepting food from people. Its thick down guards it from cold."
+    "flavorText": "Because it is very proud, it hates accepting food from people. Its thick down guards it from cold.",
+    "pricingVariants": [
+      "dylanLefavour",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4074",
@@ -2120,7 +2290,10 @@
     "weakness": "Water +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It agilely scales sheer cliffs to live atop craggy mountains. Its fire is put out when it sleeps."
+    "flavorText": "It agilely scales sheer cliffs to live atop craggy mountains. Its fire is put out when it sleeps.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "4064",
@@ -2163,6 +2336,9 @@
     "weakness": "Fire +10",
     "resistance": "Water -20",
     "retreatCost": 2,
-    "flavorText": "Made from soil, the shell on its back hardens when it drinks water. It lives along lakes."
+    "flavorText": "Made from soil, the shell on its back hardens when it drinks water. It lives along lakes.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

@@ -17,6 +17,9 @@
     "seed:missing-set-images": "node --import tsx/esm scripts/uploadSeededImagesToR2.ts",
     "backfill:price-history": "node --import tsx/esm scripts/backfillPriceHistoryFromScrydex.ts",
     "backfill:swsh-tg-external-ids": "node --import tsx/esm scripts/backfillSwshTrainerGalleryExternalIds.ts",
+    "backfill:pricing-variants": "node --import tsx/esm scripts/backfillCardPricingVariants.ts",
+    "migrate:pricing-variant-camelcase": "node --import tsx/esm scripts/migratePricingVariantKeysToCanonicalCamelCase.ts",
+    "report:pricing-variant-collisions": "node --import tsx/esm scripts/reportPricingVariantKeyCollisions.ts",
     "dedupe:price-history-sv-prefixes": "node --import tsx/esm scripts/dedupeSinglesPriceHistorySvPrefixes.ts",
     "backfill:sealed-price-history": "node --import tsx/esm scripts/backfillSealedPriceHistoryFromPokedata.ts",
     "scrape:pricing": "node --import tsx/esm scripts/scrapePricing.ts",
@@ -41,7 +44,8 @@
     "scrape:onepiece-cards": "node --import tsx/esm scripts/scrapeOnePieceCards.ts",
     "scrape:onepiece-pricing": "node --import tsx/esm scripts/scrapeOnePiecePricing.ts",
     "backfill:onepiece-price-history": "node --import tsx/esm scripts/backfillOnePiecePriceHistory.ts",
-    "r2:upload-onepiece": "node --import tsx/esm scripts/uploadOnePieceFolderToR2.ts"
+    "r2:upload-onepiece": "node --import tsx/esm scripts/uploadOnePieceFolderToR2.ts",
+    "r2:download-onepiece": "node --import tsx/esm scripts/downloadOnePieceFolderFromR2.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

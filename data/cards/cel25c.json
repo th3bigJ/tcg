@@ -33,7 +33,10 @@
     "weakness": "Colorless ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22404",
@@ -75,7 +78,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "This Pokémon appears in legends. In its tail, it has a giant generator that creates electricity."
+    "flavorText": "This Pokémon appears in legends. In its tail, it has a giant generator that creates electricity.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22403",
@@ -117,7 +123,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "This Pokémon appears in legends. It sends flames into the air from its tail, burning up everything around it."
+    "flavorText": "This Pokémon appears in legends. It sends flames into the air from its tail, burning up everything around it.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22402",
@@ -154,7 +163,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22401",
@@ -196,7 +208,10 @@
     "weakness": "Water ×2",
     "resistance": "Lightning -20",
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22400",
@@ -239,7 +254,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22399",
@@ -276,7 +294,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22398",
@@ -313,7 +334,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22397",
@@ -339,7 +363,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22396",
@@ -376,7 +403,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22395",
@@ -402,7 +432,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22394",
@@ -445,7 +478,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "An underpowered, pathetic Pokémon. It may jump high on rare occasions, but never more than seven feet."
+    "flavorText": "An underpowered, pathetic Pokémon. It may jump high on rare occasions, but never more than seven feet.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22393",
@@ -488,7 +524,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22392",
@@ -531,7 +570,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22391",
@@ -567,7 +609,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Your Birthdate: ______________________________"
+    "flavorText": "Your Birthdate: ______________________________",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22390",
@@ -603,7 +648,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "Because of its unusual, star-like silhouette, people believe that it came here on a meteor."
+    "flavorText": "Because of its unusual, star-like silhouette, people believe that it came here on a meteor.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22389",
@@ -640,7 +688,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22385",
@@ -676,7 +727,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "This plant blooms when it is absorbing solar energy. It stays on the move to seek sunlight."
+    "flavorText": "This plant blooms when it is absorbing solar energy. It stays on the move to seek sunlight.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22387",
@@ -718,7 +772,10 @@
     "weakness": null,
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22386",
@@ -744,7 +801,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22388",
@@ -780,7 +840,10 @@
     "weakness": "Grass +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22384",
@@ -823,7 +886,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22383",
@@ -859,7 +925,10 @@
     "weakness": "Grass ×2",
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": "Normally found only in the deep ocean, it has recently been seen in shallow waters as well."
+    "flavorText": "Normally found only in the deep ocean, it has recently been seen in shallow waters as well.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22382",
@@ -895,7 +964,10 @@
     "weakness": "Water ×2",
     "resistance": "Fighting -30",
     "retreatCost": 3,
-    "flavorText": "Spits fire that is hot enough to melt boulders. Known to unintentionally cause forest fires."
+    "flavorText": "Spits fire that is hot enough to melt boulders. Known to unintentionally cause forest fires.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "22381",
@@ -931,6 +1003,9 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "A brutal Pokémon with pressurized water jets on its shell. They are used for high-speed tackles."
+    "flavorText": "A brutal Pokémon with pressurized water jets on its shell. They are used for high-speed tackles.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

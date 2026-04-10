@@ -40,7 +40,10 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "No two SPINDA have the same pattern of spots. Its tottering step fouls the aim of foes."
+    "flavorText": "No two SPINDA have the same pattern of spots. Its tottering step fouls the aim of foes.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9247",
@@ -83,7 +86,10 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has a very nervous nature. It stands up high on its tail so it can scan wide areas."
+    "flavorText": "It has a very nervous nature. It stands up high on its tail so it can scan wide areas.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9238",
@@ -126,7 +132,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It uses the horns on its head to sense human emotions. It is said to appear in front of cheerful people."
+    "flavorText": "It uses the horns on its head to sense human emotions. It is said to appear in front of cheerful people.",
+    "pricingVariants": [
+      "jasonKlaczynski",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9229",
@@ -169,7 +179,10 @@
     "weakness": "Fighting +10",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "Its fluffy coat swells to double when static electricity builds up. Touching it can be shocking."
+    "flavorText": "Its fluffy coat swells to double when static electricity builds up. Touching it can be shocking.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9220",
@@ -212,7 +225,10 @@
     "weakness": "Grass +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Many live in the clean seas of the south. They apparently can't live in polluted waters."
+    "flavorText": "Many live in the clean seas of the south. They apparently can't live in polluted waters.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9214",
@@ -249,7 +265,10 @@
     "weakness": "Fire +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "To shelter itself from cold, wintry winds, it covers itself with a cloak made of twigs and leaves."
+    "flavorText": "To shelter itself from cold, wintry winds, it covers itself with a cloak made of twigs and leaves.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9206",
@@ -286,7 +305,10 @@
     "weakness": "Fire +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "To shelter itself from cold, wintry winds, it covers itself with a cloak made of twigs and leaves."
+    "flavorText": "To shelter itself from cold, wintry winds, it covers itself with a cloak made of twigs and leaves.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9197",
@@ -323,7 +345,10 @@
     "weakness": "Fire +20",
     "resistance": "Lightning -20",
     "retreatCost": 1,
-    "flavorText": "When BURMY evolved, it cloak became a part of this Pokémon's body. The cloak is never shed."
+    "flavorText": "When BURMY evolved, it cloak became a part of this Pokémon's body. The cloak is never shed.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9189",
@@ -366,7 +391,10 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Staring at its antlers creates an odd sensation as if one were being drawn into their centers."
+    "flavorText": "Staring at its antlers creates an odd sensation as if one were being drawn into their centers.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9180",
@@ -409,7 +437,12 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is highly perceptive of its Trainer's feelings. It dances when it is feeling happy."
+    "flavorText": "It is highly perceptive of its Trainer's feelings. It dances when it is feeling happy.",
+    "pricingVariants": [
+      "holofoil",
+      "jasonKlaczynski",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9171",
@@ -452,7 +485,10 @@
     "weakness": "Fighting +20",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "If its coat becomes fully charged with electricity, its tail lights up. It fire hair that zaps on impact."
+    "flavorText": "If its coat becomes fully charged with electricity, its tail lights up. It fire hair that zaps on impact.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9162",
@@ -495,7 +531,10 @@
     "weakness": "Metal +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It carries food rolled up in its tail. It has the habit of sharing food with people lost in mountains."
+    "flavorText": "It carries food rolled up in its tail. It has the habit of sharing food with people lost in mountains.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9152",
@@ -538,7 +577,11 @@
     "weakness": "Fire +20",
     "resistance": "Fighting -20",
     "retreatCost": null,
-    "flavorText": "It loves the honey of flowers and steals honey collected by COMBEE."
+    "flavorText": "It loves the honey of flowers and steals honey collected by COMBEE.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9143",
@@ -581,7 +624,11 @@
     "weakness": "Colorless +20",
     "resistance": "Fighting -20",
     "retreatCost": 2,
-    "flavorText": "A highly intelligent Pokémon. By folding back its wings in flight, it can overtake jet planes."
+    "flavorText": "A highly intelligent Pokémon. By folding back its wings in flight, it can overtake jet planes.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9133",
@@ -624,7 +671,11 @@
     "weakness": "Colorless +20",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "Its body is covered with a down that can refract light in such a way that it becomes invisible."
+    "flavorText": "Its body is covered with a down that can refract light in such a way that it becomes invisible.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9120",
@@ -667,7 +718,13 @@
     "weakness": "Psychic +30",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "A master of courtesy and swordsmanship, it fights using extending swords on it elbows."
+    "flavorText": "A master of courtesy and swordsmanship, it fights using extending swords on it elbows.",
+    "pricingVariants": [
+      "holofoil",
+      "jasonKlaczynski",
+      "michaelPramawat",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9113",
@@ -704,6 +761,10 @@
     "weakness": "Fighting +30",
     "resistance": "Metal -20",
     "retreatCost": 3,
-    "flavorText": "The tip of its tail shines brightly. In the olden days, people sent signals using the tail's light."
+    "flavorText": "The tip of its tail shines brightly. In the olden days, people sent signals using the tail's light.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   }
 ]

@@ -23,7 +23,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9047",
@@ -66,7 +69,10 @@
     "weakness": "Darkness +20",
     "resistance": "Colorless -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9044",
@@ -109,7 +115,10 @@
     "weakness": "Darkness +20",
     "resistance": "Colorless -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9040",
@@ -152,7 +161,10 @@
     "weakness": "Darkness +20",
     "resistance": "Colorless -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9036",
@@ -195,7 +207,10 @@
     "weakness": "Darkness +20",
     "resistance": "Colorless -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9032",
@@ -238,7 +253,10 @@
     "weakness": "Darkness +20",
     "resistance": "Colorless -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9028",
@@ -275,7 +293,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "One summer, a group of Pikachu was found riding the waves at the local beach."
+    "flavorText": "One summer, a group of Pikachu was found riding the waves at the local beach.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "9025",
@@ -318,7 +339,10 @@
     "weakness": null,
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "By learning how to fly, Pikachu overcame its weakness to Fighting Pokémon."
+    "flavorText": "By learning how to fly, Pikachu overcame its weakness to Fighting Pokémon.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "9020",
@@ -361,7 +385,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has small electric sacs on both its cheeks. If threatened, it looses electric charges from the sacs."
+    "flavorText": "It has small electric sacs on both its cheeks. If threatened, it looses electric charges from the sacs.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "9015",
@@ -399,7 +426,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "9011",
@@ -437,7 +467,10 @@
     "weakness": "Darkness ×2",
     "resistance": "Colorless -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "9005",
@@ -475,7 +508,14 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "mychaelBryan",
+      "stephenSilvestro",
+      "tsubasaNakamura",
+      "yutaKomatsuda"
+    ]
   },
   {
     "masterCardId": "9000",
@@ -513,7 +553,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "8995",
@@ -551,7 +594,10 @@
     "weakness": "Water ×2",
     "resistance": "Lightning -20",
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "8990",
@@ -589,7 +635,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "8985",
@@ -627,7 +676,11 @@
     "weakness": "Colorless ×2",
     "resistance": "Lightning -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "davidCohen",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "8980",
@@ -665,7 +718,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "8975",
@@ -703,7 +759,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "8970",
@@ -729,7 +788,13 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "davidCohen",
+      "leagueStamp",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8967",
@@ -755,7 +820,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8962",
@@ -781,7 +850,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8957",
@@ -807,7 +880,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8951",
@@ -833,7 +910,12 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "leagueStamp",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8946",
@@ -859,7 +941,12 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "leagueStamp",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8940",
@@ -885,7 +972,15 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "leagueStamp",
+      "normal",
+      "reverseHolofoil",
+      "stephenSilvestro",
+      "tsubasaNakamura",
+      "yutaKomatsuda"
+    ]
   },
   {
     "masterCardId": "8935",
@@ -919,7 +1014,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8930",
@@ -945,7 +1044,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8925",
@@ -971,7 +1074,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8921",
@@ -997,7 +1104,13 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "leagueStamp",
+      "michaelPramawat",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8916",
@@ -1023,7 +1136,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8911",
@@ -1049,7 +1166,11 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8906",
@@ -1075,7 +1196,19 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "davidCohen",
+      "jasonMartinez",
+      "leagueStamp",
+      "michaelPramawat",
+      "mychaelBryan",
+      "normal",
+      "reverseHolofoil",
+      "stephenSilvestro",
+      "tsubasaNakamura",
+      "yukaFurusawa"
+    ]
   },
   {
     "masterCardId": "8901",
@@ -1101,7 +1234,13 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil",
+      "tsubasaNakamura",
+      "yutaKomatsuda"
+    ]
   },
   {
     "masterCardId": "8897",
@@ -1144,7 +1283,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8891",
@@ -1187,7 +1330,11 @@
     "weakness": "Fire +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It eats its weight in leaves every day. It fends off attackers with the needle on its head."
+    "flavorText": "It eats its weight in leaves every day. It fends off attackers with the needle on its head.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8885",
@@ -1224,7 +1371,11 @@
     "weakness": "Fire ×2",
     "resistance": "Water -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8879",
@@ -1261,7 +1412,11 @@
     "weakness": "Water +10",
     "resistance": "Lightning -20",
     "retreatCost": 1,
-    "flavorText": "It makes a conical pit in desert sand and lies in wait at the bottom for prey to come tumbling down."
+    "flavorText": "It makes a conical pit in desert sand and lies in wait at the bottom for prey to come tumbling down.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8873",
@@ -1304,7 +1459,11 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "If its body is torn, it can grow back if the red core remains. The core flashes at midnight."
+    "flavorText": "If its body is torn, it can grow back if the red core remains. The core flashes at midnight.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8868",
@@ -1347,7 +1506,11 @@
     "weakness": "Metal +10",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It rolls across ice floes to reach shore because its body is poorly shaped for swimming."
+    "flavorText": "It rolls across ice floes to reach shore because its body is poorly shaped for swimming.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8862",
@@ -1390,7 +1553,11 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8856",
@@ -1433,7 +1600,11 @@
     "weakness": "Grass +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Beware of pushing strongly on its squishy body, as it makes a mysterious purple fluid ooze out."
+    "flavorText": "Beware of pushing strongly on its squishy body, as it makes a mysterious purple fluid ooze out.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8851",
@@ -1476,7 +1647,11 @@
     "weakness": "Grass +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Beware of pushing strongly on its squishy body, as it makes a mysterious purple fluid ooze out."
+    "flavorText": "Beware of pushing strongly on its squishy body, as it makes a mysterious purple fluid ooze out.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8845",
@@ -1519,7 +1694,11 @@
     "weakness": "Fire +10",
     "resistance": "Water -20",
     "retreatCost": 1,
-    "flavorText": "When it dangles from a tree branch, it looks just like an acorn. It enjoys scaring other Pokémon."
+    "flavorText": "When it dangles from a tree branch, it looks just like an acorn. It enjoys scaring other Pokémon.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8839",
@@ -1562,7 +1741,11 @@
     "weakness": "Metal +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It habitually spins things on its nose. By doing so, it learns textures and odors."
+    "flavorText": "It habitually spins things on its nose. By doing so, it learns textures and odors.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8833",
@@ -1599,7 +1782,11 @@
     "weakness": "Grass ×2",
     "resistance": "Lightning -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8825",
@@ -1642,7 +1829,11 @@
     "weakness": "Fire +20",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "The sound of its grass flute makes its listeners uneasy. It lives deep in forests."
+    "flavorText": "The sound of its grass flute makes its listeners uneasy. It lives deep in forests.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8819",
@@ -1685,7 +1876,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It has a violent disposition and stabs foes with its horn, which oozes poison upon impact."
+    "flavorText": "It has a violent disposition and stabs foes with its horn, which oozes poison upon impact.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8813",
@@ -1728,7 +1923,12 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "When it senses danger, it raises all the barbs on its body. These barbs grow slower than NIDORINO's."
+    "flavorText": "When it senses danger, it raises all the barbs on its body. These barbs grow slower than NIDORINO's.",
+    "pricingVariants": [
+      "jasonMartinez",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8806",
@@ -1771,7 +1971,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It scans its surroundings by raising its ears out of the grass. Its toxic horn is for protection."
+    "flavorText": "It scans its surroundings by raising its ears out of the grass. Its toxic horn is for protection.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8800",
@@ -1814,7 +2018,13 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "While it does not prefer to fight, even one drop of the poison it secretes from barbs can be fatal."
+    "flavorText": "While it does not prefer to fight, even one drop of the poison it secretes from barbs can be fatal.",
+    "pricingVariants": [
+      "davidCohen",
+      "jasonMartinez",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8793",
@@ -1851,7 +2061,11 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It hides food under its long body hair. However, it forgets it has hidden the food."
+    "flavorText": "It hides food under its long body hair. However, it forgets it has hidden the food.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8787",
@@ -1888,7 +2102,11 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "In its desperation to gulp down food, it forgets about the food it has hidden under its fur."
+    "flavorText": "In its desperation to gulp down food, it forgets about the food it has hidden under its fur.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8781",
@@ -1931,7 +2149,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Lighter-than-air gases in its body keep it aloft. The gases not only smell, they are also explosive."
+    "flavorText": "Lighter-than-air gases in its body keep it aloft. The gases not only smell, they are also explosive.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8775",
@@ -1968,7 +2190,11 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It can freely change its body's color. The zigzag pattern on its belly doesn't change, however."
+    "flavorText": "It can freely change its body's color. The zigzag pattern on its belly doesn't change, however.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8769",
@@ -2005,7 +2231,12 @@
     "weakness": "Fire +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "While awaiting evolution, it hides from predators under leaves and in nooks of branches."
+    "flavorText": "While awaiting evolution, it hides from predators under leaves and in nooks of branches.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil",
+      "stephenSilvestro"
+    ]
   },
   {
     "masterCardId": "8758",
@@ -2048,7 +2279,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8753",
@@ -2091,7 +2326,11 @@
     "weakness": "Water +10",
     "resistance": "Lightning -20",
     "retreatCost": 2,
-    "flavorText": "It shuts its nostrils tight then travels through sand as if walking. They form colonies of around ten."
+    "flavorText": "It shuts its nostrils tight then travels through sand as if walking. They form colonies of around ten.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8748",
@@ -2134,7 +2373,11 @@
     "weakness": "Water +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "A Pokémon with a loyal nature. It will remain motionless until it is given an order by its Trainer."
+    "flavorText": "A Pokémon with a loyal nature. It will remain motionless until it is given an order by its Trainer.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8743",
@@ -2177,7 +2420,12 @@
     "weakness": "Water ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "crackedIceReverseHolofoil",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8738",
@@ -2220,7 +2468,11 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8728",
@@ -2263,7 +2515,12 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "crackedIceReverseHolofoil",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8722",
@@ -2306,7 +2563,11 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Because its genetic makeup is irregular, it quickly changes its form due to a variety of causes."
+    "flavorText": "Because its genetic makeup is irregular, it quickly changes its form due to a variety of causes.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8716",
@@ -2349,7 +2610,11 @@
     "weakness": "Lightning +10",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "They swarm any foes that invades their territory. Their sharp fangs can tear out boat hulls."
+    "flavorText": "They swarm any foes that invades their territory. Their sharp fangs can tear out boat hulls.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8710",
@@ -2392,7 +2657,11 @@
     "weakness": "Fire +10",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "It usually lives deep in mountains. However, hunger may drive it to eat railroad tracks and cars."
+    "flavorText": "It usually lives deep in mountains. However, hunger may drive it to eat railroad tracks and cars.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8704",
@@ -2435,7 +2704,11 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8699",
@@ -2478,7 +2751,11 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8693",
@@ -2521,7 +2798,11 @@
     "weakness": "Grass ×2",
     "resistance": "Lightning -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8688",
@@ -2564,7 +2845,12 @@
     "weakness": "Colorless +20",
     "resistance": "Lightning -20",
     "retreatCost": 1,
-    "flavorText": "It violently shudders its wings, generating ultrasonic waves to induce headaches in people."
+    "flavorText": "It violently shudders its wings, generating ultrasonic waves to induce headaches in people.",
+    "pricingVariants": [
+      "davidCohen",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8683",
@@ -2613,7 +2899,13 @@
     "weakness": "Fire +20",
     "resistance": "Fighting -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "expansionStaffStamp",
+      "expansionStamp",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8676",
@@ -2656,7 +2948,11 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8670",
@@ -2699,7 +2995,11 @@
     "weakness": "Lightning +20",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8664",
@@ -2742,7 +3042,11 @@
     "weakness": "Lightning +20",
     "resistance": "Psychic -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8660",
@@ -2785,7 +3089,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8654",
@@ -2828,7 +3136,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8649",
@@ -2871,7 +3183,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8643",
@@ -2914,7 +3230,11 @@
     "weakness": "Fire +20",
     "resistance": "Water -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8640",
@@ -2957,7 +3277,11 @@
     "weakness": "Fire +20",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "For food, it digs up iron ore. It smashes its steely body against others to fight over territory."
+    "flavorText": "For food, it digs up iron ore. It smashes its steely body against others to fight over territory.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8636",
@@ -3000,7 +3324,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8629",
@@ -3037,7 +3365,11 @@
     "weakness": "Water ×2",
     "resistance": "Lightning -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8622",
@@ -3080,7 +3412,11 @@
     "weakness": "Metal +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8616",
@@ -3123,7 +3459,11 @@
     "weakness": "Darkness ×2",
     "resistance": "Colorless -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8611",
@@ -3166,7 +3506,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8604",
@@ -3209,7 +3553,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8597",
@@ -3252,7 +3600,11 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8591",
@@ -3289,7 +3641,11 @@
     "weakness": "Metal +30",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "It shatters ice with its big tusks. Its thick blubber repels not only the cold, but also enemy attacks."
+    "flavorText": "It shatters ice with its big tusks. Its thick blubber repels not only the cold, but also enemy attacks.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8585",
@@ -3326,7 +3682,11 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8579",
@@ -3369,7 +3729,11 @@
     "weakness": "Lightning +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8572",
@@ -3412,7 +3776,12 @@
     "weakness": "Fighting +20",
     "resistance": null,
     "retreatCost": 4,
-    "flavorText": "It stops eating only to sleep. It doesn't feel full unless it eats nearly 900 pounds a day."
+    "flavorText": "It stops eating only to sleep. It doesn't feel full unless it eats nearly 900 pounds a day.",
+    "pricingVariants": [
+      "leagueStamp",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8563",
@@ -3455,7 +3824,12 @@
     "weakness": "Water ×2",
     "resistance": "Lightning -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8557",
@@ -3498,7 +3872,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8551",
@@ -3541,7 +3919,13 @@
     "weakness": "Psychic +30",
     "resistance": "Lightning -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "davidCohen",
+      "jasonMartinez",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8545",
@@ -3584,7 +3968,11 @@
     "weakness": "Water +30",
     "resistance": "Lightning -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8539",
@@ -3627,7 +4015,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8528",
@@ -3664,7 +4056,11 @@
     "weakness": "Metal ×2",
     "resistance": "Lightning -20",
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8521",
@@ -3707,7 +4103,11 @@
     "weakness": "Fighting +20",
     "resistance": "Metal -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8516",
@@ -3750,7 +4150,11 @@
     "weakness": "Water +20",
     "resistance": "Lightning -20",
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8509",
@@ -3793,7 +4197,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8500",
@@ -3836,7 +4244,11 @@
     "weakness": "Grass ×2",
     "resistance": "Lightning -20",
     "retreatCost": 4,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8492",
@@ -3885,7 +4297,11 @@
     "weakness": "Grass +30",
     "resistance": "Lightning -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8485",
@@ -3928,7 +4344,11 @@
     "weakness": "Grass +30",
     "resistance": "Lightning -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8479",
@@ -3971,7 +4391,12 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "cosmosHolofoil",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8474",
@@ -4014,7 +4439,11 @@
     "weakness": "Water +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8468",
@@ -4057,7 +4486,11 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8458",
@@ -4100,7 +4533,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8449",
@@ -4143,7 +4580,11 @@
     "weakness": "Psychic ×2",
     "resistance": "Fire -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8440",
@@ -4180,7 +4621,12 @@
     "weakness": "Fire +30",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its best attack involves flying around at high speed, striking with poison needles, then flying off."
+    "flavorText": "Its best attack involves flying around at high speed, striking with poison needles, then flying off.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil",
+      "stephenSilvestro"
+    ]
   },
   {
     "masterCardId": "8430",
@@ -4229,7 +4675,11 @@
     "weakness": "Fire +30",
     "resistance": "Psychic -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8422",
@@ -4272,7 +4722,11 @@
     "weakness": "Fire +30",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8413",
@@ -4315,7 +4769,11 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8404",
@@ -4358,7 +4816,11 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8396",
@@ -4401,7 +4863,11 @@
     "weakness": "Darkness ×2",
     "resistance": "Colorless -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8381",
@@ -4444,7 +4910,15 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "mychaelBryan",
+      "reverseHolofoil",
+      "stephenSilvestro",
+      "tsubasaNakamura",
+      "yutaKomatsuda"
+    ]
   },
   {
     "masterCardId": "8370",
@@ -4481,7 +4955,13 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil",
+      "tsubasaNakamura",
+      "yutaKomatsuda"
+    ]
   },
   {
     "masterCardId": "8362",
@@ -4524,7 +5004,11 @@
     "weakness": "Fire +20",
     "resistance": "Psychic -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8352",
@@ -4567,7 +5051,11 @@
     "weakness": "Metal ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8341",
@@ -4610,7 +5098,13 @@
     "weakness": "Colorless +30",
     "resistance": "Lightning -20",
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "davidCohen",
+      "holofoil",
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8331",
@@ -4653,7 +5147,11 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8321",
@@ -4690,7 +5188,11 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8309",
@@ -4733,7 +5235,11 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 3,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "8307",
@@ -4776,6 +5282,10 @@
     "weakness": "Water +20",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil",
+      "reverseHolofoil"
+    ]
   }
 ]

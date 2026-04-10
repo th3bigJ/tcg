@@ -30,7 +30,7 @@ type Props = {
 };
 
 function cardStableId(card: OnePieceCardRecord): string {
-  return [card.cardNumber, card.variant ?? "normal", card.tcgplayerProductId ?? ""].join("|");
+  return [card.cardNumber, card.variant ?? "normal", card.priceKey ?? card.tcgplayerProductId ?? ""].join("|");
 }
 
 function buildOnePieceEbaySearchQuery(card: OnePieceCardRecord, setName?: string | null): string {
@@ -469,15 +469,15 @@ export function OnePieceBrowseClient({
                     </div>
 
                     <ModalCardPricing
-                      externalId={detailCard.tcgplayerProductId}
+                      externalId={detailCard.priceKey ?? detailCard.tcgplayerProductId}
                       pricingUrl={
-                        detailCard.tcgplayerProductId
-                          ? `/api/onepiece/card-prices/${encodeURIComponent(detailCard.tcgplayerProductId)}?set=${encodeURIComponent(detailCard.setCode)}&variant=${encodeURIComponent(detailCard.variant ?? "normal")}`
+                        detailCard.priceKey || detailCard.tcgplayerProductId
+                          ? `/api/onepiece/card-prices/${encodeURIComponent(detailCard.priceKey ?? detailCard.tcgplayerProductId ?? "")}?set=${encodeURIComponent(detailCard.setCode)}&variant=${encodeURIComponent(detailCard.variant ?? "normal")}`
                           : null
                       }
                       historyUrl={
-                        detailCard.tcgplayerProductId
-                          ? `/api/onepiece/card-price-history/${encodeURIComponent(detailCard.tcgplayerProductId)}?set=${encodeURIComponent(detailCard.setCode)}&variant=${encodeURIComponent(detailCard.variant ?? "normal")}`
+                        detailCard.priceKey || detailCard.tcgplayerProductId
+                          ? `/api/onepiece/card-price-history/${encodeURIComponent(detailCard.priceKey ?? detailCard.tcgplayerProductId ?? "")}?set=${encodeURIComponent(detailCard.setCode)}&variant=${encodeURIComponent(detailCard.variant ?? "normal")}`
                           : null
                       }
                       ebaySearchQuery={buildOnePieceEbaySearchQuery(detailCard, activeSetMeta?.name)}

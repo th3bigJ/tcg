@@ -40,7 +40,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "With its sharp fangs, it will bite anything. It did not originally live in Alola but was imported from another region."
+    "flavorText": "With its sharp fangs, it will bite anything. It did not originally live in Alola but was imported from another region.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21999",
@@ -77,7 +80,10 @@
     "weakness": "Lightning ×2",
     "resistance": "Fighting -20",
     "retreatCost": 1,
-    "flavorText": "This Pokémon feeds on berries, whose leftover seeds become the ammunition for the attacks it fires off from its mouth."
+    "flavorText": "This Pokémon feeds on berries, whose leftover seeds become the ammunition for the attacks it fires off from its mouth.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21998",
@@ -114,7 +120,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 1,
-    "flavorText": "It feeds on the nectar and pollen of flowers. Because it's able to sense auras, it can identify which flowers are about to bloom."
+    "flavorText": "It feeds on the nectar and pollen of flowers. Because it's able to sense auras, it can identify which flowers are about to bloom.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21997",
@@ -157,7 +166,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "Its head sports an altered form of whiskers made of metal. When in communication with its comrades, its whiskers wobble to and fro."
+    "flavorText": "Its head sports an altered form of whiskers made of metal. When in communication with its comrades, its whiskers wobble to and fro.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21996",
@@ -194,7 +206,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "This Pokémon was not originally found in Alola. Human actions caused a surge in their numbers, and they went feral. They're prideful and crafty."
+    "flavorText": "This Pokémon was not originally found in Alola. Human actions caused a surge in their numbers, and they went feral. They're prideful and crafty.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21995",
@@ -237,7 +252,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It punches so much, its pincers often come off from overuse, but they grow back quickly. What little meat they contain is rich and delicious."
+    "flavorText": "It punches so much, its pincers often come off from overuse, but they grow back quickly. What little meat they contain is rich and delicious.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21994",
@@ -274,7 +292,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its body is gaseous and frail. It slowly grows as it collects dust from the atmosphere."
+    "flavorText": "Its body is gaseous and frail. It slowly grows as it collects dust from the atmosphere.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21993",
@@ -317,7 +338,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "A plan was recently announced to gather many Pikachu and make an electric power plant."
+    "flavorText": "A plan was recently announced to gather many Pikachu and make an electric power plant.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21992",
@@ -360,7 +384,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "This Pokémon snorts body fluids from its nose, blowing balloons to smash into its foes. It's famous for being a hard worker."
+    "flavorText": "This Pokémon snorts body fluids from its nose, blowing balloons to smash into its foes. It's famous for being a hard worker.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21991",
@@ -403,7 +430,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "While grooming itself, it builds up fur inside its stomach. It sets the fur alight and spews fiery attacks, which change based on how it coughs."
+    "flavorText": "While grooming itself, it builds up fur inside its stomach. It sets the fur alight and spews fiery attacks, which change based on how it coughs.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21990",
@@ -440,7 +470,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "They often gather near places frequented by electric Pokémon in order to avoid being attacked by bird Pokémon."
+    "flavorText": "They often gather near places frequented by electric Pokémon in order to avoid being attacked by bird Pokémon.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21989",
@@ -483,6 +516,9 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "This wary Pokémon uses photosynthesis to store up energy during the day, while becoming active at night."
+    "flavorText": "This wary Pokémon uses photosynthesis to store up energy during the day, while becoming active at night.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

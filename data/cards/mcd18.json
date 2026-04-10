@@ -40,7 +40,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Roughly 20 years ago, it was artificially created, utilizing the latest technology of the time."
+    "flavorText": "Roughly 20 years ago, it was artificially created, utilizing the latest technology of the time.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21987",
@@ -77,7 +80,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Possessing an unbalanced and unstable genetic makeup, it conceals many possible evolutions."
+    "flavorText": "Possessing an unbalanced and unstable genetic makeup, it conceals many possible evolutions.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21986",
@@ -120,7 +126,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "The eggs laid by Chansey are rich in nutrients and a favorite food of many Pokémon."
+    "flavorText": "The eggs laid by Chansey are rich in nutrients and a favorite food of many Pokémon.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21985",
@@ -163,7 +172,10 @@
     "weakness": "Fairy ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "After a 10-hour struggle, a fisherman was able to pull one up and confirm its existence."
+    "flavorText": "After a 10-hour struggle, a fisherman was able to pull one up and confirm its existence.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21984",
@@ -206,7 +218,10 @@
     "weakness": "Fire ×2",
     "resistance": "Psychic -20",
     "retreatCost": 1,
-    "flavorText": "It sends out electromagnetic waves, which let it float through the air. Touching it while it's eating electricity will give you a full-body shock."
+    "flavorText": "It sends out electromagnetic waves, which let it float through the air. Touching it while it's eating electricity will give you a full-body shock.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21983",
@@ -249,7 +264,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "When it thinks of its deceased mother, it weeps loudly. Mandibuzz that hear its cries will attack it from the air."
+    "flavorText": "When it thinks of its deceased mother, it weeps loudly. Mandibuzz that hear its cries will attack it from the air.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21982",
@@ -286,7 +304,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It loves working out. As it gazes at its muscles, which continue to swell day by day, it becomes more and more dedicated to its training."
+    "flavorText": "It loves working out. As it gazes at its muscles, which continue to swell day by day, it becomes more and more dedicated to its training.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21981",
@@ -329,7 +350,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Its long tail often breaks off. It doesn't really feel any pain, though, and the tail grows back, so Slowpoke isn't particularly bothered."
+    "flavorText": "Its long tail often breaks off. It doesn't really feel any pain, though, and the tail grows back, so Slowpoke isn't particularly bothered.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21980",
@@ -372,7 +396,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "A plan was recently announced to gather many Pikachu and make an electric power plant."
+    "flavorText": "A plan was recently announced to gather many Pikachu and make an electric power plant.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21979",
@@ -409,7 +436,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Known to shoot down flying bugs with precision blasts of ink from the surface of the water."
+    "flavorText": "Known to shoot down flying bugs with precision blasts of ink from the surface of the water.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21978",
@@ -446,7 +476,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "As a result of headaches so fierce they cause it to cry, it sometimes uses psychokinesis without meaning to."
+    "flavorText": "As a result of headaches so fierce they cause it to cry, it sometimes uses psychokinesis without meaning to.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "21977",
@@ -483,6 +516,9 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It's both clever and loyal, but if a stranger tries to invade its territory, it barks threateningly."
+    "flavorText": "It's both clever and loyal, but if a stranger tries to invade its territory, it barks threateningly.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

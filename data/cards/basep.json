@@ -34,7 +34,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1959",
@@ -71,7 +74,11 @@
     "weakness": "Water ×2",
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "pokemonCenterStamp"
+    ]
   },
   {
     "masterCardId": "1958",
@@ -114,7 +121,11 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal",
+      "pokemonCenterStamp"
+    ]
   },
   {
     "masterCardId": "1957",
@@ -151,7 +162,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1956",
@@ -188,7 +202,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 4,
-    "flavorText": "Very lazy. Just eats and sleeps. As its rotund bulk builds, it becomes steadily more slothful."
+    "flavorText": "Very lazy. Just eats and sleeps. As its rotund bulk builds, it becomes steadily more slothful.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1955",
@@ -225,7 +242,10 @@
     "weakness": null,
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": "A legendary bird Pokémon that is said to appear to doomed people who are lost in icy mountains."
+    "flavorText": "A legendary bird Pokémon that is said to appear to doomed people who are lost in icy mountains.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1954",
@@ -262,7 +282,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "So rare that it is still said to be a mirage by many experts. Only a few people have seen it worldwide."
+    "flavorText": "So rare that it is still said to be a mirage by many experts. Only a few people have seen it worldwide.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1953",
@@ -305,7 +328,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Normally found near power plants, it can wander away and cause major blackouts in cities."
+    "flavorText": "Normally found near power plants, it can wander away and cause major blackouts in cities.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1952",
@@ -342,7 +368,10 @@
     "weakness": "Fire ×2",
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "With ninja-like agility and speed, it can create the illusion that there is more than one."
+    "flavorText": "With ninja-like agility and speed, it can create the illusion that there is more than one.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1951",
@@ -385,7 +414,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Its body always burns with an orange glow that enables it to hide perfectly among flames."
+    "flavorText": "Its body always burns with an orange glow that enables it to hide perfectly among flames.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1950",
@@ -428,7 +460,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Using its amazing muscles, it throws powerful punches that can knock its victim clear over the horizon."
+    "flavorText": "Using its amazing muscles, it throws powerful punches that can knock its victim clear over the horizon.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1949",
@@ -454,7 +489,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1948",
@@ -480,7 +518,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1947",
@@ -506,7 +547,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1946",
@@ -549,7 +593,10 @@
     "weakness": null,
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "It loves to bite and yank people's hair from behind without warning, just to see their shocked reactions."
+    "flavorText": "It loves to bite and yank people's hair from behind without warning, just to see their shocked reactions.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1945",
@@ -587,7 +634,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Their shapes look like hieroglyphs on ancient tablets. It is said that the two are somehow related."
+    "flavorText": "Their shapes look like hieroglyphs on ancient tablets. It is said that the two are somehow related.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1944",
@@ -630,7 +680,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It launches kicks while spinning. If it spins at high speed, it may bore its way into the ground."
+    "flavorText": "It launches kicks while spinning. If it spins at high speed, it may bore its way into the ground.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1943",
@@ -668,7 +721,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "Its extremely flexible and elastic body makes it bounce continuously—anytime, anywhere."
+    "flavorText": "Its extremely flexible and elastic body makes it bounce continuously—anytime, anywhere.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1942",
@@ -706,7 +762,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "It is not yet skilled at storing electricity. It may send out a jolt if amused or startled."
+    "flavorText": "It is not yet skilled at storing electricity. It may send out a jolt if amused or startled.",
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "1941",
@@ -743,7 +802,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Volcanoes erupt when it barks. Unable to restrain its extreme power, it races headlong around the land."
+    "flavorText": "Volcanoes erupt when it barks. Unable to restrain its extreme power, it races headlong around the land.",
+    "pricingVariants": [
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "1940",
@@ -786,7 +848,10 @@
     "weakness": "Fire ×2",
     "resistance": "Grass -30",
     "retreatCost": 2,
-    "flavorText": "Its wings are not used for flying. They are flapped at high speed to adjust its body temperature."
+    "flavorText": "Its wings are not used for flying. They are flapped at high speed to adjust its body temperature.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1939",
@@ -823,7 +888,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": "Once it becomes an adult, it has a tendency to let its comrades plant footprints on its back."
+    "flavorText": "Once it becomes an adult, it has a tendency to let its comrades plant footprints on its back.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1938",
@@ -861,7 +929,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "Because of its unusual, star-like silhouette, people believe that it came here on a meteor."
+    "flavorText": "Because of its unusual, star-like silhouette, people believe that it came here on a meteor.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1937",
@@ -904,7 +975,10 @@
     "weakness": null,
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": "Still only a hatchling, it uses poison to chase off its enemies when threatened."
+    "flavorText": "Still only a hatchling, it uses poison to chase off its enemies when threatened.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1936",
@@ -941,7 +1015,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "The tip of its tail, which contains oil that is lighter than water, lets it swim without drowning."
+    "flavorText": "The tip of its tail, which contains oil that is lighter than water, lets it swim without drowning.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1935",
@@ -978,7 +1055,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "One summer, a group of Pikachus was found riding the waves at the local beach."
+    "flavorText": "One summer, a group of Pikachus was found riding the waves at the local beach.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1934",
@@ -1021,7 +1101,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": "When several of these Pokémon gather, their electricity can cause lightning storms."
+    "flavorText": "When several of these Pokémon gather, their electricity can cause lightning storms.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1933",
@@ -1064,7 +1147,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It uses its sensitive tail to sense its environment and has been known to react violently if its tail is grabbed."
+    "flavorText": "It uses its sensitive tail to sense its environment and has been known to react violently if its tail is grabbed.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1932",
@@ -1107,7 +1193,10 @@
     "weakness": null,
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "By learning how to fly, Pikachu overcame its weakness to Fighting Pokémon."
+    "flavorText": "By learning how to fly, Pikachu overcame its weakness to Fighting Pokémon.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1931",
@@ -1144,7 +1233,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Your Birthdate: ______________________________"
+    "flavorText": "Your Birthdate: ______________________________",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "1930",
@@ -1181,7 +1273,10 @@
     "weakness": null,
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "This legendary Pokémon is said to be present wherever there is a lightning storm."
+    "flavorText": "This legendary Pokémon is said to be present wherever there is a lightning storm.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1929",
@@ -1218,7 +1313,10 @@
     "weakness": null,
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "This legendary Pokémon is said to freeze the water in the air during winter, causing snow."
+    "flavorText": "This legendary Pokémon is said to freeze the water in the air during winter, causing snow.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1928",
@@ -1255,7 +1353,10 @@
     "weakness": null,
     "resistance": "Fighting -30",
     "retreatCost": 1,
-    "flavorText": "The flames on this legendary Pokémon's wings burn so brightly that they can make night seem like day."
+    "flavorText": "The flames on this legendary Pokémon's wings burn so brightly that they can make night seem like day.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1927",
@@ -1298,7 +1399,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "While lulling its enemies with its vacant look, this wily Pokémon will use psychokinetic powers."
+    "flavorText": "While lulling its enemies with its vacant look, this wily Pokémon will use psychokinetic powers.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1926",
@@ -1341,7 +1445,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1925",
@@ -1378,7 +1485,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": "This Pokémon is more active at night. It likes bright, shiny things and cannot resist taking them and adding them to its collection."
+    "flavorText": "This Pokémon is more active at night. It likes bright, shiny things and cannot resist taking them and adding them to its collection.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1924",
@@ -1421,7 +1531,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": null,
-    "flavorText": "Popular with women because of its beautiful fur. The leader of the Rockets keeps one as a pet."
+    "flavorText": "Popular with women because of its beautiful fur. The leader of the Rockets keeps one as a pet.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "1923",
@@ -1447,7 +1560,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1922",
@@ -1490,7 +1606,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": "A Pokémon that consists entirely of programming code. Capable of moving freely in cyberspace."
+    "flavorText": "A Pokémon that consists entirely of programming code. Capable of moving freely in cyberspace.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "1921",
@@ -1533,7 +1652,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Years of genetic experiments resulted in the creation of this never-before-seen violent Pokémon."
+    "flavorText": "Years of genetic experiments resulted in the creation of this never-before-seen violent Pokémon.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1920",
@@ -1570,7 +1692,10 @@
     "weakness": "Fire ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "This plant blooms when it is absorbing solar energy. It stays on the move to seek sunlight."
+    "flavorText": "This plant blooms when it is absorbing solar energy. It stays on the move to seek sunlight.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "1919",
@@ -1613,7 +1738,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "A scientist created this Pokémon after years of horrific gene-splicing and DNA engineering experiments."
+    "flavorText": "A scientist created this Pokémon after years of horrific gene-splicing and DNA engineering experiments.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1918",
@@ -1650,7 +1778,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": null,
-    "flavorText": "Its genetic code is irregular. It may mutate if it is exposed to radiation from elemental stones."
+    "flavorText": "Its genetic code is irregular. It may mutate if it is exposed to radiation from elemental stones.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "1917",
@@ -1687,7 +1818,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": "Adores circular objects. Wanders the streets on a nightly basis to look for dropped loose change."
+    "flavorText": "Adores circular objects. Wanders the streets on a nightly basis to look for dropped loose change.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "1916",
@@ -1730,7 +1864,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "So rare that it is still said to be a mirage by many experts. Only a few people have seen it worldwide."
+    "flavorText": "So rare that it is still said to be a mirage by many experts. Only a few people have seen it worldwide.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "1915",
@@ -1773,7 +1910,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "So rare that it is still said to be a mirage by many experts. Only a few people have seen it worldwide."
+    "flavorText": "So rare that it is still said to be a mirage by many experts. Only a few people have seen it worldwide.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1914",
@@ -1816,7 +1956,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -30",
     "retreatCost": 1,
-    "flavorText": "When its huge eyes light up, it sings a mysteriously soothing melody that lulls its enemies to sleep."
+    "flavorText": "When its huge eyes light up, it sings a mysteriously soothing melody that lulls its enemies to sleep.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1913",
@@ -1859,7 +2002,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A legendary Pokémon famous for its beauty. It looks almost as if it flies when it runs."
+    "flavorText": "A legendary Pokémon famous for its beauty. It looks almost as if it flies when it runs.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1912",
@@ -1896,7 +2042,10 @@
     "weakness": null,
     "resistance": "Fighting -30",
     "retreatCost": 2,
-    "flavorText": "This Pokémon can fly is spite of its large bulk. It is said to be able to circumnavigate the earth in just 16 hours."
+    "flavorText": "This Pokémon can fly is spite of its large bulk. It is said to be able to circumnavigate the earth in just 16 hours.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1911",
@@ -1939,7 +2088,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When several of these Pokémon gather, they attract so much electricity that they can cause lightning to strike."
+    "flavorText": "When several of these Pokémon gather, they attract so much electricity that they can cause lightning to strike.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1910",
@@ -1982,7 +2134,10 @@
     "weakness": "Psychic ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Years of genetic experiments resulted in the creation of this never-before-seen violent Pokémon."
+    "flavorText": "Years of genetic experiments resulted in the creation of this never-before-seen violent Pokémon.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1909",
@@ -2025,7 +2180,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "A wild Pokémon with a short temper. It is able to distinguish colors, and likes the color red."
+    "flavorText": "A wild Pokémon with a short temper. It is able to distinguish colors, and likes the color red.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "1908",
@@ -2068,6 +2226,9 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "When several of these Pokémon gather, their electricity could build and cause lightning storms."
+    "flavorText": "When several of these Pokémon gather, their electricity could build and cause lightning storms.",
+    "pricingVariants": [
+      "normal"
+    ]
   }
 ]

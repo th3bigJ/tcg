@@ -40,7 +40,10 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It can produce ultracold air. Its body is frozen."
+    "flavorText": "It can produce ultracold air. Its body is frozen.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7731",
@@ -66,7 +69,14 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "andrewEstrada",
+      "clementLamberton",
+      "holofoil",
+      "ianWhiton",
+      "michikazuTsuda"
+    ]
   },
   {
     "masterCardId": "7725",
@@ -92,7 +102,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7718",
@@ -118,7 +131,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7712",
@@ -161,7 +177,11 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "It races through narrow caves, using its sharp claws to catch prey. The skin on its face is harder than a rock."
+    "flavorText": "It races through narrow caves, using its sharp claws to catch prey. The skin on its face is harder than a rock.",
+    "pricingVariants": [
+      "expansionStamp",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7706",
@@ -204,7 +224,11 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "They are kind but can be relentless when defending territory. They challenge foes with tusks that can cut steel."
+    "flavorText": "They are kind but can be relentless when defending territory. They challenge foes with tusks that can cut steel.",
+    "pricingVariants": [
+      "expansionStamp",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7700",
@@ -247,7 +271,10 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "Their tusks can shatter rocks. Territory battles between Fraxure can be intensely violent."
+    "flavorText": "Their tusks can shatter rocks. Territory battles between Fraxure can be intensely violent.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7694",
@@ -284,7 +311,10 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Since a broken tusk will not grow back, they diligently sharpen their tusks on river rocks after they've been fighting."
+    "flavorText": "Since a broken tusk will not grow back, they diligently sharpen their tusks on river rocks after they've been fighting.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7688",
@@ -321,7 +351,10 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "They mark their territory by leaving gashes in trees with their tusks. If a tusk breaks, a new one grows in quickly."
+    "flavorText": "They mark their territory by leaving gashes in trees with their tusks. If a tusk breaks, a new one grows in quickly.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7682",
@@ -364,7 +397,10 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "They use their tusks to crush the berries they eat. Repeated regrowth makes their tusks strong and sharp."
+    "flavorText": "They use their tusks to crush the berries they eat. Repeated regrowth makes their tusks strong and sharp.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7676",
@@ -407,7 +443,11 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It lives in the ozone layer far above the clouds and cannot be seen from the ground."
+    "flavorText": "It lives in the ozone layer far above the clouds and cannot be seen from the ground.",
+    "pricingVariants": [
+      "expansionStamp",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7670",
@@ -450,7 +490,11 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A highly intelligent Pokémon. By folding back its wings in flight, it can overtake jet planes."
+    "flavorText": "A highly intelligent Pokémon. By folding back its wings in flight, it can overtake jet planes.",
+    "pricingVariants": [
+      "expansionStamp",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7664",
@@ -493,7 +537,11 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its body is covered in a down that can refract light in such a way that it becomes invisible."
+    "flavorText": "Its body is covered in a down that can refract light in such a way that it becomes invisible.",
+    "pricingVariants": [
+      "expansionStamp",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7658",
@@ -530,7 +578,13 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "As a result of its long-held dream of flying, its cellular structure changed, and wings grew out."
+    "flavorText": "As a result of its long-held dream of flying, its cellular structure changed, and wings grew out.",
+    "pricingVariants": [
+      "cosmosHolofoil",
+      "holofoil",
+      "leagueStamp",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "7652",
@@ -573,7 +627,12 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "Within its rugged shell, its cells have begun changing. The shell peels off the instant it evolves."
+    "flavorText": "Within its rugged shell, its cells have begun changing. The shell peels off the instant it evolves.",
+    "pricingVariants": [
+      "holofoil",
+      "leagueStamp",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "7647",
@@ -616,7 +675,12 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Dreaming of one day flying, it practices by leaping off cliffs every day."
+    "flavorText": "Dreaming of one day flying, it practices by leaping off cliffs every day.",
+    "pricingVariants": [
+      "holofoil",
+      "leagueStamp",
+      "staffStamp"
+    ]
   },
   {
     "masterCardId": "7641",
@@ -659,7 +723,11 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It is said to make its home somewhere in the sea. It guides crews of shipwrecks to shore."
+    "flavorText": "It is said to make its home somewhere in the sea. It guides crews of shipwrecks to shore.",
+    "pricingVariants": [
+      "cosmosHolofoil",
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7637",
@@ -702,7 +770,10 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "If its body takes on an aura, the weather changes instantly. It is said to live in seas and lakes."
+    "flavorText": "If its body takes on an aura, the weather changes instantly. It is said to live in seas and lakes.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7631",
@@ -745,7 +816,10 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 2,
-    "flavorText": "If its body takes on an aura, the weather changes instantly. It is said to live in seas and lakes."
+    "flavorText": "If its body takes on an aura, the weather changes instantly. It is said to live in seas and lakes.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7625",
@@ -788,7 +862,10 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is called the \"Mirage Pokémon\" because so few have seen it. Its shed skin has been found."
+    "flavorText": "It is called the \"Mirage Pokémon\" because so few have seen it. Its shed skin has been found.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7619",
@@ -825,6 +902,9 @@
     "weakness": "Dragon ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is called the \"Mirage Pokémon\" because so few have seen it. Its shed skin has been found."
+    "flavorText": "It is called the \"Mirage Pokémon\" because so few have seen it. Its shed skin has been found.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

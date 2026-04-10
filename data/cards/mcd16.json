@@ -40,7 +40,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Thanks to its unstable genetic makeup, this special Pokémon conceals many different possible evolutions."
+    "flavorText": "Thanks to its unstable genetic makeup, this special Pokémon conceals many different possible evolutions.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7299",
@@ -77,7 +80,10 @@
     "weakness": "Fighting ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Adores round objects. It wanders the streets on a nightly basis to look for dropped loose change."
+    "flavorText": "Adores round objects. It wanders the streets on a nightly basis to look for dropped loose change.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7294",
@@ -120,7 +126,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 1,
-    "flavorText": "Its whiskers serve as antennas. By sending and receiving electrical waves, it can communicate with others over vast distances."
+    "flavorText": "Its whiskers serve as antennas. By sending and receiving electrical waves, it can communicate with others over vast distances.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7289",
@@ -157,7 +166,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 1,
-    "flavorText": "A proverb claims that happiness will come to anyone who can make a sleeping Togepi stand up."
+    "flavorText": "A proverb claims that happiness will come to anyone who can make a sleeping Togepi stand up.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7284",
@@ -200,7 +212,10 @@
     "weakness": "Metal ×2",
     "resistance": "Darkness -20",
     "retreatCost": 1,
-    "flavorText": "It captivates foes with its huge, round eyes, then lulls them to sleep by singing a soothing melody."
+    "flavorText": "It captivates foes with its huge, round eyes, then lulls them to sleep by singing a soothing melody.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7279",
@@ -237,7 +252,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Psychic -20",
     "retreatCost": 2,
-    "flavorText": "Its skin has a rubbery elasticity, so it can reduce damage by defensively pulling it skin up to its neck."
+    "flavorText": "Its skin has a rubbery elasticity, so it can reduce damage by defensively pulling it skin up to its neck.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7274",
@@ -280,7 +298,10 @@
     "weakness": "Fighting ×2",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "It raises its tail to check its surroundings. The tail is sometimes struck by lightning in this pose."
+    "flavorText": "It raises its tail to check its surroundings. The tail is sometimes struck by lightning in this pose.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7269",
@@ -317,7 +338,10 @@
     "weakness": "Grass ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It is small but rough and tough. It won't hesitate to take a bite out of anything that moves."
+    "flavorText": "It is small but rough and tough. It won't hesitate to take a bite out of anything that moves.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7262",
@@ -354,7 +378,10 @@
     "weakness": "Lightning ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "In the distant past, it was somewhat stronger than the horribly weak descendants that exist today."
+    "flavorText": "In the distant past, it was somewhat stronger than the horribly weak descendants that exist today.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7250",
@@ -391,7 +418,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Eating a twig fills it with energy, and its roomy ears give vent to air hotter than 390 degrees Fahrenheit."
+    "flavorText": "Eating a twig fills it with energy, and its roomy ears give vent to air hotter than 390 degrees Fahrenheit.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7237",
@@ -428,7 +458,10 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "A fire burns inside, so it feels very warm to hug. It launches fireballs of 1,800 degrees Fahrenheit."
+    "flavorText": "A fire burns inside, so it feels very warm to hug. It launches fireballs of 1,800 degrees Fahrenheit.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   },
   {
     "masterCardId": "7228",
@@ -471,6 +504,9 @@
     "weakness": "Water ×2",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "While young, it has six gorgeous tails. When it grows, several new tails are sprouted."
+    "flavorText": "While young, it has six gorgeous tails. When it grows, several new tails are sprouted.",
+    "pricingVariants": [
+      "holofoil"
+    ]
   }
 ]

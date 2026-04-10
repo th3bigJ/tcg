@@ -40,7 +40,10 @@
     "weakness": "Fire +10",
     "resistance": "Water -20",
     "retreatCost": 2,
-    "flavorText": "Made from soil, the shell on its back hardens when it drinks water. It lives along lakes."
+    "flavorText": "Made from soil, the shell on its back hardens when it drinks water. It lives along lakes.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9252",
@@ -77,7 +80,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its body is lithe yet powerful. It can crest three mountains and cross two canyons in one night."
+    "flavorText": "Its body is lithe yet powerful. It can crest three mountains and cross two canyons in one night.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9243",
@@ -120,7 +127,10 @@
     "weakness": "Lightning +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Because it is very proud, it hates accepting food from people. Its thick down guards it from cold."
+    "flavorText": "Because it is very proud, it hates accepting food from people. Its thick down guards it from cold.",
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9235",
@@ -157,7 +167,11 @@
     "weakness": "Fighting +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It loves round white things. It carries an egg-shaped rock in imitation of CHANSEY."
+    "flavorText": "It loves round white things. It carries an egg-shaped rock in imitation of CHANSEY.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9226",
@@ -200,7 +214,11 @@
     "weakness": "Psychic +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "Its cheeks hold poison sacs. It tries to catch foes off guard to jab them with toxic fingers."
+    "flavorText": "Its cheeks hold poison sacs. It tries to catch foes off guard to jab them with toxic fingers.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9212",
@@ -243,7 +261,11 @@
     "weakness": "Water +10",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "It agilely scales sheer cliffs to live atop craggy mountains. Its fire is put out when it sleeps."
+    "flavorText": "It agilely scales sheer cliffs to live atop craggy mountains. Its fire is put out when it sleeps.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9203",
@@ -269,7 +291,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9194",
@@ -295,7 +320,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9187",
@@ -321,7 +349,10 @@
     "weakness": null,
     "resistance": null,
     "retreatCost": null,
-    "flavorText": null
+    "flavorText": null,
+    "pricingVariants": [
+      "normal"
+    ]
   },
   {
     "masterCardId": "9178",
@@ -364,7 +395,11 @@
     "weakness": "Fighting +20",
     "resistance": "Metal -20",
     "retreatCost": null,
-    "flavorText": "Its claws loose electricity with enough amperage to cause fainting. They live in small groups."
+    "flavorText": "Its claws loose electricity with enough amperage to cause fainting. They live in small groups.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9169",
@@ -407,7 +442,11 @@
     "weakness": "Fire +20",
     "resistance": "Water -20",
     "retreatCost": 1,
-    "flavorText": "It attracts prey with its sweet-smelling saliva, then chomps down. It takes a whole day to eat prey."
+    "flavorText": "It attracts prey with its sweet-smelling saliva, then chomps down. It takes a whole day to eat prey.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9154",
@@ -450,7 +489,11 @@
     "weakness": "Fire +20",
     "resistance": "Water -20",
     "retreatCost": 2,
-    "flavorText": "It blooms during times of strong sunlight. It tries to make up for everything it endured as a bud."
+    "flavorText": "It blooms during times of strong sunlight. It tries to make up for everything it endured as a bud.",
+    "pricingVariants": [
+      "normal",
+      "reverseHolofoil"
+    ]
   },
   {
     "masterCardId": "9145",
@@ -493,7 +536,11 @@
     "weakness": "Lightning +20",
     "resistance": "Fighting -20",
     "retreatCost": null,
-    "flavorText": "By churning its wings, it creates shock waves that inflict critical internal injuries to foes."
+    "flavorText": "By churning its wings, it creates shock waves that inflict critical internal injuries to foes.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9135",
@@ -536,7 +583,11 @@
     "weakness": "Fire +30",
     "resistance": "Psychic -20",
     "retreatCost": 3,
-    "flavorText": "It exudes strong magnetism from all cover. It controls three small units called Mini-Noses."
+    "flavorText": "It exudes strong magnetism from all cover. It controls three small units called Mini-Noses.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9128",
@@ -573,7 +624,11 @@
     "weakness": "Fighting +30",
     "resistance": "Metal -20",
     "retreatCost": 1,
-    "flavorText": "When its eyes gleam gold, it can spot hiding prey–even those taking shelter behind a wall."
+    "flavorText": "When its eyes gleam gold, it can spot hiding prey–even those taking shelter behind a wall.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9118",
@@ -616,7 +671,11 @@
     "weakness": "Psychic +20",
     "resistance": null,
     "retreatCost": 1,
-    "flavorText": "By catching the aura emanating from others, it can read their thoughts and movements."
+    "flavorText": "By catching the aura emanating from others, it can read their thoughts and movements.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   },
   {
     "masterCardId": "9112",
@@ -659,6 +718,10 @@
     "weakness": "Water +30",
     "resistance": null,
     "retreatCost": 3,
-    "flavorText": "It dwells in volcanic caves. It digs in with its cross-shaped feet to crawl on ceilings and walls."
+    "flavorText": "It dwells in volcanic caves. It digs in with its cross-shaped feet to crawl on ceilings and walls.",
+    "pricingVariants": [
+      "holofoil",
+      "normal"
+    ]
   }
 ]
