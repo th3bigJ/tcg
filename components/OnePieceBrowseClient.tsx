@@ -30,7 +30,21 @@ type Props = {
 };
 
 function cardStableId(card: OnePieceCardRecord): string {
-  return [card.cardNumber, card.variant ?? "normal", card.priceKey ?? card.tcgplayerProductId ?? ""].join("|");
+  return [card.cardNumber, card.variant ?? "normal", onePieceLookupId(card)].join("|");
+}
+
+function onePieceLookupId(card: OnePieceCardRecord): string {
+  const direct = card.priceKey?.trim();
+  if (direct) return direct;
+
+  const legacy = card.tcgplayerProductId?.trim();
+  if (legacy) return legacy;
+
+  const setCode = card.setCode?.trim().toUpperCase();
+  const cardNumber = card.cardNumber?.trim().toUpperCase();
+  const variant = card.variant?.trim() || "normal";
+  if (!setCode || !cardNumber) return "";
+  return `${setCode}::${cardNumber}::${variant}`;
 }
 
 function buildOnePieceEbaySearchQuery(card: OnePieceCardRecord, setName?: string | null): string {
@@ -468,20 +482,25 @@ export function OnePieceBrowseClient({
                       ) : null}
                     </div>
 
-                    <ModalCardPricing
-                      externalId={detailCard.priceKey ?? detailCard.tcgplayerProductId}
-                      pricingUrl={
-                        detailCard.priceKey || detailCard.tcgplayerProductId
-                          ? `/api/onepiece/card-prices/${encodeURIComponent(detailCard.priceKey ?? detailCard.tcgplayerProductId ?? "")}?set=${encodeURIComponent(detailCard.setCode)}&variant=${encodeURIComponent(detailCard.variant ?? "normal")}`
-                          : null
-                      }
-                      historyUrl={
-                        detailCard.priceKey || detailCard.tcgplayerProductId
-                          ? `/api/onepiece/card-price-history/${encodeURIComponent(detailCard.priceKey ?? detailCard.tcgplayerProductId ?? "")}?set=${encodeURIComponent(detailCard.setCode)}&variant=${encodeURIComponent(detailCard.variant ?? "normal")}`
-                          : null
-                      }
-                      ebaySearchQuery={buildOnePieceEbaySearchQuery(detailCard, activeSetMeta?.name)}
-                    />
+                    {(() => {
+                      const lookupId = onePieceLookupId(detailCard);
+                      return (
+                        <ModalCardPricing
+                          externalId={lookupId}
+                          pricingUrl={
+                            lookupId
+                              ? `/api/onepiece/card-prices/${encodeURIComponent(lookupId)}?set=${encodeURIComponent(detailCard.setCode)}&variant=${encodeURIComponent(detailCard.variant ?? "normal")}`
+                              : null
+                          }
+                          historyUrl={
+                            lookupId
+                              ? `/api/onepiece/card-price-history/${encodeURIComponent(lookupId)}?set=${encodeURIComponent(detailCard.setCode)}&variant=${encodeURIComponent(detailCard.variant ?? "normal")}`
+                              : null
+                          }
+                          ebaySearchQuery={buildOnePieceEbaySearchQuery(detailCard, activeSetMeta?.name)}
+                        />
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
