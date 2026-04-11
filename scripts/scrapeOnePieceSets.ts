@@ -825,7 +825,8 @@ async function main(): Promise<void> {
   // ── 3. Post-process: rename sets whose code couldn't be determined automatically ──
   //
   // Rename sets whose code couldn't be determined automatically from source data.
-  // Adventure on Kami's Island = OP15 (confirmed missing from Scrydex as of Apr 2026)
+  // OP15 is on Scrydex (e.g. adventure-on-kamis-island); this fixes legacy TCGPlayer rows
+  // that used a truncated code before merge with the Scrydex expansion list.
   //
   const KNOWN_RENAMES: Record<string, { setCode: string; name: string }> = {
     ADVENTUR: { setCode: "OP15", name: "Adventure on Kami's Island" },
