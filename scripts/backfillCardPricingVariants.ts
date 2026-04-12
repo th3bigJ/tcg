@@ -1,6 +1,6 @@
 /**
- * Reads local `data/pricing/card-pricing/{setKey}.json` and writes `pricingVariants` onto each row in
- * `data/cards/{setKey}.json`. Use after `npm run r2:download-static-data` or whenever card-pricing was
+ * Reads local `data/pokemon/pricing/card-pricing/{setKey}.json` and writes `pricingVariants` onto each row in
+ * `data/pokemon/cards/{setKey}.json`. Use after `npm run r2:download-static-data` or whenever card-pricing was
  * updated without running `scrape:pricing` (the scrape job merges variants automatically).
  *
  * Usage:
@@ -14,8 +14,9 @@ import path from "path";
 import type { CardJsonEntry, SetJsonEntry, SetPricingMap } from "../lib/staticDataTypes";
 import { applyPricingVariantsToCardsInPlace } from "../lib/applyPricingVariantsToCardJson";
 import { setRowMatchesAllowedSetCodes } from "../lib/scrydexPrefixCandidatesForSet";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
-const DATA = path.join(process.cwd(), "data");
+const DATA = pokemonLocalDataRoot;
 const CARDS_DIR = path.join(DATA, "cards");
 const PRICING_DIR = path.join(DATA, "pricing", "card-pricing");
 

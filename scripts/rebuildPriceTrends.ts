@@ -20,6 +20,7 @@ import { uploadPriceTrends } from "../lib/r2PriceTrends";
 import type { SetJsonEntry, SeriesJsonEntry } from "../lib/staticDataTypes";
 import { getSinglesCatalogSetKey } from "../lib/singlesCatalogSetKey";
 import { setRowMatchesAllowedSetCodes } from "../lib/scrydexPrefixCandidatesForSet";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 loadEnvFilesFromRepoRoot(import.meta.url);
 
@@ -39,8 +40,6 @@ function readJson<T>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
 }
 
-const DATA_DIR = path.join(process.cwd(), "data");
-
 function buildS3Client(): S3Client {
   return new S3Client({
     endpoint: process.env.R2_ENDPOINT ?? "",
@@ -54,14 +53,14 @@ function buildS3Client(): S3Client {
 }
 
 async function run() {
-  const allSets = readJson<SetJsonEntry[]>(path.join(DATA_DIR, "sets.json"));
+  const allSets = readJson<SetJsonEntry[]>(path.join(pokemonLocalDataRoot, "sets.json"));
   let sets = allSets;
 
   if (onlySetCodes?.length) {
     sets = allSets.filter((s) => setRowMatchesAllowedSetCodes(s, onlySetCodes));
     if (!sets.length) throw new Error(`No sets found matching: ${onlySetCodes.join(", ")}`);
   } else if (onlySeriesNames?.length) {
-    const allSeries = readJson<SeriesJsonEntry[]>(path.join(DATA_DIR, "series.json"));
+    const allSeries = readJson<SeriesJsonEntry[]>(path.join(pokemonLocalDataRoot, "series.json"));
     const matchedSeries = new Set(
       allSeries
         .filter((sr) => onlySeriesNames.some((n) => n.toLowerCase() === sr.name.toLowerCase()))

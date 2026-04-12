@@ -93,7 +93,7 @@ async function scrapeSet(set: OnePieceSetEntry, dryRun: boolean, source: "local"
   const cards =
     source === "r2" ? await loadOnePieceCardsForSetFromR2(set.setCode) : loadOnePieceCardsForSet(set.setCode);
   if (!cards.length) {
-    console.log(`  [${set.setCode}] skip — no cards found in ${source === "r2" ? "R2 onepiece/cards/data" : `onepiece/cards/data/${set.setCode}.json`}`);
+    console.log(`  [${set.setCode}] skip — no cards found in ${source === "r2" ? "R2 onepiece/cards/data" : `data/onepiece/cards/data/${set.setCode}.json`}`);
     return;
   }
 

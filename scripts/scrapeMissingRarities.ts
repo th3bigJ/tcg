@@ -10,6 +10,7 @@ import { fetchScrydexCardPageHtml, parseScrydexCardPageRarity } from "../lib/scr
 import { resolveExpansionConfigsForSet } from "../lib/scrydexExpansionConfigsForSet";
 import { getSinglesCatalogSetKey } from "../lib/singlesCatalogSetKey";
 import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "../lib/scrydexPrefixCandidatesForSet";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const dryRun = process.argv.includes("--dry-run");
 const includeNone = process.argv.includes("--include-none");
@@ -18,8 +19,7 @@ const onlySetCodes = setArg
   ? new Set(setArg.slice("--set=".length).split(",").map((s) => s.trim()).filter(Boolean))
   : null;
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const CARDS_DIR = path.join(DATA_DIR, "cards");
+const CARDS_DIR = path.join(pokemonLocalDataRoot, "cards");
 
 function readJson<T>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
@@ -30,7 +30,7 @@ function writeJson(filePath: string, value: unknown): void {
 }
 
 function loadSets(): SetJsonEntry[] {
-  return readJson<SetJsonEntry[]>(path.join(DATA_DIR, "sets.json"));
+  return readJson<SetJsonEntry[]>(path.join(pokemonLocalDataRoot, "sets.json"));
 }
 
 function loadCardsForSet(setCode: string): CardJsonEntry[] {

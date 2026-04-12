@@ -1,6 +1,6 @@
 /**
  * Merges run-on duplicate variant keys into canonical camelCase across
- * `data/cards`, `data/pricing/card-pricing`, `price-history`, `price-trends`.
+ * `data/pokemon/cards`, `data/pokemon/pricing/card-pricing`, `price-history`, `price-trends`.
  *
  * Pairs are defined in `lib/pricingVariantCompactAliases.ts` (`PRICING_VARIANT_RUN_ON_MIGRATIONS`).
  *
@@ -14,9 +14,10 @@ import path from "path";
 import { PRICING_VARIANT_RUN_ON_MIGRATIONS } from "../lib/pricingVariantCompactAliases";
 import type { CardPriceHistory, CardPriceTrendSummary, ScrydexVariantPricing } from "../lib/staticDataTypes";
 import type { PriceHistoryPoint, PriceHistoryWindow } from "../lib/staticDataTypes";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const dryRun = process.argv.includes("--dry-run");
-const DATA = path.join(process.cwd(), "data");
+const DATA = pokemonLocalDataRoot;
 
 function mergeScrydexVariant(
   bad: ScrydexVariantPricing,

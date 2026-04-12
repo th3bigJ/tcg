@@ -1,5 +1,5 @@
 /**
- * Live check: each set in data/sets.json resolves to ≥1 Scrydex expansion URL and the page loads.
+ * Live check: each set in data/pokemon/sets.json resolves to ≥1 Scrydex expansion URL and the page loads.
  *
  *   npx tsx scripts/verifySetsVsScrydex.ts
  */
@@ -11,7 +11,9 @@ import { resolveExpansionConfigsForSet } from "../lib/scrydexExpansionConfigsFor
 import { isScrydexErrorPage } from "../lib/scrydexCardPageCardText";
 import { SCRYDEX_DEFAULT_UA } from "../lib/scrydexExpansionListParsing";
 
-const DATA = path.join(process.cwd(), "data", "sets.json");
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
+
+const DATA = path.join(pokemonLocalDataRoot, "sets.json");
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));

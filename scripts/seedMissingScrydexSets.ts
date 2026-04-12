@@ -3,7 +3,9 @@ import path from "path";
 import { fetchScrydexExpansionMultiPageHtml } from "../lib/scrydexExpansionListParsing";
 import type { CardJsonEntry, SetJsonEntry } from "../lib/staticDataTypes";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
+
+const DATA_DIR = pokemonLocalDataRoot;
 const CARDS_DIR = path.join(DATA_DIR, "cards");
 const SETS_FILE = path.join(DATA_DIR, "sets.json");
 

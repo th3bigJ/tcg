@@ -14,11 +14,12 @@
 import fs from "fs";
 import path from "path";
 import { buildOnePieceS3Client, uploadLocalFileToOnePieceR2 } from "../lib/onepieceR2";
+import { onepieceLocalDataRoot } from "../lib/onepieceLocalDataPaths";
 import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
 
 loadEnvFilesFromRepoRoot(import.meta.url);
 
-const ONEPIECE_ROOT = path.join(process.cwd(), "onepiece");
+const ONEPIECE_ROOT = onepieceLocalDataRoot;
 const dryRun = Boolean(process.env.DRY_RUN && process.env.DRY_RUN !== "0");
 
 const setArg = process.argv.find((a) => a.startsWith("--set="));
@@ -55,7 +56,7 @@ async function main(): Promise<void> {
   const files = [...historyFiles, ...trendsFiles];
 
   if (files.length === 0) {
-    console.log("No JSON files found under onepiece/pricing/history or onepiece/pricing/trends (check --set filter).");
+    console.log("No JSON files found under data/onepiece/pricing/history or data/onepiece/pricing/trends (check --set filter).");
     return;
   }
 
@@ -69,7 +70,7 @@ async function main(): Promise<void> {
   for (const file of files) {
     index += 1;
     if (dryRun) {
-      console.log(`[${index}/${files.length}] onepiece/${file.rel}`);
+      console.log(`[${index}/${files.length}] R2 onepiece/${file.rel}`);
       continue;
     }
     await uploadLocalFileToOnePieceR2(s3, file.abs, file.rel);

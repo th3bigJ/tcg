@@ -1,9 +1,9 @@
 /**
  * Scrape One Piece TCG set data from Scrydex (expansion list + per-expansion pages).
  *
- * Outputs:
- *   onepiece/sets/data/sets.json   — set catalog (tcgplayerId / tcgplayerUrlSlug left null)
- *   onepiece/sets/images/{setCode}.{ext}  — downloaded set images (from Scrydex)
+ * Outputs (local):
+ *   data/onepiece/sets/data/sets.json   — set catalog (tcgplayerId / tcgplayerUrlSlug left null)
+ *   data/onepiece/sets/images/{setCode}.{ext}  — downloaded set images (from Scrydex)
  *
  * Usage:
  *   node --import tsx/esm scripts/scrapeOnePieceSets.ts
@@ -16,17 +16,17 @@ import https from "https";
 import http from "http";
 import type { S3Client } from "@aws-sdk/client-s3";
 import { buildOnePieceS3Client, uploadLocalFileToOnePieceR2 } from "../lib/onepieceR2";
+import { onepieceLocalDataRoot } from "../lib/onepieceLocalDataPaths";
 import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 loadEnvFilesFromRepoRoot(import.meta.url);
-/** When set (env or `--skip-r2`), write only under `onepiece/` locally — no R2 uploads. */
+/** When set (env or `--skip-r2`), write only under `data/onepiece/` locally — no R2 uploads. */
 const SKIP_R2 =
   process.env.SKIP_ONEPIECE_R2 === "1" || process.env.SKIP_ONEPIECE_R2 === "true" || process.argv.includes("--skip-r2");
 
-const REPO_ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
-const SETS_DATA_DIR = path.join(REPO_ROOT, "onepiece", "sets", "data");
-const SETS_IMAGES_DIR = path.join(REPO_ROOT, "onepiece", "sets", "images");
+const SETS_DATA_DIR = path.join(onepieceLocalDataRoot, "sets", "data");
+const SETS_IMAGES_DIR = path.join(onepieceLocalDataRoot, "sets", "images");
 const SETS_FILE = path.join(SETS_DATA_DIR, "sets.json");
 
 const SCRYDEX_EXPANSIONS_URL = "https://scrydex.com/onepiece/expansions";

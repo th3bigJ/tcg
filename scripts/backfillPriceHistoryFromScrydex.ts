@@ -51,6 +51,7 @@ import {
   buildScrydexPrefixCandidates,
   setRowMatchesAllowedSetCodes,
 } from "../lib/scrydexPrefixCandidatesForSet";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const dryRun = process.argv.includes("--dry-run");
 const setArg = process.argv.find((arg) => arg.startsWith("--set="));
@@ -66,11 +67,10 @@ function readJson<T>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
 }
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const CARDS_DIR = path.join(DATA_DIR, "cards");
+const CARDS_DIR = path.join(pokemonLocalDataRoot, "cards");
 
 function loadSets(): SetJsonEntry[] {
-  return readJson<SetJsonEntry[]>(path.join(DATA_DIR, "sets.json"));
+  return readJson<SetJsonEntry[]>(path.join(pokemonLocalDataRoot, "sets.json"));
 }
 
 function loadCardsForSet(setCode: string): CardJsonEntry[] {
@@ -314,7 +314,7 @@ async function main(): Promise<void> {
     if (!setCode) continue;
     const cards = loadCardsForSet(setCode);
     if (!cards.length) {
-      console.log(`  [${setCode}] skip — no cards in data/cards/${setCode}.json`);
+      console.log(`  [${setCode}] skip — no cards in data/pokemon/cards/${setCode}.json`);
       continue;
     }
     await backfillSet(set, cards, s3);

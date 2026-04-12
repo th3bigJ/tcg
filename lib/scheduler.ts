@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { runSnapshotPortfolio } from "./jobs/jobSnapshotPortfolio";
 import { runScrapePricing } from "./jobs/jobScrapePricing";
 import { runScrapePokedataProducts } from "./jobs/jobScrapePokedataProducts";
+import { runScrapeLorcanaPricing } from "./jobs/jobScrapeLorcanaPricing";
 import { runScrapeOnePiecePricing } from "./jobs/jobScrapeOnePiecePricing";
 
 let initialised = false;
@@ -42,6 +43,15 @@ async function runNightlyJobs() {
     log("onePiecePricing", "done");
   } catch (e) {
     log("onePiecePricing", `failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // Step 4: after One Piece, update Lorcana pricing/history/trends on R2 (cards + sets from R2).
+  log("lorcanaPricing", "starting");
+  try {
+    await runScrapeLorcanaPricing({ source: "r2" });
+    log("lorcanaPricing", "done");
+  } catch (e) {
+    log("lorcanaPricing", `failed: ${e instanceof Error ? e.message : String(e)}`);
   }
 
   log("nightly", "all jobs complete");

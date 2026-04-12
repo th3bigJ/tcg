@@ -5,6 +5,7 @@ import {
   r2SealedPokedataCatalogKey,
   r2SealedPokedataPricesSnapshotKey,
 } from "@/lib/r2BucketLayout";
+import { pokemonLocalDataRoot } from "@/lib/pokemonLocalDataPaths";
 import { updateSealedPriceHistory } from "../r2SealedPriceHistory";
 import { uploadSealedPriceTrends } from "../r2SealedPriceTrends";
 
@@ -89,10 +90,9 @@ type PricePayload = {
 
 const SOURCE_URL = "https://www.pokedata.io/products";
 const SOURCE_API_URL = "https://www.pokedata.io/api/products";
-const DATA_DIR = path.join(process.cwd(), "data");
-/** Image-failure reports only; product catalog lives in `data/{slug}-products.json`. */
-const SEALED_REPORTS_DIR = path.join(DATA_DIR, "sealed-products");
-const PRICING_DATA_DIR = path.join(DATA_DIR, "pricing");
+/** Image-failure reports only; product catalog lives in `data/pokemon/{slug}-products.json`. */
+const SEALED_REPORTS_DIR = path.join(process.cwd(), "data", "sealed-products");
+const PRICING_DATA_DIR = path.join(pokemonLocalDataRoot, "pricing");
 const DEFAULT_IMAGE_CONCURRENCY = 8;
 const DEFAULT_TCG = "Pokemon";
 const DEFAULT_LANGUAGE = "ENGLISH";
@@ -132,8 +132,15 @@ function getPublicBaseUrl(): string {
   return base.replace(/\/+$/, "");
 }
 
+/** When set, JSON mirrors under `data/pokemon/` and local failure reports are skipped (R2 uploads unchanged). */
+function scraperSkipLocalDiskMirror(): boolean {
+  const v = process.env.SCRAPER_SKIP_LOCAL_DISK?.trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
 function ensureOutputDir(): void {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (scraperSkipLocalDiskMirror()) return;
+  fs.mkdirSync(pokemonLocalDataRoot, { recursive: true });
   fs.mkdirSync(SEALED_REPORTS_DIR, { recursive: true });
   fs.mkdirSync(PRICING_DATA_DIR, { recursive: true });
 }
@@ -410,13 +417,15 @@ async function uploadProductImages(
 
   if (failures.length > 0) {
     const failuresPath = path.join(SEALED_REPORTS_DIR, `${slugParts.join("-")}-image-failures.json`);
-    writeLocalJson(failuresPath, {
-      scrapedAt: new Date().toISOString(),
-      sourceApiUrl: SOURCE_API_URL,
-      count: failures.length,
-      failures,
-    });
-    console.log(`Wrote image failure report to ${path.relative(process.cwd(), failuresPath)}`);
+    if (!scraperSkipLocalDiskMirror()) {
+      writeLocalJson(failuresPath, {
+        scrapedAt: new Date().toISOString(),
+        sourceApiUrl: SOURCE_API_URL,
+        count: failures.length,
+        failures,
+      });
+      console.log(`Wrote image failure report to ${path.relative(process.cwd(), failuresPath)}`);
+    }
     const reportKey = `sealed-products/pokedata/${slugParts.join("-")}-image-failures.json`;
     await uploadJson(s3, bucket, reportKey, {
       scrapedAt: new Date().toISOString(),
@@ -425,7 +434,11 @@ async function uploadProductImages(
       failures,
     });
     console.log(`Uploaded image failure report to R2 ${reportKey}`);
-    return { failures, localReportPath: failuresPath, r2ReportKey: reportKey };
+    return {
+      failures,
+      localReportPath: scraperSkipLocalDiskMirror() ? null : failuresPath,
+      r2ReportKey: reportKey,
+    };
   }
 
   return { failures, localReportPath: null, r2ReportKey: null };
@@ -454,16 +467,23 @@ export async function runScrapePokedataProducts(opts: ScrapePokedataProductsOpti
   const catalogPayload = buildCatalogPayload(filteredProducts, requestedLanguage, requestedTcg);
   const pricesPayload = buildPricesPayload(filteredProducts, requestedLanguage, requestedTcg);
 
-  const localProductsPath = path.join(DATA_DIR, `${slug}-products.json`);
+  const skipLocal = scraperSkipLocalDiskMirror();
+  const localProductsPath = path.join(pokemonLocalDataRoot, `${slug}-products.json`);
   const localPricesPath = path.join(PRICING_DATA_DIR, `${slug}-prices.json`);
 
-  writeLocalJson(localProductsPath, catalogPayload);
-  writeLocalJson(localPricesPath, pricesPayload);
+  if (!skipLocal) {
+    writeLocalJson(localProductsPath, catalogPayload);
+    writeLocalJson(localPricesPath, pricesPayload);
+  }
 
   console.log(`Fetched ${allProducts.length} products from ${SOURCE_API_URL}`);
   console.log(`Filtered to ${filteredProducts.length} products`);
-  console.log(`Wrote local product catalog to ${path.relative(process.cwd(), localProductsPath)}`);
-  console.log(`Wrote local price snapshot to ${path.relative(process.cwd(), localPricesPath)}`);
+  if (!skipLocal) {
+    console.log(`Wrote local product catalog to ${path.relative(process.cwd(), localProductsPath)}`);
+    console.log(`Wrote local price snapshot to ${path.relative(process.cwd(), localPricesPath)}`);
+  } else {
+    console.log(`SCRAPER_SKIP_LOCAL_DISK: skipping local JSON mirrors — uploads go to R2 only`);
+  }
 
   const s3 = buildS3Client();
   const bucket = getBucket();
@@ -474,7 +494,9 @@ export async function runScrapePokedataProducts(opts: ScrapePokedataProductsOpti
   if (mode === "all" || mode === "products") {
     const imageUploadResult = await uploadProductImages(s3, bucket, filteredProducts, imageConcurrency, skipExistingImages, slugParts);
     catalogPayload.imageFailures = imageUploadResult.failures;
-    writeLocalJson(localProductsPath, catalogPayload);
+    if (!skipLocal) {
+      writeLocalJson(localProductsPath, catalogPayload);
+    }
     await uploadJson(s3, bucket, productsKey, catalogPayload);
     console.log(`Uploaded product catalog to R2 ${productsKey}`);
   }

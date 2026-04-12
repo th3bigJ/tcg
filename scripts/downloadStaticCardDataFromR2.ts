@@ -1,11 +1,11 @@
 /**
- * Downloads static JSON from R2 into the repo `data/` tree (overwrites local files).
+ * Downloads static JSON from R2 into the repo `data/pokemon/` tree (overwrites local files).
  *
  * Fetches:
- *   - data/sets.json, data/series.json, data/pokemon.json
+ *   - data/sets.json, data/series.json, data/pokemon.json (R2 keys)
  *   - data/cards/{setCode}.json (full prefix list; removes local card JSON not present on R2)
- *   - pricing/… (entire prefix → data/pricing/…, mirrors R2 keys under the bucket)
- *   - Sealed Pokedata: `data/{slug}-products.json` (catalog) + optional `sealed-products/pokedata/…` image-failures (prices/history/trends come from pricing/ mirror)
+ *   - pricing/… (entire prefix → data/pokemon/pricing/… locally, mirrors R2 keys under the bucket)
+ *   - Sealed Pokedata: `data/{slug}-products.json` (R2) → `data/pokemon/{slug}-products.json` locally + optional `data/sealed-products/pokedata/…` image-failures
  *
  * Usage:
  *   npx tsx scripts/downloadStaticCardDataFromR2.ts
@@ -23,12 +23,13 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { R2_PRICING, R2_SEALED_POKEDATA_DEFAULT_SLUG, r2SealedPokedataCatalogKey } from "../lib/r2BucketLayout";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const ENV_FILE = path.join(process.cwd(), ".env.local");
-const DATA_DIR = path.join(process.cwd(), "data");
-const CARDS_DIR = path.join(DATA_DIR, "cards");
-const SEALED_DIR = path.join(DATA_DIR, "sealed-products");
-const PRICING_DIR = path.join(DATA_DIR, "pricing");
+const REPO_DATA_DIR = path.join(process.cwd(), "data");
+const CARDS_DIR = path.join(pokemonLocalDataRoot, "cards");
+const SEALED_DIR = path.join(REPO_DATA_DIR, "sealed-products");
+const PRICING_DIR = path.join(pokemonLocalDataRoot, "pricing");
 const PRICING_PREFIX = `${R2_PRICING}/`;
 const CARDS_PREFIX = "data/cards/";
 const ROOT_FILES = ["sets.json", "series.json", "pokemon.json"] as const;
@@ -112,7 +113,7 @@ function removeStaleSealedPricingCopies(slug: string): void {
     const abs = path.join(SEALED_DIR, name);
     if (fs.existsSync(abs)) {
       fs.unlinkSync(abs);
-      console.log(`removed stale duplicate (now under data/pricing/): data/sealed-products/${name}`);
+      console.log(`removed stale duplicate (now under data/pokemon/pricing/): data/sealed-products/${name}`);
     }
   }
 }
@@ -139,7 +140,7 @@ async function main(): Promise<void> {
 
   const slug = R2_SEALED_POKEDATA_DEFAULT_SLUG;
   const sealedDownloads = [
-    { r2Key: r2SealedPokedataCatalogKey(slug), local: path.join(DATA_DIR, `${slug}-products.json`) },
+    { r2Key: r2SealedPokedataCatalogKey(slug), local: path.join(pokemonLocalDataRoot, `${slug}-products.json`) },
     { r2Key: sealedImageFailuresKey(slug), local: path.join(SEALED_DIR, `${slug}-image-failures.json`), optional: true },
   ] as const;
 
@@ -147,7 +148,7 @@ async function main(): Promise<void> {
 
   for (const name of ROOT_FILES) {
     const key = `data/${name}`;
-    const abs = path.join(DATA_DIR, name);
+    const abs = path.join(pokemonLocalDataRoot, name);
     tasks.push({
       label: key,
       run: async () => {
@@ -193,7 +194,7 @@ async function main(): Promise<void> {
       for (const f of locals) {
         if (!expectedBasenames.has(f)) {
           fs.unlinkSync(path.join(CARDS_DIR, f));
-          console.log(`removed orphan local card file: data/cards/${f}`);
+          console.log(`removed orphan local card file: data/pokemon/cards/${f}`);
         }
       }
       console.log(`ok: ${jsonKeys.length} files under ${CARDS_PREFIX}`);
@@ -234,11 +235,11 @@ async function main(): Promise<void> {
       for (const rel of collectLocalPricingRelPaths(PRICING_DIR)) {
         if (!expectedRel.has(rel)) {
           fs.unlinkSync(path.join(PRICING_DIR, ...rel.split("/")));
-          console.log(`removed orphan local pricing file: data/pricing/${rel}`);
+          console.log(`removed orphan local pricing file: data/pokemon/pricing/${rel}`);
         }
       }
       removeStaleSealedPricingCopies(slug);
-      console.log(`ok: ${expectedRel.size} files under ${PRICING_PREFIX} → data/pricing/`);
+      console.log(`ok: ${expectedRel.size} files under ${PRICING_PREFIX} → data/pokemon/pricing/`);
     },
   });
 

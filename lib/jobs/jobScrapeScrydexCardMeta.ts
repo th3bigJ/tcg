@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { pokemonLocalDataRoot } from "@/lib/pokemonLocalDataPaths";
 import type { CardJsonEntry, SetJsonEntry, SeriesJsonEntry } from "../staticDataTypes";
 import {
   fetchScrydexExpansionMultiPageHtml,
@@ -39,16 +40,15 @@ function readJson<T>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
 }
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const CARDS_DIR = path.join(DATA_DIR, "cards");
+const CARDS_DIR = path.join(pokemonLocalDataRoot, "cards");
 const GAPS_DOC = path.join(process.cwd(), "docs", "scrydex-card-meta-gaps.md");
 
 function loadSets(): SetJsonEntry[] {
-  return readJson<SetJsonEntry[]>(path.join(DATA_DIR, "sets.json"));
+  return readJson<SetJsonEntry[]>(path.join(pokemonLocalDataRoot, "sets.json"));
 }
 
 function loadSeries(): SeriesJsonEntry[] {
-  return readJson<SeriesJsonEntry[]>(path.join(DATA_DIR, "series.json"));
+  return readJson<SeriesJsonEntry[]>(path.join(pokemonLocalDataRoot, "series.json"));
 }
 
 function loadCardsForSet(setCode: string): CardJsonEntry[] {
@@ -449,7 +449,7 @@ export async function runScrapeScrydexCardMeta(opts: ScrapeScrydexCardMetaOption
       : "all sets";
 
   console.log(`=== Scrydex card metadata scrape (${scopeLabel}) ===`);
-  if (dryRun) console.log("(dry-run: no writes to data/cards)\n");
+  if (dryRun) console.log("(dry-run: no writes to data/pokemon/cards)\n");
 
   const results: SetMetaResult[] = [];
   const setsSkippedNoMapping: string[] = [];
@@ -459,7 +459,7 @@ export async function runScrapeScrydexCardMeta(opts: ScrapeScrydexCardMetaOption
     if (!setCode) continue;
     const cards = loadCardsForSet(setCode);
     if (!cards.length) {
-      console.log(`  [${setCode}] skip — no cards in data/cards/${setCode}.json`);
+      console.log(`  [${setCode}] skip — no cards in data/pokemon/cards/${setCode}.json`);
       continue;
     }
     const configs = resolveExpansionConfigsForSet(set);

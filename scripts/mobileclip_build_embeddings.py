@@ -21,8 +21,8 @@ DEFAULT_ONNX_MODEL = REPO_ROOT / "public/models/mobileclip/mobileclip_s2_image_e
 DEFAULT_ONNX_METADATA = REPO_ROOT / "public/models/mobileclip/mobileclip_s2_image_encoder.json"
 DEFAULT_OUTPUT_BINARY = REPO_ROOT / "public/models/mobileclip/card-embeddings.f32"
 DEFAULT_OUTPUT_METADATA = REPO_ROOT / "public/models/mobileclip/card-embeddings.json"
-DEFAULT_DATA_DIR = REPO_ROOT / "data/cards"
-DEFAULT_SETS_PATH = REPO_ROOT / "data/sets.json"
+DEFAULT_DATA_DIR = REPO_ROOT / "data/pokemon/cards"
+DEFAULT_SETS_PATH = REPO_ROOT / "data/pokemon/sets.json"
 
 
 def parse_args() -> argparse.Namespace:

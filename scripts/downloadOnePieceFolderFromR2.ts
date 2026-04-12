@@ -1,5 +1,5 @@
 /**
- * Download the R2 `onepiece/` prefix into the local `onepiece/` folder, preserving
+ * Download the R2 `onepiece/` prefix into the local `data/onepiece/` folder, preserving
  * nested paths and removing stale local files not present on R2.
  *
  * Usage:
@@ -11,11 +11,12 @@ import fs from "fs";
 import path from "path";
 import { GetObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { ONEPIECE_R2_PREFIX, buildOnePieceS3Client, getOnePieceR2Bucket } from "../lib/onepieceR2";
+import { onepieceLocalDataRoot } from "../lib/onepieceLocalDataPaths";
 import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
 
 loadEnvFilesFromRepoRoot(import.meta.url);
 
-const ROOT = path.join(process.cwd(), "onepiece");
+const ROOT = onepieceLocalDataRoot;
 const PREFIX = `${ONEPIECE_R2_PREFIX}/`;
 const dryRun = Boolean(process.env.DRY_RUN && process.env.DRY_RUN !== "0");
 
@@ -116,14 +117,14 @@ async function main(): Promise<void> {
   for (const rel of collectLocalFiles(ROOT)) {
     if (expected.has(rel)) continue;
     if (dryRun) {
-      console.log(`[dry-run] would remove stale local file: onepiece/${rel}`);
+      console.log(`[dry-run] would remove stale local file: data/onepiece/${rel}`);
       continue;
     }
     fs.unlinkSync(path.join(ROOT, ...rel.split("/")));
-    console.log(`removed stale local file: onepiece/${rel}`);
+    console.log(`removed stale local file: data/onepiece/${rel}`);
   }
 
-  console.log(`Finished ${dryRun ? "(dry-run)" : "downloading"} onepiece/`);
+  console.log(`Finished ${dryRun ? "(dry-run)" : "downloading"} data/onepiece/`);
 }
 
 main().catch((error) => {

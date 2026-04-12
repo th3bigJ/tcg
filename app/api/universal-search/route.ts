@@ -16,7 +16,7 @@ import {
 } from "@/lib/r2SealedProducts";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const pokemonJson = require("../../../data/pokemon.json") as Array<{
+const pokemonJson = require("../../../data/pokemon/pokemon.json") as Array<{
   nationalDexNumber: number;
   name: string;
   imageUrl: string;

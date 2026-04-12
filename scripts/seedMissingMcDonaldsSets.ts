@@ -1,9 +1,10 @@
 import fs from "fs";
 import path from "path";
 import type { CardJsonEntry, SetJsonEntry } from "../lib/staticDataTypes";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const TARGET_SET_IDS = new Set(["2014xy", "2015xy", "2017sm", "2018sm"]);
-const DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR = pokemonLocalDataRoot;
 const CARDS_DIR = path.join(DATA_DIR, "cards");
 
 type TcgdexSetSummary = {

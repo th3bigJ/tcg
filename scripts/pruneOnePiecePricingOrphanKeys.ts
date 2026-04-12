@@ -1,5 +1,5 @@
 /**
- * Remove pricing rows whose keys no longer match any card in onepiece/cards/data/{set}.json.
+ * Remove pricing rows whose keys no longer match any card in data/onepiece/cards/data/{set}.json.
  *
  * Historic rows used tcgplayerProductId as the map key (e.g. "482337"). Current data uses
  * priceKey (e.g. "OP02::OP02-008::foil"). mergeSetPriceHistoryMaps keeps old keys forever;

@@ -1,6 +1,6 @@
 /**
  * Fetches a One Piece expansion page from Scrydex and sets `scrydexSlug` on each
- * card in onepiece/cards/data/{setCode}.json. Required for daily pricing:
+ * card in data/onepiece/cards/data/{setCode}.json. Required for daily pricing:
  * `jobScrapeOnePiecePricing` only reads prices when `scrydexSlug` is set.
  *
  * Regex must stay in sync with `parseScrydexExpansionCards` in scrapeOnePieceCards.ts.
@@ -11,6 +11,7 @@
 
 import fs from "fs";
 import path from "path";
+import { onepieceLocalDataRoot } from "../lib/onepieceLocalDataPaths";
 import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
 
 loadEnvFilesFromRepoRoot(import.meta.url);
@@ -57,9 +58,8 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const repoRoot = process.cwd();
-  const setsPath = path.join(repoRoot, "onepiece", "sets", "data", "sets.json");
-  const cardsPath = path.join(repoRoot, "onepiece", "cards", "data", `${setCode}.json`);
+  const setsPath = path.join(onepieceLocalDataRoot, "sets", "data", "sets.json");
+  const cardsPath = path.join(onepieceLocalDataRoot, "cards", "data", `${setCode}.json`);
 
   const sets = JSON.parse(fs.readFileSync(setsPath, "utf8")) as SetRow[];
   const row = sets.find((s) => s.setCode.toUpperCase() === setCode);

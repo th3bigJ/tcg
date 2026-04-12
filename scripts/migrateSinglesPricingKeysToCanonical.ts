@@ -1,5 +1,5 @@
 /**
- * Rewrite local `data/pricing/card-pricing|price-history|price-trends/{setKey}.json`
+ * Rewrite local `data/pokemon/pricing/card-pricing|price-history|price-trends/{setKey}.json`
  * so top-level keys match catalog `externalId` (trimmed, lowercased), using the same
  * alias rules as `buildPricingLookupIds`. Merges duplicate entries when several legacy
  * keys map to one card. Regenerates `price-trends` from merged `price-history`.
@@ -29,6 +29,7 @@ import type {
   SetPricingMap,
   SetPriceTrendMap,
 } from "../lib/staticDataTypes";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const dryRun = Boolean(process.env.DRY_RUN && process.env.DRY_RUN !== "0");
 const setFilterArg = process.argv.find((a) => a.startsWith("--set="));
@@ -42,7 +43,7 @@ const setFilter = setFilterArg
     )
   : null;
 
-const DATA = path.join(process.cwd(), "data");
+const DATA = pokemonLocalDataRoot;
 const setsPath = path.join(DATA, "sets.json");
 const cardsDir = path.join(DATA, "cards");
 const pricingRoot = path.join(DATA, "pricing");

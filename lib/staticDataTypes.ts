@@ -73,7 +73,7 @@ export type SetJsonEntry = {
    * Single catalog id for this set: Scrydex main `listPrefix` (e.g. `me2`, `swsh12pt5`, `swsh45`).
    * Multi-list sets use the primary id on disk; scrapers follow all Scrydex listings (e.g. Crown Zenith + GG,
    * Shining Fates + Shiny Vault, SWSH `swsh10` + `swsh10tg` Trainer Gallery).
-   * Drives `data/cards/{setKey}.json`, R2 singles pricing, scrapers.
+   * Drives local `data/pokemon/cards/{setKey}.json`, R2 singles pricing, scrapers.
    */
   setKey: string;
   releaseDate: string | null;

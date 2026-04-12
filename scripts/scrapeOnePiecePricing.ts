@@ -2,7 +2,7 @@
  * Scrape current One Piece Near Mint USD prices from Scrydex card pages.
  * Writes market + merged daily history + trends:
  *   - Default (R2): onepiece/pricing/{market,history,trends}/{setCode}.json on R2
- *   - Local: set ONEPIECE_PRICING_LOCAL=1 → same paths under repo `onepiece/pricing/`
+ *   - Local: set ONEPIECE_PRICING_LOCAL=1 → same paths under repo `data/onepiece/pricing/`
  *
  * Usage:
  *   node --import tsx/esm scripts/scrapeOnePiecePricing.ts

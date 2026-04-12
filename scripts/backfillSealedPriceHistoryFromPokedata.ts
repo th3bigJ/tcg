@@ -21,6 +21,7 @@ import {
   type SealedProductPriceHistoryMap,
 } from "../lib/r2SealedPriceHistory";
 import { uploadSealedPriceTrends } from "../lib/r2SealedPriceTrends";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 type PokedataProduct = {
   id: number;
@@ -45,7 +46,7 @@ type ProductTransactionsPayload = {
 
 const SOURCE_API_URL = "https://www.pokedata.io/api/products";
 const PRODUCT_TRANSACTIONS_URL = "https://www.pokedata.io/api/product_transactions";
-const PRICING_DATA_DIR = path.join(process.cwd(), "data", "pricing");
+const PRICING_DATA_DIR = path.join(pokemonLocalDataRoot, "pricing");
 const ENV_FILE = path.join(process.cwd(), ".env.local");
 const DEFAULT_TCG = "Pokemon";
 const DEFAULT_LANGUAGE = "ENGLISH";

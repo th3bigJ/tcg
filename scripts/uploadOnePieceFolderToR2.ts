@@ -1,5 +1,5 @@
 /**
- * Upload the local `onepiece/` folder to R2, preserving the folder and all nested contents:
+ * Upload the local `data/onepiece/` folder to R2, preserving the folder and all nested contents:
  *   onepiece/** -> onepiece/** on R2
  *
  * Usage:
@@ -11,11 +11,12 @@ import fs from "fs";
 import path from "path";
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { buildOnePieceS3Client, onePieceR2Key, uploadLocalFileToOnePieceR2 } from "../lib/onepieceR2";
+import { onepieceLocalDataRoot } from "../lib/onepieceLocalDataPaths";
 import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
 
 loadEnvFilesFromRepoRoot(import.meta.url);
 
-const ROOT = path.join(process.cwd(), "onepiece");
+const ROOT = onepieceLocalDataRoot;
 const dryRun = Boolean(process.env.DRY_RUN && process.env.DRY_RUN !== "0");
 const resume = Boolean(process.env.RESUME && process.env.RESUME !== "0");
 
@@ -97,7 +98,7 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log(`Finished ${dryRun ? "(dry-run)" : "uploading"} onepiece/`);
+  console.log(`Finished ${dryRun ? "(dry-run)" : "uploading"} data/onepiece/ → R2 onepiece/`);
 }
 
 main().catch((error) => {

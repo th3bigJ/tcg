@@ -1,6 +1,6 @@
 /**
- * Compare `data/cards/{setKey}.json` externalIds to keys in:
- *   data/pricing/card-pricing, price-history, price-trends
+ * Compare `data/pokemon/cards/{setKey}.json` externalIds to keys in:
+ *   data/pokemon/pricing/card-pricing, price-history, price-trends
  *
  * Usage:
  *   node --import tsx/esm scripts/verifySinglesPricingCatalogParity.ts
@@ -9,10 +9,11 @@
 
 import fs from "fs";
 import path from "path";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const jsonOut = process.argv.includes("--json");
 
-const DATA = path.join(process.cwd(), "data");
+const DATA = pokemonLocalDataRoot;
 const setsPath = path.join(DATA, "sets.json");
 const cardsDir = path.join(DATA, "cards");
 const pricingRoot = path.join(DATA, "pricing");

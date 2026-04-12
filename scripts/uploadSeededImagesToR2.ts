@@ -4,6 +4,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { r2SetLogoPrefix, r2SetSymbolPrefix } from "../lib/r2BucketLayout";
 import type { CardJsonEntry, SetJsonEntry } from "../lib/staticDataTypes";
 import { getSinglesCatalogSetKey } from "../lib/singlesCatalogSetKey";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const TARGET_SET_CODES = [
   "2014xy",
@@ -25,9 +26,8 @@ const TARGET_SET_CODES = [
   "xyp",
 ] as const;
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const CARDS_DIR = path.join(DATA_DIR, "cards");
-const SETS_FILE = path.join(DATA_DIR, "sets.json");
+const CARDS_DIR = path.join(pokemonLocalDataRoot, "cards");
+const SETS_FILE = path.join(pokemonLocalDataRoot, "sets.json");
 const ENV_FILE = path.join(process.cwd(), ".env.local");
 
 function readJson<T>(filePath: string): T {

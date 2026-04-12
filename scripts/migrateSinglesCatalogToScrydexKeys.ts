@@ -1,5 +1,5 @@
 /**
- * Legacy maintenance: ensure each `data/cards/{set.setKey}.json` uses `setCode` matching `sets.setKey`,
+ * Legacy maintenance: ensure each `data/pokemon/cards/{set.setKey}.json` uses `setCode` matching `sets.setKey`,
  * strips removed TCGdex mirror fields (`tcgdex_id`, `setTcgdexId`), and drops other stale keys.
  *
  * Earlier versions also renamed files from tcg codes → Scrydex keys; that is already reflected
@@ -12,10 +12,11 @@
 import fs from "fs";
 import path from "path";
 import type { CardJsonEntry, SetJsonEntry } from "../lib/staticDataTypes";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const DRY_RUN = Boolean(process.env.DRY_RUN && process.env.DRY_RUN !== "0");
 const ROOT = process.cwd();
-const DATA_DIR = path.join(ROOT, "data");
+const DATA_DIR = pokemonLocalDataRoot;
 const SETS_PATH = path.join(DATA_DIR, "sets.json");
 const CARDS_DIR = path.join(DATA_DIR, "cards");
 

@@ -1,5 +1,5 @@
 /**
- * Groups variant keys in `data/pricing/card-pricing/*.json` by a compact form (lowercase, no spaces/_/-)
+ * Groups variant keys in `data/pokemon/pricing/card-pricing/*.json` by a compact form (lowercase, no spaces/_/-)
  * and prints groups where more than one distinct key maps to the same form — candidates for duplicate slugs.
  *
  * Usage: node --import tsx/esm scripts/reportPricingVariantKeyCollisions.ts
@@ -8,7 +8,9 @@
 import fs from "fs";
 import path from "path";
 
-const DATA = path.join(process.cwd(), "data", "pricing", "card-pricing");
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
+
+const DATA = path.join(pokemonLocalDataRoot, "pricing", "card-pricing");
 
 function compactGroupKey(variantKey: string): string {
   return variantKey.toLowerCase().replace(/[\s_-]/g, "");

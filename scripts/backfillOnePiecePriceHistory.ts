@@ -1,7 +1,7 @@
 /**
  * Backfill One Piece price history from Scrydex chart data (merge into existing history).
  *   - Default (R2): reads/writes onepiece/pricing/history|trends on R2
- *   - Local: ONEPIECE_PRICING_LOCAL=1 → repo `onepiece/pricing/history|trends/`
+ *   - Local: ONEPIECE_PRICING_LOCAL=1 → repo `data/onepiece/pricing/history|trends/`
  *
  * Uses the same daily/weekly/monthly window format as Pokemon:
  * - daily: last 31 days
@@ -71,7 +71,7 @@ function scrydexQueryVariant(card: OnePieceCardEntry): string {
 async function backfillSet(set: OnePieceSetEntry, dryRunMode: boolean): Promise<void> {
   const cards = loadOnePieceCardsForSet(set.setCode);
   if (!cards.length) {
-    console.log(`  [${set.setCode}] skip — no cards in onepiece/cards/data/${set.setCode}.json`);
+    console.log(`  [${set.setCode}] skip — no cards in data/onepiece/cards/data/${set.setCode}.json`);
     return;
   }
 
@@ -107,7 +107,7 @@ async function backfillSet(set: OnePieceSetEntry, dryRunMode: boolean): Promise<
 
   const merged = await mergeOnePieceHistoryForSet(set.setCode, historyMap);
   console.log(
-    `  [${set.setCode}] merged ${Object.keys(historyMap).length} backfilled cards into onepiece/pricing/history/${set.setCode}.json (${Object.keys(merged).length} total keys)`,
+    `  [${set.setCode}] merged ${Object.keys(historyMap).length} backfilled cards into data/onepiece/pricing/history/${set.setCode}.json (${Object.keys(merged).length} total keys)`,
   );
 }
 

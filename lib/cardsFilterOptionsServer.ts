@@ -66,7 +66,7 @@ export async function getCachedSetFilterOptions(setCodes: string[]): Promise<Set
 const getAllPokemonFilterOptions = cache(async function getAllPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
   "use cache";
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const raw = require("../data/pokemon.json") as PokemonJsonEntry[];
+  const raw = require("../data/pokemon/pokemon.json") as PokemonJsonEntry[];
   return raw.map((p) => ({
     nationalDexNumber: p.nationalDexNumber,
     name: p.name,

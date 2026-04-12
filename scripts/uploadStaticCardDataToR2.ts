@@ -1,8 +1,8 @@
 /**
  * Uploads local static JSON to R2.
- *   - `data/sets.json`, `series.json`, `pokemon.json`, `data/cards/{setCode}.json` → same keys under `data/…` on R2
- *   - `data/{slug}-products.json` → same key on R2 (sealed Pokedata catalog; slug from lib/r2BucketLayout.ts)
- *   - `data/pricing/**` (recursive `.json` only) → `pricing/**` on R2 (matches bucket layout in lib/r2BucketLayout.ts)
+ *   - Local `data/pokemon/{sets,series,pokemon}.json`, `data/pokemon/cards/{setCode}.json` → same keys under `data/…` on R2
+ *   - `data/pokemon/{slug}-products.json` → same key on R2 (sealed Pokedata catalog; slug from lib/r2BucketLayout.ts)
+ *   - `data/pokemon/pricing/**` (recursive `.json` only) → `pricing/**` on R2 (matches bucket layout in lib/r2BucketLayout.ts)
  * Does not modify files on disk or any URLs inside them.
  *
  * Usage:
@@ -21,11 +21,11 @@ import {
   R2_SEALED_POKEDATA_DEFAULT_SLUG,
   r2SealedPokedataCatalogKey,
 } from "../lib/r2BucketLayout";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const ENV_FILE = path.join(process.cwd(), ".env.local");
-const DATA_DIR = path.join(process.cwd(), "data");
-const CARDS_DIR = path.join(DATA_DIR, "cards");
-const PRICING_DIR = path.join(DATA_DIR, "pricing");
+const CARDS_DIR = path.join(pokemonLocalDataRoot, "cards");
+const PRICING_DIR = path.join(pokemonLocalDataRoot, "pricing");
 
 const ROOT_FILES = ["sets.json", "series.json", "pokemon.json"] as const;
 
@@ -87,7 +87,7 @@ export async function runUploadStaticCardDataToR2(dryRun: boolean): Promise<void
   const uploads: Array<{ key: string; abs: string }> = [];
 
   for (const name of ROOT_FILES) {
-    const abs = path.join(DATA_DIR, name);
+    const abs = path.join(pokemonLocalDataRoot, name);
     if (!fs.existsSync(abs)) {
       console.warn(`skip missing: ${abs}`);
       continue;
@@ -105,7 +105,7 @@ export async function runUploadStaticCardDataToR2(dryRun: boolean): Promise<void
   }
 
   const sealedSlug = R2_SEALED_POKEDATA_DEFAULT_SLUG;
-  const sealedCatalogAbs = path.join(DATA_DIR, `${sealedSlug}-products.json`);
+  const sealedCatalogAbs = path.join(pokemonLocalDataRoot, `${sealedSlug}-products.json`);
   const sealedCatalogKey = r2SealedPokedataCatalogKey(sealedSlug);
   if (!fs.existsSync(sealedCatalogAbs)) {
     console.warn(`skip missing sealed catalog: ${sealedCatalogAbs} (expected R2 key ${sealedCatalogKey})`);

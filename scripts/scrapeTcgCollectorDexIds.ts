@@ -3,7 +3,7 @@
  *
  * 1. Fetches the Perfect Order set page to get all card wiki links
  * 2. Visits each card page to extract the National Pokédex number(s)
- * 3. Matches by card number and updates data/cards/me03.json
+ * 3. Matches by card number and updates data/pokemon/cards/me03.json
  *
  * Usage:
  *   node --import tsx/esm scripts/scrapeTcgCollectorDexIds.ts
@@ -13,11 +13,13 @@
 import fs from "fs";
 import path from "path";
 import type { CardJsonEntry } from "../lib/staticDataTypes";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const SET_URL = "https://bulbapedia.bulbagarden.net/wiki/Perfect_Order_(TCG)";
 const BASE_URL = "https://bulbapedia.bulbagarden.net";
-const CARDS_FILE = path.join(process.cwd(), "data/cards/me03.json");
+
+const CARDS_FILE = path.join(pokemonLocalDataRoot, "cards/me03.json");
 const UA = "Mozilla/5.0 (compatible; TCG-DexScraper/1.0)";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

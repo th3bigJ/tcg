@@ -1,7 +1,7 @@
 /**
  * Full local refresh of One Piece static data + pricing (no R2 uploads).
  *
- * Writes under `onepiece/`:
+ * Writes under `data/onepiece/`:
  *   - sets/data/sets.json, sets/images/
  *   - cards/data/{set}.json, cards/images/{set}/
  *   - pricing/market|history|trends/{set}.json  (when ONEPIECE_PRICING_LOCAL is set for pricing steps)
@@ -150,7 +150,7 @@ After completion:
 
   if (!skipPricing) {
     runStep(
-      "3/4 — Scrape current prices (Scrydex → onepiece/pricing/market + history + trends, local files)",
+      "3/4 — Scrape current prices (Scrydex → data/onepiece/pricing/market + history + trends, local files)",
       "scripts/scrapeOnePiecePricing.ts",
       pricingArgs,
       localPricing,
@@ -161,7 +161,7 @@ After completion:
 
   if (!skipHistory) {
     runStep(
-      "4/4 — Backfill NM price history (merge into onepiece/pricing/history + trends, local files)",
+      "4/4 — Backfill NM price history (merge into data/onepiece/pricing/history + trends, local files)",
       "scripts/backfillOnePiecePriceHistory.ts",
       historyArgs,
       localPricing,
@@ -174,13 +174,13 @@ After completion:
 Done.
 
 Local outputs:
-  onepiece/sets/data/sets.json
-  onepiece/sets/images/
-  onepiece/cards/data/*.json
-  onepiece/cards/images/*/
-  onepiece/pricing/market/*.json
-  onepiece/pricing/history/*.json
-  onepiece/pricing/trends/*.json
+  data/onepiece/sets/data/sets.json
+  data/onepiece/sets/images/
+  data/onepiece/cards/data/*.json
+  data/onepiece/cards/images/*/
+  data/onepiece/pricing/market/*.json
+  data/onepiece/pricing/history/*.json
+  data/onepiece/pricing/trends/*.json
 
 Upload to R2 when ready:
   npm run r2:upload-onepiece

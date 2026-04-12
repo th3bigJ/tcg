@@ -1,5 +1,5 @@
 /**
- * Rewrite `data/pricing/price-history/*.json` so Scarlet & Violet card keys use canonical
+ * Rewrite `data/pokemon/pricing/price-history/*.json` so Scarlet & Violet card keys use canonical
  * catalog prefixes (`sv2-…` not `sv02-…`, `sv6pt5-…` not `sv06.5-…`, etc.).
  *
  * When both legacy and canonical keys exist for the same card, keeps the canonical entry.
@@ -16,10 +16,11 @@ import {
   SCARLET_VIOLET_CARD_KEY_PREFIX_ALIASES,
 } from "../lib/scrydexScarletVioletUrls";
 import type { SetPriceHistoryMap } from "../lib/staticDataTypes";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const dryRun = process.argv.includes("--dry-run");
 
-const DIR = path.join(process.cwd(), "data", "pricing", "price-history");
+const DIR = path.join(pokemonLocalDataRoot, "pricing", "price-history");
 
 /** Match catalog `externalId` numbering (`sv6pt5-99` not `sv6pt5-099`). */
 function normalizeHistoryCardSuffix(suffix: string): string {

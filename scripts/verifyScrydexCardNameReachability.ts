@@ -32,9 +32,9 @@ import {
   parseScrydexDevPaneField,
   parseScrydexCardId,
 } from "../lib/scrydexCardPageCardText";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const CARDS_DIR = path.join(DATA_DIR, "cards");
+const CARDS_DIR = path.join(pokemonLocalDataRoot, "cards");
 
 const DEFAULT_REPORT = path.join("docs", "scrydex-card-name-verification.md");
 
@@ -209,8 +209,8 @@ async function main(): Promise<void> {
   const conc = Number.parseInt(process.env.SCRYDEX_VERIFY_CONCURRENCY ?? "10", 10);
   const startedAt = new Date().toISOString();
 
-  const sets = readJson<SetJsonEntry[]>(path.join(DATA_DIR, "sets.json"));
-  const allSeries = readJson<SeriesJsonEntry[]>(path.join(DATA_DIR, "series.json"));
+  const sets = readJson<SetJsonEntry[]>(path.join(pokemonLocalDataRoot, "sets.json"));
+  const allSeries = readJson<SeriesJsonEntry[]>(path.join(pokemonLocalDataRoot, "series.json"));
 
   let setsToWalk = sets;
   const scopeLines: string[] = [];

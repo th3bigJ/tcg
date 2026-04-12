@@ -1,6 +1,5 @@
-import fs from "fs";
-import path from "path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getJsonFromR2, putJsonToR2 } from "@/lib/adminR2";
 import { r2SinglesCardPricingPrefix } from "@/lib/r2BucketLayout";
 import type {
   CardJsonEntry,
@@ -40,27 +39,20 @@ export interface ScrapePricingOptions {
   onlySeriesNames?: string[];
 }
 
-// ─── Static data ──────────────────────────────────────────────────────────────
+// ─── Catalog from R2 (same keys as /admin APIs) ───────────────────────────────
 
-function readJson<T>(filePath: string): T {
-  return JSON.parse(fs.readFileSync(filePath, "utf-8")) as T;
+async function loadSetsFromR2(): Promise<SetJsonEntry[]> {
+  const sets = await getJsonFromR2<SetJsonEntry[]>("data/sets.json");
+  if (!sets?.length) throw new Error("data/sets.json not found or empty in R2");
+  return sets;
 }
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const CARDS_DIR = path.join(DATA_DIR, "cards");
-
-function loadSets(): SetJsonEntry[] {
-  return readJson<SetJsonEntry[]>(path.join(DATA_DIR, "sets.json"));
+async function loadSeriesFromR2(): Promise<SeriesJsonEntry[]> {
+  return (await getJsonFromR2<SeriesJsonEntry[]>("data/series.json")) ?? [];
 }
 
-function loadSeries(): SeriesJsonEntry[] {
-  return readJson<SeriesJsonEntry[]>(path.join(DATA_DIR, "series.json"));
-}
-
-function loadCardsForSet(setCode: string): CardJsonEntry[] {
-  const file = path.join(CARDS_DIR, `${setCode}.json`);
-  if (!fs.existsSync(file)) return [];
-  return readJson<CardJsonEntry[]>(file);
+async function loadCardsForSetFromR2(setCode: string): Promise<CardJsonEntry[]> {
+  return (await getJsonFromR2<CardJsonEntry[]>(`data/cards/${setCode}.json`)) ?? [];
 }
 
 // ─── Pricing helpers ──────────────────────────────────────────────────────────
@@ -271,20 +263,26 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
   const count = Object.keys(pricingMap).length;
   const json = JSON.stringify(pricingMap);
 
-  const cardsPath = path.join(CARDS_DIR, `${setCode}.json`);
-  if (fs.existsSync(cardsPath)) {
-    try {
-      const cardRows = readJson<CardJsonEntry[]>(cardsPath);
-      const vChanged = applyPricingVariantsToCardsInPlace(cardRows, pricingMap);
-      if (vChanged && !dryRun) {
-        fs.writeFileSync(cardsPath, `${JSON.stringify(cardRows, null, 2)}\n`, "utf-8");
-        console.log(`  [${setCode}] updated pricingVariants in data/cards/${setCode}.json`);
-      } else if (vChanged && dryRun) {
-        console.log(`  [${setCode}] would update pricingVariants in data/cards/${setCode}.json (dry-run)`);
+  const cardKey = `data/cards/${setCode}.json`;
+  try {
+    const cardRows = await getJsonFromR2<CardJsonEntry[]>(cardKey);
+    if (cardRows?.length) {
+      if (dryRun) {
+        const copy = JSON.parse(JSON.stringify(cardRows)) as CardJsonEntry[];
+        const vChanged = applyPricingVariantsToCardsInPlace(copy, pricingMap);
+        if (vChanged) {
+          console.log(`  [${setCode}] would update pricingVariants in R2 ${cardKey} (dry-run)`);
+        }
+      } else {
+        const vChanged = applyPricingVariantsToCardsInPlace(cardRows, pricingMap);
+        if (vChanged) {
+          await putJsonToR2(cardKey, cardRows);
+          console.log(`  [${setCode}] updated pricingVariants in R2 ${cardKey}`);
+        }
       }
-    } catch (e) {
-      console.warn(`  [${setCode}] could not merge pricingVariants into card JSON: ${e instanceof Error ? e.message : e}`);
     }
+  } catch (e) {
+    console.warn(`  [${setCode}] could not merge pricingVariants into card JSON: ${e instanceof Error ? e.message : e}`);
   }
 
   if (dryRun) {
@@ -302,14 +300,14 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
 export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise<void> {
   const { dryRun = false, onlySetCodes, onlySeriesNames } = opts;
 
-  const allSets = loadSets();
+  const allSets = await loadSetsFromR2();
   let sets = allSets;
 
   if (onlySetCodes?.length) {
     sets = allSets.filter((s) => setRowMatchesAllowedSetCodes(s, onlySetCodes));
     if (!sets.length) throw new Error(`No sets found matching: ${onlySetCodes.join(", ")}`);
   } else if (onlySeriesNames?.length) {
-    const allSeries = loadSeries();
+    const allSeries = await loadSeriesFromR2();
     const matchedSeries = new Set(
       allSeries
         .filter((sr) => onlySeriesNames.some((n) => n.toLowerCase() === sr.name.toLowerCase()))
@@ -326,7 +324,7 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
       ? `series: ${onlySeriesNames.join(", ")}`
       : "all sets";
 
-  console.log(`=== Scrydex price scrape (${scopeLabel}) — storing USD ===`);
+  console.log(`=== Scrydex price scrape (${scopeLabel}) — catalog from R2, outputs to R2 ===`);
   if (dryRun) console.log("(dry-run: no R2 uploads)\n");
 
   const s3 = buildS3Client();
@@ -334,9 +332,9 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
   for (const set of sets) {
     const setCode = getSinglesCatalogSetKey(set);
     if (!setCode) continue;
-    const cards = loadCardsForSet(setCode);
+    const cards = await loadCardsForSetFromR2(setCode);
     if (!cards.length) {
-      console.log(`  [${setCode}] skip — no cards in data/cards/${setCode}.json`);
+      console.log(`  [${setCode}] skip — no cards in R2 data/cards/${setCode}.json`);
       continue;
     }
     await scrapeSet(set, cards, s3, dryRun);

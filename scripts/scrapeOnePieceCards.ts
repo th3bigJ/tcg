@@ -1,11 +1,11 @@
 /**
  * Scrape One Piece card data from Scrydex.
  *
- * For each set in onepiece/sets/data/sets.json:
+ * For each set in data/onepiece/sets/data/sets.json:
  *   1. Fetch Scrydex expansion page → unique card slug/number pairs
  *   2. Fetch each Scrydex card page → metadata + available variants
- *   3. Build card records and write onepiece/cards/data/{setCode}.json
- *   4. Download card images to onepiece/cards/images/{setCode}/
+ *   3. Build card records and write data/onepiece/cards/data/{setCode}.json
+ *   4. Download card images to data/onepiece/cards/images/{setCode}/
  *
  * Usage:
  *   node --import tsx/esm scripts/scrapeOnePieceCards.ts
@@ -22,13 +22,14 @@ import https from "https";
 import http from "http";
 import type { S3Client } from "@aws-sdk/client-s3";
 import { buildOnePieceS3Client, uploadLocalFileToOnePieceR2 } from "../lib/onepieceR2";
+import { onepieceLocalDataRoot } from "../lib/onepieceLocalDataPaths";
 import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const NO_IMAGES = process.argv.includes("--no-images");
 const REFRESH_IMAGES = process.argv.includes("--refresh-images");
 loadEnvFilesFromRepoRoot(import.meta.url);
-/** When set, write only under `onepiece/` locally — no R2 uploads. */
+/** When set, write only under `data/onepiece/` locally — no R2 uploads. */
 const SKIP_R2 =
   process.env.SKIP_ONEPIECE_R2 === "1" || process.env.SKIP_ONEPIECE_R2 === "true" || process.argv.includes("--skip-r2");
 
@@ -37,10 +38,9 @@ const ONLY_SETS = setArg
   ? setArg.slice("--set=".length).split(",").map((s) => s.trim().toUpperCase())
   : null;
 
-const REPO_ROOT = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
-const SETS_FILE = path.join(REPO_ROOT, "onepiece", "sets", "data", "sets.json");
-const CARDS_DATA_DIR = path.join(REPO_ROOT, "onepiece", "cards", "data");
-const CARDS_IMAGES_DIR = path.join(REPO_ROOT, "onepiece", "cards", "images");
+const SETS_FILE = path.join(onepieceLocalDataRoot, "sets", "data", "sets.json");
+const CARDS_DATA_DIR = path.join(onepieceLocalDataRoot, "cards", "data");
+const CARDS_IMAGES_DIR = path.join(onepieceLocalDataRoot, "cards", "images");
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
@@ -476,7 +476,7 @@ async function scrapeSet(set: OnePieceSetEntry, s3: S3Client): Promise<void> {
       if (!DRY_RUN && result.imagePath && !SKIP_R2) {
         await uploadLocalFileToOnePieceR2(
           s3,
-          path.join(REPO_ROOT, result.imagePath),
+          path.join(onepieceLocalDataRoot, result.imagePath.replace(/^onepiece\//, "")),
           result.imagePath.replace(/^onepiece\//, ""),
         );
       }

@@ -3,9 +3,9 @@
  * by scripts/exportCardJson.ts. Zero DB queries, zero network calls.
  *
  * Files live at:
- *   data/sets.json
- *   data/series.json
- *   data/cards/{setKey}.json
+ *   data/pokemon/sets.json
+ *   data/pokemon/series.json
+ *   data/pokemon/cards/{setKey}.json
  */
 
 import type { CardJsonEntry, SeriesJsonEntry, SetJsonEntry } from "@/lib/staticDataTypes";
@@ -22,7 +22,7 @@ let _sets: SetJsonEntry[] | null = null;
 export function getAllSets(): SetJsonEntry[] {
   if (_sets) return _sets;
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const raw = require("../data/sets.json") as SetJsonEntry[];
+  const raw = require("../data/pokemon/sets.json") as SetJsonEntry[];
   // Resolve image paths to full URLs at read time so consumers always get absolute URLs
   _sets = raw.map((s) => ({
     ...s,
@@ -60,7 +60,7 @@ let _series: SeriesJsonEntry[] | null = null;
 export function getAllSeries(): SeriesJsonEntry[] {
   if (_series) return _series;
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  _series = require("../data/series.json") as SeriesJsonEntry[];
+  _series = require("../data/pokemon/series.json") as SeriesJsonEntry[];
   return _series;
 }
 
@@ -72,7 +72,7 @@ export function getCardsBySet(setCode: string): CardJsonEntry[] {
   if (_cardsBySet.has(setCode)) return _cardsBySet.get(setCode)!;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const raw = require(`../data/cards/${setCode}.json`) as CardJsonEntry[];
+    const raw = require(`../data/pokemon/cards/${setCode}.json`) as CardJsonEntry[];
     const cards = raw.map((c) => ({
       ...c,
       imageLowSrc: resolveMediaURL(c.imageLowSrc) || c.imageLowSrc,

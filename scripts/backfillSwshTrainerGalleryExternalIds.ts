@@ -10,8 +10,9 @@
 
 import fs from "fs";
 import path from "path";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
-const DATA = path.join(process.cwd(), "data");
+const DATA = pokemonLocalDataRoot;
 const CARDS_DIR = path.join(DATA, "cards");
 const PRICING = path.join(DATA, "pricing", "card-pricing");
 

@@ -24,6 +24,7 @@ import {
   r2SinglesPriceHistoryPrefix,
   r2SinglesPriceTrendsPrefix,
 } from "../lib/r2BucketLayout";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 import type {
   CardPriceHistory,
   CardPriceTrendSummary,
@@ -213,8 +214,7 @@ async function main(): Promise<void> {
   console.log(`Using GBP-per-USD (usdToGbp) = ${usdToGbp.toFixed(6)}  →  divide stored GBP by this to get USD (factor ${inv.toFixed(6)})\n`);
 
   const s3 = buildS3();
-  const dataDir = path.join(process.cwd(), "data");
-  const sets = readJson<SetJsonEntry[]>(path.join(dataDir, "sets.json"));
+  const sets = readJson<SetJsonEntry[]>(path.join(pokemonLocalDataRoot, "sets.json"));
 
   let setsUpdated = 0;
   let setsSkipped = 0;

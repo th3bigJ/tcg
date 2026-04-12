@@ -3,6 +3,7 @@ import path from "path";
 import { buildTrendMapFromHistoryMap } from "@/lib/r2PriceTrends";
 import { mergeSetPriceHistoryMaps, todayKey, upsertAndTrim } from "@/lib/r2PriceHistory";
 import { buildOnePieceS3Client, getJsonFromOnePieceR2, putJsonToOnePieceR2 } from "@/lib/onepieceR2";
+import { onepieceLocalDataRoot } from "@/lib/onepieceLocalDataPaths";
 import type {
   CardPriceHistory,
   CardPriceTrendSummary,
@@ -16,7 +17,7 @@ const DAILY_HISTORY_LIMIT = 31;
 const WEEKLY_HISTORY_LIMIT = 52;
 const MONTHLY_HISTORY_LIMIT = 60;
 
-const ONEPIECE_ROOT = path.join(process.cwd(), "onepiece");
+const ONEPIECE_ROOT = onepieceLocalDataRoot;
 const ONEPIECE_SETS_FILE = path.join(ONEPIECE_ROOT, "sets", "data", "sets.json");
 const ONEPIECE_CARDS_DIR = path.join(ONEPIECE_ROOT, "cards", "data");
 const ONEPIECE_PRICING_DIR = path.join(ONEPIECE_ROOT, "pricing");
@@ -148,7 +149,7 @@ export function ensureOnePiecePricingDirs(): void {
   fs.mkdirSync(ONEPIECE_TRENDS_DIR, { recursive: true });
 }
 
-/** When true, read/write `onepiece/pricing/{market,history,trends}` on disk instead of R2. */
+/** When true, read/write `data/onepiece/pricing/{market,history,trends}` on disk instead of R2. */
 export function useOnePiecePricingLocalFiles(): boolean {
   const v = process.env.ONEPIECE_PRICING_LOCAL?.trim().toLowerCase();
   return v === "1" || v === "true" || v === "yes";

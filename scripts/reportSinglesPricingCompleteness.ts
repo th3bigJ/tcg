@@ -1,6 +1,6 @@
 /**
  * Lists catalog cards whose externalId cannot be resolved in all three local mirrors:
- *   data/pricing/card-pricing, price-history, price-trends
+ *   data/pokemon/pricing/card-pricing, price-history, price-trends
  *
  * Uses `buildPricingLookupIds` so alternate spellings still resolve; pricing files should
  * use the exact catalog `externalId` as the key (case-sensitive).
@@ -13,12 +13,13 @@
 import fs from "fs";
 import path from "path";
 import { buildPricingLookupIds } from "../lib/r2Pricing";
+import { pokemonLocalDataRoot } from "../lib/pokemonLocalDataPaths";
 
 const jsonOut = process.argv.includes("--json");
 const limitArg = process.argv.find((a) => a.startsWith("--limit="));
 const printLimit = limitArg ? Math.max(0, Number.parseInt(limitArg.split("=")[1] ?? "100", 10)) : 100;
 
-const DATA = path.join(process.cwd(), "data");
+const DATA = pokemonLocalDataRoot;
 const setsPath = path.join(DATA, "sets.json");
 const cardsDir = path.join(DATA, "cards");
 const pricingRoot = path.join(DATA, "pricing");

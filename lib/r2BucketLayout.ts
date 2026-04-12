@@ -26,6 +26,10 @@ export const r2SinglesPriceTrendsPrefix = `${R2_PRICING}/price-trends`;
 /** Static JSON exports (e.g. sealed Pokedata catalog) under `data/…` */
 export const R2_DATA = "data" as const;
 
+/** App brand catalog + logos: `brands/data/…`, `brands/images/…` */
+export const R2_BRANDS_DATA = "brands/data" as const;
+export const R2_BRANDS_IMAGES = "brands/images" as const;
+
 /** Default slug for English Pokémon sealed scrape (`pokedata-english-pokemon`). */
 export const R2_SEALED_POKEDATA_DEFAULT_SLUG = "pokedata-english-pokemon" as const;
 
