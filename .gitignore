@@ -46,4 +46,14 @@ next-env.d.ts
 .claude
 
 /onepiece
-/data
+
+# Bulk local datasets — keep untracked, except minimal Pokémon stubs for CI/Docker.
+/data/*
+!/data/pokemon/
+/data/pokemon/*
+!/data/pokemon/sets.json
+!/data/pokemon/series.json
+!/data/pokemon/pokemon.json
+!/data/pokemon/cards/
+/data/pokemon/cards/*
+!/data/pokemon/cards/.gitkeep
