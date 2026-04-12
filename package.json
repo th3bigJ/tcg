@@ -44,8 +44,12 @@
     "scrape:onepiece-cards": "node --import tsx/esm scripts/scrapeOnePieceCards.ts",
     "scrape:onepiece-pricing": "node --import tsx/esm scripts/scrapeOnePiecePricing.ts",
     "backfill:onepiece-price-history": "node --import tsx/esm scripts/backfillOnePiecePriceHistory.ts",
+    "onepiece:rescrape-local": "node --import tsx/esm scripts/fullRescrapeOnePieceLocal.ts",
+    "onepiece:prune-pricing-orphans": "node --import tsx/esm scripts/pruneOnePiecePricingOrphanKeys.ts",
     "r2:upload-onepiece": "node --import tsx/esm scripts/uploadOnePieceFolderToR2.ts",
-    "r2:download-onepiece": "node --import tsx/esm scripts/downloadOnePieceFolderFromR2.ts"
+    "r2:upload-onepiece-history-trends": "node --import tsx/esm scripts/uploadOnePiecePricingHistoryTrendsToR2.ts",
+    "r2:download-onepiece": "node --import tsx/esm scripts/downloadOnePieceFolderFromR2.ts",
+    "r2:sum-cards-image-sizes": "node --import tsx/esm scripts/r2SumPokemonCardImageSizes.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

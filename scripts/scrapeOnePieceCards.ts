@@ -28,6 +28,9 @@ const DRY_RUN = process.argv.includes("--dry-run");
 const NO_IMAGES = process.argv.includes("--no-images");
 const REFRESH_IMAGES = process.argv.includes("--refresh-images");
 loadEnvFilesFromRepoRoot(import.meta.url);
+/** When set, write only under `onepiece/` locally — no R2 uploads. */
+const SKIP_R2 =
+  process.env.SKIP_ONEPIECE_R2 === "1" || process.env.SKIP_ONEPIECE_R2 === "true" || process.argv.includes("--skip-r2");
 
 const setArg = process.argv.find((a) => a.startsWith("--set="));
 const ONLY_SETS = setArg
@@ -280,7 +283,8 @@ function parseCardMeta(html: string, fallbackCardNumber: string, fallbackVariant
 
 function parseScrydexExpansionCards(html: string): ScrydexCardRef[] {
   const best = new Map<string, ScrydexCardRef>();
-  const re = /href="\/onepiece\/cards\/([^/"]+)\/(OP\d{2}-\d+|ST\d{2}-\d+|EB\d{2}-\d+|PRB\d+-\d+)\?variant=([^"]+)"/gi;
+  const re =
+    /href="\/onepiece\/cards\/([^/"]+)\/(OP\d{2}-\d+|ST\d{2}-\d+|EB\d{2}-\d+|PRB\d+-\d+|P-\d+)\?variant=([^"]+)"/gi;
   let match: RegExpExecArray | null;
 
   while ((match = re.exec(html)) !== null) {
@@ -469,7 +473,7 @@ async function scrapeSet(set: OnePieceSetEntry, s3: S3Client): Promise<void> {
     for (const card of cards) {
       const result = await downloadCardImage(card, setImagesDir);
       card.imagePath = result.imagePath;
-      if (!DRY_RUN && result.imagePath) {
+      if (!DRY_RUN && result.imagePath && !SKIP_R2) {
         await uploadLocalFileToOnePieceR2(
           s3,
           path.join(REPO_ROOT, result.imagePath),
@@ -486,8 +490,10 @@ async function scrapeSet(set: OnePieceSetEntry, s3: S3Client): Promise<void> {
   if (!DRY_RUN) {
     const outFile = path.join(CARDS_DATA_DIR, `${set.setCode}.json`);
     fs.writeFileSync(outFile, JSON.stringify(cards, null, 2) + "\n");
-    await uploadLocalFileToOnePieceR2(s3, outFile, `cards/data/${set.setCode}.json`);
-    console.log(`  Wrote ${cards.length} cards → ${path.relative(REPO_ROOT, outFile)}`);
+    if (!SKIP_R2) {
+      await uploadLocalFileToOnePieceR2(s3, outFile, `cards/data/${set.setCode}.json`);
+    }
+    console.log(`  Wrote ${cards.length} cards → ${path.relative(REPO_ROOT, outFile)}${SKIP_R2 ? " (skip R2)" : ""}`);
   }
 }
 

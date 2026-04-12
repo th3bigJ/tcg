@@ -148,6 +148,16 @@ export function ensureOnePiecePricingDirs(): void {
   fs.mkdirSync(ONEPIECE_TRENDS_DIR, { recursive: true });
 }
 
+/** When true, read/write `onepiece/pricing/{market,history,trends}` on disk instead of R2. */
+export function useOnePiecePricingLocalFiles(): boolean {
+  const v = process.env.ONEPIECE_PRICING_LOCAL?.trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes";
+}
+
+function writeJsonFile(filePath: string, value: unknown): void {
+  fs.writeFileSync(filePath, JSON.stringify(value, null, 2) + "\n");
+}
+
 export function loadOnePieceSets(): OnePieceSetEntry[] {
   return readJson<OnePieceSetEntry[]>(ONEPIECE_SETS_FILE);
 }
@@ -196,26 +206,47 @@ function trendsR2PathForSet(setCode: string): string {
 }
 
 export async function loadOnePieceHistoryForSet(setCode: string): Promise<SetPriceHistoryMap> {
+  if (useOnePiecePricingLocalFiles()) {
+    return readJsonIfExists<SetPriceHistoryMap>(historyFilePathForSet(setCode), {});
+  }
   const s3 = buildOnePieceS3Client();
   return (await getJsonFromOnePieceR2<SetPriceHistoryMap>(s3, historyR2PathForSet(setCode))) ?? {};
 }
 
 export async function loadOnePieceMarketForSet(setCode: string): Promise<OnePieceSetMarketMap> {
+  if (useOnePiecePricingLocalFiles()) {
+    return readJsonIfExists<OnePieceSetMarketMap>(marketFilePathForSet(setCode), {});
+  }
   const s3 = buildOnePieceS3Client();
   return (await getJsonFromOnePieceR2<OnePieceSetMarketMap>(s3, marketR2PathForSet(setCode))) ?? {};
 }
 
 export async function writeOnePieceMarketForSet(setCode: string, marketMap: OnePieceSetMarketMap): Promise<void> {
+  if (useOnePiecePricingLocalFiles()) {
+    ensureOnePiecePricingDirs();
+    writeJsonFile(marketFilePathForSet(setCode), marketMap);
+    return;
+  }
   const s3 = buildOnePieceS3Client();
   await putJsonToOnePieceR2(s3, marketR2PathForSet(setCode), marketMap);
 }
 
 export async function writeOnePieceHistoryForSet(setCode: string, historyMap: SetPriceHistoryMap): Promise<void> {
+  if (useOnePiecePricingLocalFiles()) {
+    ensureOnePiecePricingDirs();
+    writeJsonFile(historyFilePathForSet(setCode), historyMap);
+    return;
+  }
   const s3 = buildOnePieceS3Client();
   await putJsonToOnePieceR2(s3, historyR2PathForSet(setCode), historyMap);
 }
 
 export async function writeOnePieceTrendsForSet(setCode: string, trendMap: SetPriceTrendMap): Promise<void> {
+  if (useOnePiecePricingLocalFiles()) {
+    ensureOnePiecePricingDirs();
+    writeJsonFile(trendsFilePathForSet(setCode), trendMap);
+    return;
+  }
   const s3 = buildOnePieceS3Client();
   await putJsonToOnePieceR2(s3, trendsR2PathForSet(setCode), trendMap);
 }

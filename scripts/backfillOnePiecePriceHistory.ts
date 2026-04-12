@@ -1,7 +1,7 @@
 /**
- * Backfill One Piece price history from Scrydex chart data into R2:
- *   onepiece/pricing/history/{setCode}.json
- *   onepiece/pricing/trends/{setCode}.json
+ * Backfill One Piece price history from Scrydex chart data (merge into existing history).
+ *   - Default (R2): reads/writes onepiece/pricing/history|trends on R2
+ *   - Local: ONEPIECE_PRICING_LOCAL=1 → repo `onepiece/pricing/history|trends/`
  *
  * Uses the same daily/weekly/monthly window format as Pokemon:
  * - daily: last 31 days

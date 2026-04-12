@@ -1,11 +1,12 @@
 /**
- * Scrape current One Piece market pricing from TCGPlayer and update R2:
- *   onepiece/pricing/market/{setCode}.json
- *   onepiece/pricing/history/{setCode}.json
- *   onepiece/pricing/trends/{setCode}.json
+ * Scrape current One Piece Near Mint USD prices from Scrydex card pages.
+ * Writes market + merged daily history + trends:
+ *   - Default (R2): onepiece/pricing/{market,history,trends}/{setCode}.json on R2
+ *   - Local: set ONEPIECE_PRICING_LOCAL=1 → same paths under repo `onepiece/pricing/`
  *
  * Usage:
  *   node --import tsx/esm scripts/scrapeOnePiecePricing.ts
+ *   ONEPIECE_PRICING_LOCAL=1 node --import tsx/esm scripts/scrapeOnePiecePricing.ts
  *   node --import tsx/esm scripts/scrapeOnePiecePricing.ts --dry-run
  *   node --import tsx/esm scripts/scrapeOnePiecePricing.ts --set=OP01
  *   node --import tsx/esm scripts/scrapeOnePiecePricing.ts --set=OP01,PRB01

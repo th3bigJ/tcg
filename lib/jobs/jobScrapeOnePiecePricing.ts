@@ -52,11 +52,18 @@ async function loadRawPricesForCardPath(
   }
 }
 
-async function buildMarketMap(cards: OnePieceCardEntry[], nowIso: string): Promise<OnePieceSetMarketMap> {
+async function buildMarketMap(
+  setCode: string,
+  cards: OnePieceCardEntry[],
+  nowIso: string,
+): Promise<OnePieceSetMarketMap> {
   const marketMap: OnePieceSetMarketMap = {};
   const cache = new Map<string, RawPriceMap>();
+  let missingSlug = 0;
 
   for (const card of cards) {
+    if (!card.scrydexSlug?.trim()) missingSlug += 1;
+
     const rawPrices = await loadRawPricesForCardPath(cache, card);
     const marketPrice = selectScrydexRawPriceForCard(rawPrices, card);
     marketMap[priceKeyForOnePieceCard(card)] = buildOnePieceMarketEntry(
@@ -73,6 +80,12 @@ async function buildMarketMap(cards: OnePieceCardEntry[], nowIso: string): Promi
     );
   }
 
+  if (missingSlug > 0) {
+    console.warn(
+      `  [${setCode}] ${missingSlug}/${cards.length} cards have no scrydexSlug — Scrydex prices are skipped for those (backfill slugs from the expansion page).`,
+    );
+  }
+
   return marketMap;
 }
 
@@ -86,7 +99,7 @@ async function scrapeSet(set: OnePieceSetEntry, dryRun: boolean, source: "local"
 
   console.log(`  [${set.setCode}] fetching Scrydex prices…`);
   const nowIso = new Date().toISOString();
-  const marketMap = await buildMarketMap(cards, nowIso);
+  const marketMap = await buildMarketMap(set.setCode, cards, nowIso);
   const priced = Object.values(marketMap).filter((entry) => entry.tcgplayer?.marketPrice != null).length;
 
   if (dryRun) {
