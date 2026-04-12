@@ -6,6 +6,8 @@
  *   data/pokemon/sets.json
  *   data/pokemon/series.json
  *   data/pokemon/cards/{setKey}.json
+ *
+ * Minimal `[]` stubs may be committed so CI/Docker builds succeed; run `npm run r2:download-static-data` for full data.
  */
 
 import type { CardJsonEntry, SeriesJsonEntry, SetJsonEntry } from "@/lib/staticDataTypes";
