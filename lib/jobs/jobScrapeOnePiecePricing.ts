@@ -12,6 +12,7 @@ import {
   updateOnePieceHistoryWithDailyMarket,
   writeOnePieceMarketForSet,
 } from "@/lib/onepiecePricing";
+import { fetchGumgumSetListHtml, gumgumPriceByCardIdFromListHtml } from "@/lib/gumgumOnePiece";
 import { fetchScrydexCardPageHtml, parseScrydexCardPageRawNearMintUsd } from "@/lib/scrydexMepCardPagePricing";
 
 export interface ScrapeOnePiecePricingOptions {
@@ -52,20 +53,39 @@ async function loadRawPricesForCardPath(
   }
 }
 
-async function buildMarketMap(
-  setCode: string,
-  cards: OnePieceCardEntry[],
-  nowIso: string,
-): Promise<OnePieceSetMarketMap> {
+async function buildMarketMap(set: OnePieceSetEntry, cards: OnePieceCardEntry[], nowIso: string): Promise<OnePieceSetMarketMap> {
+  const setCode = set.setCode;
   const marketMap: OnePieceSetMarketMap = {};
   const cache = new Map<string, RawPriceMap>();
-  let missingSlug = 0;
+  const gumgumPath = set.gumgumCardsListPath?.trim();
+  let gumgumById: Record<string, number> = {};
 
+  if (gumgumPath && cards.some((c) => c.gumgumCardId?.trim())) {
+    try {
+      console.log(`  [${setCode}] fetching GumGum list (${gumgumPath})…`);
+      const listHtml = await fetchGumgumSetListHtml(gumgumPath);
+      gumgumById = gumgumPriceByCardIdFromListHtml(listHtml);
+    } catch (e) {
+      console.warn(`  [${setCode}] GumGum list fetch failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  let missingPriceSource = 0;
   for (const card of cards) {
-    if (!card.scrydexSlug?.trim()) missingSlug += 1;
+    const hasScrydex = Boolean(card.scrydexSlug?.trim());
+    const gumId = card.gumgumCardId?.trim();
+    const hasGumgum = Boolean(gumId);
+    if (!hasScrydex && !hasGumgum) missingPriceSource += 1;
 
-    const rawPrices = await loadRawPricesForCardPath(cache, card);
-    const marketPrice = selectScrydexRawPriceForCard(rawPrices, card);
+    let marketPrice: number | null = null;
+    if (hasScrydex) {
+      const rawPrices = await loadRawPricesForCardPath(cache, card);
+      marketPrice = selectScrydexRawPriceForCard(rawPrices, card);
+    } else if (hasGumgum) {
+      const p = gumgumById[gumId!];
+      if (typeof p === "number" && Number.isFinite(p)) marketPrice = p;
+    }
+
     marketMap[priceKeyForOnePieceCard(card)] = buildOnePieceMarketEntry(
       marketPrice === null
         ? null
@@ -80,9 +100,9 @@ async function buildMarketMap(
     );
   }
 
-  if (missingSlug > 0) {
+  if (missingPriceSource > 0) {
     console.warn(
-      `  [${setCode}] ${missingSlug}/${cards.length} cards have no scrydexSlug — Scrydex prices are skipped for those (backfill slugs from the expansion page).`,
+      `  [${setCode}] ${missingPriceSource}/${cards.length} cards have neither scrydexSlug nor gumgumCardId — those rows get null marketPrice.`,
     );
   }
 
@@ -97,9 +117,9 @@ async function scrapeSet(set: OnePieceSetEntry, dryRun: boolean, source: "local"
     return;
   }
 
-  console.log(`  [${set.setCode}] fetching Scrydex prices…`);
+  console.log(`  [${set.setCode}] fetching prices…`);
   const nowIso = new Date().toISOString();
-  const marketMap = await buildMarketMap(set.setCode, cards, nowIso);
+  const marketMap = await buildMarketMap(set, cards, nowIso);
   const priced = Object.values(marketMap).filter((entry) => entry.tcgplayer?.marketPrice != null).length;
 
   if (dryRun) {
@@ -119,7 +139,7 @@ export async function runScrapeOnePiecePricing(opts: ScrapeOnePiecePricingOption
 
   const sets = requested?.length
     ? allSets.filter((set) => requested.includes(set.setCode.toUpperCase()))
-    : allSets.filter((set) => Boolean(set.scrydexId));
+    : allSets.filter((set) => Boolean(set.scrydexId?.trim()) || Boolean(set.gumgumCardsListPath?.trim()));
 
   if (requested?.length && sets.length === 0) {
     throw new Error(`No One Piece sets found matching: ${requested.join(", ")}`);

@@ -4,6 +4,8 @@
  *   - Default (R2): onepiece/pricing/{market,history,trends}/{setCode}.json on R2
  *   - Local: set ONEPIECE_PRICING_LOCAL=1 → same paths under repo `data/onepiece/pricing/`
  *
+ * Sets with `gumgumCardsListPath` (and no Scrydex on cards) use GumGum list NM for USD until Scrydex exists.
+ *
  * Usage:
  *   node --import tsx/esm scripts/scrapeOnePiecePricing.ts
  *   ONEPIECE_PRICING_LOCAL=1 node --import tsx/esm scripts/scrapeOnePiecePricing.ts

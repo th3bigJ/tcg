@@ -336,7 +336,35 @@ export function mergeScrydexExpansionAndDetailUsd(
 }
 
 /**
- * Parse all `*_Raw_*_history` Chartkick charts on a card HTML page → label → last NM USD.
+ * Raw NM USD from each `data-company="Raw"` price grid on the card page (DOM).
+ * Scrydex sometimes omits Chartkick `*_Raw_{slug}_history` for a print (e.g. One Piece `mangaAltArt`)
+ * while still showing NM/LP in the grid — chart-only parsing would miss those entirely.
+ */
+function parseScrydexCardPageRawGridNearMintUsd(html: string): Record<string, number> {
+  const out: Record<string, number> = {};
+  const openRe =
+    /<div\b[^>]*\bdata-company="Raw"[^>]*\bdata-variant="([^"]+)"[^>]*\bdata-prices-target="pricesContainer"/g;
+  let m: RegExpExecArray | null;
+  while ((m = openRe.exec(html)) !== null) {
+    const variantSlug = m[1];
+    const start = m.index;
+    const slice = html.slice(start, start + 16000);
+    const nmIdx = slice.indexOf(">Near Mint</span>");
+    if (nmIdx < 0) continue;
+    const afterNm = slice.slice(nmIdx, nmIdx + 1200);
+    const priceMatch = afterNm.match(/text-heading-20">\$([\d,]+(?:\.\d+)?)/);
+    if (!priceMatch) continue;
+    const usd = Number.parseFloat(priceMatch[1].replace(/,/g, ""));
+    if (!Number.isFinite(usd)) continue;
+    const label = scrydexRawVariantSlugToLabel(variantSlug);
+    out[label] = usd;
+  }
+  return out;
+}
+
+/**
+ * Parse all `*_Raw_*_history` Chartkick charts on a card HTML page → label → last NM USD,
+ * then fill any missing prints from the Raw price grid (DOM). Chart values win when both exist.
  */
 export function parseScrydexCardPageRawNearMintUsd(html: string): Record<string, number> {
   const out: Record<string, number> = {};
@@ -360,6 +388,11 @@ export function parseScrydexCardPageRawNearMintUsd(html: string): Record<string,
     if (usd === null) continue;
     const label = scrydexRawVariantSlugToLabel(variantSlug);
     out[label] = usd;
+  }
+
+  const fromGrid = parseScrydexCardPageRawGridNearMintUsd(html);
+  for (const [label, usd] of Object.entries(fromGrid)) {
+    if (out[label] === undefined) out[label] = usd;
   }
   return out;
 }

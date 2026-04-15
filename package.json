@@ -48,6 +48,7 @@
     "backfill:lorcana-price-history": "node --import tsx/esm scripts/backfillLorcanaPriceHistory.ts",
     "scrape:onepiece-sets": "node --import tsx/esm scripts/scrapeOnePieceSets.ts",
     "scrape:onepiece-cards": "node --import tsx/esm scripts/scrapeOnePieceCards.ts",
+    "scrape:onepiece-cards-gumgum": "node --import tsx/esm scripts/scrapeOnePieceCardsFromGumGum.ts",
     "scrape:onepiece-pricing": "node --import tsx/esm scripts/scrapeOnePiecePricing.ts",
     "backfill:onepiece-price-history": "node --import tsx/esm scripts/backfillOnePiecePriceHistory.ts",
     "onepiece:rescrape-local": "node --import tsx/esm scripts/fullRescrapeOnePieceLocal.ts",

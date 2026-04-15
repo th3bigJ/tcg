@@ -31,6 +31,11 @@ export type OnePieceSetEntry = {
   name: string;
   tcgplayerId: string | null;
   scrydexId: string | null;
+  /**
+   * When Scrydex is not live yet, GumGum set list pathname (e.g. `/cards/ST29/egghead`).
+   * @see https://gumgum.gg
+   */
+  gumgumCardsListPath?: string | null;
   setType: string | null;
   releaseDate?: string | null;
   cardCount?: number | null;
@@ -58,6 +63,8 @@ export type OnePieceCardEntry = {
   setCode: string;
   variant: OnePieceCardVariant;
   scrydexSlug: string | null;
+  /** GumGum `id` query (e.g. `ST29-001` or `ST29-001_p1`) when pricing from gumgum.gg. */
+  gumgumCardId?: string | null;
 };
 
 export type OnePieceTcgplayerMarket = {
@@ -376,9 +383,10 @@ export function scrydexHistoryCandidatesForVariant(variant: OnePieceCardVariant)
     case "fullArt":
       return ["altArt", "alt art", "fullArt", "full art"];
     case "mangaAltArt":
-      return ["mangaAltArt", "manga alt art", "altArt", "alt art"];
+      // Never fall back to altArt — different SKU; Scrydex chart ids often omit manga while grid has NM.
+      return ["mangaAltArt", "manga alt art"];
     case "specialAltArt":
-      return ["specialAltArt", "special alt art", "altArt", "alt art"];
+      return ["specialAltArt", "special alt art"];
     case "jollyRogerFoil":
       return ["jollyRogerFoil", "jolly roger foil", "foil", "parallel", "normal"];
     case "reprint":

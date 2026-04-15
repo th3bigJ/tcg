@@ -5,6 +5,7 @@
  * Usage:
  *   node --import tsx/esm scripts/downloadOnePieceFolderFromR2.ts
  *   DRY_RUN=1 node --import tsx/esm scripts/downloadOnePieceFolderFromR2.ts
+ *   SKIP_IMAGES=1 npm run r2:download-onepiece   — JSON/pricing only; skips cards/images and sets/images
  */
 
 import fs from "fs";
@@ -19,6 +20,12 @@ loadEnvFilesFromRepoRoot(import.meta.url);
 const ROOT = onepieceLocalDataRoot;
 const PREFIX = `${ONEPIECE_R2_PREFIX}/`;
 const dryRun = Boolean(process.env.DRY_RUN && process.env.DRY_RUN !== "0");
+const skipImages = Boolean(process.env.SKIP_IMAGES && process.env.SKIP_IMAGES !== "0");
+
+function isOnePieceImageRelPath(rel: string): boolean {
+  const n = rel.replace(/\\/g, "/").toLowerCase();
+  return n.startsWith("cards/images/") || n.startsWith("sets/images/");
+}
 
 async function bodyToBuffer(body: unknown): Promise<Buffer> {
   if (!body) throw new Error("Empty response body");
@@ -87,19 +94,24 @@ async function main(): Promise<void> {
   const bucket = getOnePieceR2Bucket();
   const keys = await listAllKeys(PREFIX);
   const expectedRelPaths = keys.map((key) => key.slice(PREFIX.length));
+  const keysToDownload = skipImages ? keys.filter((key) => !isOnePieceImageRelPath(key.slice(PREFIX.length))) : keys;
+  const skippedImageCount = keys.length - keysToDownload.length;
 
-  console.log(`Downloading ${keys.length} onepiece files from R2 bucket ${bucket} (${dryRun ? "dry-run" : "live"})`);
+  console.log(
+    `Downloading ${keysToDownload.length} onepiece files from R2 bucket ${bucket} (${dryRun ? "dry-run" : "live"}${skipImages ? `, skipping ${skippedImageCount} image objects` : ""})`,
+  );
 
   if (!dryRun) fs.mkdirSync(ROOT, { recursive: true });
 
   let index = 0;
-  for (const key of keys) {
+  const total = keysToDownload.length;
+  for (const key of keysToDownload) {
     index += 1;
     const rel = key.slice(PREFIX.length);
     const abs = path.join(ROOT, ...rel.split("/"));
 
     if (dryRun) {
-      console.log(`[${index}/${keys.length}] ${key} -> ${path.relative(process.cwd(), abs)}`);
+      console.log(`[${index}/${total}] ${key} -> ${path.relative(process.cwd(), abs)}`);
       continue;
     }
 
@@ -108,8 +120,8 @@ async function main(): Promise<void> {
     fs.mkdirSync(path.dirname(abs), { recursive: true });
     fs.writeFileSync(abs, body);
 
-    if (index % 50 === 0 || index === keys.length) {
-      console.log(`... ${index}/${keys.length} downloaded`);
+    if (index % 50 === 0 || index === total) {
+      console.log(`... ${index}/${total} downloaded`);
     }
   }
 
