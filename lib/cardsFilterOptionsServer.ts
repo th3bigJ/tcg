@@ -1,8 +1,7 @@
 import { cache } from "react";
 
 import { resolvePokemonMediaURL } from "@/lib/media";
-import type { PokemonJsonEntry } from "@/lib/staticDataTypes";
-import { getAllSets } from "@/lib/staticCards";
+import { getAllPokemonDexEntries, getAllSets } from "@/lib/staticCards";
 import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
 
 export type SetFilterOption = {
@@ -65,8 +64,7 @@ export async function getCachedSetFilterOptions(setCodes: string[]): Promise<Set
 
 const getAllPokemonFilterOptions = cache(async function getAllPokemonFilterOptions(): Promise<PokemonFilterOption[]> {
   "use cache";
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const raw = require("../data/pokemon/pokemon.json") as PokemonJsonEntry[];
+  const raw = getAllPokemonDexEntries();
   return raw.map((p) => ({
     nationalDexNumber: p.nationalDexNumber,
     name: p.name,

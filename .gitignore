@@ -47,6 +47,10 @@ next-env.d.ts
 
 /onepiece
 
-# Bulk local datasets (e.g. data/pokemon, data/onepiece, data/lorcana) — sync via R2 scripts; not committed.
+# Bulk local datasets — sync via R2 scripts; not committed except minimal Pokémon index JSON for CI/Docker.
 # Use `/**` so nested paths are ignored; `/data/*` alone can miss files under subfolders.
 /data/**
+!/data/pokemon/
+!/data/pokemon/sets.json
+!/data/pokemon/series.json
+!/data/pokemon/pokemon.json

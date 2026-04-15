@@ -2,20 +2,42 @@
  * Static data access layer — reads card catalog from local JSON files generated
  * by scripts/exportCardJson.ts. Zero DB queries, zero network calls.
  *
- * Files live at:
- *   data/pokemon/sets.json
- *   data/pokemon/series.json
- *   data/pokemon/cards/{setKey}.json
- *
- * `data/pokemon/` is gitignored; run `npm run r2:download-static-data` locally (and in CI) before builds that need catalog JSON.
+ * Committed stubs: `data/pokemon/{sets,series,pokemon}.json` (empty arrays) so CI/Docker resolve modules.
+ * For a full catalog locally or on a host with a populated volume, run `npm run r2:download-static-data`
+ * and add per-set files under `data/pokemon/cards/` (gitignored). Those files are bundled when present
+ * via `import.meta.glob` so Turbopack does not need a dynamic `require()` per set.
  */
 
-import type { CardJsonEntry, SeriesJsonEntry, SetJsonEntry } from "@/lib/staticDataTypes";
+import type { CardJsonEntry, PokemonJsonEntry, SeriesJsonEntry, SetJsonEntry } from "@/lib/staticDataTypes";
 import { resolveMediaURL } from "@/lib/media";
 import { buildScrydexPrefixCandidates } from "@/lib/scrydexPrefixCandidatesForSet";
 import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
 
+import pokemonDexRaw from "../data/pokemon/pokemon.json";
+import seriesRaw from "../data/pokemon/series.json";
+import setsRaw from "../data/pokemon/sets.json";
+
 export type { CardJsonEntry, SeriesJsonEntry, SetJsonEntry };
+
+type CardJsonModule = CardJsonEntry[] | { default: CardJsonEntry[] };
+
+/** Turbopack exposes `import.meta.glob`; Next's `ImportMeta` typings omit it. */
+function loadCardJsonGlob(): Record<string, CardJsonModule> {
+  const meta = import.meta as ImportMeta & { glob?: (p: string, o: { eager: true }) => Record<string, CardJsonModule> };
+  if (typeof meta.glob !== "function") return {};
+  return meta.glob("../data/pokemon/cards/*.json", { eager: true });
+}
+
+const cardJsonModules = loadCardJsonGlob();
+
+function normalizeJsonModule<T>(mod: CardJsonEntry[] | { default: CardJsonEntry[] }): CardJsonEntry[] {
+  return Array.isArray(mod) ? mod : mod.default;
+}
+
+function cardGlobPathForSet(setCode: string): string | undefined {
+  const suffix = `/${setCode}.json`;
+  return Object.keys(cardJsonModules).find((k) => k.endsWith(suffix));
+}
 
 // ─── Sets ─────────────────────────────────────────────────────────────────────
 
@@ -23,9 +45,7 @@ let _sets: SetJsonEntry[] | null = null;
 
 export function getAllSets(): SetJsonEntry[] {
   if (_sets) return _sets;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const raw = require("../data/pokemon/sets.json") as SetJsonEntry[];
-  // Resolve image paths to full URLs at read time so consumers always get absolute URLs
+  const raw = setsRaw as SetJsonEntry[];
   _sets = raw.map((s) => ({
     ...s,
     logoSrc: resolveMediaURL(s.logoSrc) || s.logoSrc,
@@ -61,30 +81,39 @@ let _series: SeriesJsonEntry[] | null = null;
 
 export function getAllSeries(): SeriesJsonEntry[] {
   if (_series) return _series;
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  _series = require("../data/pokemon/series.json") as SeriesJsonEntry[];
+  _series = seriesRaw as SeriesJsonEntry[];
   return _series;
 }
 
-// ─── Cards ────────────────────────────────────────────────────────────────────
+// ─── Pokémon dex (search / filters) ──────────────────────────────────────────
+
+let _pokemonDex: PokemonJsonEntry[] | null = null;
+
+export function getAllPokemonDexEntries(): PokemonJsonEntry[] {
+  if (_pokemonDex) return _pokemonDex;
+  _pokemonDex = pokemonDexRaw as PokemonJsonEntry[];
+  return _pokemonDex;
+}
+
+// ─── Cards ───────────────────────────────────────────────────────────────────
 
 const _cardsBySet = new Map<string, CardJsonEntry[]>();
 
 export function getCardsBySet(setCode: string): CardJsonEntry[] {
   if (_cardsBySet.has(setCode)) return _cardsBySet.get(setCode)!;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const raw = require(`../data/pokemon/cards/${setCode}.json`) as CardJsonEntry[];
-    const cards = raw.map((c) => ({
-      ...c,
-      imageLowSrc: resolveMediaURL(c.imageLowSrc) || c.imageLowSrc,
-      imageHighSrc: c.imageHighSrc ? resolveMediaURL(c.imageHighSrc) || c.imageHighSrc : c.imageHighSrc,
-    }));
-    _cardsBySet.set(setCode, cards);
-    return cards;
-  } catch {
+  const path = cardGlobPathForSet(setCode);
+  if (!path) {
+    _cardsBySet.set(setCode, []);
     return [];
   }
+  const raw = normalizeJsonModule(cardJsonModules[path]!);
+  const cards = raw.map((c) => ({
+    ...c,
+    imageLowSrc: resolveMediaURL(c.imageLowSrc) || c.imageLowSrc,
+    imageHighSrc: c.imageHighSrc ? resolveMediaURL(c.imageHighSrc) || c.imageHighSrc : c.imageHighSrc,
+  }));
+  _cardsBySet.set(setCode, cards);
+  return cards;
 }
 
 let _allCards: CardJsonEntry[] | null = null;

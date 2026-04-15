@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server";
 
 import { getCurrentCustomerForApiRoute } from "@/lib/auth";
 import { jsonResponseWithAuthCookies, createSupabaseRouteHandlerClient } from "@/lib/supabase/route-handler";
-import { getAllCards, getAllSets } from "@/lib/staticCards";
+import { getAllCards, getAllPokemonDexEntries, getAllSets } from "@/lib/staticCards";
 import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
 import { getFilterFacets } from "@/lib/staticCardIndex";
 import { fetchGbpConversionMultipliers } from "@/lib/marketPriceExchange";
@@ -14,13 +14,6 @@ import {
   searchShopSealedProducts,
   sortShopSealedProducts,
 } from "@/lib/r2SealedProducts";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pokemonJson = require("../../../data/pokemon/pokemon.json") as Array<{
-  nationalDexNumber: number;
-  name: string;
-  imageUrl: string;
-}>;
 
 let _setNameMap: Map<string, string> | null = null;
 function getSetNameMap(): Map<string, string> {
@@ -94,7 +87,7 @@ export async function GET(request: NextRequest) {
     }));
 
   // Pokemon — search by name
-  const pokemon = pokemonJson
+  const pokemon = getAllPokemonDexEntries()
     .filter((p) => normalizeName(p.name).toLocaleLowerCase().includes(qLower))
     .slice(0, 3)
     .map((p) => ({
