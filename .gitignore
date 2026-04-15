@@ -47,6 +47,6 @@ next-env.d.ts
 
 /onepiece
 
-# Bulk local datasets — not committed (e.g. npm run r2:download-static-data).
-/data/*
-/data/pokemon/
+# Bulk local datasets (e.g. data/pokemon, data/onepiece, data/lorcana) — sync via R2 scripts; not committed.
+# Use `/**` so nested paths are ignored; `/data/*` alone can miss files under subfolders.
+/data/**
