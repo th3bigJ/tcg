@@ -7,14 +7,14 @@
  * Sets with `gumgumCardsListPath` (and no Scrydex on cards) use GumGum list NM for USD until Scrydex exists.
  *
  * Usage:
- *   node --import tsx/esm scripts/scrapeOnePiecePricing.ts
- *   ONEPIECE_PRICING_LOCAL=1 node --import tsx/esm scripts/scrapeOnePiecePricing.ts
- *   node --import tsx/esm scripts/scrapeOnePiecePricing.ts --dry-run
- *   node --import tsx/esm scripts/scrapeOnePiecePricing.ts --set=OP01
- *   node --import tsx/esm scripts/scrapeOnePiecePricing.ts --set=OP01,PRB01
+ *   node --import tsx/esm scrapeOnePiecePricing.ts
+ *   ONEPIECE_PRICING_LOCAL=1 node --import tsx/esm scrapeOnePiecePricing.ts
+ *   node --import tsx/esm scrapeOnePiecePricing.ts --dry-run
+ *   node --import tsx/esm scrapeOnePiecePricing.ts --set=OP01
+ *   node --import tsx/esm scrapeOnePiecePricing.ts --set=OP01,PRB01
  */
 
-import { runScrapeOnePiecePricing } from "../lib/jobs/jobScrapeOnePiecePricing";
+import { runScrapeOnePiecePricing } from "./jobScrapeOnePiecePricing";
 import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
 
 loadEnvFilesFromRepoRoot(import.meta.url);

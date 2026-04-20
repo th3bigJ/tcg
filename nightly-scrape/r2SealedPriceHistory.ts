@@ -4,13 +4,13 @@ import path from "node:path";
 import {
   R2_SEALED_POKEDATA_DEFAULT_SLUG,
   r2SealedPokedataPriceHistoryKey,
-} from "@/lib/r2BucketLayout";
+} from "./r2BucketLayout";
 import type {
   PriceHistoryPoint,
   PriceHistoryWindow,
   SealedProductPriceHistory,
   SealedProductPriceHistoryMap,
-} from "@/lib/staticDataTypes";
+} from "./staticDataTypes";
 
 export type {
   PriceHistoryPoint,

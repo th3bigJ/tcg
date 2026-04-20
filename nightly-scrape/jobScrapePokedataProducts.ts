@@ -4,10 +4,10 @@ import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s
 import {
   r2SealedPokedataCatalogKey,
   r2SealedPokedataPricesSnapshotKey,
-} from "@/lib/r2BucketLayout";
-import { pokemonLocalDataRoot } from "@/lib/pokemonLocalDataPaths";
-import { updateSealedPriceHistory } from "../r2SealedPriceHistory";
-import { uploadSealedPriceTrends } from "../r2SealedPriceTrends";
+} from "./r2BucketLayout";
+import { pokemonLocalDataRoot } from "./pokemonLocalDataPaths";
+import { updateSealedPriceHistory } from "./r2SealedPriceHistory";
+import { uploadSealedPriceTrends } from "./r2SealedPriceTrends";
 
 interface ScrapePokedataProductsOptions {
   mode?: "all" | "products" | "prices";

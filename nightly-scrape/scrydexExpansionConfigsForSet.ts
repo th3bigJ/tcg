@@ -3,14 +3,14 @@
  * card-meta scrape, and migration tooling.
  */
 
-import type { SetJsonEntry } from "@/lib/staticDataTypes";
-import { scrydexMegaExpansionConfig } from "@/lib/scrydexMegaEvolutionUrls";
-import { scrydexScarletVioletExpansionConfig } from "@/lib/scrydexScarletVioletUrls";
+import type { SetJsonEntry } from "./staticDataTypes";
+import { scrydexMegaExpansionConfig } from "./scrydexMegaEvolutionUrls";
+import { scrydexScarletVioletExpansionConfig } from "./scrydexScarletVioletUrls";
 import {
   lookupScrydexBulkExpansionConfig,
   resolveSwshTrainerGalleryExpansionPair,
-} from "@/lib/scrydexBulkExpansionUrls";
-import type { ScrydexExpansionListConfig } from "@/lib/scrydexMegaEvolutionUrls";
+} from "./scrydexBulkExpansionUrls";
+import type { ScrydexExpansionListConfig } from "./scrydexMegaEvolutionUrls";
 
 export type { ScrydexExpansionListConfig };
 

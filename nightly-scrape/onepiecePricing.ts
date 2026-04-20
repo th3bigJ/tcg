@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
-import { buildTrendMapFromHistoryMap } from "@/lib/r2PriceTrends";
-import { mergeSetPriceHistoryMaps, todayKey, upsertAndTrim } from "@/lib/r2PriceHistory";
-import { buildOnePieceS3Client, getJsonFromOnePieceR2, putJsonToOnePieceR2 } from "@/lib/onepieceR2";
-import { onepieceLocalDataRoot } from "@/lib/onepieceLocalDataPaths";
+import { buildTrendMapFromHistoryMap } from "./r2PriceTrends";
+import { mergeSetPriceHistoryMaps, todayKey, upsertAndTrim } from "./r2PriceHistory";
+import { buildOnePieceS3Client, getJsonFromOnePieceR2, putJsonToOnePieceR2 } from "./onepieceR2";
+import { onepieceLocalDataRoot } from "./onepieceLocalDataPaths";
 import type {
   CardPriceHistory,
   CardPriceTrendSummary,
@@ -11,7 +11,7 @@ import type {
   PriceHistoryWindow,
   SetPriceHistoryMap,
   SetPriceTrendMap,
-} from "@/lib/staticDataTypes";
+} from "./staticDataTypes";
 
 const DAILY_HISTORY_LIMIT = 31;
 const WEEKLY_HISTORY_LIMIT = 52;

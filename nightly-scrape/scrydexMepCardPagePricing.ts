@@ -8,7 +8,7 @@
  * @see https://scrydex.com/pokemon/cards/bosss-orders/me2pt5-256?variant=holofoil
  */
 
-import { SCRYDEX_DEFAULT_UA } from "@/lib/scrydexExpansionListParsing";
+import { SCRYDEX_DEFAULT_UA } from "./scrydexExpansionListParsing";
 
 export type ScrydexHistoryPoint = [string, number];
 

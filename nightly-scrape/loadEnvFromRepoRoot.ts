@@ -2,8 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/** Repo root (parent of `scripts/`), not `process.cwd()` — npm may run with a different cwd. */
-export function getRepoRootFromScriptsDir(importMetaUrl: string): string {
+/** Repo root (parent of `nightly-scrape/`), not `process.cwd()` — npm may run with a different cwd. */
+export function getRepoRootFromNightlyScrapeDir(importMetaUrl: string): string {
   return resolve(dirname(fileURLToPath(importMetaUrl)), "..");
 }
 
@@ -31,7 +31,7 @@ function applyEnvFile(path: string, override: boolean): void {
 
 /** Loads `.env` then `.env.local` from the repo root (via `import.meta.url`) and again from `cwd()` if different. */
 export function loadEnvFilesFromRepoRoot(importMetaUrl: string): void {
-  const roots = [...new Set([getRepoRootFromScriptsDir(importMetaUrl), process.cwd()])];
+  const roots = [...new Set([getRepoRootFromNightlyScrapeDir(importMetaUrl), process.cwd()])];
   for (const root of roots) {
     applyEnvFile(resolve(root, ".env"), false);
     applyEnvFile(resolve(root, ".env.local"), true);

@@ -3,7 +3,7 @@
  * @see https://scrydex.com/pokemon/expansions
  */
 
-import type { ScrydexExpansionListConfig } from "@/lib/scrydexMegaEvolutionUrls";
+import type { ScrydexExpansionListConfig } from "./scrydexMegaEvolutionUrls";
 
 const BASE = "https://scrydex.com/pokemon/expansions";
 

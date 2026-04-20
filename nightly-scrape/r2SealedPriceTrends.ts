@@ -2,7 +2,7 @@ import { PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
 import {
   R2_SEALED_POKEDATA_DEFAULT_SLUG,
   r2SealedPokedataPriceTrendsKey,
-} from "@/lib/r2BucketLayout";
+} from "./r2BucketLayout";
 import type {
   PriceHistoryPoint,
   PriceTrendDirection,
@@ -10,7 +10,7 @@ import type {
   SealedProductPriceHistoryMap,
   SealedProductPriceTrendMap,
   SealedProductPriceTrendSummary,
-} from "@/lib/staticDataTypes";
+} from "./staticDataTypes";
 
 export type { SealedProductPriceTrendMap, SealedProductPriceTrendSummary };
 

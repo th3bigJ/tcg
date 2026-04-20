@@ -1,6 +1,6 @@
 /**
  * Shared types for static JSON data files.
- * Used by both the export scripts (scripts/) and the read layer (lib/).
+ * Used by both the nightly scrape entries and shared data layer.
  */
 
 /** Pokémon attacks from Scrydex card pages. */

@@ -1,6 +1,6 @@
-import type { CardJsonEntry, SetPricingMap } from "@/lib/staticDataTypes";
-import { collectPricingVariantKeys } from "@/lib/catalogPricingExtract";
-import { getPricingForCard } from "@/lib/r2Pricing";
+import type { CardJsonEntry, SetPricingMap } from "./staticDataTypes";
+import { collectPricingVariantKeys } from "./catalogPricingExtract";
+import { getPricingForCard } from "./r2Pricing";
 
 function pricingVariantsEqual(a: string[] | null | undefined, b: string[] | null | undefined): boolean {
   if (a == null && b == null) return true;

@@ -3,7 +3,7 @@
  * Mega Evolution + Scarlet & Violet promos / special ids live in `scrydexMegaEvolutionUrls` and `scrydexScarletVioletUrls`.
  */
 
-import type { ScrydexExpansionListConfig } from "@/lib/scrydexMegaEvolutionUrls";
+import type { ScrydexExpansionListConfig } from "./scrydexMegaEvolutionUrls";
 
 const BASE = "https://scrydex.com/pokemon/expansions";
 

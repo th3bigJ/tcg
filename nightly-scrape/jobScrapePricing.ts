@@ -1,22 +1,22 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { getJsonFromR2, putJsonToR2 } from "@/lib/adminR2";
-import { r2SinglesCardPricingPrefix } from "@/lib/r2BucketLayout";
+import { getJsonFromR2, putJsonToR2 } from "./adminR2";
+import { r2SinglesCardPricingPrefix } from "./r2BucketLayout";
 import type {
   CardJsonEntry,
   ScrydexCardPricing,
   SeriesJsonEntry,
   SetJsonEntry,
   SetPricingMap,
-} from "../staticDataTypes";
-import { updatePriceHistory } from "../r2PriceHistory";
-import { uploadPriceTrends } from "../r2PriceTrends";
+} from "./staticDataTypes";
+import { updatePriceHistory } from "./r2PriceHistory";
+import { uploadPriceTrends } from "./r2PriceTrends";
 import {
   fetchScrydexExpansionMultiPageHtml,
   parseScrydexExpansionListPrices,
   parseScrydexExpansionListPaths,
   resolveScrydexListUsd,
   resolveScrydexCardPath,
-} from "../scrydexExpansionListParsing";
+} from "./scrydexExpansionListParsing";
 import {
   fetchScrydexCardPageHtml,
   parseScrydexCardPageRawNearMintUsd,
@@ -26,12 +26,12 @@ import {
   canonicalScrydexVariantLabel,
   SCRYDEX_FLAT_PSA10_KEY_SUFFIX,
   SCRYDEX_FLAT_ACE10_KEY_SUFFIX,
-} from "../scrydexMepCardPagePricing";
-import { resolveExpansionConfigsForSet } from "../scrydexExpansionConfigsForSet";
-import { getSinglesCatalogSetKey } from "../singlesCatalogSetKey";
-import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "../scrydexPrefixCandidatesForSet";
-import { applyPricingVariantsToCardsInPlace } from "../applyPricingVariantsToCardJson";
-import { canonicalVariantSlugFromCompactLabel } from "../pricingVariantCompactAliases";
+} from "./scrydexMepCardPagePricing";
+import { resolveExpansionConfigsForSet } from "./scrydexExpansionConfigsForSet";
+import { getSinglesCatalogSetKey } from "./singlesCatalogSetKey";
+import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "./scrydexPrefixCandidatesForSet";
+import { applyPricingVariantsToCardsInPlace } from "./applyPricingVariantsToCardJson";
+import { canonicalVariantSlugFromCompactLabel } from "./pricingVariantCompactAliases";
 
 interface ScrapePricingOptions {
   dryRun?: boolean;

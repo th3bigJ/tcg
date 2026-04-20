@@ -1,7 +1,7 @@
 import { PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
-import { r2SinglesPriceTrendsPrefix } from "@/lib/r2BucketLayout";
-import { PRICING_VARIANT_DISPLAY_ORDER } from "@/lib/pricingVariantRegistry";
-import { buildPricingLookupIds } from "@/lib/r2Pricing";
+import { r2SinglesPriceTrendsPrefix } from "./r2BucketLayout";
+import { PRICING_VARIANT_DISPLAY_ORDER } from "./pricingVariantRegistry";
+import { buildPricingLookupIds } from "./r2Pricing";
 import type {
   CardPriceHistory,
   CardPriceTrendSummary,
@@ -10,7 +10,7 @@ import type {
   PriceTrendDirection,
   SetPriceHistoryMap,
   SetPriceTrendMap,
-} from "@/lib/staticDataTypes";
+} from "./staticDataTypes";
 
 export type { CardPriceTrendSummary, SetPriceTrendMap };
 

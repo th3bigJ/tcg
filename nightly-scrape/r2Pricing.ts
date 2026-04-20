@@ -6,13 +6,13 @@
  * exact `externalId` (Scrydex spelling, case-sensitive). `scrydex` variant figures are **USD**.
  */
 
-import { r2SinglesCardPricingPrefix } from "@/lib/r2BucketLayout";
+import { r2SinglesCardPricingPrefix } from "./r2BucketLayout";
 import {
   normalizeScarletVioletCardKeySetPrefix,
   partitionPokemonCardExternalId,
   scarletVioletLegacyPricingPrefixesByCatalogKey,
-} from "@/lib/scrydexScarletVioletUrls";
-import type { CardPricingEntry, SetPricingMap } from "@/lib/staticDataTypes";
+} from "./scrydexScarletVioletUrls";
+import type { CardPricingEntry, SetPricingMap } from "./staticDataTypes";
 
 export type { CardPricingEntry, SetPricingMap };
 

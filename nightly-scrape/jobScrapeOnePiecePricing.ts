@@ -11,9 +11,9 @@ import {
   type OnePieceSetMarketMap,
   updateOnePieceHistoryWithDailyMarket,
   writeOnePieceMarketForSet,
-} from "@/lib/onepiecePricing";
-import { fetchGumgumSetListHtml, gumgumPriceByCardIdFromListHtml } from "@/lib/gumgumOnePiece";
-import { fetchScrydexCardPageHtml, parseScrydexCardPageRawNearMintUsd } from "@/lib/scrydexMepCardPagePricing";
+} from "./onepiecePricing";
+import { fetchGumgumSetListHtml, gumgumPriceByCardIdFromListHtml } from "./gumgumOnePiece";
+import { fetchScrydexCardPageHtml, parseScrydexCardPageRawNearMintUsd } from "./scrydexMepCardPagePricing";
 
 interface ScrapeOnePiecePricingOptions {
   dryRun?: boolean;

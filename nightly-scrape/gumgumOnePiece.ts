@@ -4,7 +4,7 @@
  * @see https://gumgum.gg/cards/ST29/egghead
  */
 
-import type { OnePieceCardVariant } from "@/lib/onepiecePricing";
+import type { OnePieceCardVariant } from "./onepiecePricing";
 
 const GUMGUM_ORIGIN = "https://gumgum.gg";
 

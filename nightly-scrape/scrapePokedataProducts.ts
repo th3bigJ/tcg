@@ -2,14 +2,14 @@
  * Scrape Pokedata.io for sealed product catalog and/or pricing.
  *
  * Usage:
- *   node --import tsx/esm scripts/scrapePokedataProducts.ts
- *   node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=products
- *   node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=prices
- *   node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH
+ *   node --import tsx/esm scrapePokedataProducts.ts
+ *   node --import tsx/esm scrapePokedataProducts.ts --mode=products
+ *   node --import tsx/esm scrapePokedataProducts.ts --mode=prices
+ *   node --import tsx/esm scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH
  */
 
 import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
-import { runScrapePokedataProducts } from "../lib/jobs/jobScrapePokedataProducts";
+import { runScrapePokedataProducts } from "./jobScrapePokedataProducts";
 
 loadEnvFilesFromRepoRoot(import.meta.url);
 

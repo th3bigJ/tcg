@@ -1,5 +1,5 @@
 import http from "node:http";
-import { initScheduler } from "./lib/scheduler";
+import { initScheduler } from "./scheduler";
 
 const PORT = process.env.PORT || 3000;
 

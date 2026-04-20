@@ -4,15 +4,15 @@
  * and merged `pricingVariants` on card JSON back to R2 (`pricing/…`, `data/cards/…`).
  *
  * Usage:
- *   node --import tsx/esm scripts/scrapePricing.ts
- *   node --import tsx/esm scripts/scrapePricing.ts --dry-run
- *   node --import tsx/esm scripts/scrapePricing.ts --set=sv1
- *   node --import tsx/esm scripts/scrapePricing.ts --set=sv1,sv2
- *   node --import tsx/esm scripts/scrapePricing.ts --series="Scarlet & Violet"
+ *   node --import tsx/esm scrapePricing.ts
+ *   node --import tsx/esm scrapePricing.ts --dry-run
+ *   node --import tsx/esm scrapePricing.ts --set=sv1
+ *   node --import tsx/esm scrapePricing.ts --set=sv1,sv2
+ *   node --import tsx/esm scrapePricing.ts --series="Scarlet & Violet"
  */
 
 import { loadEnvFilesFromRepoRoot } from "./loadEnvFromRepoRoot";
-import { runScrapePricing } from "../lib/jobs/jobScrapePricing";
+import { runScrapePricing } from "./jobScrapePricing";
 
 loadEnvFilesFromRepoRoot(import.meta.url);
 

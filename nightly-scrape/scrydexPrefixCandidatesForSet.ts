@@ -1,6 +1,6 @@
-import type { SetJsonEntry } from "@/lib/staticDataTypes";
-import { resolveExpansionConfigsForSet } from "@/lib/scrydexExpansionConfigsForSet";
-import { getSinglesCatalogSetKey } from "@/lib/singlesCatalogSetKey";
+import type { SetJsonEntry } from "./staticDataTypes";
+import { resolveExpansionConfigsForSet } from "./scrydexExpansionConfigsForSet";
+import { getSinglesCatalogSetKey } from "./singlesCatalogSetKey";
 
 /** Old dotted `setKey` / `?set=` values that still resolve after dual-list sets moved to primary Scrydex prefixes. */
 const LEGACY_CATALOG_ALIASES: Record<string, string[]> = {

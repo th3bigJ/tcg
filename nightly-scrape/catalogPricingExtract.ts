@@ -1,11 +1,11 @@
-import type { GbpConversionMultipliers } from "@/lib/marketPriceExchange";
-import type { CardPricingEntry } from "@/lib/staticDataTypes";
-import { canonicalVariantSlugFromCompactLabel } from "@/lib/pricingVariantCompactAliases";
+import type { GbpConversionMultipliers } from "./marketPriceExchange";
+import type { CardPricingEntry } from "./staticDataTypes";
+import { canonicalVariantSlugFromCompactLabel } from "./pricingVariantCompactAliases";
 import {
   canonicalScrydexVariantLabel,
   SCRYDEX_FLAT_PSA10_KEY_SUFFIX,
   SCRYDEX_FLAT_ACE10_KEY_SUFFIX,
-} from "@/lib/scrydexMepCardPagePricing";
+} from "./scrydexMepCardPagePricing";
 
 /** Non-variant keys on TCGdex `tcgplayer` objects. */
 const TCGPLAYER_SKIP_KEYS = new Set(["updated", "unit"]);

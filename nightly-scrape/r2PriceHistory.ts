@@ -1,6 +1,6 @@
 import { GetObjectCommand, PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
-import { r2SinglesPriceHistoryPrefix } from "@/lib/r2BucketLayout";
-import { buildPricingLookupIds } from "@/lib/r2Pricing";
+import { r2SinglesPriceHistoryPrefix } from "./r2BucketLayout";
+import { buildPricingLookupIds } from "./r2Pricing";
 import type {
   CardPriceHistory,
   PriceHistoryPoint,
@@ -8,7 +8,7 @@ import type {
   ScrydexCardPricing,
   SetPriceHistoryMap,
   SetPricingMap,
-} from "@/lib/staticDataTypes";
+} from "./staticDataTypes";
 
 export type { CardPriceHistory, PriceHistoryPoint, PriceHistoryWindow, SetPriceHistoryMap };
 
