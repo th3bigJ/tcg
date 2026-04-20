@@ -10,14 +10,9 @@
     "start": "node --import tsx/esm server.ts",
     "lint": "eslint",
     "scrape:pricing": "node --import tsx/esm scripts/scrapePricing.ts",
-    "scrape:scrydex-card-meta": "node --import tsx/esm scripts/scrapeScrydexCardMeta.ts",
-    "scrape:pokemon-mep-pkmncards-regulation-marks": "node --import tsx/esm scripts/scrapePkmnCardsMepRegulationMarks.ts",
     "scrape:pokedata-products": "node --import tsx/esm scripts/scrapePokedataProducts.ts",
     "scrape:pokedata-products:catalog": "node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=products --tcg=Pokemon --language=ENGLISH",
     "scrape:pokedata-products:prices": "node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH",
-    "scrape:onepiece-sets": "node --import tsx/esm scripts/scrapeOnePieceSets.ts",
-    "scrape:onepiece-cards": "node --import tsx/esm scripts/scrapeOnePieceCards.ts",
-    "scrape:onepiece-cards-gumgum": "node --import tsx/esm scripts/scrapeOnePieceCardsFromGumGum.ts",
     "scrape:onepiece-pricing": "node --import tsx/esm scripts/scrapeOnePiecePricing.ts"
   },
   "dependencies": {
