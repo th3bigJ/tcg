@@ -20,7 +20,7 @@ export function adminCardsFetchPath(brandId: string, setCode: string): string | 
 }
 
 export function adminPricingFetchPath(brandId: string, setCode: string): string | null {
-  if (brandId === "pokemon" || brandId === "onepiece" || brandId === "lorcana") {
+  if (brandId === "pokemon" || brandId === "onepiece") {
     return `/api/admin/data/card-pricing/${encodeURIComponent(brandId)}/${encodeURIComponent(setCode)}`;
   }
   return null;

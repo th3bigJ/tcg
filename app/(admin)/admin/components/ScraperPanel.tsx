@@ -56,18 +56,7 @@ const BRAND_SCRAPERS: BrandScrapers[] = [
       },
     ],
   },
-  {
-    id: "lorcana",
-    name: "Lorcana",
-    scrapers: [
-      {
-        label: "Singles pricing",
-        endpoint: "/api/admin/scrapers/lorcana-pricing",
-        body: { source: "r2" },
-        description: "Scrydex prices for all sets → R2",
-      },
-    ],
-  },
+
 ];
 
 export function ScraperPanel() {

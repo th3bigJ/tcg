@@ -1,3 +1,12 @@
+/**
+ * Uploads remote card/set images to R2 and rewrites JSON to relative keys.
+ *
+ * Default: all sets in TARGET_SET_CODES.
+ * Energy-only (no full catalog refresh): `--only=sve,mee` or `UPLOAD_SET_CODES=sve,mee`.
+ *
+ *   node --import tsx/esm scripts/uploadSeededImagesToR2.ts -- --only=sve,mee
+ */
+
 import fs from "fs";
 import path from "path";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
@@ -22,7 +31,9 @@ const TARGET_SET_CODES = [
   "ex5.5",
   "ex5",
   "hgssp",
+  "mee",
   "svp",
+  "sve",
   "xyp",
 ] as const;
 
@@ -109,13 +120,12 @@ async function fetchRemoteImage(url: string): Promise<{ body: Buffer; contentTyp
   return { body, contentType, ext };
 }
 
-async function uploadSetAssets(s3: S3Client, bucket: string): Promise<void> {
+async function uploadSetAssets(s3: S3Client, bucket: string, targets: ReadonlySet<string>): Promise<void> {
   const sets = readJson<SetJsonEntry[]>(SETS_FILE);
-  const targets = new Set(TARGET_SET_CODES);
 
   for (const set of sets) {
     const catalog = getSinglesCatalogSetKey(set) ?? "";
-    const hit = catalog && targets.has(catalog as (typeof TARGET_SET_CODES)[number]);
+    const hit = Boolean(catalog && targets.has(catalog));
     if (!hit) continue;
     const setCode = catalog;
 
@@ -137,6 +147,19 @@ async function uploadSetAssets(s3: S3Client, bucket: string): Promise<void> {
   }
 
   writeJson(SETS_FILE, sets);
+}
+
+/** Restrict upload to specific catalog keys, e.g. `--only=sve,mee` or `UPLOAD_SET_CODES=sve,mee`. */
+function targetCodesFromCliOrEnv(): Set<string> {
+  const argv = process.argv.slice(2);
+  const flag = argv.find((a) => a.startsWith("--only="));
+  const raw = flag ? flag.slice("--only=".length).trim() : process.env.UPLOAD_SET_CODES?.trim();
+  if (raw) {
+    const codes = raw.split(",").map((s) => s.trim()).filter(Boolean);
+    if (!codes.length) throw new Error("--only / UPLOAD_SET_CODES must list at least one set code.");
+    return new Set(codes);
+  }
+  return new Set(TARGET_SET_CODES as unknown as string[]);
 }
 
 async function uploadCardsForSet(
@@ -200,14 +223,16 @@ async function main(): Promise<void> {
   const s3 = buildS3Client();
   const bucket = getBucket();
 
-  await uploadSetAssets(s3, bucket);
+  const targets = targetCodesFromCliOrEnv();
+
+  await uploadSetAssets(s3, bucket, targets);
 
   let totalUploaded = 0;
   let totalRewritten = 0;
 
   const allSetsForResolve = readJson<SetJsonEntry[]>(SETS_FILE);
   const catalogKeys = new Set<string>();
-  for (const t of TARGET_SET_CODES) {
+  for (const t of targets) {
     const row = allSetsForResolve.find((s) => (s.setKey ?? "").trim() === t);
     const key = row ? getSinglesCatalogSetKey(row) : t;
     if (key) catalogKeys.add(key);
