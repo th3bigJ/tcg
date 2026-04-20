@@ -7,13 +7,13 @@
     "node": ">=20.9.0"
   },
   "scripts": {
-    "start": "node --import tsx/esm server.ts",
+    "start": "node --import tsx/esm nightly-scrape/server.ts",
     "lint": "eslint",
-    "scrape:pricing": "node --import tsx/esm scrapePricing.ts",
-    "scrape:pokedata-products": "node --import tsx/esm scrapePokedataProducts.ts",
-    "scrape:pokedata-products:catalog": "node --import tsx/esm scrapePokedataProducts.ts --mode=products --tcg=Pokemon --language=ENGLISH",
-    "scrape:pokedata-products:prices": "node --import tsx/esm scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH",
-    "scrape:onepiece-pricing": "node --import tsx/esm scrapeOnePiecePricing.ts"
+    "scrape:pricing": "node --import tsx/esm nightly-scrape/scrapePricing.ts",
+    "scrape:pokedata-products": "node --import tsx/esm nightly-scrape/scrapePokedataProducts.ts",
+    "scrape:pokedata-products:catalog": "node --import tsx/esm nightly-scrape/scrapePokedataProducts.ts --mode=products --tcg=Pokemon --language=ENGLISH",
+    "scrape:pokedata-products:prices": "node --import tsx/esm nightly-scrape/scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH",
+    "scrape:onepiece-pricing": "node --import tsx/esm nightly-scrape/scrapeOnePiecePricing.ts"
   },
   "dependencies": {
     "node-cron": "^4.2.1"

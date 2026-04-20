@@ -5,9 +5,8 @@ import {
   r2SealedPokedataCatalogKey,
   r2SealedPokedataPricesSnapshotKey,
 } from "./r2BucketLayout";
-import { pokemonLocalDataRoot } from "./pokemonLocalDataPaths";
-import { updateSealedPriceHistory } from "./r2SealedPriceHistory";
-import { uploadSealedPriceTrends } from "./r2SealedPriceTrends";
+import { pokemonLocalDataRoot } from "./localDataPaths";
+import { updateSealedPriceHistory, uploadSealedPriceTrends } from "./r2SealedPricing";
 
 interface ScrapePokedataProductsOptions {
   mode?: "all" | "products" | "prices";

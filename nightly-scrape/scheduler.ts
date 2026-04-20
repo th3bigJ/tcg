@@ -1,7 +1,7 @@
 import cron from "node-cron";
-import { runScrapePricing } from "./jobs/jobScrapePricing";
-import { runScrapePokedataProducts } from "./jobs/jobScrapePokedataProducts";
-import { runScrapeOnePiecePricing } from "./jobs/jobScrapeOnePiecePricing";
+import { runScrapePricing } from "./jobScrapePricing";
+import { runScrapePokedataProducts } from "./jobScrapePokedataProducts";
+import { runScrapeOnePiecePricing } from "./jobScrapeOnePiecePricing";
 
 let initialised = false;
 

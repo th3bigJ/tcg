@@ -3,7 +3,7 @@ import path from "path";
 import { buildTrendMapFromHistoryMap } from "./r2PriceTrends";
 import { mergeSetPriceHistoryMaps, todayKey, upsertAndTrim } from "./r2PriceHistory";
 import { buildOnePieceS3Client, getJsonFromOnePieceR2, putJsonToOnePieceR2 } from "./onepieceR2";
-import { onepieceLocalDataRoot } from "./onepieceLocalDataPaths";
+import { onepieceLocalDataRoot } from "./localDataPaths";
 import type {
   CardPriceHistory,
   CardPriceTrendSummary,

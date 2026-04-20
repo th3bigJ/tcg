@@ -1,6 +1,5 @@
 import type { SetJsonEntry } from "./staticDataTypes";
 import { resolveExpansionConfigsForSet } from "./scrydexExpansionConfigsForSet";
-import { getSinglesCatalogSetKey } from "./singlesCatalogSetKey";
 
 /** Old dotted `setKey` / `?set=` values that still resolve after dual-list sets moved to primary Scrydex prefixes. */
 const LEGACY_CATALOG_ALIASES: Record<string, string[]> = {
@@ -10,7 +9,7 @@ const LEGACY_CATALOG_ALIASES: Record<string, string[]> = {
 
 /** Prefix strings to try when resolving Scrydex listing/detail paths for a set (card id aliases). */
 export function buildScrydexPrefixCandidates(set: SetJsonEntry): string[] {
-  const catalog = getSinglesCatalogSetKey(set);
+  const catalog = typeof set.setKey === "string" ? set.setKey.trim() : "";
   const configs = resolveExpansionConfigsForSet(set);
   const legacy = catalog ? LEGACY_CATALOG_ALIASES[catalog.toLowerCase()] ?? [] : [];
   const raw = [

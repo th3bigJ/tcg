@@ -1,5 +1,4 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { getJsonFromR2, putJsonToR2 } from "./adminR2";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { r2SinglesCardPricingPrefix } from "./r2BucketLayout";
 import type {
   CardJsonEntry,
@@ -28,7 +27,6 @@ import {
   SCRYDEX_FLAT_ACE10_KEY_SUFFIX,
 } from "./scrydexMepCardPagePricing";
 import { resolveExpansionConfigsForSet } from "./scrydexExpansionConfigsForSet";
-import { getSinglesCatalogSetKey } from "./singlesCatalogSetKey";
 import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "./scrydexPrefixCandidatesForSet";
 import { applyPricingVariantsToCardsInPlace } from "./applyPricingVariantsToCardJson";
 import { canonicalVariantSlugFromCompactLabel } from "./pricingVariantCompactAliases";
@@ -39,20 +37,55 @@ interface ScrapePricingOptions {
   onlySeriesNames?: string[];
 }
 
+function getSinglesCatalogSetKey(set: SetJsonEntry): string | null {
+  const k = typeof set.setKey === "string" ? set.setKey.trim() : "";
+  return k || null;
+}
+
 // ─── Catalog from R2 (same keys as /admin APIs) ───────────────────────────────
 
-async function loadSetsFromR2(): Promise<SetJsonEntry[]> {
-  const sets = await getJsonFromR2<SetJsonEntry[]>("data/sets.json");
+async function getJsonFromR2<T>(s3: S3Client, key: string): Promise<T | null> {
+  try {
+    const result = await s3.send(
+      new GetObjectCommand({
+        Bucket: getR2Bucket(),
+        Key: key,
+      }),
+    );
+    const raw = await result.Body?.transformToString();
+    if (!raw?.trim()) return null;
+    return JSON.parse(raw) as T;
+  } catch (error: unknown) {
+    const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+    const name = (error as { name?: string }).name;
+    if (status === 404 || name === "NoSuchKey") return null;
+    throw error;
+  }
+}
+
+async function putJsonToR2(s3: S3Client, key: string, value: unknown): Promise<void> {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: getR2Bucket(),
+      Key: key,
+      Body: JSON.stringify(value, null, 2) + "\n",
+      ContentType: "application/json; charset=utf-8",
+    }),
+  );
+}
+
+async function loadSetsFromR2(s3: S3Client): Promise<SetJsonEntry[]> {
+  const sets = await getJsonFromR2<SetJsonEntry[]>(s3, "data/sets.json");
   if (!sets?.length) throw new Error("data/sets.json not found or empty in R2");
   return sets;
 }
 
-async function loadSeriesFromR2(): Promise<SeriesJsonEntry[]> {
-  return (await getJsonFromR2<SeriesJsonEntry[]>("data/series.json")) ?? [];
+async function loadSeriesFromR2(s3: S3Client): Promise<SeriesJsonEntry[]> {
+  return (await getJsonFromR2<SeriesJsonEntry[]>(s3, "data/series.json")) ?? [];
 }
 
-async function loadCardsForSetFromR2(setCode: string): Promise<CardJsonEntry[]> {
-  return (await getJsonFromR2<CardJsonEntry[]>(`data/cards/${setCode}.json`)) ?? [];
+async function loadCardsForSetFromR2(s3: S3Client, setCode: string): Promise<CardJsonEntry[]> {
+  return (await getJsonFromR2<CardJsonEntry[]>(s3, `data/cards/${setCode}.json`)) ?? [];
 }
 
 // ─── Pricing helpers ──────────────────────────────────────────────────────────
@@ -129,12 +162,16 @@ function buildS3Client(): S3Client {
   });
 }
 
-async function uploadToR2(s3: S3Client, setCode: string, json: string): Promise<void> {
-  const bucket = process.env.R2_BUCKET;
+function getR2Bucket(): string {
+  const bucket = process.env.R2_BUCKET?.trim();
   if (!bucket) throw new Error("R2_BUCKET env var not set");
+  return bucket;
+}
+
+async function uploadToR2(s3: S3Client, setCode: string, json: string): Promise<void> {
   await s3.send(
     new PutObjectCommand({
-      Bucket: bucket,
+      Bucket: getR2Bucket(),
       Key: `${r2SinglesCardPricingPrefix}/${setCode}.json`,
       Body: json,
       ContentType: "application/json",
@@ -265,7 +302,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
 
   const cardKey = `data/cards/${setCode}.json`;
   try {
-    const cardRows = await getJsonFromR2<CardJsonEntry[]>(cardKey);
+    const cardRows = await getJsonFromR2<CardJsonEntry[]>(s3, cardKey);
     if (cardRows?.length) {
       if (dryRun) {
         const copy = JSON.parse(JSON.stringify(cardRows)) as CardJsonEntry[];
@@ -276,7 +313,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
       } else {
         const vChanged = applyPricingVariantsToCardsInPlace(cardRows, pricingMap);
         if (vChanged) {
-          await putJsonToR2(cardKey, cardRows);
+          await putJsonToR2(s3, cardKey, cardRows);
           console.log(`  [${setCode}] updated pricingVariants in R2 ${cardKey}`);
         }
       }
@@ -299,15 +336,16 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
 
 export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise<void> {
   const { dryRun = false, onlySetCodes, onlySeriesNames } = opts;
+  const s3 = buildS3Client();
 
-  const allSets = await loadSetsFromR2();
+  const allSets = await loadSetsFromR2(s3);
   let sets = allSets;
 
   if (onlySetCodes?.length) {
     sets = allSets.filter((s) => setRowMatchesAllowedSetCodes(s, onlySetCodes));
     if (!sets.length) throw new Error(`No sets found matching: ${onlySetCodes.join(", ")}`);
   } else if (onlySeriesNames?.length) {
-    const allSeries = await loadSeriesFromR2();
+    const allSeries = await loadSeriesFromR2(s3);
     const matchedSeries = new Set(
       allSeries
         .filter((sr) => onlySeriesNames.some((n) => n.toLowerCase() === sr.name.toLowerCase()))
@@ -327,12 +365,10 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
   console.log(`=== Scrydex price scrape (${scopeLabel}) — catalog from R2, outputs to R2 ===`);
   if (dryRun) console.log("(dry-run: no R2 uploads)\n");
 
-  const s3 = buildS3Client();
-
   for (const set of sets) {
     const setCode = getSinglesCatalogSetKey(set);
     if (!setCode) continue;
-    const cards = await loadCardsForSetFromR2(setCode);
+    const cards = await loadCardsForSetFromR2(s3, setCode);
     if (!cards.length) {
       console.log(`  [${setCode}] skip — no cards in R2 data/cards/${setCode}.json`);
       continue;
