@@ -44,7 +44,7 @@ function scaleGradeTrendUsdToGbp(g: GradeTrendSummary, usdToGbp: number): GradeT
 }
 
 /** Singles trend summary from R2 (USD currents) → GBP for grid/API consumers. */
-export function scaleCardPriceTrendSummaryUsdToGbpForDisplay(
+function scaleCardPriceTrendSummaryUsdToGbpForDisplay(
   summary: CardPriceTrendSummary,
   usdToGbp: number,
 ): CardPriceTrendSummary {

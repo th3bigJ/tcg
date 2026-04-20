@@ -24,7 +24,7 @@ export type SortOrder =
 export const DEFAULT_SORT: SortOrder = "price-desc";
 export const SEARCH_DEFAULT_SORT: SortOrder = "random";
 
-export type PersistedFilters = {
+type PersistedFilters = {
   rarity?: string;
   energy?: string;
   excludeCommonUncommon?: boolean;
@@ -59,61 +59,4 @@ export function persistFilters(next: PersistedFilters, scope?: PersistedFilterSc
       );
     }
   } catch {}
-}
-
-export function buildPokedexDetailHref(dexNumber: number): string {
-  const f = readPersistedFilters("pokedex");
-  const p = new URLSearchParams();
-  if (f.energy) p.set("energy", f.energy);
-  if (f.rarity) p.set("rarity", f.rarity);
-  if (f.excludeCommonUncommon) p.set("exclude_cu", "1");
-  if (f.excludeCollected) p.set("exclude_owned", "1");
-  if (f.duplicatesOnly) p.set("duplicates_only", "1");
-  if (f.category) p.set("category", f.category);
-  if (f.groupBySet) p.set("group_by_set", "1");
-  const s = p.toString();
-  return s ? `/pokedex/${dexNumber}?${s}` : `/pokedex/${dexNumber}`;
-}
-
-export function sortCards<T extends { setReleaseDate?: string | null; cardNumber?: string | null }>(
-  cards: T[],
-  sort: SortOrder,
-  getPriceFn?: (card: T) => number,
-  getTrendFn?: (card: T) => number,
-): T[] {
-  const arr = [...cards];
-  switch (sort) {
-    case "random":
-      return arr;
-    case "price-desc":
-      return arr.sort((a, b) => (getPriceFn?.(b) ?? 0) - (getPriceFn?.(a) ?? 0));
-    case "price-asc":
-      return arr.sort((a, b) => (getPriceFn?.(a) ?? 0) - (getPriceFn?.(b) ?? 0));
-    case "change-desc":
-      return arr.sort(
-        (a, b) =>
-          (getTrendFn?.(b) ?? Number.NEGATIVE_INFINITY) -
-          (getTrendFn?.(a) ?? Number.NEGATIVE_INFINITY),
-      );
-    case "change-asc":
-      return arr.sort(
-        (a, b) =>
-          (getTrendFn?.(a) ?? Number.POSITIVE_INFINITY) -
-          (getTrendFn?.(b) ?? Number.POSITIVE_INFINITY),
-      );
-    case "release-desc":
-      return arr.sort((a, b) => (b.setReleaseDate ?? "").localeCompare(a.setReleaseDate ?? ""));
-    case "release-asc":
-      return arr.sort((a, b) => (a.setReleaseDate ?? "").localeCompare(b.setReleaseDate ?? ""));
-    case "number-desc":
-      return arr.sort((a, b) =>
-        (b.cardNumber ?? "").localeCompare(a.cardNumber ?? "", undefined, { numeric: true }),
-      );
-    case "number-asc":
-      return arr.sort((a, b) =>
-        (a.cardNumber ?? "").localeCompare(b.cardNumber ?? "", undefined, { numeric: true }),
-      );
-    default:
-      return arr;
-  }
 }

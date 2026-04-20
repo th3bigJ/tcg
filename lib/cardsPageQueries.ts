@@ -43,9 +43,9 @@ export type CardsPageCardEntry = {
 };
 
 /** Legacy default page size (used only to interpret old `?page=` bookmarks). */
-export const CARDS_PER_PAGE = 80;
+const CARDS_PER_PAGE = 80;
 /** First paint on /cards — how many cards to fetch before "Load more". */
-export const CARDS_INITIAL_TAKE = 42;
+const CARDS_INITIAL_TAKE = 42;
 /** Each "Load more" adds this many additional cards (URL `take` grows by this). */
 export const CARDS_LOAD_MORE_STEP = 42;
 /** Upper bound for a single /cards request (Payload `in` query + payload size). */

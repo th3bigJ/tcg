@@ -1,5 +1,5 @@
 /** Normalize energy / element type strings the same way filter facets do. */
-export function normalizeEnergyTypeToken(value: string): string {
+function normalizeEnergyTypeToken(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 

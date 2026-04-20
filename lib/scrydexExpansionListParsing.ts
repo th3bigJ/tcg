@@ -10,7 +10,7 @@ function escapeRegExp(s: string): string {
 }
 
 /** Normalise `me1-001` / `ME1-1` → `me1-1` for map keys (matches Scrydex href ids). */
-export function normalizeScrydexListCardKey(listPrefix: string, cardHrefId: string): string {
+function normalizeScrydexListCardKey(listPrefix: string, cardHrefId: string): string {
   const p = listPrefix.trim().toLowerCase();
   const re = new RegExp(`^${escapeRegExp(p)}-([a-z0-9]+)$`, "i");
   const m = cardHrefId.trim().match(re);
@@ -92,7 +92,7 @@ export function parseScrydexExpansionListPaths(
   return out;
 }
 
-export async function fetchScrydexExpansionPageHtml(url: string): Promise<string> {
+async function fetchScrydexExpansionPageHtml(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: { "User-Agent": SCRYDEX_DEFAULT_UA },
     redirect: "follow",
@@ -106,7 +106,7 @@ const SCRYDEX_EXPANSION_MAX_PAGES = 100;
 /**
  * Highest `?page=N` link Scrydex embeds for this expansion pathname (e.g. page 1 links to `?page=2`).
  */
-export function maxScrydexExpansionPageFromHtml(html: string, pathname: string): number {
+function maxScrydexExpansionPageFromHtml(html: string, pathname: string): number {
   const esc = escapeRegExp(pathname);
   const re = new RegExp(`${esc}\\?page=(\\d+)`, "gi");
   let max = 1;
@@ -154,7 +154,7 @@ export async function fetchScrydexExpansionMultiPageHtml(expansionUrl: string): 
 }
 
 /** Try multiple id spellings (TCGdex `me01-3` vs Scrydex `me1-3`). */
-export function buildScrydexPriceMapLookupKeys(
+function buildScrydexPriceMapLookupKeys(
   ext: string,
   listPrefix: string,
   tcgPrefixes: readonly string[],

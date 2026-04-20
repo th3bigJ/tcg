@@ -3,7 +3,7 @@
  * Used by `jobScrapePricing` / `externalScrapeVariantSlugFromFlatKey` and data migrations.
  */
 
-export const PRICING_VARIANT_COMPACT_TO_CANONICAL: Record<string, string> = {
+const PRICING_VARIANT_COMPACT_TO_CANONICAL: Record<string, string> = {
   default: "default",
   holofoil: "holofoil",
   reverseholofoil: "reverseHolofoil",
@@ -22,7 +22,7 @@ export function canonicalVariantSlugFromCompactLabel(compact: string): string | 
 }
 
 /** Run-on duplicate keys → canonical (for one-shot JSON migrations). Order: longer `bad` keys first avoids partial overlaps. */
-export const PRICING_VARIANT_RUN_ON_MIGRATIONS: readonly { bad: string; good: string }[] = [
+const PRICING_VARIANT_RUN_ON_MIGRATIONS: readonly { bad: string; good: string }[] = [
   { bad: "firsteditionshadowlessholofoil", good: "firstEditionShadowlessHolofoil" },
   { bad: "firsteditionshadowless", good: "firstEditionShadowless" },
   { bad: "firsteditionholofoil", good: "firstEditionHolofoil" },

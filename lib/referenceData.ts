@@ -1,5 +1,5 @@
-export type ItemCondition = { id: string; name: string; sortOrder: number };
-export type ProductType = { id: string; name: string; slug: string };
+type ItemCondition = { id: string; name: string; sortOrder: number };
+type ProductType = { id: string; name: string; slug: string };
 
 export const ITEM_CONDITIONS: ItemCondition[] = [
   { id: "near-mint",          name: "Near Mint",          sortOrder: 1 },

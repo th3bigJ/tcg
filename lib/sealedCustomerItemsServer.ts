@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { unstable_noStore as noStore } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -19,7 +18,7 @@ function parsePurchaseType(value: unknown): SealedCollectionLine["purchaseType"]
 const SEALED_COLLECTION_REF_PREFIX = "sealed-collection:";
 
 /** Opened vs sealed for each collection row id, from `account_transactions.sealed_state` + `source_reference`. */
-export async function fetchSealedStateByCollectionIdWithSupabase(
+async function fetchSealedStateByCollectionIdWithSupabase(
   supabase: SupabaseClient,
   customerId: string,
 ): Promise<Map<string, SealedCollectionLine["sealedState"]>> {
@@ -45,7 +44,6 @@ export async function fetchSealedStateByCollectionIdWithSupabase(
 export async function fetchSealedStateByCollectionIdFromTransactions(
   customerId: string,
 ): Promise<Map<string, SealedCollectionLine["sealedState"]>> {
-  noStore();
   const supabase = await createSupabaseServerClient();
   return fetchSealedStateByCollectionIdWithSupabase(supabase, customerId);
 }
@@ -98,7 +96,6 @@ export async function fetchSealedCollectionLinesWithSupabase(
 }
 
 export async function fetchSealedCollectionLines(customerId: string): Promise<SealedCollectionLine[]> {
-  noStore();
   const supabase = await createSupabaseServerClient();
   return fetchSealedCollectionLinesWithSupabase(supabase, customerId);
 }
@@ -108,7 +105,6 @@ export async function fetchSealedCollectionLinesForProduct(
   customerId: string,
   sealedProductId: number,
 ): Promise<SealedCollectionLine[]> {
-  noStore();
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("customer_sealed_collections")
@@ -124,7 +120,6 @@ export async function fetchSealedCollectionLinesForProduct(
 }
 
 export async function fetchSealedWishlistLines(customerId: string): Promise<SealedWishlistLine[]> {
-  noStore();
   const supabase = await createSupabaseServerClient();
   const allRows: Record<string, unknown>[] = [];
   let from = 0;
@@ -185,7 +180,6 @@ export async function fetchSealedProductUserState(
   collectionEntryIds: string[];
   totalQuantity: number;
 }> {
-  noStore();
   const supabase = await createSupabaseServerClient();
   const [wishRes, colRes] = await Promise.all([
     supabase

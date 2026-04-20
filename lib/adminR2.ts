@@ -1,6 +1,6 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-export function buildAdminS3Client(): S3Client {
+function buildAdminS3Client(): S3Client {
   return new S3Client({
     endpoint: process.env.R2_ENDPOINT ?? "",
     credentials: {

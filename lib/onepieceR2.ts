@@ -27,7 +27,7 @@ export function onePieceR2Key(relativePath: string): string {
   return `${ONEPIECE_R2_PREFIX}/${clean}`;
 }
 
-export function guessContentType(filePath: string): string {
+function guessContentType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
   if (ext === ".json") return "application/json; charset=utf-8";
   if (ext === ".png") return "image/png";
@@ -36,7 +36,7 @@ export function guessContentType(filePath: string): string {
   return "application/octet-stream";
 }
 
-export async function putBufferToOnePieceR2(
+async function putBufferToOnePieceR2(
   s3: S3Client,
   relativePath: string,
   body: Buffer | string,

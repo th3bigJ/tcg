@@ -57,7 +57,7 @@ export type WishlistEntriesByMasterCardId = Record<string, WishlistEntrySummary[
 export type StorefrontCardEntry = CardsPageCardEntry & StorefrontCardExtras;
 
 /** Whole-copy count for a collection row or merged tile (matches grid ×N and merge totals). */
-export function collectionLineQuantity(e: Pick<StorefrontCardEntry, "quantity">): number {
+function collectionLineQuantity(e: Pick<StorefrontCardEntry, "quantity">): number {
   const q = e.quantity;
   if (typeof q === "number" && Number.isFinite(q) && q >= 1) return Math.max(1, Math.floor(q));
   return 1;
@@ -86,7 +86,7 @@ export function collectionCardCopyBucketsFromEntries(entries: StorefrontCardEntr
   return { gradedCopies, singleCopies, packedCopies };
 }
 
-export function getMasterCardCopyTotals(
+function getMasterCardCopyTotals(
   entries: Pick<StorefrontCardEntry, "masterCardId" | "quantity">[],
 ): Record<string, number> {
   const totals: Record<string, number> = {};
@@ -117,11 +117,6 @@ export function getMasterCardIdsWithMinCopies(
 /** Sum of {@link collectionLineQuantity} on merged grid rows — matches sum of copy counts shown on tiles (×N). */
 export function totalCopiesFromMergedGrid(merged: StorefrontCardEntry[]): number {
   return merged.reduce((sum, row) => sum + collectionLineQuantity(row), 0);
-}
-
-/** Invariant: merging by variant+condition does not change total copy count. */
-export function collectionCopyTotalsMatch(entries: StorefrontCardEntry[], merged: StorefrontCardEntry[]): boolean {
-  return collectionCopyTotalFromEntries(entries) === totalCopiesFromMergedGrid(merged);
 }
 
 export function fetchItemConditionOptions(): { id: string; name: string }[] {
@@ -404,23 +399,6 @@ export function mergeCollectionEntriesForGrid(entries: StorefrontCardEntry[]): S
     });
   }
 
-  return out;
-}
-
-/**
- * One grid row per collection line (not merged), so each tile has a stable {@link StorefrontCardEntry.collectionEntryId}
- * for trade selection.
- */
-export function storefrontEntriesToTradeGridCards(entries: StorefrontCardEntry[]): StorefrontCardEntry[] {
-  const out: StorefrontCardEntry[] = [];
-  for (const e of entries) {
-    if (!e.masterCardId || !e.collectionEntryId) continue;
-    out.push({
-      ...e,
-      collectionGroupKey: collectionGroupKeyFromEntry(e),
-      quantity: collectionLineQuantity(e),
-    });
-  }
   return out;
 }
 

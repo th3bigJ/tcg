@@ -5,7 +5,7 @@ import { scaleSetPriceTrendMapUsdToGbpForDisplay } from "@/lib/pricingUsdStorage
 import { getPriceTrendForCard, getPriceTrendsForSet } from "@/lib/r2PriceTrends";
 import type { CardJsonEntry, CardPriceTrendSummary } from "@/lib/staticDataTypes";
 
-export function readMarketGbp(
+function readMarketGbp(
   tcgplayer: unknown,
   cardmarket: unknown,
   scrydex: unknown,

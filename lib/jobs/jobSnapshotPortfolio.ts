@@ -3,7 +3,7 @@ import { fetchAllCustomerIds } from "../portfolioSnapshotCustomers";
 import { computePortfolioSnapshotPoint } from "../portfolioSnapshotCompute";
 import { mergeAndUploadPortfolioSnapshot } from "../r2PortfolioSnapshots";
 
-export interface SnapshotPortfolioOptions {
+interface SnapshotPortfolioOptions {
   dryRun?: boolean;
   onlyIds?: string[];
 }

@@ -109,7 +109,7 @@ function buildAllVariantsTrends(cardHistory: CardPriceHistory): Record<string, R
   return out;
 }
 
-export function buildTrendSummaryForCard(cardHistory: CardPriceHistory): CardPriceTrendSummary | null {
+function buildTrendSummaryForCard(cardHistory: CardPriceHistory): CardPriceTrendSummary | null {
   const allVariants = buildAllVariantsTrends(cardHistory);
 
   for (const variant of sortedVariantKeys(cardHistory)) {

@@ -39,11 +39,11 @@ function buildS3Client(): S3Client {
   });
 }
 
-export function portfolioSnapshotObjectKey(customerId: string): string {
+function portfolioSnapshotObjectKey(customerId: string): string {
   return `portfolio-snapshots/${customerId}.json`;
 }
 
-export async function fetchPortfolioSnapshotDocumentFromPublicUrl(
+async function fetchPortfolioSnapshotDocumentFromPublicUrl(
   customerId: string,
 ): Promise<PortfolioSnapshotDocument | null> {
   const base = getPortfolioSnapshotBaseUrl();
@@ -96,7 +96,7 @@ export async function fetchPortfolioSnapshotDocumentForServer(
   );
 }
 
-export function mergePortfolioSnapshotPoint(
+function mergePortfolioSnapshotPoint(
   existing: PortfolioSnapshotDocument | null,
   point: PortfolioSnapshotPoint,
   customerId: string,

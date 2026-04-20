@@ -19,7 +19,7 @@ function candidateStrings(set: SetJsonEntry): string[] {
   return k ? [k] : [];
 }
 
-export function resolveExpansionConfigForSet(set: SetJsonEntry): ScrydexExpansionListConfig | null {
+function resolveExpansionConfigForSet(set: SetJsonEntry): ScrydexExpansionListConfig | null {
   const sk = set.setKey?.trim();
   for (const c of candidateStrings(set)) {
     const r = scrydexMegaExpansionConfig(c, sk, sk);

@@ -9,7 +9,7 @@ import { pokemonLocalDataRoot } from "@/lib/pokemonLocalDataPaths";
 import { updateSealedPriceHistory } from "../r2SealedPriceHistory";
 import { uploadSealedPriceTrends } from "../r2SealedPriceTrends";
 
-export interface ScrapePokedataProductsOptions {
+interface ScrapePokedataProductsOptions {
   mode?: "all" | "products" | "prices";
   tcg?: string;
   language?: string;

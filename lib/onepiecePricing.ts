@@ -157,7 +157,7 @@ export function ensureOnePiecePricingDirs(): void {
 }
 
 /** When true, read/write `data/onepiece/pricing/{market,history,trends}` on disk instead of R2. */
-export function useOnePiecePricingLocalFiles(): boolean {
+function useOnePiecePricingLocalFiles(): boolean {
   const v = process.env.ONEPIECE_PRICING_LOCAL?.trim().toLowerCase();
   return v === "1" || v === "true" || v === "yes";
 }
@@ -239,7 +239,7 @@ export async function writeOnePieceMarketForSet(setCode: string, marketMap: OneP
   await putJsonToOnePieceR2(s3, marketR2PathForSet(setCode), marketMap);
 }
 
-export async function writeOnePieceHistoryForSet(setCode: string, historyMap: SetPriceHistoryMap): Promise<void> {
+async function writeOnePieceHistoryForSet(setCode: string, historyMap: SetPriceHistoryMap): Promise<void> {
   if (useOnePiecePricingLocalFiles()) {
     ensureOnePiecePricingDirs();
     writeJsonFile(historyFilePathForSet(setCode), historyMap);
@@ -249,7 +249,7 @@ export async function writeOnePieceHistoryForSet(setCode: string, historyMap: Se
   await putJsonToOnePieceR2(s3, historyR2PathForSet(setCode), historyMap);
 }
 
-export async function writeOnePieceTrendsForSet(setCode: string, trendMap: SetPriceTrendMap): Promise<void> {
+async function writeOnePieceTrendsForSet(setCode: string, trendMap: SetPriceTrendMap): Promise<void> {
   if (useOnePiecePricingLocalFiles()) {
     ensureOnePiecePricingDirs();
     writeJsonFile(trendsFilePathForSet(setCode), trendMap);
@@ -259,7 +259,7 @@ export async function writeOnePieceTrendsForSet(setCode: string, trendMap: SetPr
   await putJsonToOnePieceR2(s3, trendsR2PathForSet(setCode), trendMap);
 }
 
-export async function writeOnePieceTrendsFromHistory(setCode: string, historyMap: SetPriceHistoryMap): Promise<SetPriceTrendMap> {
+async function writeOnePieceTrendsFromHistory(setCode: string, historyMap: SetPriceHistoryMap): Promise<SetPriceTrendMap> {
   const trendMap = buildTrendMapFromHistoryMap(historyMap);
   await writeOnePieceTrendsForSet(setCode, trendMap);
   return trendMap;
@@ -374,7 +374,7 @@ function normalizeVariantLabel(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
-export function scrydexHistoryCandidatesForVariant(variant: OnePieceCardVariant): string[] {
+function scrydexHistoryCandidatesForVariant(variant: OnePieceCardVariant): string[] {
   switch (variant) {
     case "foil":
     case "parallel":
@@ -434,5 +434,3 @@ export function selectScrydexRawHistoryForCard(
 
   return null;
 }
-
-export type OnePiecePrimaryTrendMap = Record<string, CardPriceTrendSummary>;

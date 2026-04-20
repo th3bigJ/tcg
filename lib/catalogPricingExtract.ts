@@ -84,19 +84,17 @@ export function extractCardmarketAvgsGbp(
 }
 
 /** Per-variant Scrydex scrape: raw (NM/list), PSA 10, and ACE 10 in **USD** (R2 storage). */
-export type ExternalScrapeVariantNumbers = {
+type ExternalScrapeVariantNumbers = {
   raw?: number;
   psa10?: number;
   ace10?: number;
 };
 
-export type ExternalScrapeByVariantNumbers = Record<string, ExternalScrapeVariantNumbers>;
-
 /**
  * Stable variant slug for JSON storage (e.g. `holofoil`, `reverseHolofoil`, `staffStamp`),
  * aligned with common TCGdex `tcgplayer` keys where possible.
  */
-export function externalScrapeVariantSlugFromFlatKey(flatKey: string): string {
+function externalScrapeVariantSlugFromFlatKey(flatKey: string): string {
   const c = canonicalScrydexVariantLabel(flatKey.trim());
   const compact = c.toLowerCase().replace(/[\s-_]+/g, "");
   const canon = canonicalVariantSlugFromCompactLabel(compact);
@@ -110,69 +108,4 @@ export function externalScrapeVariantSlugFromFlatKey(flatKey: string): string {
       .map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
       .join("")
   );
-}
-
-/**
- * Turn flat merged USD (`Holofoil`, `Holofoil PSA 10`, `Holofoil ACE 10`) into `{ holofoil: { raw, psa10, ace10 } }`.
- */
-export function collateFlatExternalScrapeUsdToByVariant(
-  flatUsd: Record<string, number>,
-): ExternalScrapeByVariantNumbers {
-  const out: ExternalScrapeByVariantNumbers = {};
-  for (const [k, v] of Object.entries(flatUsd)) {
-    if (typeof v !== "number" || !Number.isFinite(v)) continue;
-    if (k.endsWith(SCRYDEX_FLAT_PSA10_KEY_SUFFIX)) {
-      const base = k.slice(0, -SCRYDEX_FLAT_PSA10_KEY_SUFFIX.length);
-      const slug = externalScrapeVariantSlugFromFlatKey(base);
-      const prev = out[slug] ?? {};
-      out[slug] = { ...prev, psa10: v };
-    } else if (k.endsWith(SCRYDEX_FLAT_ACE10_KEY_SUFFIX)) {
-      const base = k.slice(0, -SCRYDEX_FLAT_ACE10_KEY_SUFFIX.length);
-      const slug = externalScrapeVariantSlugFromFlatKey(base);
-      const prev = out[slug] ?? {};
-      out[slug] = { ...prev, ace10: v };
-    } else {
-      const slug = externalScrapeVariantSlugFromFlatKey(k);
-      const prev = out[slug] ?? {};
-      out[slug] = { ...prev, raw: v };
-    }
-  }
-  return out;
-}
-
-export function convertExternalScrapeByVariantUsdToGbp(
-  byVariantUsd: ExternalScrapeByVariantNumbers,
-  multipliers: GbpConversionMultipliers,
-): ExternalScrapeByVariantNumbers {
-  const { usdToGbp } = multipliers;
-  const out: ExternalScrapeByVariantNumbers = {};
-  for (const [slug, rec] of Object.entries(byVariantUsd)) {
-    const next: ExternalScrapeVariantNumbers = {};
-    if (typeof rec.raw === "number" && Number.isFinite(rec.raw)) {
-      next.raw = rec.raw * usdToGbp;
-    }
-    if (typeof rec.psa10 === "number" && Number.isFinite(rec.psa10)) {
-      next.psa10 = rec.psa10 * usdToGbp;
-    }
-    if (typeof rec.ace10 === "number" && Number.isFinite(rec.ace10)) {
-      next.ace10 = rec.ace10 * usdToGbp;
-    }
-    if (Object.keys(next).length > 0) out[slug] = next;
-  }
-  return out;
-}
-
-/** Scrape / external source: arbitrary variant keys, USD → GBP (legacy flat shape). */
-export function convertExternalVariantPricesUsdToGbp(
-  usdByVariant: Record<string, number>,
-  multipliers: GbpConversionMultipliers,
-): Record<string, number> {
-  const { usdToGbp } = multipliers;
-  const out: Record<string, number> = {};
-  for (const [k, v] of Object.entries(usdByVariant)) {
-    if (typeof v === "number" && Number.isFinite(v)) {
-      out[k] = v * usdToGbp;
-    }
-  }
-  return out;
 }

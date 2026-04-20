@@ -22,7 +22,7 @@ export type SealedProductCatalogEntry = {
   };
 };
 
-export type SealedProductCatalogPayload = {
+type SealedProductCatalogPayload = {
   scrapedAt: string;
   sourceUrl: string;
   sourceApiUrl: string;
@@ -39,14 +39,14 @@ export type SealedProductCatalogPayload = {
   products: SealedProductCatalogEntry[];
 };
 
-export type SealedProductPriceEntry = {
+type SealedProductPriceEntry = {
   id: number;
   market_value: number | null;
   currency: "USD";
   live: boolean;
 };
 
-export type SealedProductPricesPayload = {
+type SealedProductPricesPayload = {
   scrapedAt: string;
   sourceUrl: string;
   sourceApiUrl: string;
@@ -67,7 +67,7 @@ export type ShopSealedProduct = SealedProductCatalogEntry & {
   trend?: SealedProductPriceTrendSummary | null;
 };
 
-export type ShopSealedProductFilters = {
+type ShopSealedProductFilters = {
   search?: string;
   type?: string;
   series?: string;
@@ -120,25 +120,6 @@ export function suggestedProductTypeIdForSealedProduct(product: Pick<SealedProdu
     default:
       return "other";
   }
-}
-
-export function buildCollectionTransactionHref(product: ShopSealedProduct): string {
-  const searchParams = new URLSearchParams();
-  searchParams.set("direction", "purchase");
-  searchParams.set("description", product.name);
-  searchParams.set("productTypeId", suggestedProductTypeIdForSealedProduct(product));
-  searchParams.set("sealedState", "sealed");
-  searchParams.set("quantity", "1");
-  if (typeof product.marketValue === "number") {
-    searchParams.set("unitPrice", product.marketValue.toFixed(2));
-  }
-  searchParams.set("sourceReference", `sealed-product:${product.id}`);
-  return `/account/transactions?${searchParams.toString()}`;
-}
-
-export function parsePositivePage(value: string | null | undefined): number {
-  const parsed = Number.parseInt(value ?? "", 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
 export function buildSealedBrowseHref(
@@ -226,10 +207,6 @@ function getSealedProductsUrl(objectKey: string): string | null {
   const base = getR2BaseUrl();
   if (!base) return null;
   return `${base}/${objectKey}`;
-}
-
-export function getSealedProductsPublicUrl(objectKey: string): string | null {
-  return getSealedProductsUrl(objectKey);
 }
 
 type CacheEntry<T> = { value: T; expiresAt: number };

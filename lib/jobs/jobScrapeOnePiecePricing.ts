@@ -15,7 +15,7 @@ import {
 import { fetchGumgumSetListHtml, gumgumPriceByCardIdFromListHtml } from "@/lib/gumgumOnePiece";
 import { fetchScrydexCardPageHtml, parseScrydexCardPageRawNearMintUsd } from "@/lib/scrydexMepCardPagePricing";
 
-export interface ScrapeOnePiecePricingOptions {
+interface ScrapeOnePiecePricingOptions {
   dryRun?: boolean;
   onlySetCodes?: string[];
   source?: "local" | "r2";

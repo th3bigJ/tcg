@@ -26,7 +26,7 @@ export type PortfolioSnapshotDocument = {
   points: PortfolioSnapshotPoint[];
 };
 
-export function emptyGroupTotals(): PortfolioGroupSnapshot {
+function emptyGroupTotals(): PortfolioGroupSnapshot {
   return { valueGbp: 0, spentGbp: 0, soldGbp: 0 };
 }
 

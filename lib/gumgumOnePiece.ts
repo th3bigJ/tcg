@@ -6,9 +6,9 @@
 
 import type { OnePieceCardVariant } from "@/lib/onepiecePricing";
 
-export const GUMGUM_ORIGIN = "https://gumgum.gg";
+const GUMGUM_ORIGIN = "https://gumgum.gg";
 
-export type GumgumListRow = {
+type GumgumListRow = {
   /** GumGum `id` query value, e.g. `ST29-001` or `ST29-001_p1`. */
   gumgumCardId: string;
   cardNumber: string;
@@ -21,12 +21,12 @@ export type GumgumListRow = {
 };
 
 /** GumGum `_p1` etc. aligns with Scrydex `altArt` for starter parallel art rows. */
-export function gumgumVariantFromCardId(gumgumCardId: string): OnePieceCardVariant {
+function gumgumVariantFromCardId(gumgumCardId: string): OnePieceCardVariant {
   return /_p\d+$/i.test(gumgumCardId.trim()) ? "altArt" : "normal";
 }
 
 /** Printed number (e.g. ST29-001) from a GumGum id (strips `_p1` suffixes). */
-export function printedNumberFromGumgumCardId(gumgumCardId: string): string {
+function printedNumberFromGumgumCardId(gumgumCardId: string): string {
   const base = gumgumCardId.trim().replace(/_p\d+$/i, "");
   return base.toUpperCase();
 }

@@ -6,7 +6,7 @@ export type FourWayCategory = "single" | "graded" | "sealed" | "ripped";
  * Spend/sold by transaction line. Opened sealed inventory counts as Ripped.
  * Single/graded card lines ignore sealed state.
  */
-export function transactionFourWayCategoryFromProductTypeSlug(
+function transactionFourWayCategoryFromProductTypeSlug(
   productTypeSlug: string,
   sealedState: "sealed" | "opened" | null | undefined,
 ): FourWayCategory {

@@ -14,7 +14,6 @@ import type {
 
 export type {
   PriceHistoryPoint,
-  PriceHistoryWindow,
   SealedProductPriceHistory,
   SealedProductPriceHistoryMap,
 };
@@ -57,17 +56,17 @@ function pad2(value: number): string {
   return String(value).padStart(2, "0");
 }
 
-export function todayKey(date = new Date()): string {
+function todayKey(date = new Date()): string {
   const { year, month, day } = getUtcDateParts(date);
   return `${year}-${pad2(month)}-${pad2(day)}`;
 }
 
-export function currentMonthKey(date = new Date()): string {
+function currentMonthKey(date = new Date()): string {
   const { year, month } = getUtcDateParts(date);
   return `${year}-${pad2(month)}`;
 }
 
-export function currentWeekKey(date = new Date()): string {
+function currentWeekKey(date = new Date()): string {
   const utc = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const day = utc.getUTCDay() || 7;
   utc.setUTCDate(utc.getUTCDate() + 4 - day);
@@ -103,7 +102,7 @@ function ensureWindow(window?: Partial<PriceHistoryWindow>): PriceHistoryWindow 
   };
 }
 
-export function upsertAndTrim(
+function upsertAndTrim(
   points: PriceHistoryPoint[],
   key: string,
   price: number,

@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { unstable_noStore as noStore } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getItemConditionName } from "@/lib/referenceData";
 import {
@@ -42,13 +41,11 @@ export async function fetchCollectionCardEntriesWithSupabase(
 }
 
 export async function fetchCollectionCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {
-  noStore();
   const supabase = await createSupabaseServerClient();
   return fetchCollectionCardEntriesWithSupabase(supabase, customerId);
 }
 
 export async function fetchWishlistCardEntries(customerId: string): Promise<StorefrontCardEntry[]> {
-  noStore();
   const supabase = await createSupabaseServerClient();
   const allRows: Record<string, unknown>[] = [];
   let from = 0;
@@ -78,7 +75,6 @@ export async function fetchWishlistCardEntries(customerId: string): Promise<Stor
 export async function fetchWishlistIdsByMasterCard(
   customerId: string,
 ): Promise<WishlistEntriesByMasterCardId> {
-  noStore();
   const supabase = await createSupabaseServerClient();
   const map: WishlistEntriesByMasterCardId = {};
   let from = 0;

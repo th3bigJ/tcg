@@ -94,7 +94,7 @@ function extractHighestNumericSeriesUsd(
 }
 
 /** Map Chartkick Raw slug (holofoil, staffStamp) to a stable external_price key. */
-export function scrydexRawVariantSlugToLabel(slug: string): string {
+function scrydexRawVariantSlugToLabel(slug: string): string {
   if (slug === "staffStamp") return "Staff Stamp";
   if (slug === "holofoil") return "Holofoil";
   if (slug === "reverseHolofoil") return "Reverse Holofoil";
@@ -122,7 +122,7 @@ export function canonicalScrydexVariantLabel(raw: string): string {
 export const SCRYDEX_FLAT_PSA10_KEY_SUFFIX = " PSA 10";
 
 /** Flat merge key for PSA 10 before `collateFlatExternalScrapeUsdToByVariant`. */
-export function scrydexPsa10VariantKey(baseVariantLabel: string): string {
+function scrydexPsa10VariantKey(baseVariantLabel: string): string {
   return `${canonicalScrydexVariantLabel(baseVariantLabel)}${SCRYDEX_FLAT_PSA10_KEY_SUFFIX}`;
 }
 
@@ -133,7 +133,7 @@ export function scrydexPsa10VariantKey(baseVariantLabel: string): string {
 export const SCRYDEX_FLAT_ACE10_KEY_SUFFIX = " ACE 10";
 
 /** Flat merge key for ACE 10 before `collateFlatExternalScrapeUsdToByVariant`. */
-export function scrydexAce10VariantKey(baseVariantLabel: string): string {
+function scrydexAce10VariantKey(baseVariantLabel: string): string {
   return `${canonicalScrydexVariantLabel(baseVariantLabel)}${SCRYDEX_FLAT_ACE10_KEY_SUFFIX}`;
 }
 
@@ -435,32 +435,6 @@ function decodeBasicHtmlEntities(value: string): string {
     .replace(/&nbsp;/g, " ");
 }
 
-export function parseScrydexCardPageRarity(html: string): string | null {
-  const normalize = (value: string): string | null => {
-    const rarity = decodeBasicHtmlEntities(value).trim();
-    if (!rarity || rarity === "-" || rarity === "—") return null;
-    return rarity;
-  };
-
-  const valueMatch = html.match(
-    /<div class="mb-2 text-sm text-white">Rarity<\/div><div class="relative inline-block"><div><div class="text-body-16 text-mono-4">([^<]*)<\/div>/i,
-  );
-  if (valueMatch) {
-    const rarity = normalize(valueMatch[1]);
-    if (rarity) return rarity;
-  }
-
-  const dashMatch = html.match(
-    /<div class="mb-2 text-sm text-white">Rarity<\/div><span class="text-mono-4">([^<]*)<\/span>/i,
-  );
-  if (dashMatch) {
-    const rarity = normalize(dashMatch[1]);
-    if (rarity) return rarity;
-  }
-
-  return null;
-}
-
 export async function fetchScrydexCardPageHtml(
   path: string,
   variant = "holofoil",
@@ -475,6 +449,3 @@ export async function fetchScrydexCardPageHtml(
   if (!res.ok) throw new Error(`Scrydex card page ${trimmed}: HTTP ${res.status}`);
   return res.text();
 }
-
-/** @deprecated Use fetchScrydexCardPageHtml */
-export const fetchScrydexMepCardPageHtml = fetchScrydexCardPageHtml;

@@ -26,7 +26,7 @@ import {
   parseScrydexSupertype,
 } from "../scrydexCardPageCardText";
 
-export interface ScrapeScrydexCardMetaOptions {
+interface ScrapeScrydexCardMetaOptions {
   dryRun?: boolean;
   onlySetCodes?: string[];
   onlySeriesNames?: string[];

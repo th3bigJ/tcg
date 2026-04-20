@@ -63,7 +63,7 @@ function buildWindowSummary(points: PriceHistoryPoint[]) {
   };
 }
 
-export function buildTrendSummaryForSealedProduct(
+function buildTrendSummaryForSealedProduct(
   history: SealedProductPriceHistory,
 ): SealedProductPriceTrendSummary | null {
   const current = history?.daily?.[history.daily.length - 1]?.[1];
@@ -76,7 +76,7 @@ export function buildTrendSummaryForSealedProduct(
   };
 }
 
-export function buildSealedTrendMapFromHistoryMap(
+function buildSealedTrendMapFromHistoryMap(
   historyMap: SealedProductPriceHistoryMap,
 ): SealedProductPriceTrendMap {
   const out: SealedProductPriceTrendMap = {};
@@ -101,15 +101,6 @@ export async function getSealedPriceTrends(): Promise<SealedProductPriceTrendMap
   } catch {
     return null;
   }
-}
-
-export function getSealedPriceTrendForProduct(
-  trendMap: SealedProductPriceTrendMap,
-  productId: number | string,
-): SealedProductPriceTrendSummary | null {
-  const key = String(productId).trim();
-  if (!key) return null;
-  return trendMap[key] ?? null;
 }
 
 export async function uploadSealedPriceTrends(

@@ -133,7 +133,7 @@ function isPriceHistoryPoint(value: unknown): value is PriceHistoryPoint {
   );
 }
 
-export function extractVariantGradePrices(
+function extractVariantGradePrices(
   scrydexData: ScrydexCardPricing | null | undefined,
 ): Record<string, Record<string, number>> {
   const out: Record<string, Record<string, number>> = {};
@@ -177,7 +177,7 @@ export function mergeDailySeriesIntoWindow(
 }
 
 /** Combine two windows by merging all daily points (same calendar day → max USD), then re-derive limits. */
-export function mergePriceHistoryWindows(wa: PriceHistoryWindow, wb: PriceHistoryWindow): PriceHistoryWindow {
+function mergePriceHistoryWindows(wa: PriceHistoryWindow, wb: PriceHistoryWindow): PriceHistoryWindow {
   const combinedDaily: PriceHistoryPoint[] = [...ensureWindow(wa).daily, ...ensureWindow(wb).daily];
   const byD = new Map<string, number>();
   for (const [d, p] of combinedDaily) {
@@ -192,7 +192,7 @@ export function mergePriceHistoryWindows(wa: PriceHistoryWindow, wb: PriceHistor
 }
 
 /** Deep-merge incoming chart backfill into existing card history (variant → grade → window). */
-export function mergeCardPriceHistory(
+function mergeCardPriceHistory(
   existing: CardPriceHistory | undefined,
   incoming: CardPriceHistory,
 ): CardPriceHistory {

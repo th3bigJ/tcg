@@ -6,7 +6,7 @@
 
 import type { CardJsonEntry } from "../lib/staticDataTypes";
 
-export type TcgdexSetSummary = {
+type TcgdexSetSummary = {
   id: string;
   name: string;
   releaseDate?: string;
@@ -14,7 +14,7 @@ export type TcgdexSetSummary = {
   cards?: Array<{ id: string; localId: string; name: string }>;
 };
 
-export type PtgCardImages = {
+type PtgCardImages = {
   small?: string;
   large?: string;
   name?: string;
@@ -22,13 +22,13 @@ export type PtgCardImages = {
 
 const PTG_CARD_BASE = "https://api.pokemontcg.io/v2/cards";
 
-export async function fetchJson<T>(url: string): Promise<T> {
+async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
   return (await res.json()) as T;
 }
 
-export async function fetchTcgdexSet(tcgdxSetId: string): Promise<TcgdexSetSummary> {
+async function fetchTcgdexSet(tcgdxSetId: string): Promise<TcgdexSetSummary> {
   return fetchJson<TcgdexSetSummary>(`https://api.tcgdex.net/v2/en/sets/${tcgdxSetId}`);
 }
 
@@ -48,13 +48,13 @@ export async function fetchPtgSveCard(localIdPadded: string): Promise<PtgCardIma
   };
 }
 
-export function padLocalId(localId: string | undefined): string {
+function padLocalId(localId: string | undefined): string {
   const value = (localId ?? "").trim();
   if (!value) return "";
   return /^\d+$/u.test(value) ? value.padStart(3, "0") : value;
 }
 
-export function limitlessEnergyImage(setAbbrevUpper: string, paddedLocalId: string, size: "SM" | "LG" | "MD"): string {
+function limitlessEnergyImage(setAbbrevUpper: string, paddedLocalId: string, size: "SM" | "LG" | "MD"): string {
   return `https://limitlesstcg.nyc3.cdn.digitaloceanspaces.com/tpci/${setAbbrevUpper}/${setAbbrevUpper}_${paddedLocalId}_R_EN_${size}.png`;
 }
 
@@ -73,7 +73,7 @@ const TYPE_WORD_TO_LABEL: Record<string, string> = {
 };
 
 /** Derive element type from "Grass Energy" / "Basic Grass Energy". */
-export function elementTypesFromEnergyName(name: string): string[] {
+function elementTypesFromEnergyName(name: string): string[] {
   const trimmed = name.trim();
   const basic = trimmed.match(/^Basic\s+(\w+)\s+Energy$/iu);
   if (basic) {
@@ -90,7 +90,7 @@ export function elementTypesFromEnergyName(name: string): string[] {
   return [];
 }
 
-export function buildFullDisplayName(name: string, cardNumber: string, setName: string): string {
+function buildFullDisplayName(name: string, cardNumber: string, setName: string): string {
   return `${name} ${cardNumber} ${setName}`.trim();
 }
 
@@ -102,7 +102,7 @@ type TcgdexCardDetail = {
   illustrator?: string | null;
 };
 
-export type BuildEnergyCardArgs = {
+type BuildEnergyCardArgs = {
   detail: TcgdexCardDetail;
   setKey: string;
   setName: string;
@@ -112,7 +112,7 @@ export type BuildEnergyCardArgs = {
   ptg?: PtgCardImages | null;
 };
 
-export function buildEnergyCardJson(args: BuildEnergyCardArgs): CardJsonEntry {
+function buildEnergyCardJson(args: BuildEnergyCardArgs): CardJsonEntry {
   const { detail, setKey, setName, officialCount, abbrevUpper, masterCardId, ptg } = args;
   const localId = padLocalId(detail.localId);
   const cardNumber = `${localId}/${String(officialCount)}`;

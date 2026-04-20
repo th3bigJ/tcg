@@ -59,7 +59,7 @@ function pickCanonicalCategoryLabel(values: ReadonlySet<string>): string {
 
 // ─── Default card order ───────────────────────────────────────────────────────
 
-export type DefaultCardOrderEntry = {
+type DefaultCardOrderEntry = {
   id: string;
   setCode: string;
   setReleaseTimestamp: number;
@@ -104,7 +104,7 @@ export function getDefaultCardOrder(): DefaultCardOrderEntry[] {
 
 // ─── Filter facets ────────────────────────────────────────────────────────────
 
-export type FilterFacets = {
+type FilterFacets = {
   setCodes: string[];
   rarityDisplayValues: string[];
   categoryDisplayValues: string[];
@@ -179,7 +179,7 @@ export function getFilterFacets(): FilterFacets {
 
 // ─── Pokemon dex index ────────────────────────────────────────────────────────
 
-export type PokemonDexIndexEntry = {
+type PokemonDexIndexEntry = {
   id: string;
   setCode: string;
   rarity: string;
@@ -188,7 +188,7 @@ export type PokemonDexIndexEntry = {
   cardNumberRank: number;
 };
 
-export type PokemonDexIndex = Record<string, PokemonDexIndexEntry[]>;
+type PokemonDexIndex = Record<string, PokemonDexIndexEntry[]>;
 
 let _pokemonDexIndex: PokemonDexIndex | null = null;
 

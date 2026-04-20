@@ -1,6 +1,6 @@
 const EXCLUDED_BASIC_RARITIES = new Set(["common", "uncommon"]);
 
-export function normalizeRarityToken(value: string | null | undefined): string {
+function normalizeRarityToken(value: string | null | undefined): string {
   return String(value ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 

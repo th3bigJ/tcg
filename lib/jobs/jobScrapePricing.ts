@@ -33,7 +33,7 @@ import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "../s
 import { applyPricingVariantsToCardsInPlace } from "../applyPricingVariantsToCardJson";
 import { canonicalVariantSlugFromCompactLabel } from "../pricingVariantCompactAliases";
 
-export interface ScrapePricingOptions {
+interface ScrapePricingOptions {
   dryRun?: boolean;
   onlySetCodes?: string[];
   onlySeriesNames?: string[];

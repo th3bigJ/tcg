@@ -23,7 +23,7 @@ export function isScrydexErrorPage(html: string): boolean {
 /**
  * Read a scalar field from the right-hand dev pane (`data-target-field="id"`, etc.).
  */
-export function parseScrydexDevPaneField(html: string, field: string): string | null {
+function parseScrydexDevPaneField(html: string, field: string): string | null {
   const esc = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const re = new RegExp(
     `data-target-field="${esc}"[\\s\\S]*?<div class="overflow-x-auto[^"]*">([^<]*)</div>`,
@@ -67,14 +67,14 @@ export function parseScrydexCardRulesFromDetails(html: string): string | null {
   return spans.join("\n\n");
 }
 
-export type ScrydexParsedAttack = {
+type ScrydexParsedAttack = {
   name: string;
   damage: string | null;
   cost: string[];
   effect: string | null;
 };
 
-export type ScrydexParsedAbility = {
+type ScrydexParsedAbility = {
   type: string | null;
   name: string;
   text: string | null;

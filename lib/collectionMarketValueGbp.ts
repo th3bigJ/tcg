@@ -154,14 +154,14 @@ export async function estimateCardUnitPricesGbp(
   return { prices: out, manualPriceIds };
 }
 
-export type CollectionMarketValueResult = {
+type CollectionMarketValueResult = {
   totalGbp: number;
   pricedCardCount: number;
   attemptedCardCount: number;
   hasIncompleteData: boolean;
 };
 
-export type CardCollectionMarketBucketsGbp = {
+type CardCollectionMarketBucketsGbp = {
   singleCardsGbp: number;
   gradedCardsGbp: number;
   /** Ungraded cards logged as pulled from packs (`purchase_type === "packed"`). */

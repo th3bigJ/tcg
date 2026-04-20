@@ -19,7 +19,7 @@ export type SealedWishlistLine = {
   addedAt: string | null;
 };
 
-export type SealedCollectionGridItem = {
+type SealedCollectionGridItem = {
   sealedProductId: number;
   product: ShopSealedProduct | null;
   entryIds: string[];

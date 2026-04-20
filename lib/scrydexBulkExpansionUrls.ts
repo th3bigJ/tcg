@@ -388,7 +388,7 @@ export function lookupScrydexBulkExpansionConfig(
  * Sword & Shield sets where Scrydex uses a separate expansion for Trainer Gallery cards
  * (`swshNtg` listPrefix). Catalog `setKey` stays the main set (`swshN`); scrapers merge both listings.
  */
-export const SWSH_TRAINER_GALLERY_LIST_PREFIX_BY_MAIN: Readonly<Record<string, string>> = {
+const SWSH_TRAINER_GALLERY_LIST_PREFIX_BY_MAIN: Readonly<Record<string, string>> = {
   swsh9: "swsh9tg",
   swsh10: "swsh10tg",
   swsh11: "swsh11tg",
