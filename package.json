@@ -31,8 +31,6 @@
     "scrape:pokedata-products": "node --import tsx/esm scripts/scrapePokedataProducts.ts",
     "scrape:pokedata-products:catalog": "node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=products --tcg=Pokemon --language=ENGLISH",
     "scrape:pokedata-products:prices": "node --import tsx/esm scripts/scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH",
-    "portfolio:snapshot": "node --import tsx/esm scripts/snapshotPortfolio.ts",
-    "portfolio:snapshot:fix-dates": "node --import tsx/esm scripts/backfillPortfolioSnapshotTodayToYesterday.ts",
     "r2:migrate-pokemon-bucket": "node --import tsx/esm scripts/r2MigratePokemonBucketIntoTcg.ts",
     "r2:upload-static-data": "node --import tsx/esm scripts/uploadStaticCardDataToR2.ts",
     "r2:upload-brands": "node --import tsx/esm scripts/uploadBrandsToR2.ts",
@@ -58,12 +56,7 @@
     "r2:sum-cards-image-sizes": "node --import tsx/esm scripts/r2SumPokemonCardImageSizes.ts"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.9.0",
-    "@supabase/supabase-js": "^2.99.3",
-    "@tcgdex/sdk": "^2.7.1",
-    "node-cron": "^4.2.1",
-    "onnxruntime-web": "^1.24.3",
-    "tesseract.js": "^7.0.0"
+    "node-cron": "^4.2.1"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1019.0",

@@ -1,5 +1,4 @@
 import cron from "node-cron";
-import { runSnapshotPortfolio } from "./jobs/jobSnapshotPortfolio";
 import { runScrapePricing } from "./jobs/jobScrapePricing";
 import { runScrapePokedataProducts } from "./jobs/jobScrapePokedataProducts";
 import { runScrapeOnePiecePricing } from "./jobs/jobScrapeOnePiecePricing";
@@ -11,16 +10,7 @@ function log(tag: string, msg: string) {
 }
 
 async function runNightlyJobs() {
-  // Step 1: snapshot portfolio using yesterday's prices already in R2
-  log("portfolioSnapshot", "starting");
-  try {
-    await runSnapshotPortfolio();
-    log("portfolioSnapshot", "done");
-  } catch (e) {
-    log("portfolioSnapshot", `failed: ${e instanceof Error ? e.message : String(e)}`);
-  }
-
-  // Step 2: scrape Pokemon singles + sealed pricing in parallel.
+  // Step 1: scrape Pokemon singles + sealed pricing in parallel.
   log("nightly", "starting pokemon pricing scrapes in parallel");
   const pokemonResults = await Promise.allSettled([
     runScrapePricing().then(() => log("scrapePricing", "done")),
