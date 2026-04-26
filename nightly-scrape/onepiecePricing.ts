@@ -13,7 +13,7 @@ import type {
   SetPriceTrendMap,
 } from "./staticDataTypes";
 
-const DAILY_HISTORY_LIMIT = 31;
+const DAILY_HISTORY_LIMIT = 40;
 const WEEKLY_HISTORY_LIMIT = 52;
 const MONTHLY_HISTORY_LIMIT = 60;
 

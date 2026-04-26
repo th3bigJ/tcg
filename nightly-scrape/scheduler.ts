@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { runScrapePricing } from "./jobScrapePricing";
 import { runScrapePokedataProducts } from "./jobScrapePokedataProducts";
 import { runScrapeOnePiecePricing } from "./jobScrapeOnePiecePricing";
+import { runCalculateMarketTrends } from "./jobCalculateMarketTrends";
 
 let initialised = false;
 
@@ -32,6 +33,15 @@ async function runNightlyJobs() {
     log("onePiecePricing", "done");
   } catch (e) {
     log("onePiecePricing", `failed: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // Step 4: calculate global market trends for both brands.
+  log("marketTrends", "starting");
+  try {
+    await runCalculateMarketTrends();
+    log("marketTrends", "done");
+  } catch (e) {
+    log("marketTrends", `failed: ${e instanceof Error ? e.message : String(e)}`);
   }
 
   log("nightly", "all jobs complete");

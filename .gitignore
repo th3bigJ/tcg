@@ -54,3 +54,5 @@ next-env.d.ts
 !/data/pokemon/sets.json
 !/data/pokemon/series.json
 !/data/pokemon/pokemon.json
+
+/r2_backup

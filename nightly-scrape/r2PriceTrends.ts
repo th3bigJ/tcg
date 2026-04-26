@@ -64,7 +64,7 @@ function buildWindowSummary(points: PriceHistoryPoint[]) {
   };
 }
 
-function sortedVariantKeys(cardHistory: CardPriceHistory): string[] {
+export function sortedVariantKeys(cardHistory: CardPriceHistory): string[] {
   const keys = Object.keys(cardHistory);
   return keys.sort((left, right) => {
     const leftRank = PRIMARY_VARIANT_ORDER.indexOf(left);
@@ -76,7 +76,7 @@ function sortedVariantKeys(cardHistory: CardPriceHistory): string[] {
   });
 }
 
-function sortedGradeKeys(variantHistory: Record<string, { daily: PriceHistoryPoint[] }>): string[] {
+export function sortedGradeKeys(variantHistory: Record<string, { daily: PriceHistoryPoint[] }>): string[] {
   const keys = Object.keys(variantHistory);
   return keys.sort((left, right) => {
     const leftRank = PRIMARY_GRADE_ORDER.indexOf(left);
