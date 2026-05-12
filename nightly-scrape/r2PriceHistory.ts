@@ -1,5 +1,9 @@
 import { GetObjectCommand, PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
-import { r2SinglesPriceHistoryPrefix } from "./r2BucketLayout";
+import {
+  r2NewPricingDailyKey,
+  r2NewPricingWeeklyKey,
+  r2NewPricingMonthlyKey,
+} from "./r2BucketLayout";
 import { buildPricingLookupIds } from "./r2Pricing";
 import type {
   CardPriceHistory,
@@ -12,18 +16,15 @@ import type {
 
 export type { CardPriceHistory, PriceHistoryPoint, PriceHistoryWindow, SetPriceHistoryMap };
 
-const DAILY_HISTORY_LIMIT = 40;
+const DAILY_HISTORY_LIMIT = 31;
 const WEEKLY_HISTORY_LIMIT = 52;
 const MONTHLY_HISTORY_LIMIT = 60;
 
-function getPriceHistoryBaseUrl(): string {
-  const base =
-    process.env.R2_PUBLIC_BASE_URL ??
-    process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL ??
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL ??
-    "";
-  return base.replace(/\/+$/, "");
-}
+/**
+ * Shape of a new_pricing bucket file.
+ * cardId → variant → grade → price (single price for that bucket period)
+ */
+type PricingBucketFile = Record<string, Record<string, Record<string, number>>>;
 
 function getR2Bucket(): string {
   const bucket = process.env.R2_BUCKET;
@@ -83,46 +84,6 @@ export function upsertAndTrim(
   return next.slice(-maxLen);
 }
 
-function aggregateLatestByBucket(
-  points: PriceHistoryPoint[],
-  keyForPoint: (dateKey: string) => string,
-  maxLen: number,
-): PriceHistoryPoint[] {
-  const sorted = [...points].sort((left, right) => left[0].localeCompare(right[0]));
-  const byBucket = new Map<string, number>();
-  for (const [dateKey, price] of sorted) {
-    byBucket.set(keyForPoint(dateKey), price);
-  }
-  return [...byBucket.entries()].slice(-maxLen);
-}
-
-function aggregateAverageByBucket(
-  points: PriceHistoryPoint[],
-  keyForPoint: (dateKey: string) => string,
-  maxLen: number,
-): PriceHistoryPoint[] {
-  const sorted = [...points].sort((left, right) => left[0].localeCompare(right[0]));
-  const byBucket = new Map<string, { total: number; count: number }>();
-  for (const [dateKey, price] of sorted) {
-    const bucketKey = keyForPoint(dateKey);
-    const current = byBucket.get(bucketKey) ?? { total: 0, count: 0 };
-    current.total += price;
-    current.count += 1;
-    byBucket.set(bucketKey, current);
-  }
-  return [...byBucket.entries()]
-    .map(([bucketKey, value]) => [bucketKey, value.total / value.count] as PriceHistoryPoint)
-    .slice(-maxLen);
-}
-
-function ensureWindow(window?: Partial<PriceHistoryWindow>): PriceHistoryWindow {
-  return {
-    daily: Array.isArray(window?.daily) ? window.daily.filter(isPriceHistoryPoint) : [],
-    weekly: Array.isArray(window?.weekly) ? window.weekly.filter(isPriceHistoryPoint) : [],
-    monthly: Array.isArray(window?.monthly) ? window.monthly.filter(isPriceHistoryPoint) : [],
-  };
-}
-
 function isPriceHistoryPoint(value: unknown): value is PriceHistoryPoint {
   return (
     Array.isArray(value) &&
@@ -133,28 +94,11 @@ function isPriceHistoryPoint(value: unknown): value is PriceHistoryPoint {
   );
 }
 
-function extractVariantGradePrices(
-  scrydexData: ScrydexCardPricing | null | undefined,
-): Record<string, Record<string, number>> {
-  const out: Record<string, Record<string, number>> = {};
-  if (!scrydexData || typeof scrydexData !== "object") return out;
-
-  for (const [variantSlug, grades] of Object.entries(scrydexData)) {
-    if (!grades || typeof grades !== "object") continue;
-    for (const [gradeKey, price] of Object.entries(grades)) {
-      if (typeof price !== "number" || !Number.isFinite(price)) continue;
-      out[variantSlug] ??= {};
-      out[variantSlug][gradeKey] = price;
-    }
-  }
-
-  return out;
-}
-
-function deriveWeeklyAndMonthlyFromDaily(daily: PriceHistoryPoint[]): Pick<PriceHistoryWindow, "weekly" | "monthly"> {
+function ensureWindow(window?: Partial<PriceHistoryWindow>): PriceHistoryWindow {
   return {
-    weekly: aggregateAverageByBucket(daily, weekKeyFromDateKey, WEEKLY_HISTORY_LIMIT),
-    monthly: aggregateAverageByBucket(daily, monthKeyFromDateKey, MONTHLY_HISTORY_LIMIT),
+    daily: Array.isArray(window?.daily) ? window.daily.filter(isPriceHistoryPoint) : [],
+    weekly: Array.isArray(window?.weekly) ? window.weekly.filter(isPriceHistoryPoint) : [],
+    monthly: Array.isArray(window?.monthly) ? window.monthly.filter(isPriceHistoryPoint) : [],
   };
 }
 
@@ -166,114 +110,97 @@ export function mergeDailySeriesIntoWindow(
     .filter(isPriceHistoryPoint)
     .sort((left, right) => left[0].localeCompare(right[0]));
   const daily = allDaily.slice(-DAILY_HISTORY_LIMIT);
-  const derived = deriveWeeklyAndMonthlyFromDaily(allDaily);
-  const existing = ensureWindow(existingWindow);
 
+  const byWeek = new Map<string, { total: number; count: number }>();
+  const byMonth = new Map<string, { total: number; count: number }>();
+  for (const [dateKey, price] of allDaily) {
+    const wk = weekKeyFromDateKey(dateKey);
+    const mk = monthKeyFromDateKey(dateKey);
+    const w = byWeek.get(wk) ?? { total: 0, count: 0 };
+    w.total += price; w.count += 1;
+    byWeek.set(wk, w);
+    const m = byMonth.get(mk) ?? { total: 0, count: 0 };
+    m.total += price; m.count += 1;
+    byMonth.set(mk, m);
+  }
+
+  const weekly: PriceHistoryPoint[] = [...byWeek.entries()]
+    .map(([k, v]) => [k, v.total / v.count] as PriceHistoryPoint)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-WEEKLY_HISTORY_LIMIT);
+
+  const monthly: PriceHistoryPoint[] = [...byMonth.entries()]
+    .map(([k, v]) => [k, v.total / v.count] as PriceHistoryPoint)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-MONTHLY_HISTORY_LIMIT);
+
+  const existing = ensureWindow(existingWindow);
   return {
     daily,
-    weekly: derived.weekly.length > 0 ? derived.weekly : existing.weekly.slice(-WEEKLY_HISTORY_LIMIT),
-    monthly: derived.monthly.length > 0 ? derived.monthly : existing.monthly.slice(-MONTHLY_HISTORY_LIMIT),
+    weekly: weekly.length > 0 ? weekly : existing.weekly.slice(-WEEKLY_HISTORY_LIMIT),
+    monthly: monthly.length > 0 ? monthly : existing.monthly.slice(-MONTHLY_HISTORY_LIMIT),
   };
 }
 
-/** Combine two windows by merging all daily points (same calendar day → max USD), then re-derive limits. */
-function mergePriceHistoryWindows(wa: PriceHistoryWindow, wb: PriceHistoryWindow): PriceHistoryWindow {
-  const combinedDaily: PriceHistoryPoint[] = [...ensureWindow(wa).daily, ...ensureWindow(wb).daily];
-  const byD = new Map<string, number>();
-  for (const [d, p] of combinedDaily) {
-    if (typeof d !== "string" || typeof p !== "number" || !Number.isFinite(p)) continue;
-    const prev = byD.get(d);
-    byD.set(d, prev === undefined ? p : Math.max(prev, p));
-  }
-  const sorted: PriceHistoryPoint[] = [...byD.entries()]
-    .sort((x, y) => x[0].localeCompare(y[0]))
-    .map(([d, p]) => [d, p]);
-  return mergeDailySeriesIntoWindow(undefined, sorted);
-}
-
-/** Deep-merge incoming chart backfill into existing card history (variant → grade → window). */
-function mergeCardPriceHistory(
-  existing: CardPriceHistory | undefined,
-  incoming: CardPriceHistory,
-): CardPriceHistory {
-  const base: CardPriceHistory = existing ? structuredClone(existing) : {};
-  for (const [vKey, vObjB] of Object.entries(incoming)) {
-    if (!base[vKey]) {
-      base[vKey] = structuredClone(vObjB);
-      continue;
-    }
-    const vObjA = base[vKey];
-    for (const [gKey, winB] of Object.entries(vObjB)) {
-      const winA = vObjA[gKey];
-      if (!winA) {
-        vObjA[gKey] = ensureWindow(winB as Partial<PriceHistoryWindow>);
-        continue;
-      }
-      vObjA[gKey] = mergePriceHistoryWindows(ensureWindow(winA), ensureWindow(winB as Partial<PriceHistoryWindow>));
-    }
-  }
-  return base;
-}
-
-/** Merge per-card histories: keeps all existing keys; updates/adds keys present in `incoming`. */
 export function mergeSetPriceHistoryMaps(existing: SetPriceHistoryMap, incoming: SetPriceHistoryMap): SetPriceHistoryMap {
   const out: SetPriceHistoryMap = { ...existing };
   for (const [id, cardHist] of Object.entries(incoming)) {
-    out[id] = mergeCardPriceHistory(existing[id], cardHist);
+    if (!out[id]) {
+      out[id] = cardHist;
+      continue;
+    }
+    const base = out[id];
+    for (const [vKey, vObj] of Object.entries(cardHist as CardPriceHistory)) {
+      base[vKey] ??= {};
+      for (const [gKey, win] of Object.entries(vObj as Record<string, PriceHistoryWindow>)) {
+        base[vKey][gKey] = ensureWindow(win as Partial<PriceHistoryWindow>);
+      }
+    }
   }
   return out;
 }
 
-/** Load current price-history JSON from R2 via S3 (same key the scrape uploads). */
-export async function getPriceHistoryForSetFromS3(
-  s3: S3Client,
-  setCode: string,
-): Promise<SetPriceHistoryMap | null> {
+function extractVariantGradePrices(
+  scrydexData: ScrydexCardPricing | null | undefined,
+): Record<string, Record<string, number>> {
+  const out: Record<string, Record<string, number>> = {};
+  if (!scrydexData || typeof scrydexData !== "object") return out;
+  for (const [variantSlug, grades] of Object.entries(scrydexData)) {
+    if (!grades || typeof grades !== "object") continue;
+    for (const [gradeKey, price] of Object.entries(grades)) {
+      if (typeof price !== "number" || !Number.isFinite(price)) continue;
+      out[variantSlug] ??= {};
+      out[variantSlug][gradeKey] = price;
+    }
+  }
+  return out;
+}
+
+// ─── R2 bucket file helpers ───────────────────────────────────────────────────
+
+async function getBucketFile(s3: S3Client, key: string): Promise<PricingBucketFile> {
   try {
-    const res = await s3.send(
-      new GetObjectCommand({
-        Bucket: getR2Bucket(),
-        Key: `${r2SinglesPriceHistoryPrefix}/${setCode}.json`,
-      }),
-    );
+    const res = await s3.send(new GetObjectCommand({ Bucket: getR2Bucket(), Key: key }));
     const raw = await res.Body?.transformToString();
-    if (!raw?.trim()) return null;
-    return JSON.parse(raw) as SetPriceHistoryMap;
+    if (!raw?.trim()) return {};
+    return JSON.parse(raw) as PricingBucketFile;
   } catch (e: unknown) {
     const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
     const name = (e as { name?: string }).name;
-    if (status === 404 || name === "NoSuchKey") return null;
+    if (status === 404 || name === "NoSuchKey") return {};
     throw e;
   }
 }
 
-function upsertAverageForBucket(
-  points: PriceHistoryPoint[],
-  dailyPoints: PriceHistoryPoint[],
-  bucketKey: string,
-  keyForPoint: (dateKey: string) => string,
-  maxLen: number,
-): PriceHistoryPoint[] {
-  const bucketPoints = dailyPoints.filter(([dateKey]) => keyForPoint(dateKey) === bucketKey);
-  if (bucketPoints.length === 0) return points.slice(-maxLen);
-  const average = bucketPoints.reduce((sum, [, price]) => sum + price, 0) / bucketPoints.length;
-  return upsertAndTrim(points, bucketKey, average, maxLen);
-}
-
-export async function getPriceHistoryForSet(setCode: string): Promise<SetPriceHistoryMap | null> {
-  const base = getPriceHistoryBaseUrl();
-  if (!base) return null;
-
-  const url = `${base}/${r2SinglesPriceHistoryPrefix}/${setCode}.json`;
-  try {
-    const res = await fetch(url, {
-      next: { revalidate: process.env.NODE_ENV === "development" ? 0 : 86400 },
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as SetPriceHistoryMap;
-  } catch {
-    return null;
-  }
+async function putBucketFile(s3: S3Client, key: string, data: PricingBucketFile): Promise<void> {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: getR2Bucket(),
+      Key: key,
+      Body: JSON.stringify(data),
+      ContentType: "application/json",
+    }),
+  );
 }
 
 export function getPriceHistoryForCard(
@@ -285,7 +212,6 @@ export function getPriceHistoryForCard(
     const match = historyMap[id];
     if (match) return match;
   }
-
   if (fallbackIds) {
     for (const fallbackId of fallbackIds) {
       for (const id of buildPricingLookupIds(fallbackId)) {
@@ -294,58 +220,152 @@ export function getPriceHistoryForCard(
       }
     }
   }
-
   return null;
 }
 
+// ─── Main update function ─────────────────────────────────────────────────────
+
+/**
+ * For each card in `currentPricingMap`, writes today's price into the three
+ * new_pricing bucket files (daily/{date}, weekly/{week}, monthly/{month}).
+ *
+ * Weekly and monthly bucket values are the average of all daily points in
+ * that period across the entire bucket file (not just this set).
+ *
+ * Returns a `SetPriceHistoryMap` reconstructed from the bucket files so that
+ * the trends job has the same interface as before.
+ */
 export async function updatePriceHistory(
   s3: S3Client,
   setCode: string,
   currentPricingMap: SetPricingMap,
 ): Promise<SetPriceHistoryMap> {
-  const historyMap = (await getPriceHistoryForSet(setCode)) ?? {};
   const dailyKey = todayKey();
   const weekKey = currentWeekKey();
   const monthKey = currentMonthKey();
 
-  for (const [externalId, entry] of Object.entries(currentPricingMap)) {
+  const r2DailyKey = r2NewPricingDailyKey(dailyKey);
+  const r2WeeklyKey = r2NewPricingWeeklyKey(weekKey);
+  const r2MonthlyKey = r2NewPricingMonthlyKey(monthKey);
+
+  // Load the three current bucket files in parallel.
+  const [dailyFile, weeklyFile, monthlyFile] = await Promise.all([
+    getBucketFile(s3, r2DailyKey),
+    getBucketFile(s3, r2WeeklyKey),
+    getBucketFile(s3, r2MonthlyKey),
+  ]);
+
+  // Accumulate weekly/monthly averages: track running totals per card/variant/grade.
+  // We update in-place so existing cards from other sets are preserved.
+  const weeklyTotals: Record<string, Record<string, Record<string, { total: number; count: number }>>> = {};
+  const monthlyTotals: Record<string, Record<string, Record<string, { total: number; count: number }>>> = {};
+
+  // Seed totals from values already in the bucket files so we can average correctly.
+  for (const [cardId, variants] of Object.entries(weeklyFile)) {
+    weeklyTotals[cardId] ??= {};
+    for (const [variant, grades] of Object.entries(variants)) {
+      weeklyTotals[cardId][variant] ??= {};
+      for (const [grade, price] of Object.entries(grades)) {
+        weeklyTotals[cardId][variant][grade] = { total: price, count: 1 };
+      }
+    }
+  }
+  for (const [cardId, variants] of Object.entries(monthlyFile)) {
+    monthlyTotals[cardId] ??= {};
+    for (const [variant, grades] of Object.entries(variants)) {
+      monthlyTotals[cardId][variant] ??= {};
+      for (const [grade, price] of Object.entries(grades)) {
+        monthlyTotals[cardId][variant][grade] = { total: price, count: 1 };
+      }
+    }
+  }
+
+  for (const [externalId, entry] of Object.entries(currentPricingMap) as [string, { scrydex: ScrydexCardPricing | null }][]) {
     const extracted = extractVariantGradePrices(entry.scrydex);
     if (Object.keys(extracted).length === 0) continue;
 
-    const cardHistory = historyMap[externalId] ?? {};
     for (const [variantSlug, grades] of Object.entries(extracted)) {
-      cardHistory[variantSlug] ??= {};
       for (const [gradeKey, price] of Object.entries(grades)) {
-        const current = ensureWindow(cardHistory[variantSlug][gradeKey]);
-        const daily = upsertAndTrim(current.daily, dailyKey, price, DAILY_HISTORY_LIMIT);
-        const weekly = upsertAverageForBucket(
-          current.weekly,
-          daily,
-          weekKey,
-          weekKeyFromDateKey,
-          WEEKLY_HISTORY_LIMIT,
-        );
-        const monthly = upsertAverageForBucket(
-          current.monthly,
-          daily,
-          monthKey,
-          monthKeyFromDateKey,
-          MONTHLY_HISTORY_LIMIT,
-        );
-        cardHistory[variantSlug][gradeKey] = { daily, weekly, monthly };
+        // Daily: just set today's price.
+        dailyFile[externalId] ??= {};
+        dailyFile[externalId][variantSlug] ??= {};
+        dailyFile[externalId][variantSlug][gradeKey] = price;
+
+        // Weekly: update running average.
+        weeklyTotals[externalId] ??= {};
+        weeklyTotals[externalId][variantSlug] ??= {};
+        const wt = weeklyTotals[externalId][variantSlug][gradeKey];
+        if (wt) {
+          wt.total += price; wt.count += 1;
+        } else {
+          weeklyTotals[externalId][variantSlug][gradeKey] = { total: price, count: 1 };
+        }
+
+        // Monthly: update running average.
+        monthlyTotals[externalId] ??= {};
+        monthlyTotals[externalId][variantSlug] ??= {};
+        const mt = monthlyTotals[externalId][variantSlug][gradeKey];
+        if (mt) {
+          mt.total += price; mt.count += 1;
+        } else {
+          monthlyTotals[externalId][variantSlug][gradeKey] = { total: price, count: 1 };
+        }
+      }
+    }
+  }
+
+  // Materialise weekly/monthly averages back into bucket files.
+  for (const [cardId, variants] of Object.entries(weeklyTotals)) {
+    weeklyFile[cardId] ??= {};
+    for (const [variant, grades] of Object.entries(variants)) {
+      weeklyFile[cardId][variant] ??= {};
+      for (const [grade, { total, count }] of Object.entries(grades)) {
+        weeklyFile[cardId][variant][grade] = total / count;
+      }
+    }
+  }
+  for (const [cardId, variants] of Object.entries(monthlyTotals)) {
+    monthlyFile[cardId] ??= {};
+    for (const [variant, grades] of Object.entries(variants)) {
+      monthlyFile[cardId][variant] ??= {};
+      for (const [grade, { total, count }] of Object.entries(grades)) {
+        monthlyFile[cardId][variant][grade] = total / count;
+      }
+    }
+  }
+
+  // Write all three bucket files back.
+  await Promise.all([
+    putBucketFile(s3, r2DailyKey, dailyFile),
+    putBucketFile(s3, r2WeeklyKey, weeklyFile),
+    putBucketFile(s3, r2MonthlyKey, monthlyFile),
+  ]);
+
+  // Reconstruct a SetPriceHistoryMap for only the cards in this set so the
+  // trends job has the data it needs in the same shape as before.
+  const historyMap: SetPriceHistoryMap = {};
+  for (const externalId of Object.keys(currentPricingMap)) {
+    const dVariants = dailyFile[externalId];
+    if (!dVariants) continue;
+
+    const cardHistory: CardPriceHistory = {};
+    for (const [variant, grades] of Object.entries(dVariants)) {
+      cardHistory[variant] ??= {};
+      for (const grade of Object.keys(grades)) {
+        // daily: just today's single point
+        const daily: PriceHistoryPoint[] = [[dailyKey, dVariants[variant][grade]]];
+        // weekly: single point for this week
+        const weeklyPrice = weeklyFile[externalId]?.[variant]?.[grade];
+        const weekly: PriceHistoryPoint[] = weeklyPrice !== undefined ? [[weekKey, weeklyPrice]] : [];
+        // monthly: single point for this month
+        const monthlyPrice = monthlyFile[externalId]?.[variant]?.[grade];
+        const monthly: PriceHistoryPoint[] = monthlyPrice !== undefined ? [[monthKey, monthlyPrice]] : [];
+
+        cardHistory[variant][grade] = { daily, weekly, monthly };
       }
     }
     historyMap[externalId] = cardHistory;
   }
-
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: getR2Bucket(),
-      Key: `${r2SinglesPriceHistoryPrefix}/${setCode}.json`,
-      Body: JSON.stringify(historyMap),
-      ContentType: "application/json",
-    }),
-  );
 
   return historyMap;
 }

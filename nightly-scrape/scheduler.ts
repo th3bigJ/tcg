@@ -10,7 +10,7 @@ function log(tag: string, msg: string) {
   console.log(`[cron:${tag}] ${new Date().toISOString()} ${msg}`);
 }
 
-async function runNightlyJobs() {
+export async function runNightlyJobs() {
   // Step 1: scrape Pokemon singles + sealed pricing in parallel.
   log("nightly", "starting pokemon pricing scrapes in parallel");
   const pokemonResults = await Promise.allSettled([

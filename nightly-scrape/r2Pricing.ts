@@ -1,13 +1,4 @@
-/**
- * Fetches per-set pricing JSON from R2 (`pricing/card-pricing/{setCode}.json`).
- * Updated by the pricing scrape job (`jobScrapePricing` / `scrape:pricing`).
- *
- * Each file shape: { [externalId]: { scrydex, tcgplayer, cardmarket } } — keys are the catalog’s
- * exact `externalId` (Scrydex spelling, case-sensitive). `scrydex` variant figures are **USD**.
- */
-
 import { S3Client } from "@aws-sdk/client-s3";
-import { r2SinglesCardPricingPrefix } from "./r2BucketLayout";
 import {
   normalizeScarletVioletCardKeySetPrefix,
   partitionPokemonCardExternalId,
@@ -90,37 +81,6 @@ export function buildPricingLookupIds(externalId: string): string[] {
 export function setCodeFromExternalId(id: string): string {
   const parts = id.trim().split("-");
   return parts.length > 1 ? parts.slice(0, -1).join("-") : id.trim();
-}
-
-function getPricingBaseUrl(): string {
-  const base =
-    process.env.R2_PUBLIC_BASE_URL ??
-    process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL ??
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL ??
-    "";
-  return base.replace(/\/+$/, "");
-}
-
-/**
- * Fetch pricing map for a set from R2.
- * Cached for 24h at the Next.js fetch layer — revalidates after daily pricing refresh.
- * Returns null if the file doesn't exist yet or the request fails.
- */
-export async function getPricingForSet(setCode: string): Promise<SetPricingMap | null> {
-  const base = getPricingBaseUrl();
-  if (!base) return null;
-
-  const url = `${base}/${r2SinglesCardPricingPrefix}/${setCode}.json`;
-
-  try {
-    const res = await fetch(url, {
-      next: { revalidate: process.env.NODE_ENV === "development" ? 0 : 86400 },
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as SetPricingMap;
-  } catch {
-    return null;
-  }
 }
 
 /**

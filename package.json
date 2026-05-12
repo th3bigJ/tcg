@@ -14,7 +14,8 @@
     "scrape:pokedata-products:catalog": "node --import tsx/esm nightly-scrape/scrapePokedataProducts.ts --mode=products --tcg=Pokemon --language=ENGLISH",
     "scrape:pokedata-products:prices": "node --import tsx/esm nightly-scrape/scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH",
     "scrape:onepiece-pricing": "node --import tsx/esm nightly-scrape/scrapeOnePiecePricing.ts",
-    "scrape:market-trends": "node --import tsx/esm nightly-scrape/runTrends.ts"
+    "scrape:market-trends": "node --import tsx/esm nightly-scrape/runTrends.ts",
+    "scrape:nightly": "node --import tsx/esm nightly-scrape/runNightlyNow.ts"
   },
   "dependencies": {
     "node-cron": "^4.2.1"

@@ -1,5 +1,4 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { r2SinglesCardPricingPrefix } from "./r2BucketLayout";
 import type {
   CardJsonEntry,
   ScrydexCardPricing,
@@ -148,7 +147,7 @@ async function mapPool<T>(items: T[], concurrency: number, fn: (item: T) => Prom
   await Promise.all(Array.from({ length: Math.min(Math.max(1, concurrency), items.length) }, worker));
 }
 
-// ─── R2 upload ────────────────────────────────────────────────────────────────
+// ─── R2 helpers ───────────────────────────────────────────────────────────────
 
 function buildS3Client(): S3Client {
   return new S3Client({
@@ -166,17 +165,6 @@ function getR2Bucket(): string {
   const bucket = process.env.R2_BUCKET?.trim();
   if (!bucket) throw new Error("R2_BUCKET env var not set");
   return bucket;
-}
-
-async function uploadToR2(s3: S3Client, setCode: string, json: string): Promise<void> {
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: getR2Bucket(),
-      Key: `${r2SinglesCardPricingPrefix}/${setCode}.json`,
-      Body: json,
-      ContentType: "application/json",
-    }),
-  );
 }
 
 // ─── Per-set scrape ───────────────────────────────────────────────────────────
@@ -298,38 +286,46 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
   }
 
   const count = Object.keys(pricingMap).length;
-  const json = JSON.stringify(pricingMap);
+
+  if (dryRun) {
+    console.log(`  [${setCode}] ${count} cards scraped (dry-run — skipping R2 uploads)`);
+    return;
+  }
+
+  const historyMap = await updatePriceHistory(s3, setCode, pricingMap);
+  await uploadPriceTrends(s3, setCode, historyMap);
+
+  // Update pricingVariants on card JSON using the flat daily bucket shape.
+  const dailyBucketForSet: Record<string, Record<string, Record<string, number>>> = {};
+  for (const [externalId, entry] of Object.entries(pricingMap) as [string, { scrydex: ScrydexCardPricing | null }][]) {
+    if (!entry.scrydex) continue;
+    const variants: Record<string, Record<string, number>> = {};
+    for (const [variant, grades] of Object.entries(entry.scrydex)) {
+      if (!grades || typeof grades !== "object") continue;
+      const gradeMap: Record<string, number> = {};
+      for (const [grade, price] of Object.entries(grades)) {
+        if (typeof price === "number" && Number.isFinite(price)) gradeMap[grade] = price;
+      }
+      if (Object.keys(gradeMap).length > 0) variants[variant] = gradeMap;
+    }
+    if (Object.keys(variants).length > 0) dailyBucketForSet[externalId] = variants;
+  }
 
   const cardKey = `data/cards/${setCode}.json`;
   try {
     const cardRows = await getJsonFromR2<CardJsonEntry[]>(s3, cardKey);
     if (cardRows?.length) {
-      if (dryRun) {
-        const copy = JSON.parse(JSON.stringify(cardRows)) as CardJsonEntry[];
-        const vChanged = applyPricingVariantsToCardsInPlace(copy, pricingMap);
-        if (vChanged) {
-          console.log(`  [${setCode}] would update pricingVariants in R2 ${cardKey} (dry-run)`);
-        }
-      } else {
-        const vChanged = applyPricingVariantsToCardsInPlace(cardRows, pricingMap);
-        if (vChanged) {
-          await putJsonToR2(s3, cardKey, cardRows);
-          console.log(`  [${setCode}] updated pricingVariants in R2 ${cardKey}`);
-        }
+      const vChanged = applyPricingVariantsToCardsInPlace(cardRows, dailyBucketForSet);
+      if (vChanged) {
+        await putJsonToR2(s3, cardKey, cardRows);
+        console.log(`  [${setCode}] updated pricingVariants in R2 ${cardKey}`);
       }
     }
   } catch (e) {
     console.warn(`  [${setCode}] could not merge pricingVariants into card JSON: ${e instanceof Error ? e.message : e}`);
   }
 
-  if (dryRun) {
-    console.log(`  [${setCode}] ${count} cards in pricing map (dry-run — skipping R2 upload)`);
-  } else {
-    await uploadToR2(s3, setCode, json);
-    const historyMap = await updatePriceHistory(s3, setCode, pricingMap);
-    await uploadPriceTrends(s3, setCode, historyMap);
-    console.log(`  [${setCode}] ${count} cards → R2 ${r2SinglesCardPricingPrefix}/${setCode}.json`);
-  }
+  console.log(`  [${setCode}] ${count} cards → history + trends written to R2`);
 }
 
 // ─── Exported job function ────────────────────────────────────────────────────

@@ -59,10 +59,7 @@ export type CardJsonEntry = {
   retreatCost?: number | null;
   /** Flavor text printed on the card. */
   flavorText?: string | null;
-  /**
-   * Variant keys present in `pricing/card-pricing` for this card (Scrydex slugs + TCGPlayer market keys).
-   * Sorted lexicographically. Populated by `scrape:pricing` / `backfill:pricing-variants`.
-   */
+  /** Variant keys present for this card (Scrydex slugs). Sorted lexicographically. */
   pricingVariants?: string[] | null;
 };
 

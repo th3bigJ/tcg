@@ -1,6 +1,4 @@
-import type { CardJsonEntry, SetPricingMap } from "./staticDataTypes";
-import { collectPricingVariantKeys } from "./catalogPricingExtract";
-import { getPricingForCard } from "./r2Pricing";
+import type { CardJsonEntry } from "./staticDataTypes";
 
 function pricingVariantsEqual(a: string[] | null | undefined, b: string[] | null | undefined): boolean {
   if (a == null && b == null) return true;
@@ -10,10 +8,13 @@ function pricingVariantsEqual(a: string[] | null | undefined, b: string[] | null
 }
 
 /**
- * Sets `pricingVariants` on each card from a per-set `card-pricing` map (or clears when missing).
+ * Sets `pricingVariants` on each card from a daily bucket pricing map.
  * Mutates the given array in place; returns whether any card changed.
  */
-export function applyPricingVariantsToCardsInPlace(cards: CardJsonEntry[], pricingMap: SetPricingMap | null): boolean {
+export function applyPricingVariantsToCardsInPlace(
+  cards: CardJsonEntry[],
+  dailyPricingMap: Record<string, Record<string, Record<string, number>>> | null,
+): boolean {
   let changed = false;
   for (const card of cards) {
     const ext = (card.externalId ?? "").trim();
@@ -24,8 +25,8 @@ export function applyPricingVariantsToCardsInPlace(cards: CardJsonEntry[], prici
       }
       continue;
     }
-    const entry = pricingMap ? getPricingForCard(pricingMap, ext) : null;
-    const keys = collectPricingVariantKeys(entry);
+    const variants = dailyPricingMap?.[ext];
+    const keys = variants ? Object.keys(variants).filter(Boolean).sort((a, b) => a.localeCompare(b)) : [];
     const next = keys.length > 0 ? keys : null;
     if (!pricingVariantsEqual(card.pricingVariants, next)) {
       card.pricingVariants = next;

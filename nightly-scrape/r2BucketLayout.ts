@@ -13,15 +13,25 @@ export const r2PokemonMediaPrefixDefault = `${R2_IMAGES}/pokemon`;
 const r2SetLogoPrefix = `${R2_IMAGES}/sets/logo`;
 const r2SetSymbolPrefix = `${R2_IMAGES}/sets/symbol`;
 
-/** Root folder for singles (Scrydex) pricing JSON + history + trends on R2. */
-const R2_PRICING = "pricing" as const;
+/** Root folder for all pricing data on R2. */
+const R2_NEW_PRICING = "new_pricing" as const;
 
-/** Per-set pricing map: `pricing/card-pricing/{setCode}.json` */
-export const r2SinglesCardPricingPrefix = `${R2_PRICING}/card-pricing`;
-/** Per-set price history: `pricing/price-history/{setCode}.json` */
-export const r2SinglesPriceHistoryPrefix = `${R2_PRICING}/price-history`;
-/** Per-set price trend summaries: `pricing/price-trends/{setCode}.json` */
-export const r2SinglesPriceTrendsPrefix = `${R2_PRICING}/price-trends`;
+
+/** Per-set price trend summaries: `new_pricing/price-trends/{setCode}.json` */
+export const r2SinglesPriceTrendsPrefix = `${R2_NEW_PRICING}/price-trends`;
+
+/** Flat daily snapshot: `new_pricing/daily/{YYYY-MM-DD}.json` */
+export function r2NewPricingDailyKey(dateKey: string): string {
+  return `${R2_NEW_PRICING}/daily/${dateKey}.json`;
+}
+/** Flat weekly snapshot: `new_pricing/weekly/{YYYY-Www}.json` */
+export function r2NewPricingWeeklyKey(weekKey: string): string {
+  return `${R2_NEW_PRICING}/weekly/${weekKey}.json`;
+}
+/** Flat monthly snapshot: `new_pricing/monthly/{YYYY-MM}.json` */
+export function r2NewPricingMonthlyKey(monthKey: string): string {
+  return `${R2_NEW_PRICING}/monthly/${monthKey}.json`;
+}
 
 /** Static JSON exports (e.g. sealed Pokedata catalog) under `data/…` */
 const R2_DATA = "data" as const;
@@ -38,17 +48,20 @@ export function r2SealedPokedataCatalogKey(slug: string): string {
   return `${R2_DATA}/${slug}-products.json`;
 }
 
-/** Sealed Pokedata price snapshot: `pricing/{slug}-prices.json` */
+/** Sealed Pokedata price snapshot: `new_pricing/{slug}-prices.json` */
 export function r2SealedPokedataPricesSnapshotKey(slug: string): string {
-  return `${R2_PRICING}/${slug}-prices.json`;
+  return `${R2_NEW_PRICING}/${slug}-prices.json`;
 }
 
-/** Sealed rolling price history blob: `pricing/{slug}-price-history.json` */
+/** Sealed rolling price history blob: `new_pricing/{slug}-price-history.json` */
 export function r2SealedPokedataPriceHistoryKey(slug: string): string {
-  return `${R2_PRICING}/${slug}-price-history.json`;
+  return `${R2_NEW_PRICING}/${slug}-price-history.json`;
 }
 
-/** Sealed price trends blob: `pricing/{slug}-price-trends.json` */
+/** Sealed price trends blob: `new_pricing/{slug}-price-trends.json` */
 export function r2SealedPokedataPriceTrendsKey(slug: string): string {
-  return `${R2_PRICING}/${slug}-price-trends.json`;
+  return `${R2_NEW_PRICING}/${slug}-price-trends.json`;
 }
+
+/** Global market trend summary: `new_pricing/market-trend.json` */
+export const r2MarketTrendKey = `${R2_NEW_PRICING}/market-trend.json` as const;
