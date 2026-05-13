@@ -1,49 +1,30 @@
-import { PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
+import { GetObjectCommand, PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
 import {
-  R2_SEALED_POKEDATA_DEFAULT_SLUG,
-  r2SealedPokedataPriceHistoryKey,
-  r2SealedPokedataPriceTrendsKey,
+  r2SealedPriceTrendsKey,
+  r2SealedDailyKey,
+  r2SealedWeeklyKey,
+  r2SealedMonthlyKey,
 } from "./r2BucketLayout";
 import type {
   PriceHistoryPoint,
   PriceTrendDirection,
-  PriceHistoryWindow,
-  SealedProductPriceHistory,
-  SealedProductPriceHistoryMap,
   SealedProductPriceTrendMap,
   SealedProductPriceTrendSummary,
 } from "./staticDataTypes";
 
 export type {
   PriceHistoryPoint,
-  SealedProductPriceHistory,
-  SealedProductPriceHistoryMap,
   SealedProductPriceTrendMap,
   SealedProductPriceTrendSummary,
 };
 
-const DAILY_HISTORY_LIMIT = 31;
-const WEEKLY_HISTORY_LIMIT = 52;
-const MONTHLY_HISTORY_LIMIT = 60;
 const FLAT_THRESHOLD_PCT = 1;
-const SEALED_PRICE_HISTORY_FILE = r2SealedPokedataPriceHistoryKey(R2_SEALED_POKEDATA_DEFAULT_SLUG);
-const SEALED_PRICE_TRENDS_FILE = r2SealedPokedataPriceTrendsKey(R2_SEALED_POKEDATA_DEFAULT_SLUG);
-const LOCAL_SEALED_PRICE_HISTORY_FILE = path.join(
-  process.cwd(),
-  "data",
-  "pricing",
-  "pokedata-english-pokemon-price-history.json",
-);
+const SEALED_PRICE_TRENDS_FILE = r2SealedPriceTrendsKey;
 
-function getPriceHistoryBaseUrl(): string {
-  const base =
-    process.env.R2_PUBLIC_BASE_URL ??
-    process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL ??
-    process.env.NEXT_PUBLIC_MEDIA_BASE_URL ??
-    "";
-  return base.replace(/\/+$/, "");
+function getR2Bucket(): string {
+  const bucket = process.env.R2_BUCKET;
+  if (!bucket) throw new Error("R2_BUCKET env var not set");
+  return bucket;
 }
 
 function getPriceTrendBaseUrl(): string {
@@ -53,12 +34,6 @@ function getPriceTrendBaseUrl(): string {
     process.env.NEXT_PUBLIC_MEDIA_BASE_URL ??
     "";
   return base.replace(/\/+$/, "");
-}
-
-function getR2Bucket(): string {
-  const bucket = process.env.R2_BUCKET;
-  if (!bucket) throw new Error("R2_BUCKET env var not set");
-  return bucket;
 }
 
 function getUtcDateParts(date = new Date()): { year: number; month: number; day: number } {
@@ -73,17 +48,17 @@ function pad2(value: number): string {
   return String(value).padStart(2, "0");
 }
 
-function todayKey(date = new Date()): string {
+export function todayKey(date = new Date()): string {
   const { year, month, day } = getUtcDateParts(date);
   return `${year}-${pad2(month)}-${pad2(day)}`;
 }
 
-function currentMonthKey(date = new Date()): string {
+export function currentMonthKey(date = new Date()): string {
   const { year, month } = getUtcDateParts(date);
   return `${year}-${pad2(month)}`;
 }
 
-function currentWeekKey(date = new Date()): string {
+export function currentWeekKey(date = new Date()): string {
   const utc = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const day = utc.getUTCDay() || 7;
   utc.setUTCDate(utc.getUTCDate() + 4 - day);
@@ -93,97 +68,9 @@ function currentWeekKey(date = new Date()): string {
   return `${isoYear}-W${pad2(week)}`;
 }
 
-function weekKeyFromDateKey(dateKey: string): string {
-  return currentWeekKey(new Date(`${dateKey}T00:00:00.000Z`));
-}
-
-function monthKeyFromDateKey(dateKey: string): string {
-  return dateKey.slice(0, 7);
-}
-
-function isPriceHistoryPoint(value: unknown): value is PriceHistoryPoint {
-  return (
-    Array.isArray(value) &&
-    value.length === 2 &&
-    typeof value[0] === "string" &&
-    typeof value[1] === "number" &&
-    Number.isFinite(value[1])
-  );
-}
-
-function ensureWindow(window?: Partial<PriceHistoryWindow>): PriceHistoryWindow {
-  return {
-    daily: Array.isArray(window?.daily) ? window.daily.filter(isPriceHistoryPoint) : [],
-    weekly: Array.isArray(window?.weekly) ? window.weekly.filter(isPriceHistoryPoint) : [],
-    monthly: Array.isArray(window?.monthly) ? window.monthly.filter(isPriceHistoryPoint) : [],
-  };
-}
-
-function upsertAndTrim(
-  points: PriceHistoryPoint[],
-  key: string,
-  price: number,
-  maxLen: number,
-): PriceHistoryPoint[] {
-  const next = points.filter(([existingKey]) => existingKey !== key);
-  next.push([key, price]);
-  next.sort((left, right) => left[0].localeCompare(right[0]));
-  return next.slice(-maxLen);
-}
-
-function aggregateAverageByBucket(
-  points: PriceHistoryPoint[],
-  keyForPoint: (dateKey: string) => string,
-  maxLen: number,
-): PriceHistoryPoint[] {
-  const sorted = [...points].sort((left, right) => left[0].localeCompare(right[0]));
-  const byBucket = new Map<string, { total: number; count: number }>();
-  for (const [dateKey, price] of sorted) {
-    const bucketKey = keyForPoint(dateKey);
-    const current = byBucket.get(bucketKey) ?? { total: 0, count: 0 };
-    current.total += price;
-    current.count += 1;
-    byBucket.set(bucketKey, current);
-  }
-  return [...byBucket.entries()]
-    .map(([bucketKey, value]) => [bucketKey, value.total / value.count] as PriceHistoryPoint)
-    .slice(-maxLen);
-}
-
-function deriveWeeklyAndMonthlyFromDaily(daily: PriceHistoryPoint[]): Pick<PriceHistoryWindow, "weekly" | "monthly"> {
-  return {
-    weekly: aggregateAverageByBucket(daily, weekKeyFromDateKey, WEEKLY_HISTORY_LIMIT),
-    monthly: aggregateAverageByBucket(daily, monthKeyFromDateKey, MONTHLY_HISTORY_LIMIT),
-  };
-}
-
-function upsertAverageForBucket(
-  points: PriceHistoryPoint[],
-  dailyPoints: PriceHistoryPoint[],
-  bucketKey: string,
-  keyForPoint: (dateKey: string) => string,
-  maxLen: number,
-): PriceHistoryPoint[] {
-  const bucketPoints = dailyPoints.filter(([dateKey]) => keyForPoint(dateKey) === bucketKey);
-  if (bucketPoints.length === 0) return points.slice(-maxLen);
-  const average = bucketPoints.reduce((sum, [, price]) => sum + price, 0) / bucketPoints.length;
-  return upsertAndTrim(points, bucketKey, average, maxLen);
-}
-
-function computeChange(points: PriceHistoryPoint[]): number | null {
-  if (points.length < 2) return null;
-  const previous = points[points.length - 2]?.[1];
-  const current = points[points.length - 1]?.[1];
-  if (
-    typeof previous !== "number" ||
-    typeof current !== "number" ||
-    !Number.isFinite(previous) ||
-    !Number.isFinite(current) ||
-    previous === 0
-  ) {
-    return null;
-  }
-  return ((current - previous) / previous) * 100;
+function computeChange(prev: number | undefined, curr: number): number | null {
+  if (typeof prev !== "number" || !Number.isFinite(prev) || prev === 0) return null;
+  return ((curr - prev) / prev) * 100;
 }
 
 function directionForChange(changePct: number | null): PriceTrendDirection {
@@ -193,67 +80,37 @@ function directionForChange(changePct: number | null): PriceTrendDirection {
   return changePct > 0 ? "up" : "down";
 }
 
-function buildWindowSummary(points: PriceHistoryPoint[]) {
-  const changePct = computeChange(points);
-  return {
-    changePct,
-    direction: directionForChange(changePct),
-  };
-}
+// ─── Snapshot file helpers ────────────────────────────────────────────────────
 
-function buildTrendSummaryForSealedProduct(
-  history: SealedProductPriceHistory,
-): SealedProductPriceTrendSummary | null {
-  const current = history?.daily?.[history.daily.length - 1]?.[1];
-  if (typeof current !== "number" || !Number.isFinite(current)) return null;
-  return {
-    current,
-    daily: buildWindowSummary(history.daily),
-    weekly: buildWindowSummary(history.weekly),
-    monthly: buildWindowSummary(history.monthly),
-  };
-}
+/** productId → market_value for a single period */
+type SealedPricingSnapshot = Record<string, number>;
 
-function buildSealedTrendMapFromHistoryMap(
-  historyMap: SealedProductPriceHistoryMap,
-): SealedProductPriceTrendMap {
-  const out: SealedProductPriceTrendMap = {};
-  for (const [productId, history] of Object.entries(historyMap)) {
-    const summary = buildTrendSummaryForSealedProduct(history);
-    if (summary) out[productId] = summary;
+async function getSealedSnapshot(s3: S3Client, key: string): Promise<SealedPricingSnapshot> {
+  try {
+    const res = await s3.send(new GetObjectCommand({ Bucket: getR2Bucket(), Key: key }));
+    const raw = await res.Body?.transformToString();
+    if (!raw?.trim()) return {};
+    return JSON.parse(raw) as SealedPricingSnapshot;
+  } catch (e: unknown) {
+    const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+    const name = (e as { name?: string }).name;
+    if (status === 404 || name === "NoSuchKey") return {};
+    throw e;
   }
-  return out;
 }
 
-type CacheEntry<T> = { value: T; expiresAt: number };
-let _priceHistoryCache: CacheEntry<SealedProductPriceHistoryMap | null> | null = null;
-
-export async function getSealedPriceHistory(): Promise<SealedProductPriceHistoryMap | null> {
-  if (_priceHistoryCache && Date.now() < _priceHistoryCache.expiresAt) return _priceHistoryCache.value;
-
-  const base = getPriceHistoryBaseUrl();
-  if (base) {
-    const url = `${base}/${SEALED_PRICE_HISTORY_FILE}`;
-    const ttlMs = process.env.NODE_ENV === "development" ? 0 : 24 * 60 * 60 * 1000;
-    try {
-      const res = await fetch(url, { cache: "no-store" });
-      if (res.ok) {
-        const value = (await res.json()) as SealedProductPriceHistoryMap;
-        _priceHistoryCache = { value, expiresAt: Date.now() + ttlMs };
-        return value;
-      }
-    } catch {}
-  }
-
-  if (process.env.NODE_ENV === "development") {
-    try {
-      const raw = await readFile(LOCAL_SEALED_PRICE_HISTORY_FILE, "utf8");
-      return JSON.parse(raw) as SealedProductPriceHistoryMap;
-    } catch {}
-  }
-
-  return null;
+async function putSealedSnapshot(s3: S3Client, key: string, data: SealedPricingSnapshot): Promise<void> {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: getR2Bucket(),
+      Key: key,
+      Body: JSON.stringify(data),
+      ContentType: "application/json",
+    }),
+  );
 }
+
+// ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function getSealedPriceTrends(): Promise<SealedProductPriceTrendMap | null> {
   const base = getPriceTrendBaseUrl();
@@ -263,7 +120,7 @@ export async function getSealedPriceTrends(): Promise<SealedProductPriceTrendMap
   try {
     const res = await fetch(url, {
       next: { revalidate: process.env.NODE_ENV === "development" ? 0 : 86400 },
-    });
+    } as RequestInit);
     if (!res.ok) return null;
     return (await res.json()) as SealedProductPriceTrendMap;
   } catch {
@@ -271,66 +128,93 @@ export async function getSealedPriceTrends(): Promise<SealedProductPriceTrendMap
   }
 }
 
-export function getSealedPriceHistoryForProduct(
-  historyMap: SealedProductPriceHistoryMap,
-  productId: number | string,
-): SealedProductPriceHistory | null {
-  const key = String(productId).trim();
-  if (!key) return null;
-  return historyMap[key] ?? null;
-}
-
 export async function updateSealedPriceHistory(
   s3: S3Client,
   prices: Record<string, { id: number; market_value: number | null }>,
-): Promise<SealedProductPriceHistoryMap> {
-  const historyMap = (await getSealedPriceHistory()) ?? {};
+): Promise<void> {
   const dailyKey = todayKey();
   const weekKey = currentWeekKey();
   const monthKey = currentMonthKey();
+
+  const r2Daily = r2SealedDailyKey(dailyKey);
+  const r2Weekly = r2SealedWeeklyKey(weekKey);
+  const r2Monthly = r2SealedMonthlyKey(monthKey);
+
+  const [dailySnapshot, weeklySnapshot, monthlySnapshot] = await Promise.all([
+    getSealedSnapshot(s3, r2Daily),
+    getSealedSnapshot(s3, r2Weekly),
+    getSealedSnapshot(s3, r2Monthly),
+  ]);
+
+  const weeklyTotals: Record<string, { total: number; count: number }> = {};
+  const monthlyTotals: Record<string, { total: number; count: number }> = {};
+
+  for (const [id, price] of Object.entries(weeklySnapshot)) {
+    weeklyTotals[id] = { total: price, count: 1 };
+  }
+  for (const [id, price] of Object.entries(monthlySnapshot)) {
+    monthlyTotals[id] = { total: price, count: 1 };
+  }
 
   for (const priceEntry of Object.values(prices)) {
     if (!priceEntry || typeof priceEntry.id !== "number") continue;
     if (typeof priceEntry.market_value !== "number" || !Number.isFinite(priceEntry.market_value)) continue;
 
     const productId = String(priceEntry.id);
-    const current = ensureWindow(historyMap[productId]);
     const usdValue = priceEntry.market_value;
-    const daily = upsertAndTrim(current.daily, dailyKey, usdValue, DAILY_HISTORY_LIMIT);
-    const weekly = upsertAverageForBucket(
-      current.weekly,
-      daily,
-      weekKey,
-      weekKeyFromDateKey,
-      WEEKLY_HISTORY_LIMIT,
-    );
-    const monthly = upsertAverageForBucket(
-      current.monthly,
-      daily,
-      monthKey,
-      monthKeyFromDateKey,
-      MONTHLY_HISTORY_LIMIT,
-    );
-    historyMap[productId] = { daily, weekly, monthly };
+
+    dailySnapshot[productId] = usdValue;
+
+    const wt = weeklyTotals[productId];
+    if (wt) { wt.total += usdValue; wt.count += 1; }
+    else { weeklyTotals[productId] = { total: usdValue, count: 1 }; }
+
+    const mt = monthlyTotals[productId];
+    if (mt) { mt.total += usdValue; mt.count += 1; }
+    else { monthlyTotals[productId] = { total: usdValue, count: 1 }; }
   }
 
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: getR2Bucket(),
-      Key: SEALED_PRICE_HISTORY_FILE,
-      Body: JSON.stringify(historyMap),
-      ContentType: "application/json",
-    }),
-  );
+  for (const [id, { total, count }] of Object.entries(weeklyTotals)) {
+    weeklySnapshot[id] = total / count;
+  }
+  for (const [id, { total, count }] of Object.entries(monthlyTotals)) {
+    monthlySnapshot[id] = total / count;
+  }
 
-  return historyMap;
+  await Promise.all([
+    putSealedSnapshot(s3, r2Daily, dailySnapshot),
+    putSealedSnapshot(s3, r2Weekly, weeklySnapshot),
+    putSealedSnapshot(s3, r2Monthly, monthlySnapshot),
+  ]);
 }
 
 export async function uploadSealedPriceTrends(
   s3: S3Client,
-  historyMap: SealedProductPriceHistoryMap,
+  dailySnapshot: SealedPricingSnapshot,
+  weeklySnapshot: SealedPricingSnapshot,
+  monthlySnapshot: SealedPricingSnapshot,
+  prevDailySnapshot: SealedPricingSnapshot,
+  prevWeeklySnapshot: SealedPricingSnapshot,
+  prevMonthlySnapshot: SealedPricingSnapshot,
 ): Promise<SealedProductPriceTrendMap> {
-  const trendMap = buildSealedTrendMapFromHistoryMap(historyMap);
+  const trendMap: SealedProductPriceTrendMap = {};
+
+  for (const [productId, current] of Object.entries(dailySnapshot)) {
+    if (!Number.isFinite(current)) continue;
+
+    const dailyChangePct = computeChange(prevDailySnapshot[productId], current);
+    const weeklyChangePct = computeChange(prevWeeklySnapshot[productId], weeklySnapshot[productId] ?? current);
+    const monthlyChangePct = computeChange(prevMonthlySnapshot[productId], monthlySnapshot[productId] ?? current);
+
+    const summary: SealedProductPriceTrendSummary = {
+      current,
+      daily: { changePct: dailyChangePct, direction: directionForChange(dailyChangePct) },
+      weekly: { changePct: weeklyChangePct, direction: directionForChange(weeklyChangePct) },
+      monthly: { changePct: monthlyChangePct, direction: directionForChange(monthlyChangePct) },
+    };
+    trendMap[productId] = summary;
+  }
+
   await s3.send(
     new PutObjectCommand({
       Bucket: getR2Bucket(),
@@ -339,5 +223,6 @@ export async function uploadSealedPriceTrends(
       ContentType: "application/json",
     }),
   );
+
   return trendMap;
 }

@@ -1,12 +1,20 @@
 import fs from "fs";
 import path from "path";
-import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import {
   r2SealedPokedataCatalogKey,
-  r2SealedPokedataPricesSnapshotKey,
+  r2SealedDailyKey,
+  r2SealedWeeklyKey,
+  r2SealedMonthlyKey,
 } from "./r2BucketLayout";
 import { pokemonLocalDataRoot } from "./localDataPaths";
-import { updateSealedPriceHistory, uploadSealedPriceTrends } from "./r2SealedPricing";
+import {
+  updateSealedPriceHistory,
+  uploadSealedPriceTrends,
+  todayKey,
+  currentWeekKey,
+  currentMonthKey,
+} from "./r2SealedPricing";
 
 interface ScrapePokedataProductsOptions {
   mode?: "all" | "products" | "prices";
@@ -231,6 +239,20 @@ function buildPublicUrl(r2Key: string | null): string | null {
   const base = getPublicBaseUrl();
   if (!base) return null;
   return `${base}/${r2Key}`;
+}
+
+async function fetchSnapshot(s3: S3Client, bucket: string, key: string): Promise<Record<string, number>> {
+  try {
+    const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    const raw = await res.Body?.transformToString();
+    if (!raw?.trim()) return {};
+    return JSON.parse(raw) as Record<string, number>;
+  } catch (e: unknown) {
+    const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+    const name = (e as { name?: string }).name;
+    if (status === 404 || name === "NoSuchKey") return {};
+    throw e;
+  }
 }
 
 async function uploadJson(s3: S3Client, bucket: string, key: string, payload: unknown): Promise<void> {
@@ -468,18 +490,15 @@ export async function runScrapePokedataProducts(opts: ScrapePokedataProductsOpti
 
   const skipLocal = scraperSkipLocalDiskMirror();
   const localProductsPath = path.join(pokemonLocalDataRoot, `${slug}-products.json`);
-  const localPricesPath = path.join(PRICING_DATA_DIR, `${slug}-prices.json`);
 
   if (!skipLocal) {
     writeLocalJson(localProductsPath, catalogPayload);
-    writeLocalJson(localPricesPath, pricesPayload);
   }
 
   console.log(`Fetched ${allProducts.length} products from ${SOURCE_API_URL}`);
   console.log(`Filtered to ${filteredProducts.length} products`);
   if (!skipLocal) {
     console.log(`Wrote local product catalog to ${path.relative(process.cwd(), localProductsPath)}`);
-    console.log(`Wrote local price snapshot to ${path.relative(process.cwd(), localPricesPath)}`);
   } else {
     console.log(`SCRAPER_SKIP_LOCAL_DISK: skipping local JSON mirrors — uploads go to R2 only`);
   }
@@ -488,7 +507,6 @@ export async function runScrapePokedataProducts(opts: ScrapePokedataProductsOpti
   const bucket = getBucket();
 
   const productsKey = r2SealedPokedataCatalogKey(slug);
-  const pricesKey = r2SealedPokedataPricesSnapshotKey(slug);
 
   if (mode === "all" || mode === "products") {
     const imageUploadResult = await uploadProductImages(s3, bucket, filteredProducts, imageConcurrency, skipExistingImages, slugParts);
@@ -501,9 +519,27 @@ export async function runScrapePokedataProducts(opts: ScrapePokedataProductsOpti
   }
 
   if (mode === "all" || mode === "prices") {
-    await uploadJson(s3, bucket, pricesKey, pricesPayload);
-    const historyMap = await updateSealedPriceHistory(s3, pricesPayload.prices);
-    await uploadSealedPriceTrends(s3, historyMap);
-    console.log(`Uploaded price snapshot to R2 ${pricesKey}`);
+    const dailyKey = todayKey();
+    const weekKey = currentWeekKey();
+    const monthKey = currentMonthKey();
+
+    // Load current period snapshots before update (used as "previous" for trend deltas)
+    const [prevDaily, prevWeekly, prevMonthly] = await Promise.all([
+      fetchSnapshot(s3, bucket, r2SealedDailyKey(dailyKey)),
+      fetchSnapshot(s3, bucket, r2SealedWeeklyKey(weekKey)),
+      fetchSnapshot(s3, bucket, r2SealedMonthlyKey(monthKey)),
+    ]);
+
+    await updateSealedPriceHistory(s3, pricesPayload.prices);
+
+    // Load updated snapshots to build trends from
+    const [daily, weekly, monthly] = await Promise.all([
+      fetchSnapshot(s3, bucket, r2SealedDailyKey(dailyKey)),
+      fetchSnapshot(s3, bucket, r2SealedWeeklyKey(weekKey)),
+      fetchSnapshot(s3, bucket, r2SealedMonthlyKey(monthKey)),
+    ]);
+
+    await uploadSealedPriceTrends(s3, daily, weekly, monthly, prevDaily, prevWeekly, prevMonthly);
+    console.log(`Updated sealed pricing snapshots and trends`);
   }
 }

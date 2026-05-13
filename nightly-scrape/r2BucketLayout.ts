@@ -45,27 +45,27 @@ const R2_DATA = "data" as const;
 const R2_BRANDS_DATA = "brands/data" as const;
 const R2_BRANDS_IMAGES = "brands/images" as const;
 
-/** Default slug for English Pokémon sealed scrape (`pokedata-english-pokemon`). */
-export const R2_SEALED_POKEDATA_DEFAULT_SLUG = "pokedata-english-pokemon" as const;
-
 /** Sealed Pokedata product catalog: `data/{slug}-products.json` */
 export function r2SealedPokedataCatalogKey(slug: string): string {
   return `${R2_DATA}/${slug}-products.json`;
 }
 
-/** Sealed Pokedata price snapshot: `new_pricing/{slug}-prices.json` */
-export function r2SealedPokedataPricesSnapshotKey(slug: string): string {
-  return `${R2_NEW_PRICING}/${slug}-prices.json`;
-}
+const R2_SEALED_PRICING = `${R2_NEW_PRICING}/sealed` as const;
 
-/** Sealed rolling price history blob: `new_pricing/{slug}-price-history.json` */
-export function r2SealedPokedataPriceHistoryKey(slug: string): string {
-  return `${R2_NEW_PRICING}/${slug}-price-history.json`;
-}
+/** Sealed price trends: `new_pricing/sealed/price-trends.json` */
+export const r2SealedPriceTrendsKey = `${R2_SEALED_PRICING}/price-trends.json` as const;
 
-/** Sealed price trends blob: `new_pricing/{slug}-price-trends.json` */
-export function r2SealedPokedataPriceTrendsKey(slug: string): string {
-  return `${R2_NEW_PRICING}/${slug}-price-trends.json`;
+/** Sealed daily snapshot: `new_pricing/sealed/daily/{YYYY-MM-DD}.json` */
+export function r2SealedDailyKey(dateKey: string): string {
+  return `${R2_SEALED_PRICING}/daily/${dateKey}.json`;
+}
+/** Sealed weekly snapshot: `new_pricing/sealed/weekly/{YYYY-Www}.json` */
+export function r2SealedWeeklyKey(weekKey: string): string {
+  return `${R2_SEALED_PRICING}/weekly/${weekKey}.json`;
+}
+/** Sealed monthly snapshot: `new_pricing/sealed/monthly/{YYYY-MM}.json` */
+export function r2SealedMonthlyKey(monthKey: string): string {
+  return `${R2_SEALED_PRICING}/monthly/${monthKey}.json`;
 }
 
 /** Global market trend summary: `new_pricing/market-trend.json` */
