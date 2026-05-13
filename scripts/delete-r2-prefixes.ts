@@ -1,4 +1,7 @@
 import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { loadEnvFilesFromRepoRoot } from "../nightly-scrape/loadEnvFromRepoRoot.js";
+
+loadEnvFilesFromRepoRoot(import.meta.url);
 
 const s3 = new S3Client({
   endpoint: process.env.R2_ENDPOINT,

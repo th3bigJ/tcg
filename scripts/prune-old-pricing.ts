@@ -90,13 +90,13 @@ async function main() {
   // 1. Prune R2 Storage
   console.log("=== Pruning R2 Storage ===");
   await prunePrefix("new_pricing/daily/", (k) => {
-    const p = k.split("/"); return p[2] < minDaily;
+    const file = k.split("/").pop() || ""; return file.slice(0, 10) < minDaily;
   });
   await prunePrefix("new_pricing/weekly/", (k) => {
-    const p = k.split("/"); return p[2] < minWeekly;
+    const file = k.split("/").pop() || ""; return file.slice(0, 8) < minWeekly;
   });
   await prunePrefix("new_pricing/monthly/", (k) => {
-    const p = k.split("/"); return p[2] < minMonthly;
+    const file = k.split("/").pop() || ""; return file.slice(0, 7) < minMonthly;
   });
 
   await prunePrefix("new_pricing/sealed/daily/", (k) => {
@@ -111,9 +111,9 @@ async function main() {
 
   // 2. Prune Local Filesystem (`r2_backup/new_pricing/`)
   console.log("\n=== Pruning Local Mirror ===");
-  pruneLocalDir("new_pricing/daily", (name) => name < minDaily);
-  pruneLocalDir("new_pricing/weekly", (name) => name < minWeekly);
-  pruneLocalDir("new_pricing/monthly", (name) => name < minMonthly);
+  pruneLocalDir("new_pricing/daily", (name) => name.slice(0, 10) < minDaily);
+  pruneLocalDir("new_pricing/weekly", (name) => name.slice(0, 8) < minWeekly);
+  pruneLocalDir("new_pricing/monthly", (name) => name.slice(0, 7) < minMonthly);
 
   pruneLocalDir("new_pricing/sealed/daily", (name) => name.slice(0, 10) < minDaily);
   pruneLocalDir("new_pricing/sealed/weekly", (name) => name.slice(0, 8) < minWeekly);

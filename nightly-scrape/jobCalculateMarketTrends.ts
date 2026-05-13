@@ -1,5 +1,5 @@
-import { GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { r2NewPricingDailyPrefix, r2MarketTrendKey } from "./r2BucketLayout";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { r2NewPricingDailyKey, r2MarketTrendKey } from "./r2BucketLayout.js";
 import { buildS3Client, getR2Bucket } from "./r2Pricing";
 import { buildOnePieceS3Client, getOnePieceR2Bucket } from "./onepieceR2";
 import { loadOnePieceSetsFromR2 } from "./onepiecePricing";
@@ -45,45 +45,25 @@ async function getJsonFromS3<T>(s3: S3Client, bucket: string, key: string): Prom
   }
 }
 
-/** Per-set daily file shape: cardId → variant → grade → price */
+/** Consolidated daily file shape: cardId → variant → grade → price */
 type DailySetFile = Record<string, Record<string, Record<string, number>>>;
-
-async function listSetKeysForDate(s3: S3Client, bucket: string, dateKey: string): Promise<string[]> {
-  const prefix = r2NewPricingDailyPrefix(dateKey);
-  const keys: string[] = [];
-  let continuationToken: string | undefined;
-  do {
-    const res = await s3.send(
-      new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: continuationToken }),
-    );
-    for (const obj of res.Contents ?? []) {
-      if (obj.Key) keys.push(obj.Key);
-    }
-    continuationToken = res.NextContinuationToken;
-  } while (continuationToken);
-  return keys;
-}
 
 async function sumDailyRawPrices(
   s3: S3Client,
   bucket: string,
   dateKey: string,
 ): Promise<Map<string, number>> {
-  const keys = await listSetKeysForDate(s3, bucket, dateKey);
   const totals = new Map<string, number>();
-  await Promise.all(
-    keys.map(async (key) => {
-      const data = await getJsonFromS3<DailySetFile>(s3, bucket, key);
-      if (!data) return;
-      for (const [cardId, variants] of Object.entries(data)) {
-        for (const [variant, grades] of Object.entries(variants)) {
-          const price = grades["raw"];
-          if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) continue;
-          totals.set(`${cardId}::${variant}`, price);
-        }
-      }
-    }),
-  );
+  const key = r2NewPricingDailyKey(dateKey);
+  const data = await getJsonFromS3<DailySetFile>(s3, bucket, key);
+  if (!data) return totals;
+  for (const [cardId, variants] of Object.entries(data)) {
+    for (const [variant, grades] of Object.entries(variants)) {
+      const price = grades["raw"];
+      if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) continue;
+      totals.set(`${cardId}::${variant}`, price);
+    }
+  }
   return totals;
 }
 

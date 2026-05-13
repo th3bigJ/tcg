@@ -235,10 +235,10 @@ export function getPriceHistoryForCard(
 
 /**
  * For each card in `currentPricingMap`, writes today's price into the three
- * per-set bucket files (daily/{date}/{setCode}.json, weekly/…, monthly/…).
+ * consolidated bucket files (daily/{date}.json, weekly/…, monthly/…).
  *
  * Weekly and monthly values are the running average of all daily scrapes
- * seen for that set within the current period.
+ * seen for that card within the current period.
  *
  * Returns a `SetPriceHistoryMap` reconstructed from the bucket files so that
  * the trends job has the same interface as before.
@@ -252,11 +252,11 @@ export async function updatePriceHistory(
   const weekKey = currentWeekKey();
   const monthKey = currentMonthKey();
 
-  const r2DailyKey = r2NewPricingDailyKey(dailyKey, setCode);
-  const r2WeeklyKey = r2NewPricingWeeklyKey(weekKey, setCode);
-  const r2MonthlyKey = r2NewPricingMonthlyKey(monthKey, setCode);
+  const r2DailyKey = r2NewPricingDailyKey(dailyKey);
+  const r2WeeklyKey = r2NewPricingWeeklyKey(weekKey);
+  const r2MonthlyKey = r2NewPricingMonthlyKey(monthKey);
 
-  // Load the three current per-set bucket files in parallel.
+  // Load the three current consolidated bucket files in parallel.
   const [dailyFile, weeklyFile, monthlyFile] = await Promise.all([
     getBucketFile(s3, r2DailyKey),
     getBucketFile(s3, r2WeeklyKey),

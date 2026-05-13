@@ -1,19 +1,17 @@
 /**
- * Migrates existing flat daily/weekly/monthly bucket files into the new
- * folder-per-date, per-set layout.
+ * Consolidates existing per-set bucket files into single files per interval.
  *
- * Source:  r2_backup/new_pricing/daily/{YYYY-MM-DD}.json
- *          r2_backup/new_pricing/weekly/{YYYY-Www}.json
- *          r2_backup/new_pricing/monthly/{YYYY-MM}.json
- *          Each file: { [cardId]: { [variant]: { [grade]: price } } }
- *
- * Output:  r2_backup/new_pricing/daily/{YYYY-MM-DD}/{setCode}.json
+ * Source:  r2_backup/new_pricing/daily/{YYYY-MM-DD}/{setCode}.json
  *          r2_backup/new_pricing/weekly/{YYYY-Www}/{setCode}.json
  *          r2_backup/new_pricing/monthly/{YYYY-MM}/{setCode}.json
  *          Each file: { [cardId]: { [variant]: { [grade]: price } } }
  *
- * Set code is derived from the card ID prefix before the first '-'.
- * Existing flat files are deleted after splitting.
+ * Output:  r2_backup/new_pricing/daily/{YYYY-MM-DD}.json
+ *          r2_backup/new_pricing/weekly/{YYYY-Www}.json
+ *          r2_backup/new_pricing/monthly/{YYYY-MM}.json
+ *          Each file: { [cardId]: { [variant]: { [grade]: price } } }
+ *
+ * Existing subfolders are deleted after merging.
  */
 
 import fs from "fs";
@@ -23,59 +21,64 @@ const BASE = path.join(process.cwd(), "r2_backup/new_pricing");
 
 type FlatBucketFile = Record<string, Record<string, Record<string, number>>>;
 
-function setCodeFromCardId(cardId: string): string {
-  return cardId.slice(0, cardId.indexOf("-"));
-}
+function mergeAndWrite(dir: string): number {
+  if (!fs.existsSync(dir)) return 0;
 
-function splitAndWrite(dir: string): number {
-  const entries = fs.readdirSync(dir).filter((f) => f.endsWith(".json"));
-  let written = 0;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  let mergedCount = 0;
 
-  for (const filename of entries) {
-    const bucketKey = filename.replace(".json", "");
-    const filePath = path.join(dir, filename);
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.name === "sealed") continue;
 
-    let flat: FlatBucketFile;
-    try {
-      flat = JSON.parse(fs.readFileSync(filePath, "utf-8")) as FlatBucketFile;
-    } catch (e) {
-      console.warn(`  Skipping ${filename}: ${(e as Error).message}`);
-      continue;
+    const folderName = entry.name;
+    const folderPath = path.join(dir, folderName);
+    const setFiles = fs.readdirSync(folderPath).filter((f) => f.endsWith(".json"));
+
+    const combined: FlatBucketFile = {};
+    let totalCards = 0;
+
+    // If an existing flat file already exists for this interval, load it to merge into.
+    const outFilePath = path.join(dir, `${folderName}.json`);
+    if (fs.existsSync(outFilePath)) {
+      try {
+        Object.assign(combined, JSON.parse(fs.readFileSync(outFilePath, "utf-8")));
+      } catch (e) {
+        console.warn(`  Warning: could not read existing flat file ${outFilePath}: ${(e as Error).message}`);
+      }
     }
 
-    // Group cards by set code.
-    const bySet = new Map<string, FlatBucketFile>();
-    for (const [cardId, variants] of Object.entries(flat)) {
-      const setCode = setCodeFromCardId(cardId);
-      if (!setCode) continue;
-      let setMap = bySet.get(setCode);
-      if (!setMap) { setMap = {}; bySet.set(setCode, setMap); }
-      setMap[cardId] = variants;
+    for (const filename of setFiles) {
+      const setFilePath = path.join(folderPath, filename);
+      try {
+        const setMap = JSON.parse(fs.readFileSync(setFilePath, "utf-8")) as FlatBucketFile;
+        for (const [cardId, variants] of Object.entries(setMap)) {
+          combined[cardId] = variants;
+          totalCards++;
+        }
+      } catch (e) {
+        console.warn(`  Skipping ${setFilePath}: ${(e as Error).message}`);
+      }
     }
 
-    // Write per-set files into a subfolder named after the bucket key.
-    const outDir = path.join(dir, bucketKey);
-    fs.mkdirSync(outDir, { recursive: true });
-    for (const [setCode, setMap] of bySet) {
-      fs.writeFileSync(path.join(outDir, `${setCode}.json`), JSON.stringify(setMap));
-      written++;
-    }
+    // Save combined JSON
+    fs.writeFileSync(outFilePath, JSON.stringify(combined));
+    mergedCount++;
 
-    // Remove the old flat file.
-    fs.unlinkSync(filePath);
-    process.stdout.write(`  ${bucketKey}: ${bySet.size} sets\n`);
+    // Remove the old subdirectory recursively
+    fs.rmSync(folderPath, { recursive: true, force: true });
+    process.stdout.write(`  Merged ${folderName}: ${setFiles.length} sets (${totalCards} cards)\n`);
   }
 
-  return written;
+  return mergedCount;
 }
 
-console.log("Migrating daily...");
-const d = splitAndWrite(path.join(BASE, "daily"));
+console.log("Consolidating daily...");
+const d = mergeAndWrite(path.join(BASE, "daily"));
 
-console.log("Migrating weekly...");
-const w = splitAndWrite(path.join(BASE, "weekly"));
+console.log("Consolidating weekly...");
+const w = mergeAndWrite(path.join(BASE, "weekly"));
 
-console.log("Migrating monthly...");
-const m = splitAndWrite(path.join(BASE, "monthly"));
+console.log("Consolidating monthly...");
+const m = mergeAndWrite(path.join(BASE, "monthly"));
 
-console.log(`\nDone. Written: daily=${d} weekly=${w} monthly=${m} set files`);
+console.log(`\nDone. Consolidations complete: daily=${d} weekly=${w} monthly=${m} time periods`);
