@@ -227,10 +227,10 @@ export function getPriceHistoryForCard(
 
 /**
  * For each card in `currentPricingMap`, writes today's price into the three
- * new_pricing bucket files (daily/{date}, weekly/{week}, monthly/{month}).
+ * per-set bucket files (daily/{date}/{setCode}.json, weekly/…, monthly/…).
  *
- * Weekly and monthly bucket values are the average of all daily points in
- * that period across the entire bucket file (not just this set).
+ * Weekly and monthly values are the running average of all daily scrapes
+ * seen for that set within the current period.
  *
  * Returns a `SetPriceHistoryMap` reconstructed from the bucket files so that
  * the trends job has the same interface as before.
@@ -244,23 +244,21 @@ export async function updatePriceHistory(
   const weekKey = currentWeekKey();
   const monthKey = currentMonthKey();
 
-  const r2DailyKey = r2NewPricingDailyKey(dailyKey);
-  const r2WeeklyKey = r2NewPricingWeeklyKey(weekKey);
-  const r2MonthlyKey = r2NewPricingMonthlyKey(monthKey);
+  const r2DailyKey = r2NewPricingDailyKey(dailyKey, setCode);
+  const r2WeeklyKey = r2NewPricingWeeklyKey(weekKey, setCode);
+  const r2MonthlyKey = r2NewPricingMonthlyKey(monthKey, setCode);
 
-  // Load the three current bucket files in parallel.
+  // Load the three current per-set bucket files in parallel.
   const [dailyFile, weeklyFile, monthlyFile] = await Promise.all([
     getBucketFile(s3, r2DailyKey),
     getBucketFile(s3, r2WeeklyKey),
     getBucketFile(s3, r2MonthlyKey),
   ]);
 
-  // Accumulate weekly/monthly averages: track running totals per card/variant/grade.
-  // We update in-place so existing cards from other sets are preserved.
+  // Running totals for weekly/monthly averages — seeded from existing bucket values.
   const weeklyTotals: Record<string, Record<string, Record<string, { total: number; count: number }>>> = {};
   const monthlyTotals: Record<string, Record<string, Record<string, { total: number; count: number }>>> = {};
 
-  // Seed totals from values already in the bucket files so we can average correctly.
   for (const [cardId, variants] of Object.entries(weeklyFile)) {
     weeklyTotals[cardId] ??= {};
     for (const [variant, grades] of Object.entries(variants)) {
@@ -286,35 +284,25 @@ export async function updatePriceHistory(
 
     for (const [variantSlug, grades] of Object.entries(extracted)) {
       for (const [gradeKey, price] of Object.entries(grades)) {
-        // Daily: just set today's price.
         dailyFile[externalId] ??= {};
         dailyFile[externalId][variantSlug] ??= {};
         dailyFile[externalId][variantSlug][gradeKey] = price;
 
-        // Weekly: update running average.
         weeklyTotals[externalId] ??= {};
         weeklyTotals[externalId][variantSlug] ??= {};
         const wt = weeklyTotals[externalId][variantSlug][gradeKey];
-        if (wt) {
-          wt.total += price; wt.count += 1;
-        } else {
-          weeklyTotals[externalId][variantSlug][gradeKey] = { total: price, count: 1 };
-        }
+        if (wt) { wt.total += price; wt.count += 1; }
+        else { weeklyTotals[externalId][variantSlug][gradeKey] = { total: price, count: 1 }; }
 
-        // Monthly: update running average.
         monthlyTotals[externalId] ??= {};
         monthlyTotals[externalId][variantSlug] ??= {};
         const mt = monthlyTotals[externalId][variantSlug][gradeKey];
-        if (mt) {
-          mt.total += price; mt.count += 1;
-        } else {
-          monthlyTotals[externalId][variantSlug][gradeKey] = { total: price, count: 1 };
-        }
+        if (mt) { mt.total += price; mt.count += 1; }
+        else { monthlyTotals[externalId][variantSlug][gradeKey] = { total: price, count: 1 }; }
       }
     }
   }
 
-  // Materialise weekly/monthly averages back into bucket files.
   for (const [cardId, variants] of Object.entries(weeklyTotals)) {
     weeklyFile[cardId] ??= {};
     for (const [variant, grades] of Object.entries(variants)) {
@@ -334,15 +322,12 @@ export async function updatePriceHistory(
     }
   }
 
-  // Write all three bucket files back.
   await Promise.all([
     putBucketFile(s3, r2DailyKey, dailyFile),
     putBucketFile(s3, r2WeeklyKey, weeklyFile),
     putBucketFile(s3, r2MonthlyKey, monthlyFile),
   ]);
 
-  // Reconstruct a SetPriceHistoryMap for only the cards in this set so the
-  // trends job has the data it needs in the same shape as before.
   const historyMap: SetPriceHistoryMap = {};
   for (const externalId of Object.keys(currentPricingMap)) {
     const dVariants = dailyFile[externalId];
@@ -352,15 +337,11 @@ export async function updatePriceHistory(
     for (const [variant, grades] of Object.entries(dVariants)) {
       cardHistory[variant] ??= {};
       for (const grade of Object.keys(grades)) {
-        // daily: just today's single point
         const daily: PriceHistoryPoint[] = [[dailyKey, dVariants[variant][grade]]];
-        // weekly: single point for this week
         const weeklyPrice = weeklyFile[externalId]?.[variant]?.[grade];
         const weekly: PriceHistoryPoint[] = weeklyPrice !== undefined ? [[weekKey, weeklyPrice]] : [];
-        // monthly: single point for this month
         const monthlyPrice = monthlyFile[externalId]?.[variant]?.[grade];
         const monthly: PriceHistoryPoint[] = monthlyPrice !== undefined ? [[monthKey, monthlyPrice]] : [];
-
         cardHistory[variant][grade] = { daily, weekly, monthly };
       }
     }

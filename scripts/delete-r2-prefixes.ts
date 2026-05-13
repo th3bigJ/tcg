@@ -13,8 +13,9 @@ const s3 = new S3Client({
 const bucket = process.env.R2_BUCKET!;
 
 const PREFIXES_TO_DELETE = [
-  "pricing/",
-  "portfolio-snapshots/",
+  "new_pricing/daily/",
+  "new_pricing/weekly/",
+  "new_pricing/monthly/",
 ];
 
 async function listAllKeys(prefix: string): Promise<string[]> {

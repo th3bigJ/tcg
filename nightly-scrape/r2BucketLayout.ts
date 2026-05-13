@@ -20,17 +20,22 @@ const R2_NEW_PRICING = "new_pricing" as const;
 /** Per-set price trend summaries: `new_pricing/price-trends/{setCode}.json` */
 export const r2SinglesPriceTrendsPrefix = `${R2_NEW_PRICING}/price-trends`;
 
-/** Flat daily snapshot: `new_pricing/daily/{YYYY-MM-DD}.json` */
-export function r2NewPricingDailyKey(dateKey: string): string {
-  return `${R2_NEW_PRICING}/daily/${dateKey}.json`;
+/** Per-set daily snapshot: `new_pricing/daily/{YYYY-MM-DD}/{setCode}.json` */
+export function r2NewPricingDailyKey(dateKey: string, setCode: string): string {
+  return `${R2_NEW_PRICING}/daily/${dateKey}/${setCode}.json`;
 }
-/** Flat weekly snapshot: `new_pricing/weekly/{YYYY-Www}.json` */
-export function r2NewPricingWeeklyKey(weekKey: string): string {
-  return `${R2_NEW_PRICING}/weekly/${weekKey}.json`;
+/** Per-set weekly snapshot: `new_pricing/weekly/{YYYY-Www}/{setCode}.json` */
+export function r2NewPricingWeeklyKey(weekKey: string, setCode: string): string {
+  return `${R2_NEW_PRICING}/weekly/${weekKey}/${setCode}.json`;
 }
-/** Flat monthly snapshot: `new_pricing/monthly/{YYYY-MM}.json` */
-export function r2NewPricingMonthlyKey(monthKey: string): string {
-  return `${R2_NEW_PRICING}/monthly/${monthKey}.json`;
+/** Per-set monthly snapshot: `new_pricing/monthly/{YYYY-MM}/{setCode}.json` */
+export function r2NewPricingMonthlyKey(monthKey: string, setCode: string): string {
+  return `${R2_NEW_PRICING}/monthly/${monthKey}/${setCode}.json`;
+}
+
+/** Folder prefix for all set files under a given date: `new_pricing/daily/{YYYY-MM-DD}/` */
+export function r2NewPricingDailyPrefix(dateKey: string): string {
+  return `${R2_NEW_PRICING}/daily/${dateKey}/`;
 }
 
 /** Static JSON exports (e.g. sealed Pokedata catalog) under `data/…` */

@@ -1,5 +1,5 @@
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { r2NewPricingDailyKey, r2MarketTrendKey } from "./r2BucketLayout";
+import { GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { r2NewPricingDailyPrefix, r2MarketTrendKey } from "./r2BucketLayout";
 import { buildS3Client, getR2Bucket } from "./r2Pricing";
 import { buildOnePieceS3Client, getOnePieceR2Bucket } from "./onepieceR2";
 import { loadOnePieceSetsFromR2 } from "./onepiecePricing";
@@ -45,33 +45,67 @@ async function getJsonFromS3<T>(s3: S3Client, bucket: string, key: string): Prom
   }
 }
 
-/** Daily bucket file shape: cardId → variant → grade → price */
-type DailyBucketFile = Record<string, Record<string, Record<string, number>>>;
+/** Per-set daily file shape: cardId → variant → grade → price */
+type DailySetFile = Record<string, Record<string, Record<string, number>>>;
+
+async function listSetKeysForDate(s3: S3Client, bucket: string, dateKey: string): Promise<string[]> {
+  const prefix = r2NewPricingDailyPrefix(dateKey);
+  const keys: string[] = [];
+  let continuationToken: string | undefined;
+  do {
+    const res = await s3.send(
+      new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: continuationToken }),
+    );
+    for (const obj of res.Contents ?? []) {
+      if (obj.Key) keys.push(obj.Key);
+    }
+    continuationToken = res.NextContinuationToken;
+  } while (continuationToken);
+  return keys;
+}
+
+async function sumDailyRawPrices(
+  s3: S3Client,
+  bucket: string,
+  dateKey: string,
+): Promise<Map<string, number>> {
+  const keys = await listSetKeysForDate(s3, bucket, dateKey);
+  const totals = new Map<string, number>();
+  await Promise.all(
+    keys.map(async (key) => {
+      const data = await getJsonFromS3<DailySetFile>(s3, bucket, key);
+      if (!data) return;
+      for (const [cardId, variants] of Object.entries(data)) {
+        for (const [variant, grades] of Object.entries(variants)) {
+          const price = grades["raw"];
+          if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) continue;
+          totals.set(`${cardId}::${variant}`, price);
+        }
+      }
+    }),
+  );
+  return totals;
+}
 
 async function calculatePokemonBrandTrend(s3: S3Client, bucket: string): Promise<BrandTrend> {
-  const [bucketT, bucketT1, bucketT7, bucketT31] = await Promise.all(
-    [0, 1, 7, 31].map((n) => getJsonFromS3<DailyBucketFile>(s3, bucket, r2NewPricingDailyKey(getOffsetDateKey(n)))),
+  const [mapT, mapT1, mapT7, mapT31] = await Promise.all(
+    [0, 1, 7, 31].map((n) => sumDailyRawPrices(s3, bucket, getOffsetDateKey(n))),
   );
 
-  const baseline = bucketT31 ?? {};
   const isOutlier = (p: number | null, p31: number) => p === null || p > p31 * 5;
 
   let sumT = 0, sumT1 = 0, sumT7 = 0, sumT31 = 0;
 
-  for (const [cardId, variants31] of Object.entries(baseline)) {
-    for (const [variant, grades31] of Object.entries(variants31)) {
-      const p31 = grades31["raw"];
-      if (typeof p31 !== "number" || !Number.isFinite(p31) || p31 <= 0) continue;
+  for (const [key, p31] of mapT31) {
+    if (p31 <= 0) continue;
+    const pt = mapT.get(key) ?? null;
+    const p1 = mapT1.get(key) ?? null;
+    const p7 = mapT7.get(key) ?? null;
 
-      const pt  = bucketT?.[cardId]?.[variant]?.["raw"]  ?? null;
-      const p1  = bucketT1?.[cardId]?.[variant]?.["raw"] ?? null;
-      const p7  = bucketT7?.[cardId]?.[variant]?.["raw"] ?? null;
-
-      sumT31 += p31;
-      sumT   += isOutlier(pt,  p31) ? p31 : pt!;
-      sumT1  += isOutlier(p1,  p31) ? p31 : p1!;
-      sumT7  += isOutlier(p7,  p31) ? p31 : p7!;
-    }
+    sumT31 += p31;
+    sumT   += isOutlier(pt,  p31) ? p31 : pt!;
+    sumT1  += isOutlier(p1,  p31) ? p31 : p1!;
+    sumT7  += isOutlier(p7,  p31) ? p31 : p7!;
   }
 
   return {
