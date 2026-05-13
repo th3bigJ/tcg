@@ -3,8 +3,8 @@ import {
   r2NewPricingDailyKey,
   r2NewPricingWeeklyKey,
   r2NewPricingMonthlyKey,
-} from "./r2BucketLayout";
-import { buildPricingLookupIds } from "./r2Pricing";
+} from "./r2BucketLayout.js";
+import { buildPricingLookupIds } from "./r2Pricing.js";
 import type {
   CardPriceHistory,
   PriceHistoryPoint,
@@ -12,7 +12,7 @@ import type {
   ScrydexCardPricing,
   SetPriceHistoryMap,
   SetPricingMap,
-} from "./staticDataTypes";
+} from "./staticDataTypes.js";
 
 export type { CardPriceHistory, PriceHistoryPoint, PriceHistoryWindow, SetPriceHistoryMap };
 
@@ -96,9 +96,9 @@ function isPriceHistoryPoint(value: unknown): value is PriceHistoryPoint {
 
 function ensureWindow(window?: Partial<PriceHistoryWindow>): PriceHistoryWindow {
   return {
-    daily: Array.isArray(window?.daily) ? window.daily.filter(isPriceHistoryPoint) : [],
-    weekly: Array.isArray(window?.weekly) ? window.weekly.filter(isPriceHistoryPoint) : [],
-    monthly: Array.isArray(window?.monthly) ? window.monthly.filter(isPriceHistoryPoint) : [],
+    daily: Array.isArray(window?.daily) ? window.daily.filter(isPriceHistoryPoint).slice(-DAILY_HISTORY_LIMIT) : [],
+    weekly: Array.isArray(window?.weekly) ? window.weekly.filter(isPriceHistoryPoint).slice(-WEEKLY_HISTORY_LIMIT) : [],
+    monthly: Array.isArray(window?.monthly) ? window.monthly.filter(isPriceHistoryPoint).slice(-MONTHLY_HISTORY_LIMIT) : [],
   };
 }
 
@@ -143,12 +143,20 @@ export function mergeDailySeriesIntoWindow(
 }
 
 export function mergeSetPriceHistoryMaps(existing: SetPriceHistoryMap, incoming: SetPriceHistoryMap): SetPriceHistoryMap {
-  const out: SetPriceHistoryMap = { ...existing };
-  for (const [id, cardHist] of Object.entries(incoming)) {
-    if (!out[id]) {
-      out[id] = cardHist;
-      continue;
+  const out: SetPriceHistoryMap = {};
+  for (const [id, cardHist] of Object.entries(existing)) {
+    if (!cardHist) continue;
+    out[id] = {};
+    for (const [vKey, vObj] of Object.entries(cardHist as CardPriceHistory)) {
+      out[id][vKey] = {};
+      for (const [gKey, win] of Object.entries(vObj as Record<string, PriceHistoryWindow>)) {
+        out[id][vKey][gKey] = ensureWindow(win as Partial<PriceHistoryWindow>);
+      }
     }
+  }
+  for (const [id, cardHist] of Object.entries(incoming)) {
+    if (!cardHist) continue;
+    out[id] ??= {};
     const base = out[id];
     for (const [vKey, vObj] of Object.entries(cardHist as CardPriceHistory)) {
       base[vKey] ??= {};

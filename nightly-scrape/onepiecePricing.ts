@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
-import { buildTrendMapFromHistoryMap } from "./r2PriceTrends";
-import { mergeSetPriceHistoryMaps, todayKey, upsertAndTrim } from "./r2PriceHistory";
-import { buildOnePieceS3Client, getJsonFromOnePieceR2, putJsonToOnePieceR2 } from "./onepieceR2";
-import { onepieceLocalDataRoot } from "./localDataPaths";
+import { buildTrendMapFromHistoryMap } from "./r2PriceTrends.js";
+import { mergeSetPriceHistoryMaps, todayKey, upsertAndTrim } from "./r2PriceHistory.js";
+import { buildOnePieceS3Client, getJsonFromOnePieceR2, putJsonToOnePieceR2 } from "./onepieceR2.js";
+import { onepieceLocalDataRoot } from "./localDataPaths.js";
 import type {
   CardPriceHistory,
   CardPriceTrendSummary,
@@ -11,9 +11,9 @@ import type {
   PriceHistoryWindow,
   SetPriceHistoryMap,
   SetPriceTrendMap,
-} from "./staticDataTypes";
+} from "./staticDataTypes.js";
 
-const DAILY_HISTORY_LIMIT = 40;
+const DAILY_HISTORY_LIMIT = 31;
 const WEEKLY_HISTORY_LIMIT = 52;
 const MONTHLY_HISTORY_LIMIT = 60;
 
@@ -95,9 +95,9 @@ function readJsonIfExists<T>(filePath: string, fallback: T): T {
 
 function ensureWindow(window?: Partial<PriceHistoryWindow>): PriceHistoryWindow {
   return {
-    daily: Array.isArray(window?.daily) ? window.daily.filter(isPriceHistoryPoint) : [],
-    weekly: Array.isArray(window?.weekly) ? window.weekly.filter(isPriceHistoryPoint) : [],
-    monthly: Array.isArray(window?.monthly) ? window.monthly.filter(isPriceHistoryPoint) : [],
+    daily: Array.isArray(window?.daily) ? window.daily.filter(isPriceHistoryPoint).slice(-DAILY_HISTORY_LIMIT) : [],
+    weekly: Array.isArray(window?.weekly) ? window.weekly.filter(isPriceHistoryPoint).slice(-WEEKLY_HISTORY_LIMIT) : [],
+    monthly: Array.isArray(window?.monthly) ? window.monthly.filter(isPriceHistoryPoint).slice(-MONTHLY_HISTORY_LIMIT) : [],
   };
 }
 
@@ -240,6 +240,15 @@ export async function writeOnePieceMarketForSet(setCode: string, marketMap: OneP
 }
 
 async function writeOnePieceHistoryForSet(setCode: string, historyMap: SetPriceHistoryMap): Promise<void> {
+  for (const [id, cardHist] of Object.entries(historyMap)) {
+    if (!cardHist) continue;
+    for (const [vKey, vObj] of Object.entries(cardHist as CardPriceHistory)) {
+      for (const [gKey, win] of Object.entries(vObj as Record<string, PriceHistoryWindow>)) {
+        (historyMap[id] as CardPriceHistory)[vKey][gKey] = ensureWindow(win as Partial<PriceHistoryWindow>);
+      }
+    }
+  }
+
   if (useOnePiecePricingLocalFiles()) {
     ensureOnePiecePricingDirs();
     writeJsonFile(historyFilePathForSet(setCode), historyMap);

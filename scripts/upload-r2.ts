@@ -37,35 +37,45 @@ async function upload() {
 
   const files = await getAllFiles(inputDir);
   let count = 0;
+  const concurrency = 20;
 
-  for (const filePath of files) {
-    const relativePath = path.relative(inputDir, filePath);
-    
-    // Normalize path for S3 keys (forward slashes)
-    const key = relativePath.split(path.sep).join("/");
-    
-    console.log(`Uploading ${key}...`);
-    
-    const fileBuffer = fs.readFileSync(filePath);
-    
-    let contentType = "application/octet-stream";
-    if (key.endsWith(".json")) contentType = "application/json";
-    else if (key.endsWith(".txt")) contentType = "text/plain";
+  console.log(`Found ${files.length} files. Uploading with concurrency ${concurrency}...`);
 
-    try {
-      await s3.send(
-        new PutObjectCommand({
-          Bucket: bucketName,
-          Key: key,
-          Body: fileBuffer,
-          ContentType: contentType,
-        })
-      );
-      count++;
-    } catch (err) {
-      console.error(`Failed to upload ${key}:`, err);
+  let index = 0;
+  const workers = Array.from({ length: concurrency }, async () => {
+    while (index < files.length) {
+      const currentIndex = index++;
+      const filePath = files[currentIndex];
+      const relativePath = path.relative(inputDir, filePath);
+      
+      // Normalize path for S3 keys (forward slashes)
+      const key = relativePath.split(path.sep).join("/");
+      
+      console.log(`[${currentIndex + 1}/${files.length}] Uploading ${key}...`);
+      
+      try {
+        const fileBuffer = fs.readFileSync(filePath);
+        
+        let contentType = "application/octet-stream";
+        if (key.endsWith(".json")) contentType = "application/json";
+        else if (key.endsWith(".txt")) contentType = "text/plain";
+
+        await s3.send(
+          new PutObjectCommand({
+            Bucket: bucketName,
+            Key: key,
+            Body: fileBuffer,
+            ContentType: contentType,
+          })
+        );
+        count++;
+      } catch (err) {
+        console.error(`Failed to upload ${key}:`, err);
+      }
     }
-  }
+  });
+
+  await Promise.all(workers);
 
   console.log(`Uploaded ${count} files.`);
 }
