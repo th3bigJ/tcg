@@ -48,35 +48,31 @@ async function getJsonFromS3<T>(s3: S3Client, bucket: string, key: string): Prom
 /** Daily bucket file shape: cardId → variant → grade → price */
 type DailyBucketFile = Record<string, Record<string, Record<string, number>>>;
 
-function sumRawPricesFromDailyBucket(bucket: DailyBucketFile): number {
-  let sum = 0;
-  for (const variants of Object.values(bucket)) {
-    for (const grades of Object.values(variants)) {
-      const raw = grades["raw"];
-      if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
-        sum += raw;
-      }
-    }
-  }
-  return sum;
-}
-
 async function calculatePokemonBrandTrend(s3: S3Client, bucket: string): Promise<BrandTrend> {
-  const dateKeys = [
-    getOffsetDateKey(0),
-    getOffsetDateKey(1),
-    getOffsetDateKey(7),
-    getOffsetDateKey(31),
-  ];
-
   const [bucketT, bucketT1, bucketT7, bucketT31] = await Promise.all(
-    dateKeys.map((dk) => getJsonFromS3<DailyBucketFile>(s3, bucket, r2NewPricingDailyKey(dk))),
+    [0, 1, 7, 31].map((n) => getJsonFromS3<DailyBucketFile>(s3, bucket, r2NewPricingDailyKey(getOffsetDateKey(n)))),
   );
 
-  const sumT31 = sumRawPricesFromDailyBucket(bucketT31 ?? {});
-  const sumT = sumRawPricesFromDailyBucket(bucketT ?? {});
-  const sumT1 = sumRawPricesFromDailyBucket(bucketT1 ?? {});
-  const sumT7 = sumRawPricesFromDailyBucket(bucketT7 ?? {});
+  const baseline = bucketT31 ?? {};
+  const isOutlier = (p: number | null, p31: number) => p === null || p > p31 * 5;
+
+  let sumT = 0, sumT1 = 0, sumT7 = 0, sumT31 = 0;
+
+  for (const [cardId, variants31] of Object.entries(baseline)) {
+    for (const [variant, grades31] of Object.entries(variants31)) {
+      const p31 = grades31["raw"];
+      if (typeof p31 !== "number" || !Number.isFinite(p31) || p31 <= 0) continue;
+
+      const pt  = bucketT?.[cardId]?.[variant]?.["raw"]  ?? null;
+      const p1  = bucketT1?.[cardId]?.[variant]?.["raw"] ?? null;
+      const p7  = bucketT7?.[cardId]?.[variant]?.["raw"] ?? null;
+
+      sumT31 += p31;
+      sumT   += isOutlier(pt,  p31) ? p31 : pt!;
+      sumT1  += isOutlier(p1,  p31) ? p31 : p1!;
+      sumT7  += isOutlier(p7,  p31) ? p31 : p7!;
+    }
+  }
 
   return {
     sumToday: sumT,
@@ -101,37 +97,39 @@ async function calculateOnePieceBrandTrend(
 
   let sumT = 0, sumT1 = 0, sumT7 = 0, sumT31 = 0;
 
+  const getPriceOnOrBefore = (points: PriceHistoryPoint[], targetDate: string): number | null => {
+    let last: number | null = null;
+    for (const [date, price] of points) {
+      if (date > targetDate) break;
+      last = price;
+    }
+    return last;
+  };
+
   for (const code of setCodes) {
     const historyMap = await getJsonFromS3<SetPriceHistoryMap>(s3, bucket, `onepiece/pricing/history/${code}.json`);
     if (!historyMap) continue;
 
     for (const cardHistory of Object.values(historyMap)) {
-      const rawWindow = (cardHistory as any).default?.raw;
-      if (!rawWindow?.daily?.length) continue;
+      for (const grades of Object.values(cardHistory)) {
+        for (const window of Object.values(grades)) {
+          const sortedPoints = [...window.daily].sort((a, b) => a[0].localeCompare(b[0]));
 
-      const sortedPoints = [...(rawWindow.daily as PriceHistoryPoint[])].sort((a, b) => a[0].localeCompare(b[0]));
-      const getPriceOnOrBefore = (targetDate: string): number | null => {
-        let last: number | null = null;
-        for (const [date, price] of sortedPoints) {
-          if (date > targetDate) break;
-          last = price;
+          const p31 = getPriceOnOrBefore(sortedPoints, d31);
+          if (typeof p31 !== "number" || p31 <= 0) continue;
+
+          const pt = getPriceOnOrBefore(sortedPoints, today);
+          const p1 = getPriceOnOrBefore(sortedPoints, d1);
+          const p7 = getPriceOnOrBefore(sortedPoints, d7);
+
+          const isOutlier = (p: number | null) => p === null || p > p31 * 5;
+
+          sumT31 += p31;
+          sumT   += isOutlier(pt) ? p31 : pt!;
+          sumT1  += isOutlier(p1) ? p31 : p1!;
+          sumT7  += isOutlier(p7) ? p31 : p7!;
         }
-        return last;
-      };
-
-      const p31 = getPriceOnOrBefore(d31);
-      if (typeof p31 !== "number" || p31 <= 0) continue;
-
-      const pt = getPriceOnOrBefore(today);
-      const p1 = getPriceOnOrBefore(d1);
-      const p7 = getPriceOnOrBefore(d7);
-
-      const isOutlier = (p: number | null) => p === null || p > p31 * 5 || p < p31 * 0.1;
-
-      sumT31 += p31;
-      sumT7 += isOutlier(p7) ? p31 : (p7 ?? p31);
-      sumT1 += isOutlier(p1) ? p31 : (p1 ?? p31);
-      sumT += isOutlier(pt) ? p31 : (pt ?? p31);
+      }
     }
   }
 
