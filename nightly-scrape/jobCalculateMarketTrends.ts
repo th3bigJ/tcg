@@ -36,13 +36,33 @@ function getOffsetDateKey(daysAgo: number): string {
 }
 
 async function getJsonFromS3<T>(s3: S3Client, bucket: string, key: string): Promise<T | null> {
-  try {
-    const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-    const raw = await res.Body?.transformToString();
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
+  for (let i = 0; i < 5; i++) {
+    try {
+      const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+      const raw = await res.Body?.transformToString();
+      return raw ? JSON.parse(raw) : null;
+    } catch (e: unknown) {
+      const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+      const name = (e as { name?: string }).name;
+      if (status === 404 || name === "NoSuchKey") return null;
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+    }
   }
+  return null;
+}
+
+async function sendPutWithRetry(s3: S3Client, command: PutObjectCommand, attempts = 5): Promise<void> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      await s3.send(command);
+      return;
+    } catch (e) {
+      lastError = e;
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+  throw lastError;
 }
 
 /** Consolidated daily file shape: cardId → variant → grade → price */
@@ -181,7 +201,8 @@ export async function runCalculateMarketTrends(): Promise<void> {
     updatedAt: new Date().toISOString(),
   };
 
-  await pokemonS3.send(
+  await sendPutWithRetry(
+    pokemonS3,
     new PutObjectCommand({
       Bucket: pokemonBucket,
       Key: r2MarketTrendKey,

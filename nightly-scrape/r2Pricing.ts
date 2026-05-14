@@ -17,6 +17,7 @@ export function buildS3Client(): S3Client {
     },
     forcePathStyle: true,
     region: process.env.R2_REGION ?? "auto",
+    maxAttempts: 5,
   });
 }
 

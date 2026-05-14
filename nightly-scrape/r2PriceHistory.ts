@@ -64,6 +64,25 @@ export function currentWeekKey(date = new Date()): string {
   return `${isoYear}-W${pad2(week)}`;
 }
 
+export function prevDayKey(date = new Date()): string {
+  const d = new Date(date.getTime());
+  d.setUTCDate(d.getUTCDate() - 1);
+  return todayKey(d);
+}
+
+export function prevMonthKey(date = new Date()): string {
+  const d = new Date(date.getTime());
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() - 1);
+  return currentMonthKey(d);
+}
+
+export function prevWeekKey(date = new Date()): string {
+  const d = new Date(date.getTime());
+  d.setUTCDate(d.getUTCDate() - 7);
+  return currentWeekKey(d);
+}
+
 function weekKeyFromDateKey(dateKey: string): string {
   return currentWeekKey(new Date(`${dateKey}T00:00:00.000Z`));
 }
@@ -186,22 +205,49 @@ function extractVariantGradePrices(
 
 // ─── R2 bucket file helpers ───────────────────────────────────────────────────
 
-async function getBucketFile(s3: S3Client, key: string): Promise<PricingBucketFile> {
-  try {
-    const res = await s3.send(new GetObjectCommand({ Bucket: getR2Bucket(), Key: key }));
-    const raw = await res.Body?.transformToString();
-    if (!raw?.trim()) return {};
-    return JSON.parse(raw) as PricingBucketFile;
-  } catch (e: unknown) {
-    const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
-    const name = (e as { name?: string }).name;
-    if (status === 404 || name === "NoSuchKey") return {};
-    throw e;
+async function sendWithRetry(s3: S3Client, command: any, attempts = 5): Promise<any> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await s3.send(command);
+    } catch (e: unknown) {
+      lastError = e;
+      const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+      const name = (e as { name?: string }).name;
+      if (status === 404 || name === "NoSuchKey") {
+        throw e;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+    }
   }
+  throw lastError;
+}
+
+const bucketFileCache = new Map<string, Promise<PricingBucketFile>>();
+
+async function getBucketFile(s3: S3Client, key: string): Promise<PricingBucketFile> {
+  if (!bucketFileCache.has(key)) {
+    const promise = (async () => {
+      try {
+        const res = await sendWithRetry(s3, new GetObjectCommand({ Bucket: getR2Bucket(), Key: key }));
+        const raw = await res.Body?.transformToString();
+        if (!raw?.trim()) return {};
+        return JSON.parse(raw) as PricingBucketFile;
+      } catch (e: unknown) {
+        const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+        const name = (e as { name?: string }).name;
+        if (status === 404 || name === "NoSuchKey") return {};
+        throw e;
+      }
+    })();
+    bucketFileCache.set(key, promise);
+  }
+  return bucketFileCache.get(key)!;
 }
 
 async function putBucketFile(s3: S3Client, key: string, data: PricingBucketFile): Promise<void> {
-  await s3.send(
+  await sendWithRetry(
+    s3,
     new PutObjectCommand({
       Bucket: getR2Bucket(),
       Key: key,
@@ -252,15 +298,22 @@ export async function updatePriceHistory(
   const weekKey = currentWeekKey();
   const monthKey = currentMonthKey();
 
+  const prevDKey = prevDayKey();
+  const prevWKey = prevWeekKey();
+  const prevMKey = prevMonthKey();
+
   const r2DailyKey = r2NewPricingDailyKey(dailyKey);
   const r2WeeklyKey = r2NewPricingWeeklyKey(weekKey);
   const r2MonthlyKey = r2NewPricingMonthlyKey(monthKey);
 
-  // Load the three current consolidated bucket files in parallel.
-  const [dailyFile, weeklyFile, monthlyFile] = await Promise.all([
+  // Load the current and previous consolidated bucket files in parallel.
+  const [dailyFile, weeklyFile, monthlyFile, prevDailyFile, prevWeeklyFile, prevMonthlyFile] = await Promise.all([
     getBucketFile(s3, r2DailyKey),
     getBucketFile(s3, r2WeeklyKey),
     getBucketFile(s3, r2MonthlyKey),
+    getBucketFile(s3, r2NewPricingDailyKey(prevDKey)),
+    getBucketFile(s3, r2NewPricingWeeklyKey(prevWKey)),
+    getBucketFile(s3, r2NewPricingMonthlyKey(prevMKey)),
   ]);
 
   // Running totals for weekly/monthly averages — seeded from existing bucket values.
@@ -345,11 +398,23 @@ export async function updatePriceHistory(
     for (const [variant, grades] of Object.entries(dVariants)) {
       cardHistory[variant] ??= {};
       for (const grade of Object.keys(grades)) {
-        const daily: PriceHistoryPoint[] = [[dailyKey, dVariants[variant][grade]]];
+        const daily: PriceHistoryPoint[] = [];
+        const prevDailyPrice = prevDailyFile[externalId]?.[variant]?.[grade];
+        if (prevDailyPrice !== undefined) daily.push([prevDKey, prevDailyPrice]);
+        daily.push([dailyKey, dVariants[variant][grade]]);
+
+        const weekly: PriceHistoryPoint[] = [];
+        const prevWeeklyPrice = prevWeeklyFile[externalId]?.[variant]?.[grade];
+        if (prevWeeklyPrice !== undefined) weekly.push([prevWKey, prevWeeklyPrice]);
         const weeklyPrice = weeklyFile[externalId]?.[variant]?.[grade];
-        const weekly: PriceHistoryPoint[] = weeklyPrice !== undefined ? [[weekKey, weeklyPrice]] : [];
+        if (weeklyPrice !== undefined) weekly.push([weekKey, weeklyPrice]);
+
+        const monthly: PriceHistoryPoint[] = [];
+        const prevMonthlyPrice = prevMonthlyFile[externalId]?.[variant]?.[grade];
+        if (prevMonthlyPrice !== undefined) monthly.push([prevMKey, prevMonthlyPrice]);
         const monthlyPrice = monthlyFile[externalId]?.[variant]?.[grade];
-        const monthly: PriceHistoryPoint[] = monthlyPrice !== undefined ? [[monthKey, monthlyPrice]] : [];
+        if (monthlyPrice !== undefined) monthly.push([monthKey, monthlyPrice]);
+
         cardHistory[variant][grade] = { daily, weekly, monthly };
       }
     }

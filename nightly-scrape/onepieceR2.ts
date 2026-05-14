@@ -4,6 +4,24 @@ import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3
 
 export const ONEPIECE_R2_PREFIX = "onepiece" as const;
 
+async function sendWithRetry(s3: S3Client, command: any, attempts = 5): Promise<any> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await s3.send(command);
+    } catch (error: unknown) {
+      lastError = error;
+      const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+      const name = (error as { name?: string }).name;
+      if (status === 404 || name === "NoSuchKey") {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+  throw lastError;
+}
+
 export function buildOnePieceS3Client(): S3Client {
   return new S3Client({
     endpoint: process.env.R2_ENDPOINT ?? "",
@@ -13,6 +31,7 @@ export function buildOnePieceS3Client(): S3Client {
     },
     forcePathStyle: true,
     region: process.env.R2_REGION ?? "auto",
+    maxAttempts: 5,
   });
 }
 
@@ -42,7 +61,8 @@ async function putBufferToOnePieceR2(
   body: Buffer | string,
   contentType?: string,
 ): Promise<void> {
-  await s3.send(
+  await sendWithRetry(
+    s3,
     new PutObjectCommand({
       Bucket: getOnePieceR2Bucket(),
       Key: onePieceR2Key(relativePath),
@@ -79,7 +99,8 @@ export async function getJsonFromOnePieceR2<T>(
   relativePath: string,
 ): Promise<T | null> {
   try {
-    const result = await s3.send(
+    const result = await sendWithRetry(
+      s3,
       new GetObjectCommand({
         Bucket: getOnePieceR2Bucket(),
         Key: onePieceR2Key(relativePath),

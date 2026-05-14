@@ -189,13 +189,21 @@ export async function uploadPriceTrends(
   historyMap: SetPriceHistoryMap,
 ): Promise<SetPriceTrendMap> {
   const trendMap = buildTrendMapFromHistoryMap(historyMap);
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: getR2Bucket(),
-      Key: `${r2SinglesPriceTrendsPrefix}/${setCode}.json`,
-      Body: JSON.stringify(trendMap),
-      ContentType: "application/json",
-    }),
-  );
-  return trendMap;
+  const command = new PutObjectCommand({
+    Bucket: getR2Bucket(),
+    Key: `${r2SinglesPriceTrendsPrefix}/${setCode}.json`,
+    Body: JSON.stringify(trendMap),
+    ContentType: "application/json",
+  });
+  let lastError: unknown;
+  for (let i = 0; i < 5; i++) {
+    try {
+      await s3.send(command);
+      return trendMap;
+    } catch (e) {
+      lastError = e;
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+  throw lastError;
 }
