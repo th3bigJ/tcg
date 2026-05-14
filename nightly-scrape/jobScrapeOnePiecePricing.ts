@@ -47,7 +47,8 @@ async function loadRawPricesForCardPath(
     const prices = parseScrydexCardPageRawNearMintUsd(html);
     cache.set(path, prices);
     return prices;
-  } catch {
+  } catch (e) {
+    console.warn(`  [scrydex] FAILED ${path}: ${e instanceof Error ? e.message : String(e)}`);
     cache.set(path, {});
     return {};
   }
@@ -84,6 +85,10 @@ async function buildMarketMap(set: OnePieceSetEntry, cards: OnePieceCardEntry[],
     } else if (hasGumgum) {
       const p = gumgumById[gumId!];
       if (typeof p === "number" && Number.isFinite(p)) marketPrice = p;
+    }
+
+    if (marketPrice === null && (hasScrydex || hasGumgum)) {
+      console.warn(`  [${setCode}] no price for ${card.cardNumber} (${card.variant}) — source returned empty`);
     }
 
     marketMap[priceKeyForOnePieceCard(card)] = buildOnePieceMarketEntry(
@@ -150,7 +155,11 @@ export async function runScrapeOnePiecePricing(opts: ScrapeOnePiecePricingOption
   if (dryRun) console.log("(dry-run: no files written)\n");
 
   for (const set of sets) {
-    await scrapeSet(set, dryRun, source);
+    try {
+      await scrapeSet(set, dryRun, source);
+    } catch (e) {
+      console.error(`  [${set.setCode}] FATAL: ${e instanceof Error ? e.stack ?? e.message : String(e)}`);
+    }
   }
 
   console.log("\nDone.");

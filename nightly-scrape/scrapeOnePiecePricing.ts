@@ -25,7 +25,7 @@ const onlySetCodes = setArg
   ? setArg.slice("--set=".length).split(",").map((value) => value.trim()).filter(Boolean)
   : undefined;
 
-runScrapeOnePiecePricing({ dryRun, onlySetCodes }).catch((error) => {
+runScrapeOnePiecePricing({ dryRun, onlySetCodes, source: "r2" }).catch((error) => {
   console.error(error);
   process.exit(1);
 });
