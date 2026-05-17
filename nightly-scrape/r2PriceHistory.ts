@@ -293,7 +293,7 @@ export async function updatePriceHistory(
   s3: S3Client,
   setCode: string,
   currentPricingMap: SetPricingMap,
-): Promise<SetPriceHistoryMap> {
+): Promise<{ historyMap: SetPriceHistoryMap; dailyFile: PricingBucketFile }> {
   const dailyKey = todayKey();
   const weekKey = currentWeekKey();
   const monthKey = currentMonthKey();
@@ -341,25 +341,57 @@ export async function updatePriceHistory(
 
   for (const [externalId, entry] of Object.entries(currentPricingMap) as [string, { scrydex: ScrydexCardPricing | null }][]) {
     const extracted = extractVariantGradePrices(entry.scrydex);
-    if (Object.keys(extracted).length === 0) continue;
+    const prevExtracted = prevDailyFile[externalId] || {};
 
-    for (const [variantSlug, grades] of Object.entries(extracted)) {
-      for (const [gradeKey, price] of Object.entries(grades)) {
-        dailyFile[externalId] ??= {};
-        dailyFile[externalId][variantSlug] ??= {};
-        dailyFile[externalId][variantSlug][gradeKey] = price;
+    // Get all variant slugs from both current and previous pricing
+    const allVariants = new Set([...Object.keys(extracted), ...Object.keys(prevExtracted)]);
 
-        weeklyTotals[externalId] ??= {};
-        weeklyTotals[externalId][variantSlug] ??= {};
-        const wt = weeklyTotals[externalId][variantSlug][gradeKey];
-        if (wt) { wt.total += price; wt.count += 1; }
-        else { weeklyTotals[externalId][variantSlug][gradeKey] = { total: price, count: 1 }; }
+    for (const variantSlug of allVariants) {
+      const grades = extracted[variantSlug] || {};
+      const prevGrades = prevExtracted[variantSlug] || {};
+      const allGrades = new Set([...Object.keys(grades), ...Object.keys(prevGrades)]);
 
-        monthlyTotals[externalId] ??= {};
-        monthlyTotals[externalId][variantSlug] ??= {};
-        const mt = monthlyTotals[externalId][variantSlug][gradeKey];
-        if (mt) { mt.total += price; mt.count += 1; }
-        else { monthlyTotals[externalId][variantSlug][gradeKey] = { total: price, count: 1 }; }
+      for (const gradeKey of allGrades) {
+        const scrapedPrice = grades[gradeKey];
+        const prevPrice = prevGrades[gradeKey];
+
+        // A price is valid if it is a number, finite, and > 0
+        const isScrapedValid = typeof scrapedPrice === "number" && Number.isFinite(scrapedPrice) && scrapedPrice > 0;
+        const isPrevValid = typeof prevPrice === "number" && Number.isFinite(prevPrice) && prevPrice > 0;
+
+        let finalPrice = 0;
+        if (isScrapedValid) {
+          finalPrice = scrapedPrice;
+        } else if (isPrevValid) {
+          finalPrice = prevPrice;
+          console.log(`  [fallback] Using last available price for ${externalId} (${variantSlug} - ${gradeKey}): $${prevPrice}`);
+        }
+
+        if (finalPrice > 0) {
+          dailyFile[externalId] ??= {};
+          dailyFile[externalId][variantSlug] ??= {};
+          dailyFile[externalId][variantSlug][gradeKey] = finalPrice;
+
+          weeklyTotals[externalId] ??= {};
+          weeklyTotals[externalId][variantSlug] ??= {};
+          const wt = weeklyTotals[externalId][variantSlug][gradeKey];
+          if (wt) {
+            wt.total += finalPrice;
+            wt.count += 1;
+          } else {
+            weeklyTotals[externalId][variantSlug][gradeKey] = { total: finalPrice, count: 1 };
+          }
+
+          monthlyTotals[externalId] ??= {};
+          monthlyTotals[externalId][variantSlug] ??= {};
+          const mt = monthlyTotals[externalId][variantSlug][gradeKey];
+          if (mt) {
+            mt.total += finalPrice;
+            mt.count += 1;
+          } else {
+            monthlyTotals[externalId][variantSlug][gradeKey] = { total: finalPrice, count: 1 };
+          }
+        }
       }
     }
   }
@@ -379,6 +411,25 @@ export async function updatePriceHistory(
       monthlyFile[cardId][variant] ??= {};
       for (const [grade, { total, count }] of Object.entries(grades)) {
         monthlyFile[cardId][variant][grade] = total / count;
+      }
+    }
+  }
+
+  // Cleanup zero-value "default" variants in daily/weekly/monthly files if other variants have non-zero prices
+  const filesToCleanup = [dailyFile, weeklyFile, monthlyFile];
+  for (const file of filesToCleanup) {
+    for (const [cardId, variants] of Object.entries(file)) {
+      const hasRealPrice = Object.entries(variants).some(([vName, grades]) => {
+        if (vName === "default") return false;
+        return Object.values(grades).some((p) => typeof p === "number" && p > 0);
+      });
+      if (hasRealPrice && variants["default"]) {
+        const defaultGrades = variants["default"];
+        const isDefaultAllZero = Object.values(defaultGrades).every((p) => p === 0);
+        if (isDefaultAllZero) {
+          delete variants["default"];
+          console.log(`  [cleanup] Removed zero-value default variant for ${cardId} since other variants have prices`);
+        }
       }
     }
   }
@@ -421,5 +472,5 @@ export async function updatePriceHistory(
     historyMap[externalId] = cardHistory;
   }
 
-  return historyMap;
+  return { historyMap, dailyFile };
 }

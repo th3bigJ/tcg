@@ -4,6 +4,7 @@ import {
   loadOnePieceCardsForSetFromR2,
   loadOnePieceSets,
   loadOnePieceSetsFromR2,
+  loadOnePieceMarketForSet,
   priceKeyForOnePieceCard,
   selectScrydexRawPriceForCard,
   type OnePieceCardEntry,
@@ -125,6 +126,32 @@ async function scrapeSet(set: OnePieceSetEntry, dryRun: boolean, source: "local"
   console.log(`  [${set.setCode}] fetching prices…`);
   const nowIso = new Date().toISOString();
   const marketMap = await buildMarketMap(set, cards, nowIso);
+
+  // Fallback to previous day's market price if current scrape returned null or <= 0
+  const existingMarketMap = await loadOnePieceMarketForSet(set.setCode);
+  for (const [priceKey, entry] of Object.entries(marketMap)) {
+    const marketPrice = entry.tcgplayer?.marketPrice;
+    const isScrapedValid = typeof marketPrice === "number" && Number.isFinite(marketPrice) && marketPrice > 0;
+
+    if (!isScrapedValid) {
+      const prevEntry = existingMarketMap[priceKey];
+      const prevPrice = prevEntry?.tcgplayer?.marketPrice;
+      const isPrevValid = typeof prevPrice === "number" && Number.isFinite(prevPrice) && prevPrice > 0;
+
+      if (isPrevValid) {
+        entry.tcgplayer = {
+          marketPrice: prevPrice,
+          lowestPrice: prevEntry.tcgplayer?.lowestPrice ?? prevPrice,
+          lowestPriceWithShipping: prevEntry.tcgplayer?.lowestPriceWithShipping ?? prevPrice,
+          medianPrice: prevEntry.tcgplayer?.medianPrice ?? prevPrice,
+          totalListings: prevEntry.tcgplayer?.totalListings ?? null,
+          updatedAt: nowIso,
+        };
+        console.log(`  [fallback] Using last available price for One Piece card ${priceKey}: $${prevPrice}`);
+      }
+    }
+  }
+
   const priced = Object.values(marketMap).filter((entry) => entry.tcgplayer?.marketPrice != null).length;
 
   if (dryRun) {

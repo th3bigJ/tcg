@@ -112,6 +112,29 @@ function buildAllVariantsTrends(cardHistory: CardPriceHistory): Record<string, R
 function buildTrendSummaryForCard(cardHistory: CardPriceHistory): CardPriceTrendSummary | null {
   const allVariants = buildAllVariantsTrends(cardHistory);
 
+  // Try to find a variant and grade with a non-zero price (> 0)
+  for (const variant of sortedVariantKeys(cardHistory)) {
+    const variantHistory = cardHistory[variant];
+    if (!variantHistory || typeof variantHistory !== "object") continue;
+
+    for (const grade of sortedGradeKeys(variantHistory as Record<string, { daily: PriceHistoryPoint[] }>)) {
+      const window = variantHistory[grade];
+      const current = window?.daily?.[window.daily.length - 1]?.[1];
+      if (typeof current !== "number" || !Number.isFinite(current) || current <= 0) continue;
+
+      return {
+        variant,
+        grade,
+        current,
+        daily: buildWindowSummary(window.daily),
+        weekly: buildWindowSummary(window.weekly),
+        monthly: buildWindowSummary(window.monthly),
+        allVariants,
+      };
+    }
+  }
+
+  // Fallback to any valid price (even 0) if no positive price is found
   for (const variant of sortedVariantKeys(cardHistory)) {
     const variantHistory = cardHistory[variant];
     if (!variantHistory || typeof variantHistory !== "object") continue;

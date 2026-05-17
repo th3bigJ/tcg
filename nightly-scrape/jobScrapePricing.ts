@@ -208,7 +208,9 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
     }
   }
 
-  if (!perConfig.size) return;
+  if (!perConfig.size) {
+    console.warn(`  [${setCode}] WARNING: Scrydex expansion list scrape failed completely for all configs. Will attempt fallback to last available prices from R2.`);
+  }
 
   const conc = Number.parseInt(process.env.SCRYDEX_CARD_PAGE_CONCURRENCY ?? "20", 10);
   console.log(`  [${setCode}] fetching ${pathsNeeded.size} card detail pages (concurrency=${conc})…`);
@@ -292,23 +294,16 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
     return;
   }
 
-  const historyMap = await updatePriceHistory(s3, setCode, pricingMap);
+  const { historyMap, dailyFile } = await updatePriceHistory(s3, setCode, pricingMap);
   await uploadPriceTrends(s3, setCode, historyMap);
 
   // Update pricingVariants on card JSON using the flat daily bucket shape.
   const dailyBucketForSet: Record<string, Record<string, Record<string, number>>> = {};
-  for (const [externalId, entry] of Object.entries(pricingMap) as [string, { scrydex: ScrydexCardPricing | null }][]) {
-    if (!entry.scrydex) continue;
-    const variants: Record<string, Record<string, number>> = {};
-    for (const [variant, grades] of Object.entries(entry.scrydex)) {
-      if (!grades || typeof grades !== "object") continue;
-      const gradeMap: Record<string, number> = {};
-      for (const [grade, price] of Object.entries(grades)) {
-        if (typeof price === "number" && Number.isFinite(price)) gradeMap[grade] = price;
-      }
-      if (Object.keys(gradeMap).length > 0) variants[variant] = gradeMap;
+  for (const card of cards) {
+    const externalId = (card.externalId ?? "").trim();
+    if (externalId && dailyFile[externalId]) {
+      dailyBucketForSet[externalId] = dailyFile[externalId];
     }
-    if (Object.keys(variants).length > 0) dailyBucketForSet[externalId] = variants;
   }
 
   const cardKey = `data/cards/${setCode}.json`;
