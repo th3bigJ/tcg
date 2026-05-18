@@ -3,6 +3,7 @@ import {
   r2NewPricingDailyKey,
   r2NewPricingWeeklyKey,
   r2NewPricingMonthlyKey,
+  r2SinglesPriceTrendsPrefix,
 } from "./r2BucketLayout.js";
 import { buildPricingLookupIds } from "./r2Pricing.js";
 import type {
@@ -223,6 +224,20 @@ async function sendWithRetry(s3: S3Client, command: any, attempts = 5): Promise<
   throw lastError;
 }
 
+async function getPriceTrendsFile(s3: S3Client, key: string): Promise<any> {
+  try {
+    const res = await sendWithRetry(s3, new GetObjectCommand({ Bucket: getR2Bucket(), Key: key }));
+    const raw = await res.Body?.transformToString();
+    if (!raw?.trim()) return null;
+    return JSON.parse(raw);
+  } catch (e: unknown) {
+    const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+    const name = (e as { name?: string }).name;
+    if (status === 404 || name === "NoSuchKey") return null;
+    throw e;
+  }
+}
+
 const bucketFileCache = new Map<string, Promise<PricingBucketFile>>();
 
 async function getBucketFile(s3: S3Client, key: string): Promise<PricingBucketFile> {
@@ -305,15 +320,17 @@ export async function updatePriceHistory(
   const r2DailyKey = r2NewPricingDailyKey(dailyKey);
   const r2WeeklyKey = r2NewPricingWeeklyKey(weekKey);
   const r2MonthlyKey = r2NewPricingMonthlyKey(monthKey);
+  const trendsKey = `${r2SinglesPriceTrendsPrefix}/${setCode}.json`;
 
-  // Load the current and previous consolidated bucket files in parallel.
-  const [dailyFile, weeklyFile, monthlyFile, prevDailyFile, prevWeeklyFile, prevMonthlyFile] = await Promise.all([
+  // Load the current and previous consolidated bucket files in parallel, as well as the price trends file.
+  const [dailyFile, weeklyFile, monthlyFile, prevDailyFile, prevWeeklyFile, prevMonthlyFile, priceTrendsFile] = await Promise.all([
     getBucketFile(s3, r2DailyKey),
     getBucketFile(s3, r2WeeklyKey),
     getBucketFile(s3, r2MonthlyKey),
     getBucketFile(s3, r2NewPricingDailyKey(prevDKey)),
     getBucketFile(s3, r2NewPricingWeeklyKey(prevWKey)),
     getBucketFile(s3, r2NewPricingMonthlyKey(prevMKey)),
+    getPriceTrendsFile(s3, trendsKey),
   ]);
 
   // Running totals for weekly/monthly averages — seeded from existing bucket values.
@@ -342,14 +359,24 @@ export async function updatePriceHistory(
   for (const [externalId, entry] of Object.entries(currentPricingMap) as [string, { scrydex: ScrydexCardPricing | null }][]) {
     const extracted = extractVariantGradePrices(entry.scrydex);
     const prevExtracted = prevDailyFile[externalId] || {};
+    const trendExtracted = priceTrendsFile?.[externalId]?.allVariants || {};
 
-    // Get all variant slugs from both current and previous pricing
-    const allVariants = new Set([...Object.keys(extracted), ...Object.keys(prevExtracted)]);
+    // Get all variant slugs from current scrape, previous day's file, and existing trends file
+    const allVariants = new Set([
+      ...Object.keys(extracted),
+      ...Object.keys(prevExtracted),
+      ...Object.keys(trendExtracted),
+    ]);
 
     for (const variantSlug of allVariants) {
       const grades = extracted[variantSlug] || {};
       const prevGrades = prevExtracted[variantSlug] || {};
-      const allGrades = new Set([...Object.keys(grades), ...Object.keys(prevGrades)]);
+      const trendGrades = trendExtracted[variantSlug] || {};
+      const allGrades = new Set([
+        ...Object.keys(grades),
+        ...Object.keys(prevGrades),
+        ...Object.keys(trendGrades),
+      ]);
 
       for (const gradeKey of allGrades) {
         const scrapedPrice = grades[gradeKey];
@@ -365,6 +392,13 @@ export async function updatePriceHistory(
         } else if (isPrevValid) {
           finalPrice = prevPrice;
           console.log(`  [fallback] Using last available price for ${externalId} (${variantSlug} - ${gradeKey}): $${prevPrice}`);
+        } else {
+          const trendPrice = trendGrades[gradeKey]?.current;
+          const isTrendValid = typeof trendPrice === "number" && Number.isFinite(trendPrice) && trendPrice > 0;
+          if (isTrendValid) {
+            finalPrice = trendPrice;
+            console.log(`  [fallback-trends] Using last available price from trends for ${externalId} (${variantSlug} - ${gradeKey}): $${trendPrice}`);
+          }
         }
 
         if (finalPrice > 0) {
