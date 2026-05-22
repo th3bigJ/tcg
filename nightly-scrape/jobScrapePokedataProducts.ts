@@ -17,11 +17,15 @@ import {
 } from "./r2SealedPricing";
 
 interface ScrapePokedataProductsOptions {
-  mode?: "all" | "products" | "prices";
+  mode?: "all" | "products" | "prices" | "incremental";
   tcg?: string;
   language?: string;
   imageConcurrency?: number;
   skipExistingImages?: boolean;
+  /** Inclusive UTC date (YYYY-MM-DD); required for `incremental`. */
+  since?: string;
+  /** Inclusive UTC date (YYYY-MM-DD); required for `incremental`. */
+  until?: string;
 }
 
 type PokedataProduct = {
@@ -55,6 +59,7 @@ type ProductCatalogEntry = {
     r2_key: string | null;
     public_url: string | null;
   };
+  set_name?: string | null;
 };
 
 type PriceEntry = {
@@ -166,12 +171,64 @@ async function fetchProducts(): Promise<PokedataProduct[]> {
   return products as PokedataProduct[];
 }
 
+function parseInclusiveDateKey(value: string, label: string): number {
+  const trimmed = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    throw new Error(`Invalid ${label} date "${value}". Use YYYY-MM-DD.`);
+  }
+  const parsed = Date.parse(`${trimmed}T00:00:00Z`);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`Invalid ${label} date "${value}".`);
+  }
+  return parsed;
+}
+
+function filterProductsByReleaseDate(
+  products: PokedataProduct[],
+  since: string,
+  until: string,
+): PokedataProduct[] {
+  const start = parseInclusiveDateKey(since, "since");
+  const end = Date.parse(`${until.trim()}T23:59:59Z`);
+  if (!Number.isFinite(end)) {
+    throw new Error(`Invalid until date "${until}".`);
+  }
+  if (start > end) {
+    throw new Error(`since (${since}) must be on or before until (${until}).`);
+  }
+
+  return products.filter((product) => {
+    const releaseMs = Date.parse(product.release_date ?? "");
+    if (!Number.isFinite(releaseMs)) return false;
+    return releaseMs >= start && releaseMs <= end;
+  });
+}
+
+function sortProductsByReleaseDate(products: PokedataProduct[]): PokedataProduct[] {
+  return [...products].sort((left, right) => {
+    const rightDate = Date.parse(right.release_date ?? "") || 0;
+    const leftDate = Date.parse(left.release_date ?? "") || 0;
+    if (rightDate !== leftDate) return rightDate - leftDate;
+    return left.name.localeCompare(right.name);
+  });
+}
+
+function sortCatalogEntries(entries: ProductCatalogEntry[]): ProductCatalogEntry[] {
+  return [...entries].sort((left, right) => {
+    const rightDate = Date.parse(right.release_date ?? "") || 0;
+    const leftDate = Date.parse(left.release_date ?? "") || 0;
+    if (rightDate !== leftDate) return rightDate - leftDate;
+    return left.name.localeCompare(right.name);
+  });
+}
+
 function filterProducts(
   products: PokedataProduct[],
   requestedLanguage: string | null,
   requestedTcg: string,
 ): PokedataProduct[] {
-  return products
+  return sortProductsByReleaseDate(
+    products
     .filter((product) => {
       if (!requestedLanguage) return true;
       return (product.language ?? "").toUpperCase() === requestedLanguage;
@@ -185,13 +242,8 @@ function filterProducts(
       if (/\bcase\b/i.test(name)) return false;
       if (/\bdisplay$/i.test(name)) return false;
       return true;
-    })
-    .sort((left, right) => {
-      const rightDate = Date.parse(right.release_date ?? "") || 0;
-      const leftDate = Date.parse(left.release_date ?? "") || 0;
-      if (rightDate !== leftDate) return rightDate - leftDate;
-      return left.name.localeCompare(right.name);
-    });
+    }),
+  );
 }
 
 function resolveSeries(product: PokedataProduct): string | null {
@@ -329,6 +381,25 @@ async function mapPool<T, R>(items: T[], concurrency: number, fn: (item: T, inde
   return results;
 }
 
+function productToCatalogEntry(product: PokedataProduct): ProductCatalogEntry {
+  const r2Key = buildImageR2Key(product);
+  return {
+    id: product.id,
+    name: product.name,
+    tcg: product.tcg ?? null,
+    language: product.language ?? null,
+    type: product.type ?? null,
+    release_date: product.release_date ?? null,
+    year: product.year ?? null,
+    series: resolveSeries(product),
+    set_id: product.set_id ?? null,
+    image: {
+      r2_key: r2Key,
+      public_url: buildPublicUrl(r2Key),
+    },
+  };
+}
+
 function buildCatalogPayload(
   products: PokedataProduct[],
   requestedLanguage: string | null,
@@ -344,25 +415,22 @@ function buildCatalogPayload(
     },
     count: products.length,
     imageFailures: [],
-    products: products.map((product) => {
-      const r2Key = buildImageR2Key(product);
-      return {
-        id: product.id,
-        name: product.name,
-        tcg: product.tcg ?? null,
-        language: product.language ?? null,
-        type: product.type ?? null,
-        release_date: product.release_date ?? null,
-        year: product.year ?? null,
-        series: resolveSeries(product),
-        set_id: product.set_id ?? null,
-        image: {
-          r2_key: r2Key,
-          public_url: buildPublicUrl(r2Key),
-        },
-      };
-    }),
+    products: products.map((product) => productToCatalogEntry(product)),
   };
+}
+
+function buildPricesMap(products: PokedataProduct[]): Record<string, PriceEntry> {
+  return Object.fromEntries(
+    products.map((product) => [
+      String(product.id),
+      {
+        id: product.id,
+        market_value: typeof product.market_value === "number" ? product.market_value : null,
+        currency: "USD",
+        live: Boolean(product.live),
+      } satisfies PriceEntry,
+    ]),
+  );
 }
 
 function buildPricesPayload(
@@ -381,17 +449,47 @@ function buildPricesPayload(
       tcg: requestedTcg || null,
     },
     count: products.length,
-    prices: Object.fromEntries(
-      products.map((product) => [
-        String(product.id),
-        {
-          id: product.id,
-          market_value: typeof product.market_value === "number" ? product.market_value : null,
-          currency: "USD",
-          live: Boolean(product.live),
-        } satisfies PriceEntry,
-      ]),
-    ),
+    prices: buildPricesMap(products),
+  };
+}
+
+async function fetchCatalogFromR2(
+  s3: S3Client,
+  bucket: string,
+  key: string,
+): Promise<ProductCatalogPayload> {
+  const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  const raw = await res.Body?.transformToString();
+  if (!raw?.trim()) {
+    throw new Error(`Catalog at R2 ${key} was empty.`);
+  }
+  const payload = JSON.parse(raw) as ProductCatalogPayload;
+  if (!Array.isArray(payload.products)) {
+    throw new Error(`Catalog at R2 ${key} was missing a products array.`);
+  }
+  return payload;
+}
+
+function mergeCatalogPayload(
+  existing: ProductCatalogPayload,
+  newEntries: ProductCatalogEntry[],
+  requestedLanguage: string | null,
+  requestedTcg: string,
+  imageFailures: ProductCatalogPayload["imageFailures"],
+): ProductCatalogPayload {
+  const mergedProducts = sortCatalogEntries([...existing.products, ...newEntries]);
+  return {
+    ...existing,
+    scrapedAt: new Date().toISOString(),
+    sourceUrl: SOURCE_URL,
+    sourceApiUrl: SOURCE_API_URL,
+    filters: {
+      language: requestedLanguage,
+      tcg: requestedTcg || null,
+    },
+    count: mergedProducts.length,
+    imageFailures: [...(existing.imageFailures ?? []), ...imageFailures],
+    products: mergedProducts,
   };
 }
 
@@ -467,6 +565,126 @@ async function uploadProductImages(
 
 // ─── Exported job function ────────────────────────────────────────────────────
 
+async function runIncrementalScrapePokedataProducts(opts: ScrapePokedataProductsOptions): Promise<void> {
+  const since = opts.since?.trim();
+  const until = opts.until?.trim();
+  if (!since || !until) {
+    throw new Error('incremental mode requires --since=YYYY-MM-DD and --until=YYYY-MM-DD');
+  }
+
+  const requestedTcg = opts.tcg ?? DEFAULT_TCG;
+  const requestedLanguage = normalizeFilterValue(opts.language) ?? DEFAULT_LANGUAGE;
+  const imageConcurrency = opts.imageConcurrency ?? DEFAULT_IMAGE_CONCURRENCY;
+  const skipExistingImages = opts.skipExistingImages ?? true;
+
+  ensureOutputDir();
+
+  const allProducts = await fetchProducts();
+  const languageFiltered = filterProducts(allProducts, requestedLanguage, requestedTcg);
+  const dateFiltered = filterProductsByReleaseDate(languageFiltered, since, until);
+
+  const slugParts = buildSlugParts(requestedLanguage, requestedTcg);
+  const slug = slugParts.join("-");
+  const s3 = buildS3Client();
+  const bucket = getBucket();
+  const productsKey = r2SealedPokedataCatalogKey(slug);
+
+  const existingCatalog = await fetchCatalogFromR2(s3, bucket, productsKey);
+  const existingIds = new Set(existingCatalog.products.map((product) => product.id));
+  const newProducts = dateFiltered.filter((product) => !existingIds.has(product.id));
+
+  console.log(`Fetched ${allProducts.length} products from ${SOURCE_API_URL}`);
+  console.log(`Release window ${since} → ${until}: ${dateFiltered.length} after language/tcg/name filters`);
+  console.log(`Existing catalog: ${existingCatalog.products.length} products`);
+  console.log(`New products to add: ${newProducts.length}`);
+
+  if (newProducts.length === 0) {
+    console.log("No new products to merge. Skipping catalog and image upload.");
+  } else {
+    for (const product of newProducts) {
+      console.log(`  + ${product.id} ${product.name}`);
+    }
+  }
+
+  const skipLocal = scraperSkipLocalDiskMirror();
+  const localProductsPath = path.join(pokemonLocalDataRoot, `${slug}-products.json`);
+  const backupProductsPath = path.join(process.cwd(), "r2_backup", "data", `${slug}-products.json`);
+
+  let mergedCatalog = existingCatalog;
+
+  if (newProducts.length > 0) {
+    const imageUploadResult = await uploadProductImages(
+      s3,
+      bucket,
+      newProducts,
+      imageConcurrency,
+      skipExistingImages,
+      slugParts,
+    );
+    const newEntries = newProducts.map((product) => productToCatalogEntry(product));
+    mergedCatalog = mergeCatalogPayload(
+      existingCatalog,
+      newEntries,
+      requestedLanguage,
+      requestedTcg,
+      imageUploadResult.failures,
+    );
+
+    if (!skipLocal) {
+      writeLocalJson(localProductsPath, mergedCatalog);
+      fs.mkdirSync(path.dirname(backupProductsPath), { recursive: true });
+      writeLocalJson(backupProductsPath, mergedCatalog);
+    }
+
+    await uploadJson(s3, bucket, productsKey, mergedCatalog);
+    console.log(
+      `Merged catalog uploaded to R2 ${productsKey} (${existingCatalog.products.length} → ${mergedCatalog.count})`,
+    );
+    if (!skipLocal) {
+      console.log(`Wrote local mirrors: ${path.relative(process.cwd(), localProductsPath)}`);
+      console.log(`Wrote local mirrors: ${path.relative(process.cwd(), backupProductsPath)}`);
+    }
+  }
+
+  const pricedProducts = newProducts.filter(
+    (product) => typeof product.market_value === "number" && Number.isFinite(product.market_value),
+  );
+  console.log(`Merging prices for ${pricedProducts.length} new product(s) with finite market_value`);
+
+  if (pricedProducts.length > 0) {
+    const dailyKey = todayKey();
+    const weekKey = currentWeekKey();
+    const monthKey = currentMonthKey();
+
+    const [prevDaily, prevWeekly, prevMonthly] = await Promise.all([
+      fetchSnapshot(s3, bucket, r2SealedDailyKey(dailyKey)),
+      fetchSnapshot(s3, bucket, r2SealedWeeklyKey(weekKey)),
+      fetchSnapshot(s3, bucket, r2SealedMonthlyKey(monthKey)),
+    ]);
+
+    await updateSealedPriceHistory(s3, buildPricesMap(pricedProducts));
+
+    const [daily, weekly, monthly] = await Promise.all([
+      fetchSnapshot(s3, bucket, r2SealedDailyKey(dailyKey)),
+      fetchSnapshot(s3, bucket, r2SealedWeeklyKey(weekKey)),
+      fetchSnapshot(s3, bucket, r2SealedMonthlyKey(monthKey)),
+    ]);
+
+    await uploadSealedPriceTrends(s3, daily, weekly, monthly, prevDaily, prevWeekly, prevMonthly);
+    console.log(
+      `Updated sealed pricing: ${r2SealedDailyKey(dailyKey)}, weekly, monthly, and price-trends.json`,
+    );
+
+    const backupDailyPath = path.join(process.cwd(), "r2_backup", r2SealedDailyKey(dailyKey));
+    if (!skipLocal) {
+      fs.mkdirSync(path.dirname(backupDailyPath), { recursive: true });
+      writeLocalJson(backupDailyPath, daily);
+    }
+  } else if (newProducts.length > 0) {
+    console.log("No priced new products; sealed snapshots unchanged.");
+  }
+}
+
 export async function runScrapePokedataProducts(opts: ScrapePokedataProductsOptions = {}): Promise<void> {
   const mode = opts.mode ?? "all";
   const requestedTcg = opts.tcg ?? DEFAULT_TCG;
@@ -474,8 +692,13 @@ export async function runScrapePokedataProducts(opts: ScrapePokedataProductsOpti
   const imageConcurrency = opts.imageConcurrency ?? DEFAULT_IMAGE_CONCURRENCY;
   const skipExistingImages = opts.skipExistingImages ?? true;
 
+  if (mode === "incremental") {
+    await runIncrementalScrapePokedataProducts(opts);
+    return;
+  }
+
   if (!["all", "products", "prices"].includes(mode)) {
-    throw new Error(`Unsupported mode "${mode}". Use "all", "products", or "prices".`);
+    throw new Error(`Unsupported mode "${mode}". Use "all", "products", "prices", or "incremental".`);
   }
 
   ensureOutputDir();
