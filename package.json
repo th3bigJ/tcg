@@ -15,7 +15,10 @@
     "scrape:pokedata-products:prices": "node --import tsx/esm nightly-scrape/scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH",
     "scrape:onepiece-pricing": "node --import tsx/esm nightly-scrape/scrapeOnePiecePricing.ts",
     "scrape:market-trends": "node --import tsx/esm nightly-scrape/runTrends.ts",
-    "scrape:nightly": "node --import tsx/esm nightly-scrape/runNightlyNow.ts"
+    "scrape:nightly": "node --import tsx/esm nightly-scrape/runNightlyNow.ts",
+    "seed:pokemon-scrydex": "node --import tsx/esm scripts/seedPokemonSetFromScrydex.ts",
+    "scrape:pokemon-card-meta": "node --import tsx/esm scripts/scrapePokemonCardMeta.ts",
+    "upload:pokemon-set-files": "node --import tsx/esm scripts/upload-pokemon-set-files.ts"
   },
   "dependencies": {
     "node-cron": "^4.2.1"

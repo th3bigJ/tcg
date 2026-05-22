@@ -50,6 +50,13 @@ export function scrydexMegaExpansionConfig(
     };
   }
 
+  if (lowered.has("me04") || lowered.has("me4")) {
+    return {
+      expansionUrl: "https://scrydex.com/pokemon/expansions/chaos-rising/me4",
+      listPrefix: "me4",
+    };
+  }
+
   if (lowered.has("me01") || lowered.has("me1")) {
     return {
       expansionUrl: "https://scrydex.com/pokemon/expansions/mega-evolution/me1",
