@@ -76,6 +76,7 @@ export type SetJsonEntry = {
   releaseDate: string | null;
   cardCountTotal: number | null;
   cardCountOfficial: number | null;
+  masterSetTotal?: number | null;
   seriesName: string | null;
   logoSrc: string;
   symbolSrc: string | null;

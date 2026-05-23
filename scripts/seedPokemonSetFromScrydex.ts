@@ -371,6 +371,16 @@ async function seedSet(set: SetJsonEntry): Promise<void> {
   if (!dryRun) {
     writeJson(cardsPath, merged);
     set.cardCountTotal = listing.length;
+    
+    let masterSetTotal = 0;
+    for (const card of merged) {
+      const variantsCount = card.pricingVariants && card.pricingVariants.length > 0
+        ? card.pricingVariants.length
+        : 1;
+      masterSetTotal += variantsCount;
+    }
+    set.masterSetTotal = masterSetTotal;
+
     console.log(`[${setKey}] wrote ${merged.length} cards → ${path.relative(REPO_ROOT, cardsPath)}`);
   } else {
     console.log(`[${setKey}] dry-run: would write ${merged.length} cards (${added.length} new)`);

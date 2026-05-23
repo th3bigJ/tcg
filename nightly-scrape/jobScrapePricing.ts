@@ -169,14 +169,14 @@ function getR2Bucket(): string {
 
 // ─── Per-set scrape ───────────────────────────────────────────────────────────
 
-async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client, dryRun: boolean): Promise<void> {
+async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client, dryRun: boolean): Promise<boolean> {
   const setCode = getSinglesCatalogSetKey(set);
-  if (!setCode) return;
+  if (!setCode) return false;
 
   const configs = resolveExpansionConfigsForSet(set);
   if (!configs.length) {
     console.log(`  [${setCode}] skip — no Scrydex URL mapped`);
-    return;
+    return false;
   }
 
   const tcgPrefixes = buildScrydexPrefixCandidates(set);
@@ -291,7 +291,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
 
   if (dryRun) {
     console.log(`  [${setCode}] ${count} cards scraped (dry-run — skipping R2 uploads)`);
-    return;
+    return false;
   }
 
   const { historyMap, dailyFile } = await updatePriceHistory(s3, setCode, pricingMap);
@@ -306,6 +306,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
     }
   }
 
+  let setChanged = false;
   const cardKey = `data/cards/${setCode}.json`;
   try {
     const cardRows = await getJsonFromR2<CardJsonEntry[]>(s3, cardKey);
@@ -314,6 +315,18 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
       if (vChanged) {
         await putJsonToR2(s3, cardKey, cardRows);
         console.log(`  [${setCode}] updated pricingVariants in R2 ${cardKey}`);
+        
+        let newMasterTotal = 0;
+        for (const card of cardRows) {
+          const variantsCount = card.pricingVariants && card.pricingVariants.length > 0
+            ? card.pricingVariants.length
+            : 1;
+          newMasterTotal += variantsCount;
+        }
+        if (set.masterSetTotal !== newMasterTotal) {
+          set.masterSetTotal = newMasterTotal;
+          setChanged = true;
+        }
       }
     }
   } catch (e) {
@@ -321,6 +334,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
   }
 
   console.log(`  [${setCode}] ${count} cards → history + trends written to R2`);
+  return setChanged;
 }
 
 // ─── Exported job function ────────────────────────────────────────────────────
@@ -356,6 +370,7 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
   console.log(`=== Scrydex price scrape (${scopeLabel}) — catalog from R2, outputs to R2 ===`);
   if (dryRun) console.log("(dry-run: no R2 uploads)\n");
 
+  let anySetChanged = false;
   for (const set of sets) {
     const setCode = getSinglesCatalogSetKey(set);
     if (!setCode) continue;
@@ -364,7 +379,13 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
       console.log(`  [${setCode}] skip — no cards in R2 data/cards/${setCode}.json`);
       continue;
     }
-    await scrapeSet(set, cards, s3, dryRun);
+    const changed = await scrapeSet(set, cards, s3, dryRun);
+    if (changed) anySetChanged = true;
+  }
+
+  if (anySetChanged && !dryRun) {
+    await putJsonToR2(s3, "data/sets.json", allSets);
+    console.log("Updated data/sets.json in R2 with new masterSetTotal values");
   }
 
   console.log("\nDone.");
