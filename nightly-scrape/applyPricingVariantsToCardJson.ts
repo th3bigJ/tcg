@@ -28,6 +28,7 @@ export function applyPricingVariantsToCardsInPlace(
     const variants = dailyPricingMap?.[ext];
     const keys = variants ? Object.keys(variants).filter(Boolean).sort((a, b) => a.localeCompare(b)) : [];
     const next = keys.length > 0 ? keys : null;
+
     if (!pricingVariantsEqual(card.pricingVariants, next)) {
       card.pricingVariants = next;
       changed = true;
