@@ -8,6 +8,7 @@ import type {
 } from "./staticDataTypes";
 import { updatePriceHistory } from "./r2PriceHistory";
 import { uploadPriceTrends } from "./r2PriceTrends";
+import { r2PokemonMarketMoversKey } from "./r2BucketLayout";
 import {
   fetchScrydexExpansionMultiPageHtml,
   parseScrydexExpansionListPrices,
@@ -34,6 +35,20 @@ interface ScrapePricingOptions {
   dryRun?: boolean;
   onlySetCodes?: string[];
   onlySeriesNames?: string[];
+}
+
+export interface MarketMoverEntry {
+  cardID: string;
+  cardName: string;
+  imageURL: string | null;
+  percentChange: number;
+  setCode: string;
+}
+
+export interface PokemonMarketMovers {
+  topGainer: MarketMoverEntry | null;
+  topDecliner: MarketMoverEntry | null;
+  updatedAt: string;
 }
 
 function getSinglesCatalogSetKey(set: SetJsonEntry): string | null {
@@ -169,14 +184,19 @@ function getR2Bucket(): string {
 
 // ─── Per-set scrape ───────────────────────────────────────────────────────────
 
-async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client, dryRun: boolean): Promise<boolean> {
+async function scrapeSet(
+  set: SetJsonEntry,
+  cards: CardJsonEntry[],
+  s3: S3Client,
+  dryRun: boolean,
+): Promise<{ changed: boolean; topGainer: MarketMoverEntry | null; topDecliner: MarketMoverEntry | null }> {
   const setCode = getSinglesCatalogSetKey(set);
-  if (!setCode) return false;
+  if (!setCode) return { changed: false, topGainer: null, topDecliner: null };
 
   const configs = resolveExpansionConfigsForSet(set);
   if (!configs.length) {
     console.log(`  [${setCode}] skip — no Scrydex URL mapped`);
-    return false;
+    return { changed: false, topGainer: null, topDecliner: null };
   }
 
   const tcgPrefixes = buildScrydexPrefixCandidates(set);
@@ -291,11 +311,39 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
 
   if (dryRun) {
     console.log(`  [${setCode}] ${count} cards scraped (dry-run — skipping R2 uploads)`);
-    return false;
+    return { changed: false, topGainer: null, topDecliner: null };
   }
 
   const { historyMap, dailyFile } = await updatePriceHistory(s3, setCode, pricingMap);
-  await uploadPriceTrends(s3, setCode, historyMap);
+  const trendMap = await uploadPriceTrends(s3, setCode, historyMap);
+
+  // Build cardId → CardJsonEntry lookup for name/image resolution.
+  const cardByExternalId = new Map<string, CardJsonEntry>();
+  const cardByMasterId = new Map<string, CardJsonEntry>();
+  for (const card of cards) {
+    if (card.externalId) cardByExternalId.set(card.externalId.trim().toLowerCase(), card);
+    cardByMasterId.set(card.masterCardId.toLowerCase(), card);
+  }
+
+  // Pick the biggest weekly gainer and decliner for this set.
+  let topGainer: MarketMoverEntry | null = null;
+  let topDecliner: MarketMoverEntry | null = null;
+  for (const [externalId, summary] of Object.entries(trendMap)) {
+    const change = summary.weekly?.changePct;
+    if (typeof change !== "number" || !Number.isFinite(change)) continue;
+    const card = cardByExternalId.get(externalId.toLowerCase())
+      ?? cardByMasterId.get(externalId.toLowerCase());
+    if (!card) continue;
+    const entry: MarketMoverEntry = {
+      cardID: card.masterCardId,
+      cardName: card.cardName,
+      imageURL: card.imageLowSrc ?? null,
+      percentChange: change,
+      setCode,
+    };
+    if (topGainer === null || change > topGainer.percentChange) topGainer = entry;
+    if (topDecliner === null || change < topDecliner.percentChange) topDecliner = entry;
+  }
 
   // Update pricingVariants on card JSON using the flat daily bucket shape.
   const dailyBucketForSet: Record<string, Record<string, Record<string, number>>> = {};
@@ -315,7 +363,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
       if (vChanged) {
         await putJsonToR2(s3, cardKey, cardRows);
         console.log(`  [${setCode}] updated pricingVariants in R2 ${cardKey}`);
-        
+
         let newMasterTotal = 0;
         for (const card of cardRows) {
           const variantsCount = card.pricingVariants && card.pricingVariants.length > 0
@@ -334,7 +382,7 @@ async function scrapeSet(set: SetJsonEntry, cards: CardJsonEntry[], s3: S3Client
   }
 
   console.log(`  [${setCode}] ${count} cards → history + trends written to R2`);
-  return setChanged;
+  return { changed: setChanged, topGainer, topDecliner };
 }
 
 // ─── Exported job function ────────────────────────────────────────────────────
@@ -371,6 +419,9 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
   if (dryRun) console.log("(dry-run: no R2 uploads)\n");
 
   let anySetChanged = false;
+  let globalTopGainer: MarketMoverEntry | null = null;
+  let globalTopDecliner: MarketMoverEntry | null = null;
+
   for (const set of sets) {
     const setCode = getSinglesCatalogSetKey(set);
     if (!setCode) continue;
@@ -379,13 +430,38 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
       console.log(`  [${setCode}] skip — no cards in R2 data/cards/${setCode}.json`);
       continue;
     }
-    const changed = await scrapeSet(set, cards, s3, dryRun);
+    const { changed, topGainer, topDecliner } = await scrapeSet(set, cards, s3, dryRun);
     if (changed) anySetChanged = true;
+    if (topGainer && (globalTopGainer === null || topGainer.percentChange > globalTopGainer.percentChange)) {
+      globalTopGainer = topGainer;
+    }
+    if (topDecliner && (globalTopDecliner === null || topDecliner.percentChange < globalTopDecliner.percentChange)) {
+      globalTopDecliner = topDecliner;
+    }
   }
 
   if (anySetChanged && !dryRun) {
     await putJsonToR2(s3, "data/sets.json", allSets);
     console.log("Updated data/sets.json in R2 with new masterSetTotal values");
+  }
+
+  if (!dryRun) {
+    const movers: PokemonMarketMovers = {
+      topGainer: globalTopGainer,
+      topDecliner: globalTopDecliner,
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      await s3.send(new PutObjectCommand({
+        Bucket: getR2Bucket(),
+        Key: r2PokemonMarketMoversKey,
+        Body: JSON.stringify(movers, null, 2),
+        ContentType: "application/json",
+      }));
+      console.log(`Market movers written to R2 ${r2PokemonMarketMoversKey}`);
+    } catch (e) {
+      console.warn(`Failed to write market movers: ${e instanceof Error ? e.message : e}`);
+    }
   }
 
   console.log("\nDone.");

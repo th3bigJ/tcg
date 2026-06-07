@@ -14,7 +14,6 @@
     "scrape:pokedata-products:catalog": "node --import tsx/esm nightly-scrape/scrapePokedataProducts.ts --mode=products --tcg=Pokemon --language=ENGLISH",
     "scrape:pokedata-products:prices": "node --import tsx/esm nightly-scrape/scrapePokedataProducts.ts --mode=prices --tcg=Pokemon --language=ENGLISH",
     "scrape:pokedata-products:incremental": "node --import tsx/esm nightly-scrape/scrapePokedataProducts.ts --mode=incremental --since=2026-03-30 --until=2026-05-22 --tcg=Pokemon --language=ENGLISH",
-    "scrape:onepiece-pricing": "node --import tsx/esm nightly-scrape/scrapeOnePiecePricing.ts",
     "scrape:market-trends": "node --import tsx/esm nightly-scrape/runTrends.ts",
     "scrape:nightly": "node --import tsx/esm nightly-scrape/runNightlyNow.ts",
     "seed:pokemon-scrydex": "node --import tsx/esm scripts/seedPokemonSetFromScrydex.ts",

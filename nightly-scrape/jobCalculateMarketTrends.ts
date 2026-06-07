@@ -1,9 +1,15 @@
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { r2NewPricingDailyKey, r2MarketTrendKey } from "./r2BucketLayout.js";
-import { buildS3Client, getR2Bucket } from "./r2Pricing";
-import { buildOnePieceS3Client, getOnePieceR2Bucket } from "./onepieceR2";
-import { loadOnePieceSetsFromR2 } from "./onepiecePricing";
-import type { PriceHistoryPoint, SetPriceHistoryMap } from "./staticDataTypes";
+import { r2NewPricingDailyKey, r2MarketTrendKey, r2PokemonMarketMoversKey } from "./r2BucketLayout.js";
+import { buildS3Client, getR2Bucket } from "./r2Pricing.js";
+import type { PokemonMarketMovers } from "./jobScrapePricing.js";
+import type { PriceHistoryPoint } from "./staticDataTypes.js";
+
+interface MoverEntry {
+  cardID: string;
+  cardName: string;
+  imageURL: string | null;
+  percentChange: number;
+}
 
 interface BrandTrend {
   sumToday: number;
@@ -13,11 +19,12 @@ interface BrandTrend {
   change1Day: number | null;
   change7Days: number | null;
   change31Days: number | null;
+  biggestGainer7Days?: MoverEntry | null;
+  biggestDecliner7Days?: MoverEntry | null;
 }
 
 interface MarketTrendResult {
   pokemon: BrandTrend;
-  onepiece: BrandTrend;
   updatedAt: string;
 }
 
@@ -119,65 +126,6 @@ async function calculatePokemonBrandTrend(s3: S3Client, bucket: string): Promise
   };
 }
 
-async function calculateOnePieceBrandTrend(
-  s3: S3Client,
-  bucket: string,
-  setCodes: string[],
-): Promise<BrandTrend> {
-  const today = getOffsetDateKey(0);
-  const d1 = getOffsetDateKey(1);
-  const d7 = getOffsetDateKey(7);
-  const d31 = getOffsetDateKey(31);
-
-  let sumT = 0, sumT1 = 0, sumT7 = 0, sumT31 = 0;
-
-  const getPriceOnOrBefore = (points: PriceHistoryPoint[], targetDate: string): number | null => {
-    let last: number | null = null;
-    for (const [date, price] of points) {
-      if (date > targetDate) break;
-      last = price;
-    }
-    return last;
-  };
-
-  for (const code of setCodes) {
-    const historyMap = await getJsonFromS3<SetPriceHistoryMap>(s3, bucket, `onepiece/pricing/history/${code}.json`);
-    if (!historyMap) continue;
-
-    for (const cardHistory of Object.values(historyMap)) {
-      for (const grades of Object.values(cardHistory)) {
-        for (const window of Object.values(grades)) {
-          const sortedPoints = [...window.daily].sort((a, b) => a[0].localeCompare(b[0]));
-
-          const p31 = getPriceOnOrBefore(sortedPoints, d31);
-          if (typeof p31 !== "number" || p31 <= 0) continue;
-
-          const pt = getPriceOnOrBefore(sortedPoints, today);
-          const p1 = getPriceOnOrBefore(sortedPoints, d1);
-          const p7 = getPriceOnOrBefore(sortedPoints, d7);
-
-          const isOutlier = (p: number | null) => p === null || p > p31 * 5;
-
-          sumT31 += p31;
-          sumT   += isOutlier(pt) ? p31 : pt!;
-          sumT1  += isOutlier(p1) ? p31 : p1!;
-          sumT7  += isOutlier(p7) ? p31 : p7!;
-        }
-      }
-    }
-  }
-
-  return {
-    sumToday: sumT,
-    sum1DayAgo: sumT1,
-    sum7DaysAgo: sumT7,
-    sum31DaysAgo: sumT31,
-    change1Day: calculateChange(sumT, sumT1),
-    change7Days: calculateChange(sumT, sumT7),
-    change31Days: calculateChange(sumT, sumT31),
-  };
-}
-
 export async function runCalculateMarketTrends(): Promise<void> {
   console.log("=== Calculating Market Trends ===");
 
@@ -187,17 +135,29 @@ export async function runCalculateMarketTrends(): Promise<void> {
   console.log("  Processing Pokemon (daily bucket files)…");
   const pokemonTrend = await calculatePokemonBrandTrend(pokemonS3, pokemonBucket);
 
-  const opS3 = buildOnePieceS3Client();
-  const opBucket = getOnePieceR2Bucket();
-  const opSets = await loadOnePieceSetsFromR2();
-  const opCodes = opSets.map((s: { setCode: string }) => s.setCode).filter(Boolean);
-
-  console.log(`  Processing ${opCodes.length} One Piece sets…`);
-  const opTrend = await calculateOnePieceBrandTrend(opS3, opBucket, opCodes);
+  // Read pre-computed market movers written by the pricing scraper.
+  const pokemonMovers = await getJsonFromS3<PokemonMarketMovers>(pokemonS3, pokemonBucket, r2PokemonMarketMoversKey);
+  if (pokemonMovers?.topGainer) {
+    pokemonTrend.biggestGainer7Days = {
+      cardID: pokemonMovers.topGainer.cardID,
+      cardName: pokemonMovers.topGainer.cardName,
+      imageURL: pokemonMovers.topGainer.imageURL,
+      percentChange: pokemonMovers.topGainer.percentChange,
+    };
+    console.log(`  Biggest Pokemon gainer: ${pokemonMovers.topGainer.cardName} (+${pokemonMovers.topGainer.percentChange.toFixed(1)}%)`);
+  }
+  if (pokemonMovers?.topDecliner) {
+    pokemonTrend.biggestDecliner7Days = {
+      cardID: pokemonMovers.topDecliner.cardID,
+      cardName: pokemonMovers.topDecliner.cardName,
+      imageURL: pokemonMovers.topDecliner.imageURL,
+      percentChange: pokemonMovers.topDecliner.percentChange,
+    };
+    console.log(`  Biggest Pokemon decliner: ${pokemonMovers.topDecliner.cardName} (${pokemonMovers.topDecliner.percentChange.toFixed(1)}%)`);
+  }
 
   const result: MarketTrendResult = {
     pokemon: pokemonTrend,
-    onepiece: opTrend,
     updatedAt: new Date().toISOString(),
   };
 

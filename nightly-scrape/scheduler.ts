@@ -1,8 +1,7 @@
 import cron from "node-cron";
-import { runScrapePricing } from "./jobScrapePricing";
-import { runScrapePokedataProducts } from "./jobScrapePokedataProducts";
-import { runScrapeOnePiecePricing } from "./jobScrapeOnePiecePricing";
-import { runCalculateMarketTrends } from "./jobCalculateMarketTrends";
+import { runScrapePricing } from "./jobScrapePricing.js";
+import { runScrapePokedataProducts } from "./jobScrapePokedataProducts.js";
+import { runCalculateMarketTrends } from "./jobCalculateMarketTrends.js";
 
 let initialised = false;
 
@@ -26,16 +25,7 @@ export async function runNightlyJobs() {
     }
   }
 
-  // Step 3: once Pokemon has finished, update One Piece pricing/history/trends on R2.
-  log("onePiecePricing", "starting");
-  try {
-    await runScrapeOnePiecePricing({ source: "r2" });
-    log("onePiecePricing", "done");
-  } catch (e) {
-    log("onePiecePricing", `failed: ${e instanceof Error ? e.message : String(e)}`);
-  }
-
-  // Step 4: calculate global market trends for both brands.
+  // Step 3: calculate global market trends.
   log("marketTrends", "starting");
   try {
     await runCalculateMarketTrends();

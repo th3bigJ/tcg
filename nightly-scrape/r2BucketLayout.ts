@@ -66,3 +66,6 @@ export function r2SealedMonthlyKey(monthKey: string): string {
 
 /** Global market trend summary: `new_pricing/market-trend.json` */
 export const r2MarketTrendKey = `${R2_NEW_PRICING}/market-trend.json` as const;
+
+/** Pre-computed biggest mover cards per brand, written by the pricing scraper and read by jobCalculateMarketTrends. */
+export const r2PokemonMarketMoversKey = `${R2_NEW_PRICING}/pokemon-market-movers.json` as const;
