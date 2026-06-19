@@ -30,6 +30,7 @@ import { resolveExpansionConfigsForSet } from "./scrydexExpansionConfigsForSet";
 import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "./scrydexPrefixCandidatesForSet";
 import { applyPricingVariantsToCardsInPlace } from "./applyPricingVariantsToCardJson";
 import { canonicalVariantSlugFromCompactLabel } from "./pricingVariantCompactAliases";
+import { scrapeTcgPlayerPrice, closeBrowser } from "./tcgplayerScraper";
 
 interface ScrapePricingOptions {
   dryRun?: boolean;
@@ -259,6 +260,23 @@ async function scrapeSet(
     const extLower = storageKey.toLowerCase();
     if (!extLower) continue;
 
+    // Check if this is a temporary custom card
+    if ((card as any).isCustomSource) {
+      let tcgPrice = null;
+      if ((card as any).tcgplayerScrapeUrl) {
+        console.log(`  [${setCode}] Scraping custom TCGPlayer URL for ${storageKey}...`);
+        tcgPrice = await scrapeTcgPlayerPrice((card as any).tcgplayerScrapeUrl);
+      }
+      
+      const scrydex = scrydexZeroPricingPlaceholder();
+      if (tcgPrice !== null) {
+        scrydex.default.raw = tcgPrice;
+      }
+      
+      pricingMap[storageKey] = { scrydex, tcgplayer: null, cardmarket: null };
+      continue;
+    }
+
     let flatUsd: Record<string, number> = {};
     for (const cfg of configs) {
       const entry = perConfig.get(cfg.listPrefix);
@@ -464,5 +482,6 @@ export async function runScrapePricing(opts: ScrapePricingOptions = {}): Promise
     }
   }
 
+  await closeBrowser();
   console.log("\nDone.");
 }

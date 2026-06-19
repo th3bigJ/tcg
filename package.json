@@ -21,7 +21,10 @@
     "upload:pokemon-set-files": "node --import tsx/esm scripts/upload-pokemon-set-files.ts"
   },
   "dependencies": {
-    "node-cron": "^4.2.1"
+    "node-cron": "^4.2.1",
+    "puppeteer": "^25.1.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1019.0",
