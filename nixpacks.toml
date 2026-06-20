@@ -2,3 +2,5 @@
 # See: https://nixpacks.com/docs/providers/node
 [variables]
 NIXPACKS_NODE_VERSION = "20"
+PUPPETEER_SKIP_DOWNLOAD = "true"
+PUPPETEER_EXECUTABLE_PATH = "/usr/bin/chromium-browser"
