@@ -1,12 +1,14 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
+// @ts-ignore
 puppeteer.use(StealthPlugin());
 
 let browserInstance: any = null;
 
 export async function getBrowser() {
   if (!browserInstance) {
+    // @ts-ignore
     browserInstance = await puppeteer.launch({ 
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'] 
@@ -27,10 +29,16 @@ export async function scrapeTcgPlayerPrice(url: string): Promise<number | null> 
   const page = await browser.newPage();
   
   try {
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
     
+    await page.waitForFunction(() => {
+      // @ts-ignore
+      return document.body.innerText.match(/Market Price\s*\$?([0-9.,]+)/i) !== null;
+    }, { timeout: 15000 });
+
     const price = await page.evaluate(() => {
       // Find the Market Price block
+      // @ts-ignore
       const text = document.body.innerText;
       const match = text.match(/Market Price\s*\$?([0-9.,]+)/i);
       if (match) {

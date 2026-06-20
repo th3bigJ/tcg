@@ -5,17 +5,17 @@ import type {
   SeriesJsonEntry,
   SetJsonEntry,
   SetPricingMap,
-} from "./staticDataTypes";
-import { updatePriceHistory } from "./r2PriceHistory";
-import { uploadPriceTrends } from "./r2PriceTrends";
-import { r2PokemonMarketMoversKey } from "./r2BucketLayout";
+} from "./staticDataTypes.js";
+import { updatePriceHistory } from "./r2PriceHistory.js";
+import { uploadPriceTrends } from "./r2PriceTrends.js";
+import { r2PokemonMarketMoversKey } from "./r2BucketLayout.js";
 import {
   fetchScrydexExpansionMultiPageHtml,
   parseScrydexExpansionListPrices,
   parseScrydexExpansionListPaths,
   resolveScrydexListUsd,
   resolveScrydexCardPath,
-} from "./scrydexExpansionListParsing";
+} from "./scrydexExpansionListParsing.js";
 import {
   fetchScrydexCardPageHtml,
   parseScrydexCardPageRawNearMintUsd,
@@ -25,12 +25,12 @@ import {
   canonicalScrydexVariantLabel,
   SCRYDEX_FLAT_PSA10_KEY_SUFFIX,
   SCRYDEX_FLAT_ACE10_KEY_SUFFIX,
-} from "./scrydexMepCardPagePricing";
-import { resolveExpansionConfigsForSet } from "./scrydexExpansionConfigsForSet";
-import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "./scrydexPrefixCandidatesForSet";
-import { applyPricingVariantsToCardsInPlace } from "./applyPricingVariantsToCardJson";
-import { canonicalVariantSlugFromCompactLabel } from "./pricingVariantCompactAliases";
-import { scrapeTcgPlayerPrice, closeBrowser } from "./tcgplayerScraper";
+} from "./scrydexMepCardPagePricing.js";
+import { resolveExpansionConfigsForSet } from "./scrydexExpansionConfigsForSet.js";
+import { buildScrydexPrefixCandidates, setRowMatchesAllowedSetCodes } from "./scrydexPrefixCandidatesForSet.js";
+import { applyPricingVariantsToCardsInPlace } from "./applyPricingVariantsToCardJson.js";
+import { canonicalVariantSlugFromCompactLabel } from "./pricingVariantCompactAliases.js";
+import { scrapeTcgPlayerPrice, closeBrowser } from "./tcgplayerScraper.js";
 
 interface ScrapePricingOptions {
   dryRun?: boolean;
@@ -268,9 +268,10 @@ async function scrapeSet(
         tcgPrice = await scrapeTcgPlayerPrice((card as any).tcgplayerScrapeUrl);
       }
       
-      const scrydex = scrydexZeroPricingPlaceholder();
+      const scrydex: any = scrydexZeroPricingPlaceholder();
       if (tcgPrice !== null) {
-        scrydex.default.raw = tcgPrice;
+        delete scrydex.default;
+        scrydex.holofoil = { raw: tcgPrice, psa10: 0, ace10: 0 };
       }
       
       pricingMap[storageKey] = { scrydex, tcgplayer: null, cardmarket: null };
@@ -347,7 +348,7 @@ async function scrapeSet(
   let topGainer: MarketMoverEntry | null = null;
   let topDecliner: MarketMoverEntry | null = null;
   for (const [externalId, summary] of Object.entries(trendMap)) {
-    const change = summary.weekly?.changePct;
+    const change = (summary as any).weekly?.changePct;
     if (typeof change !== "number" || !Number.isFinite(change)) continue;
     const card = cardByExternalId.get(externalId.toLowerCase())
       ?? cardByMasterId.get(externalId.toLowerCase());
