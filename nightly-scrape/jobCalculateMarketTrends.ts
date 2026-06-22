@@ -99,20 +99,27 @@ async function calculatePokemonBrandTrend(s3: S3Client, bucket: string): Promise
     [0, 1, 7, 31].map((n) => sumDailyRawPrices(s3, bucket, getOffsetDateKey(n))),
   );
 
-  const isOutlier = (p: number | null, p31: number) => p === null || p > p31 * 5;
+  const isOutlier = (p: number, reference: number) => p > reference * 5 || p < reference / 5;
 
   let sumT = 0, sumT1 = 0, sumT7 = 0, sumT31 = 0;
 
   for (const [key, p31] of mapT31) {
     if (p31 <= 0) continue;
-    const pt = mapT.get(key) ?? null;
-    const p1 = mapT1.get(key) ?? null;
-    const p7 = mapT7.get(key) ?? null;
+    
+    const pt = mapT.get(key);
+    const p1 = mapT1.get(key);
+    const p7 = mapT7.get(key);
+
+    // Exclude if price is missing on any day
+    if (pt === undefined || p1 === undefined || p7 === undefined) continue;
+
+    // Exclude if any price is an extreme outlier (upward or downward > 5x)
+    if (isOutlier(pt, p31) || isOutlier(p1, p31) || isOutlier(p7, p31)) continue;
 
     sumT31 += p31;
-    sumT   += isOutlier(pt,  p31) ? p31 : pt!;
-    sumT1  += isOutlier(p1,  p31) ? p31 : p1!;
-    sumT7  += isOutlier(p7,  p31) ? p31 : p7!;
+    sumT   += pt;
+    sumT1  += p1;
+    sumT7  += p7;
   }
 
   return {
