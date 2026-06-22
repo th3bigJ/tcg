@@ -52,5 +52,16 @@ export function initScheduler() {
     { timezone: "UTC" },
   );
 
-  log("init", "nightly cron registered (00:05 UTC)");
+  // Temporary run for today at 7am local time (6am UTC on June 22nd)
+  cron.schedule(
+    "0 6 22 6 *",
+    () => {
+      runNightlyJobs().catch((e) => {
+        console.error("[cron:nightly] unhandled error:", e);
+      });
+    },
+    { timezone: "UTC" },
+  );
+
+  log("init", "nightly cron registered (00:05 UTC), extra run scheduled for 06:00 UTC today");
 }
