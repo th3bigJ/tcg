@@ -1,16 +1,34 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { execSync } from 'child_process';
 
 // @ts-ignore
 puppeteer.use(StealthPlugin());
 
 let browserInstance: any = null;
 
+function getExecutablePath(): string | undefined {
+  const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (envPath && envPath !== 'chromium' && envPath !== 'chromium-browser') {
+    return envPath;
+  }
+  try {
+    return execSync('which chromium').toString().trim();
+  } catch (e) {
+    try {
+      return execSync('which chromium-browser').toString().trim();
+    } catch (err) {
+      return envPath;
+    }
+  }
+}
+
 export async function getBrowser() {
   if (!browserInstance) {
     // @ts-ignore
     browserInstance = await puppeteer.launch({ 
       headless: true,
+      executablePath: getExecutablePath(),
       args: ['--no-sandbox', '--disable-setuid-sandbox'] 
     });
   }
